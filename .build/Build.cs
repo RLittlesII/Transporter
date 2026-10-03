@@ -6,13 +6,13 @@ using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-[GitHubActions("ci", GitHubActionsImage.UbuntuLatest, AutoGenerate = true, OnPushBranches = ["main"], OnPullRequestBranches = ["main"])]
+[GitHubActions("ci", GitHubActionsImage.UbuntuLatest, AutoGenerate = false, OnPullRequestBranches = ["main"])]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
     ///   - JetBrains ReSharper        https://nuke.build/resharper
     ///   - JetBrains Rider            https://nuke.build/rider
-    ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
+    ///   - Microsoft Visual Studio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
     public static int Main() => Execute<Build>(build => build.Default);
 
@@ -39,7 +39,7 @@ class Build : NukeBuild
 
 
     private Target Format => target => target
-        .DependsOn(Clean)
+        .DependsOn(Restore)
         .ProceedAfterFailure()
         .Executes(() => DotNetFormat());
 
@@ -49,12 +49,15 @@ class Build : NukeBuild
         .DependsOn(WorkflowRestore);
 
     Target NugetRestore => definition => definition
+        .DependsOn(Clean)
+        .DependsOn(WorkflowRestore)
         .Executes(() =>
         {
-            DotNetTasks.DotNetRestore();
+            DotNetRestore();
         });
 
     Target WorkflowRestore => definition => definition
+        .DependsOn(Clean)
         .Executes(() =>
         {
             // DotNetTasks.DotNetWorkloadRestore();
@@ -62,6 +65,7 @@ class Build : NukeBuild
 
     Target Compile => definition => definition
         .DependsOn(Restore)
+        .DependsOn(Format)
         .Executes(() =>
         {
             DotNetBuild();
