@@ -40,6 +40,9 @@ dotnet_diagnostic.RSA2010.severity = error      # Do not use regions
 dotnet_diagnostic.RSA2011.severity = warning      # Declare accessibility explicitly
 dotnet_diagnostic.RSA2012.severity = error      # Conditional compilation should not span member declarations
 dotnet_diagnostic.RSA2013.severity = error      # Line exceeds the maximum length
+dotnet_diagnostic.RSA2014.severity = warning      # Provide a summary for public abstractions
+dotnet_diagnostic.RSA2015.severity = warning      # Provide <inheritdoc/> on members that implement or override an abstraction
+
 
 # RSA3XXX — Performance
 dotnet_diagnostic.RSA3001.severity = warning      # Subscription not disposed; consider DisposeWith
