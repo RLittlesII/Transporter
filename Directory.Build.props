@@ -1,0 +1,5 @@
+<Project>
+    <ItemGroup>
+        <PackageReference Include="Rocket.Surgery.Airframe.CodeAnalysis"/>
+    </ItemGroup>
+</Project>

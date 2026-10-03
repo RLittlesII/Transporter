@@ -1,7 +1,6 @@
-﻿using ObjCRuntime;
-using UIKit;
+﻿using UIKit;
 
-namespace ClearSky.Maui;
+namespace Transponder.Maui;
 
 public class Program
 {

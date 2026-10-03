@@ -1,5 +1,6 @@
 using Nuke.Common;
 using Nuke.Common.CI.GitHubActions;
+using Nuke.Common.Tools.DotNet;
 
 [GitHubActions("ci", GitHubActionsImage.UbuntuLatest, AutoGenerate = true, OnPushBranches = ["main"], OnPullRequestBranches = ["main"])]
 class Build : NukeBuild
@@ -22,14 +23,26 @@ class Build : NukeBuild
         });
 
     Target Restore => definition => definition
+        .DependsOn(DotNetRestore)
+        .DependsOn(DotNetWorkflowRestore);
+
+    Target DotNetRestore => definition => definition
         .Executes(() =>
         {
+            DotNetTasks.DotNetRestore();
+        });
+
+    Target DotNetWorkflowRestore => definition => definition
+        .Executes(() =>
+        {
+            // DotNetTasks.DotNetWorkloadRestore();
         });
 
     Target Compile => definition => definition
         .DependsOn(Restore)
         .Executes(() =>
         {
+            DotNetTasks.DotNetBuild();
         });
 
     Target Default => definition => definition

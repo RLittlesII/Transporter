@@ -1,0 +1,5 @@
+<Project>
+    <!-- Importing the parent directory.build.props first is very important to maintain expected outcome of merging directory.build.props from multiple levels. -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
+
+</Project>

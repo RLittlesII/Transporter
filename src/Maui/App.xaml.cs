@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Maui;
+﻿using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 
-namespace ClearSky.Maui;
+namespace Transponder.Maui;
 
 public partial class App : Application
 {

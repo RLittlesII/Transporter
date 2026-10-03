@@ -1,4 +1,4 @@
-﻿namespace ClearSky.UnitTests;
+﻿namespace Transponder.UnitTests;
 
 public class UnitTest1
 {

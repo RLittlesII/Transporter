@@ -27,6 +27,8 @@
         "Clean",
         "Compile",
         "Default",
+        "DotNetRestore",
+        "DotNetWorkflowRestore",
         "Restore"
       ]
     },

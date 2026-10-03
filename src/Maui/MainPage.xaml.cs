@@ -1,7 +1,7 @@
 ﻿using Microsoft.Maui.Accessibility;
 using Microsoft.Maui.Controls;
 
-namespace ClearSky.Maui;
+namespace Transponder.Maui;
 
 public partial class MainPage : ContentPage
 {

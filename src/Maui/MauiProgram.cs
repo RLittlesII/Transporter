@@ -2,7 +2,7 @@
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
 
-namespace ClearSky.Maui;
+namespace Transponder.Maui;
 
 public static class MauiProgram
 {
