@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/build/">
+    <Project Path=".build/.build.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src\Maui\Maui.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test\UnitTests\UnitTests.csproj" />
+  </Folder>
+</Solution>
