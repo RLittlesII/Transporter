@@ -21,8 +21,9 @@ Nothing else — the full table is in
 - The claim, by `B-00n` id, in § 3 of the Feature's `.spec/README.md`, and the
   scenario tagged with it in the companion `.feature` file. **That text is the
   specification**; you need not have seen the conversation behind it.
-- § 4 Constraints and § 7 Technical Design: tables, validation order, the
-  interfaces the test will call.
+- § 4 Constraints and § 7 Technical Design: tables, validation order, and the
+  interfaces the test will call — § 7's type table names the file for every
+  one that is built, and the file is what the signature is read from.
 - `AGENTS.md`, and
   [`test-from-scenarios`](../.skills/test-from-scenarios/SKILL.md) — runner,
   naming, assertion library, fixtures, the scheduler rule.

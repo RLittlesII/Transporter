@@ -360,7 +360,7 @@ sequenceDiagram
   alt 200
     P-->>H: time and positional states rows
     H->>H: log X-Rate-Limit-Remaining at debug, never the token (B-027)
-    H-->>C: Right(OpenSkyStatesResponse)
+    H-->>C: OpenSkyStatesResponse
     C->>C: read rows by index, skipping 12 (B-016, B-021)
     C->>C: exclude and count unreadable rows (B-022)
     C->>K: EditDiff over the whole set (B-023)
@@ -393,21 +393,24 @@ and the replay Feature.
 
 **Interface changes**
 
-No name for any of these exists in the repository today, so this section chooses
-them. The contract first:
+This section chose every name here; none of them existed when it was written.
+The ones that have since been built are no longer written out — a declaration
+belongs in a specification only until its file exists, and after that the row
+points at the file, because two statements of one signature is one of them
+going stale
+([lesson 0004](../../../.spec/lessons/0004-a-specification-that-pastes-code-keeps-a-second-copy.md)).
+The diagrams above keep their type names: a diagram states a relationship
+rather than a declaration, and a stale name in one is something grep finds.
 
-```csharp
-internal interface IOpenSkyApi
-{
-    Task<OpenSkyStatesResponse> GetStates(
-        double lamin,
-        double lomin,
-        double lamax,
-        double lomax,
-        bool extended,
-        CancellationToken cancellationToken);
-}
-```
+| Type | File | Claims it makes visible |
+| --- | --- | --- |
+| `IOpenSkyApi` | [`Contracts/IOpenSkyApi.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/IOpenSkyApi.cs) | B-005, B-006, B-024, B-048 |
+| `OpenSkyStatesResponse` | [`Contracts/OpenSkyStatesResponse.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/OpenSkyStatesResponse.cs) | B-001, B-002 |
+| `OpenSkyStateRow` | [`Contracts/OpenSkyStateRow.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/OpenSkyStateRow.cs) | B-002, B-004, B-016, B-022 |
+| `OpenSkyThrottledException` | [`Contracts/OpenSkyThrottledException.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/OpenSkyThrottledException.cs) | B-028, transport half; ADR-0008 |
+| `OpenSkyStateRowConverter` | [`Http/OpenSkyStateRowConverter.cs`](../../../src/Transponder/Integrations/OpenSky/Http/OpenSkyStateRowConverter.cs) | B-002 |
+| `OpenSkyHttpApi` | [`Http/OpenSkyHttpApi.cs`](../../../src/Transponder/Integrations/OpenSky/Http/OpenSkyHttpApi.cs) | B-007 |
+| `OpenSkyRegistration` | [`Container/OpenSkyRegistration.cs`](../../../src/Transponder/Integrations/OpenSky/Container/OpenSkyRegistration.cs) | B-008 |
 
 `IOpenSkyApi` carries no suffix, which is B-048 visible in the identifier. Not
 `IOpenSkyApiContract`: "contract" is the pattern's word for the role, not part
@@ -433,41 +436,6 @@ OpenSky asked for travel on the exception rather than being lost with the
 headers. B-001 is why the envelope could never have carried the throttle
 itself.
 
-```csharp
-internal sealed record OpenSkyStatesResponse
-{
-    [JsonPropertyName("time")]
-    public required long Time { get; init; }
-
-    [JsonPropertyName("states")]
-    public required IReadOnlyList<OpenSkyStateRow> States { get; init; }
-}
-
-[JsonConverter(typeof(OpenSkyStateRowConverter))]
-internal sealed class OpenSkyStateRow
-{
-    public OpenSkyStateRow(IReadOnlyList<JsonElement> elements)
-    {
-        _elements = elements;
-    }
-
-    public int Count => _elements.Count;
-
-    public JsonElement this[int index] => _elements[index];
-
-    private readonly IReadOnlyList<JsonElement> _elements;
-}
-
-internal sealed class OpenSkyThrottledException : Exception
-{
-    public OpenSkyThrottledException(TimeSpan retryAfter)
-        : base($"OpenSky throttled the request and asked to be left alone for {retryAfter}.") =>
-        RetryAfter = retryAfter;
-
-    public TimeSpan RetryAfter { get; }
-}
-```
-
 Two members on the envelope, named as OpenSky names them (B-001), and no member
 of it is a named per-aircraft type (B-002) — which is why there is no
 `AircraftState` here. `OpenSkyStateRow` exposes **a count and an indexer and
@@ -476,41 +444,24 @@ type B-002 forbids, while still being something B-004 and B-045 can point at and
 something the converter can attach to. `Count` is what B-016's element count and
 B-022's 17–18 test read. It is a `class` rather than a `record` because a
 `record` over a list advertises value equality it cannot honour — the type that
-needs equality is the snapshot, one table above. `OpenSkyThrottledException`
+needs equality is the snapshot, in the index table further up. `OpenSkyThrottledException`
 carries exactly the header's seconds and no invented backoff, and it sits in
 `Contracts/` rather than in `Http/` for the reason ADR-0008 gives under its
 third decision item.
 
-```csharp
-internal sealed class OpenSkyHttpApi : IOpenSkyApi
-{
-    public OpenSkyHttpApi(IFlurlClientCache clients, IOpenSkyTokenSource tokens, ILogger<OpenSkyHttpApi> logger)
-    {
-        _clients = clients;
-        _tokens = tokens;
-        _logger = logger;
-    }
-
-    Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(
-        double lamin,
-        double lomin,
-        double lamax,
-        double lomax,
-        bool extended,
-        CancellationToken cancellationToken) => /* … */;
-
-    private readonly IFlurlClientCache _clients;
-    private readonly IOpenSkyTokenSource _tokens;
-    private readonly ILogger<OpenSkyHttpApi> _logger;
-}
-```
-
 `internal sealed`, explicit interface implementation, no `public` endpoint
-method: all three of B-007's clauses are readable in the declaration. The name
+method: all three of B-007's clauses are readable in the file. **It is not
+finished.** `0002` built it taking the Flurl client cache and nothing else;
+the token source and the logger it is designed to take arrive with B-026 and
+B-027, which are `0004`'s and which § 11 question 2 has not yet placed on a
+component. The name
 says **the transport**, which is the axis B-007 counts along, so the replay
 sibling gets a name that pairs with it. Not `OpenSkyApiClient` — "client" is
 already the layer above, and that exact collision is the one-word-three-things
 problem ADR-0002 opens with.
+
+`0005` has not built the per-type seam yet, so this one is still written out
+rather than pointed at:
 
 ```csharp
 internal interface IAircraftTrackerSource : ITrackerSource;
@@ -544,18 +495,20 @@ stated rather than discovered later: `Transponder.csproj` gains
 `InternalsVisibleTo("Transponder.UnitTests")`, and `transponder-conventions`
 § `test-from-scenarios` now carries that as the convention.
 
-Layout follows `transponder-conventions` § "Project structure":
+Where the rest of it goes, following `transponder-conventions`
+§ "Project structure":
 
 ```
 src/Transponder/Model/                           TransportVehicle, Aircraft, GeoPosition, PositionSource
 src/Transponder/Tracking/                        ITrackerSource, IFleetTracker, FleetTracker, SwappingTrackerSource,
                                                  IObservedClock, IObservedClockWriter, ObservedClock
 src/Transponder/Tracking/Sources/                IAircraftTrackerSource, AircraftTrackerSource, AircraftSnapshotMapper
-src/Transponder/Integrations/OpenSky/Contracts/  IOpenSkyApi, OpenSkyStatesResponse, OpenSkyStateRow, OpenSkyThrottledException
-src/Transponder/Integrations/OpenSky/Http/       OpenSkyHttpApi, OpenSkyStateRowConverter, IOpenSkyTokenSource, OpenSkyTokenSource
+src/Transponder/Integrations/OpenSky/Http/       IOpenSkyTokenSource, OpenSkyTokenSource
 src/Transponder/Integrations/OpenSky/            AircraftSnapshot, AircraftSnapshotClient, OpenSkyOptions, OpenSkyCredentials, BoundingBox
-src/Transponder/Integrations/OpenSky/Container/  OpenSkyRegistration
 ```
+
+The block holds only what is still unbuilt, and shrinks as the table above
+grows; `Contracts/` and `Container/` have left it entirely.
 
 The cache gets no type of its own. A `SourceCache` of `AircraftSnapshot` keyed
 by `string`, registered with the application's lifetime, **is** B-030's plain
@@ -720,7 +673,7 @@ on exists, no boundary claim can leave `Missing`, so no item can reach `done`.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
-No Feature-scoped lesson yet. Two repository-wide lessons bear on this
+No Feature-scoped lesson yet. Four repository-wide lessons bear on this
 document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
 is why § 3 keeps no build state that § 9 owns, and why every one of § 9's
 fifty-one rows reads `Missing` rather than inheriting the template's example
@@ -730,6 +683,13 @@ were unwritten, for as long as they were.
 [Lesson 0003](../../../.spec/lessons/0003-a-dedupe-is-a-move-and-a-move-has-a-destination.md)
 came out of writing § 7, which needed a member list a dedupe had removed from
 the repository while naming a record that never received it.
+[Lesson 0004](../../../.spec/lessons/0004-a-specification-that-pastes-code-keeps-a-second-copy.md)
+has § 7 as its subject: it is why the declarations of the types `0002` built
+are a table of files rather than pasted C#, and why the ones it has not built
+are still written out.
+[Lesson 0005](../../../.spec/lessons/0005-a-ruling-is-not-a-rule.md) is why
+§ 7 cites ADR-0008 for the contract's return shape rather than arguing it, and
+why the shape it argued first is named there rather than quietly replaced.
 
 ## 11. Open Questions
 

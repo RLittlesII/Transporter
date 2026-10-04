@@ -54,7 +54,8 @@ request. Settling one quietly is the failure this note exists to prevent.
   exists. The source seam is the one place this project genuinely has both.
 - **§ 7 kept current**: the domain model table, the Mermaid diagrams
   (component, data model, state machine, sequence — a type that does not apply
-  says so rather than being dropped), the interface changes, and the open
+  says so rather than being dropped), the interface changes — a declaration
+  while its file does not exist, a table row once it does — and the open
   `Decision Required` block when one is open. "No open decisions." is a valid
   body.
 - **§ 6**: each item classified Business, Technical, or Both, so the two kinds

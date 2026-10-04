@@ -130,6 +130,17 @@ spec_status: draft
 
 **Interface changes**
 
+<!-- Write a declaration out only while its file does not exist. Once it does,
+     it becomes a row below and the prose around it stays
+     (spec-and-traceability § "A declaration belongs to the file that
+     compiles"). Anything the declaration carried that the file does not —
+     a parameter a later item adds, a member nothing calls yet — moves into
+     the prose rather than leaving with it. -->
+
+| Type     | File     | Claims it makes visible |
+| -------- | -------- | ----------------------- |
+| {{type}} | {{file}} | {{claims}}              |
+
 {{interface_changes}}
 
 **Decision required**
