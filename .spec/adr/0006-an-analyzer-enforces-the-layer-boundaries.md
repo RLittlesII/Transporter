@@ -61,7 +61,7 @@ likely to be 'satisfied' by absence rather than by a test".
 | Option | Summary | Why not |
 | --- | --- | --- |
 | Reflection tests in xUnit | Assert over loaded types in the test project. No new dependency, and the stack already mandated. | Cannot see method bodies, so B-045 – B-047 — the three claims this is most needed for — would be asserted over signatures and reported as covered. A § 9 row claiming a reference rule is proven when only its signatures are is the fake-gate failure [lesson 0002](../lessons/0002-metadata-about-a-rule-drifts-too.md) is about. |
-| An architecture-rule library — NetArchTest, ArchUnitNET | A dependency-rule engine over compiled IL: "no type in `Model` may reference `Integrations.OpenSky.Contracts`" as one assertion that genuinely holds. | Reads IL, so it does see method bodies, and it would work. It reports at test time rather than build time, so a violation is already committed and the feedback arrives minutes later in a suite the Nuke `Default` target does not even run. It also answers only the dependency claims; B-007's explicit implementation and B-048's naming still need a second mechanism. |
+| An architecture-rule library — NetArchTest, ArchUnitNET | A dependency-rule engine over compiled IL: "no type in `Model` may reference `Integrations.OpenSky.Contracts`" as one assertion that genuinely holds. | Reads IL, so it does see method bodies, and it would work. It reports at test time: the violation is already written and compiled before anything says so, and what fails is an assertion in another file rather than the line that broke the rule. It also answers only the dependency claims; B-007's explicit implementation and B-048's naming still need a second mechanism. |
 | A Roslyn analyzer **(chosen)** | Diagnostics over the syntax and semantic model at compile time, shipped from this repository. | — |
 | Code review | Write the rules down and enforce them by reading. | What the repository does today, and `domain-model` § "Never add" already lists the downcast rule. The swap breaks "one line at a time", which is precisely the failure review is worst at catching. |
 
@@ -76,10 +76,10 @@ build error, not a test failure.
    argument, a method body — is a reference it can report. This is the whole
    reason for the choice, and the only one that rules the alternatives out.
 2. **It reports where the violation is written**, at the line that wrote it,
-   before the commit. A boundary enforced at test time is enforced after the
-   fact; the Nuke `Default` target does not run tests at all
-   ([`nuke-build`](../../.skills/nuke-build/SKILL.md)), so a test-time boundary
-   would not be enforced by the build this repository actually runs.
+   while it is being written. A boundary enforced at test time is enforced
+   after the fact: the code compiles, the editor stays quiet, and the first
+   signal is a red assertion somewhere else that has to be read backwards to
+   the reference that caused it.
 3. **The repository already builds analyzers.** `Directory.Build.props`
    references `Rocket.Surgery.Airframe.CodeAnalysis` for every project, and
    `.editorconfig` already configures RSA diagnostics by severity — including

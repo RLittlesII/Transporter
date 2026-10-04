@@ -77,7 +77,17 @@ class Build : NukeBuild
             DotNetBuild();
         });
 
+    private Target Test => definition => definition
+        .DependsOn(Compile)
+        .Executes(() =>
+            TestDirectory.GlobFiles("**/*.csproj")
+                .ForEach(project => DotNetTest(settings => settings
+                    .SetProjectFile(project)
+                    .EnableNoBuild()
+                    .EnableNoRestore())));
+
     Target Default => definition => definition
         .DependsOn(Format)
-        .DependsOn(Compile);
+        .DependsOn(Compile)
+        .DependsOn(Test);
 }
