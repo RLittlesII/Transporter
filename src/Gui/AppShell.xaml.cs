@@ -1,9 +1,6 @@
 namespace Gui;
 
-public partial class AppShell : Shell
+public partial class AppShell
 {
-    public AppShell()
-    {
-        InitializeComponent();
-    }
+    public AppShell() => InitializeComponent();
 }

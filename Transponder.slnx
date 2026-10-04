@@ -3,6 +3,7 @@
     <Project Path=".build/.build.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Transponder/Transponder.csproj" />
     <Project Path="src\Gui\Gui.csproj" />
   </Folder>
   <Folder Name="/test/">

@@ -1,4 +1,8 @@
+using CommunityToolkit.Maui.Markup;
+using Gui.Container;
 using Microsoft.Extensions.Logging;
+using Transponder.Features.Demo.Actors;
+using Transponder.Features.Demo.ViewModels;
 
 namespace Gui;
 
@@ -9,6 +13,9 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkitMarkup()
+            .AddAkkaHost("Transponder", static (system, registry) => registry.Register<ClickActor>(system.ActorOf(ClickActor.Props)))
+            .AddUserInterface(static collection => collection.AddTransient<MainPage>().AddTransient<DemoViewModel>())
             .ConfigureFonts(static fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

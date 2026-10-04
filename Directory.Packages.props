@@ -4,6 +4,14 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup Label="Analysis">
+    <PackageVersion Include="Akka" Version="1.5.8" />
+    <PackageVersion Include="Akka.Hosting" Version="1.5.8" />
+    <PackageVersion Include="Akka.Hosting.Maui" Version="1.5.8" />
+    <PackageVersion Include="CommunityToolkit.Maui.Markup" Version="8.0.0" />
+    <PackageVersion Include="LanguageExt.Core" Version="4.4.9" />
+    <PackageVersion Include="Microsoft.Maui.Controls.Core" Version="10.0.110" />
+    <PackageVersion Include="ReactiveMarbles.Mvvm" Version="1.0.95" />
+    <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
     <PackageVersion Include="Rocket.Surgery.Airframe.CodeAnalysis" Version="0.12.2" />
   </ItemGroup>
   <ItemGroup Label="Build">
