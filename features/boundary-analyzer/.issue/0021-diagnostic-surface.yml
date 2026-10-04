@@ -1,0 +1,89 @@
+id: "0021"
+type: task
+title: Fix what a diagnostic is — ids, message, location, severity, and the mapping
+
+status: ready-for-implementation
+
+priority: high
+risk: 2
+rank: 109
+
+parent: "0019"
+children: []
+
+depends_on:
+  - "0020"
+blocks:
+  - "0022"
+  - "0023"
+  - "0024"
+spikes: []
+
+spec: features/boundary-analyzer/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-013
+  - B-016
+  - B-018
+  - B-019
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  The conventions every rule after it obeys, held in one place
+  (Diagnostics.cs) so one test class over SupportedDiagnostics can check them
+  rather than eighteen tests checking eighteen copies: TRN ids on their own
+  sequence, a message naming the specification and claim, a location on the
+  violating node, generated code excluded, error by default, and no id reused.
+
+  B-004 and B-005 are the two that earn their own tests. They were written
+  against a failure mode this repository saw rather than imagined: an upstream
+  analyzer reporting with an empty symbol name and no location at all, which no
+  #pragma and no .editorconfig section could reach, leaving a project-wide
+  NoWarn as the only escape (RocketSurgeonsGuild/Airframe#403, 2026-10-04). An
+  analyzer of our own has the same failure mode available to it, and a rule
+  nobody can act on gets switched off.
+
+  B-016, B-018 and B-019 are the discipline half: the eighteen tests keep the
+  names aircraft-source § 9 gave them, a descriptor with no claim behind it is
+  reported as unclaimed, and § 7's table stays the only store for the mapping.
+
+acceptance_criteria:
+  - "B-001, B-008 — one diagnostic per claim and one claim per diagnostic, and
+    the set is exactly the eighteen assigned; a descriptor nothing claims fails
+    (B-018)."
+  - "B-002, B-007 — TRN plus four digits, from the analyzer's own sequence, no
+    claim number encoded, nothing duplicated, no retired id reused."
+  - "B-003 — the title and message name the specification and the claim id."
+  - "B-004 — every reported diagnostic carries a file, a line and a column, and
+    a symbol name; the hazard is a rule nobody can suppress at the violation."
+  - "B-005 — GeneratedCodeAnalysisFlags.None, and the same violation written by
+    hand is still reported."
+  - "B-006 — every default severity is error, and .editorconfig is the only way
+    to weaken one."
+  - "B-013 — no enforced claim is a claim about a computed value."
+  - "B-016, B-019 — the § 9 test names exist spelled as that matrix spells them,
+    and no row of § 7's table restates a claim's text or a test name."
+  - "§ 9 carries a row naming a test for each id above except B-016, which is a
+    Review row: a test asserting its own name proves nothing."
+
+decisions:
+  - "2026-10-04 — implementer — one DiagnosticAnalyzer with eighteen descriptors
+    rather than one analyzer class per rule. Eighteen classes would hold
+    eighteen copies of the layer identification § 11 row 1 is about, which is
+    the part most likely to change."
+
+out_of_scope:
+  - "The rules themselves — 0022, 0023, 0024."
+  - "The project and its reference shape — 0020, which this item depends on."
+  - "A code fix — § 5 row 2."

@@ -1,0 +1,65 @@
+id: "0023"
+type: task
+title: Report a declaration that is the wrong shape, on the declaration
+
+status: ready-for-implementation
+
+priority: high
+risk: 3
+rank: 91
+
+parent: "0019"
+children: []
+
+depends_on:
+  - "0021"
+blocks: []
+spikes: []
+
+spec: features/boundary-analyzer/.spec/README.md
+
+claims:
+  - B-010
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  TRN0008 – TRN0014, the seven rules that read what is in front of them: the
+  envelope keeping the provider's positional shape, the contract's one method per
+  endpoint with the cancellation token last, the types a contract declaration may
+  not name, the one implementation per transport and what it must look like, the
+  snapshot carrying nothing derived, the per-type seam not widened with
+  source-describing members, and the contract carrying no version suffix and no
+  marker above it.
+
+  Each is reported on the declaration that is wrong rather than at a call site
+  that uses it, which is what makes the message actionable: the fix is on the
+  line the diagnostic lands on.
+
+  The hazard is partial reading. aircraft-source B-007 is four conditions in one
+  sentence — one production class per transport, internal, sealed, explicit
+  interface implementation on every method — and a rule that checks three of them
+  reports Verified for the fourth. The same shape is in B-005 (one method per
+  endpoint, Task<T>, token last) and B-048 (no suffix, and no marker above it).
+  A claim with an "and" in it needs a case per clause.
+
+acceptance_criteria:
+  - "B-010 — a forbidden declaration shape is reported on that declaration, not
+    at a call site that reads it."
+  - "§ 9 carries a row naming a test for B-010."
+  - "Every clause of every multi-part claim this item carries a rule for has a
+    case of its own; a rule satisfying three clauses of four does not report the
+    fourth as met."
+  - "Each of the seven claims is proven by the test aircraft-source § 9 names
+    for it, under that name (B-016)."
+
+decisions: []
+
+out_of_scope:
+  - "Reference rules — 0022. Call-site rules — 0024."
+  - "The descriptor conventions — 0021, which this item depends on."
+  - "aircraft-source B-048's versioned layer, which the claim defers until the
+    provider declares a version — the rule reports the suffix and the marker,
+    and invents nothing about the layer that does not exist."
