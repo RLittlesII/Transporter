@@ -377,6 +377,11 @@ sequenceDiagram
   end
 ```
 
+A class diagram is `Not applicable` — the declarations below are the
+authoritative form, with accessibility, explicit implementation and generic
+arguments a diagram would have to approximate. Drawing them as well would be a
+second copy of the same thing to keep in step.
+
 A state diagram is `Not applicable` — no component here holds more than one
 state. The only state in the chain is the decorator's selected strategy, and the
 control that changes it is § 5 row 5.
