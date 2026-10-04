@@ -5,8 +5,8 @@ title: Select replay through the one switch every source uses
 status: ready-for-architecture
 
 priority: high
-risk: 3
-rank: 71
+risk: 4
+rank: 68
 
 parent: "0008"
 children: []
@@ -24,6 +24,9 @@ claims:
   - B-016
   - B-017
   - B-018
+  - B-024
+  - B-025
+  - B-026
 
 created: "2026-10-04"
 updated: "2026-10-04"
@@ -40,6 +43,17 @@ summary: |
   spending credits, and nothing downstream is rebuilt: not the tracker, its
   collection, its filters, its sorts, its groups or its bindings.
 
+  It is also where a run's recording is named. One configuration key per replay
+  source, through the same mechanism the interval and the bounding box use, with
+  **no recording compiled in as a default**: a source with none named is not
+  registered and so is not selectable, which is a visible absence rather than a
+  wrong recording. Paths resolve against one configured recordings root
+  (`recordings/` beside the application by default), and a recording that is
+  absent, unreadable or shorter than the staleness threshold is reported at
+  startup rather than discovered at the swap. Configuration never decides
+  *whether* replay is live — the selector does (B-015) — so a recording named
+  but never selected is normal. The Feature's `adr/0001` records all of it.
+
   Needs the decorator (0006) and something to swap to (0011).
 
 acceptance_criteria:
@@ -50,11 +64,29 @@ acceptance_criteria:
   - "B-017 — swapping to replay stops the outgoing live source, so a poller
     stops spending credits and a socket stops reading."
   - "B-018 — swapping to or from replay rebuilds nothing downstream."
+  - "B-024 — one configuration key per replay source names its recording;
+    nothing is compiled in as a default, a source with no recording named is
+    neither registered nor selectable, and configuration does not decide whether
+    replay is the live source."
+  - "B-025 — a named recording resolves against one configured recordings root,
+    `recordings/` beside the application by default and overridable, so a
+    rehearsal writes and a replay reads the same place with no absolute path
+    named anywhere."
+  - "B-026 — a recording that is absent, unreadable, or shorter than the
+    staleness threshold is reported at startup, never first discovered when
+    replay is selected."
   - "Scrutor's `Decorate<>` wraps what is already registered, so replay must be
     registered before the decorate call or it resolves raw and silently
-    (ADR-0003, hot-swap-source)."
+    (ADR-0003, hot-swap-source). B-024's unregistered-when-unnamed rule meets
+    the same machinery, so the two interact: both are registration-time and both
+    are invisible at runtime."
 
-decisions: []
+decisions:
+  - "2026-10-04 — spec-author — risk raised 3 to 4 when B-024 – B-026 landed
+    here. Two registration-time hazards now stack, and neither shows at runtime:
+    a strategy registered after Scrutor's `Decorate<>` call resolves raw so the
+    swap silently does nothing, and a recording named but absent or too short is
+    a stage failure unless B-026's startup report catches it first."
 
 out_of_scope:
   - "The swap control, the stage choreography, and what the audience sees during
@@ -63,8 +95,11 @@ out_of_scope:
   - "An offline mode, environment flag or \"use replay\" setting (§ 5 row 8) —
     forbidden by B-015 and recorded as an exclusion precisely because it is the
     obvious thing to reach for."
-  - "**Which recording a run loads and where it lives — § 11 row 3, still
-    open.** The question is the implementer's and is configuration rather than
-    format; ADR-0004 deliberately says nothing about it. This item must not
-    invent an answer, and should not start before the question is settled, since
-    selection is where that configuration would surface."
+  - "Choosing a recording by discovery — newest file, or any scan of the
+    directory. Rejected in the Feature's `adr/0001`: ordering by the instant in
+    the filename costs no edit after a rehearsal, but a thirty-second test
+    capture taken afterwards silently becomes the stage recording, and B-005
+    then fails invisibly at the one moment it matters. B-026 is the mitigation —
+    report at startup, not at the swap."
+  - "Opening or resolving the recording file in the pacer. B-027 puts that here
+    and keeps it out of 0010."

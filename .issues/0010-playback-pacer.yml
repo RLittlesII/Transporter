@@ -25,6 +25,7 @@ claims:
   - B-011
   - B-012
   - B-014
+  - B-027
 
 created: "2026-10-04"
 updated: "2026-10-04"
@@ -41,8 +42,13 @@ summary: |
   after a converter fix (B-014). Parsing belongs to whatever substitutes over it
   — 0011 for aircraft, 0013 for vessels.
 
-  Nothing blocks it: it needs no provider, no credential and no network, and it
-  is testable against a synthetic fixture with an injected scheduler. It is also
+  It is handed an **opened stream** and resolves no path of its own (B-027), so
+  file access stays out of the component that owns the time base. That was the
+  open question this item carried; the Feature's `adr/0001` answered it.
+
+  Nothing blocks it: it needs no provider, no credential, no network and now no
+  filesystem either, and it is testable against a synthetic fixture with an
+  injected scheduler. It is also
   what both substitution points are built on, which is why it ranks highest of
   the replay items.
 
@@ -69,11 +75,10 @@ out_of_scope:
   - "Transport controls — seek, pause, scrub, step, speed (§ 5 row 5). Playback
     is forward and looping, and ADR-0004 deliberately buys no index to seek
     with."
-  - "Deciding which recording to load and from where — § 11 row 3, open and the
-    implementer's. This item takes a recording it is given. Row 3 does bear on
-    it indirectly: whether it receives an opened stream or a path to resolve is
-    that question's to settle, and § 7 answers it before this item leaves
-    ready-for-architecture."
+  - "Deciding which recording to load and from where — now answered, and not
+    here: naming, root resolution and the startup report are B-024 – B-026 on
+    item 0012. B-027 is this item's half of that answer, and it is a negative
+    claim: resolve nothing, open nothing, take the stream you are given."
   - "Parsing a payload into an envelope or a domain object, and the observed
     instant and staleness that follow from it (B-009, B-010, B-013) — 0011."
   - "The real `Thread.Sleep`: § 4's no-wall-clock rule means the spacing comes
