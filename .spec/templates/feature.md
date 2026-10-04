@@ -23,11 +23,23 @@ spec_status: draft
      Keep the section order. Replace the example rows. DO NOT DELETE A SECTION
      BECAUSE IT IS EMPTY — an empty section is a decision ("out of scope", "no
      open questions") and says so in words. Deleting it destroys the signal
-     that the question was asked.
+     that the question was asked. An unwritten section says so IN WORDS and
+     names the role that owes it; it never keeps a {{placeholder}} row, which
+     reads as content and is not.
 
-     Each section names the role that owns it. A role writes only its own
-     sections; filling in someone else's is a boundary violation, not a
-     favour. -->
+     THE GUIDANCE BELOW BELONGS TO THIS FILE, NOT TO THE COPY. Each section
+     carries a comment saying how to fill it. On copy those are REDUCED TO A
+     ONE-LINE POINTER, the way {{placeholders}} are replaced:
+
+         ## 3. Acceptance Criteria
+
+         <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
+
+     The pointer names no owner. Section ownership is written in exactly one
+     place, .skills/transponder-conventions/SKILL.md § "Section ownership",
+     and a copy that restated it would be one more place to keep in step.
+     A role writes only its own sections; filling in someone else's is a
+     boundary violation, not a favour. -->
 
 # Specification: {{feature_title}}
 
@@ -207,11 +219,14 @@ spec_status: draft
 ## Tasks
 
 <!-- Owner: spec-author. The items cut from § 3 once the claims exist. Ids
-     only — never restated titles, or the two records disagree. "None yet."
-     is valid while the spec is still being agreed. The items are in .issue/
-     beside this file, so link each id to its own file. -->
+     and claim ids only — never a restated title or claim text, or the two
+     records disagree. "None yet." is valid while the spec is still being
+     agreed. The items are in .issue/ beside this file, so link each id to
+     its own file. -->
 
-- [ ] 0002 — {{item_title}}
+| Item                            | Claims              |
+| ------------------------------- | ------------------- |
+| [`0002`](../.issue/{{item_file}}) | {{claim_ids}}     |
 
 ## Scoring
 
