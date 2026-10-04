@@ -18,7 +18,7 @@ exists to read but the need itself.
 Sections **1 Business Goal, 2 User Needs, 3 Acceptance Criteria, 4
 Constraints, 5 Out of Scope** of `features/<slug>/.spec/README.md`, the
 companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
-`.issues/` items. Nothing else — the full table is in
+`.issue/` items. Nothing else — the full table is in
 [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
 
 ## Read first
@@ -36,7 +36,7 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
   fact, not a gap to fill by inventing one.
 - [`clarify-requirements`](../.skills/clarify-requirements/SKILL.md) when the
   need is genuinely ambiguous.
-- For an **amendment**, the `.issues/` items already citing the claims you are
+- For an **amendment**, the `.issue/` items already citing the claims you are
   about to change — a reworded claim that items depend on is a change to their
   brief, not a tidy-up.
 
@@ -66,7 +66,7 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
 6. Supporting detail that does not fit Gherkin — a table, a validation order,
    a diagram (Mermaid) — in § 4 or § 7's prose, not inlined into the feature
    file.
-7. **`## Tasks`, last**: the `.issues/` ids cut from § 3 once the claims
+7. **`## Tasks`, last**: the `.issue/` ids cut from § 3 once the claims
    exist. `"None yet."` while the agreement is still being reached — filing an
    item for a claim nobody has agreed to is the inversion this role exists to
    prevent.
@@ -83,8 +83,8 @@ a duplicate, malformed or dangling id is caught by reading or not at all.
   specification** — a § 3 claim, a § 5 out-of-scope row, or § 11 Open
   Questions. There may be no item to record it in.
 - Writing delivery status onto the spec. The spec carries `spec_status`, its
-  own document maturity; the work's status lives in the `.issues/` item.
-- Restating a claim's text inside an `.issues/` item; the item references ids.
+  own document maturity; the work's status lives in the `.issue/` item.
+- Restating a claim's text inside an `.issue/` item; the item references ids.
 - Arguing a technology choice in a feature file; that is an ADR in `.spec/adr/`.
 - Filing a process rule as an ADR (it is a convention, in the skill that owns
   it) or an interface detail (that is a claim).

@@ -22,7 +22,7 @@ is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
 - § 5 Out of Scope, and every `adr/` record the claims touch — the Feature's
   own, **and the root [`.spec/adr/`](../.spec/adr/)**, whose decisions bind
   every Feature whether or not the diff mentions them.
-- The `.issues/` item: its acceptance criteria, its `claims:` list, and whether
+- The `.issue/` item: its acceptance criteria, its `claims:` list, and whether
   its `status` matches reality.
 - `AGENTS.md` and the skill for each surface the diff touches.
 
@@ -49,7 +49,7 @@ is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
    rule filed as an ADR; a lesson missing symptom, root cause, spec delta, or
    its claim.
 10. **Section boundaries** — a role writing a section it does not own, or
-    delivery status written onto the spec, which belongs in the `.issues/` item.
+    delivery status written onto the spec, which belongs in the `.issue/` item.
 11. **The swap test**, for anything touching the UI or the seam: would
     flipping planes to ships need a view edit? If so the view knows too much
     ([`maui-ui`](../.skills/maui-ui/SKILL.md)).

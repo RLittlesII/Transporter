@@ -46,12 +46,16 @@ filling in someone else's is a boundary violation, not a favour.
 
 ## How work is tracked
 
-**Locally.** `.issues/<id>-<slug>.yml` stands in for a GitHub issue and holds
+**Locally.** A `<id>-<slug>.yml` item stands in for a GitHub issue and holds
 delivery state — status, priority, scoring, dependencies. The specification
 holds the content, and **comes first**: a feature item names its spec, a spec
 never names an item. A bug, spike or chore starts at an item instead. Code
 still pushes to GitHub as branches and pull requests; issues, labels and
 milestones are not part of this workflow.
+
+**An item sits beside the specification it was cut from**, in that Feature's
+`.issue/`, a sibling of its `.spec/`. One with no specification goes in the
+repository-root `.issue/`, where `.sequence` hands out ids repository-wide.
 
 `status: in-progress` on an item is the only signal it is taken. The schema,
 the status enum, and the authority split are in
