@@ -1,6 +1,16 @@
-# Copy to .issues/<id>-<slug>.yml. This file is the schema for a work item —
-# the local stand-in for a GitHub issue. It owns DELIVERY STATE; a Feature's
-# .spec/README.md owns CONTENT. Neither duplicates the other.
+# WHICH .issue/ DIRECTORY:
+#   - features/<feature-slug>/.issue/<id>-<slug>.yml, beside the specification
+#     this item was cut from — a sibling of that Feature's .spec/. Every
+#     `type: feature` item, and any task, test or bug delivering its claims.
+#   - .issue/<id>-<slug>.yml at the repository root, for an item that belongs
+#     to no Feature: a bug, spike or chore with `spec: null`. Same blast-radius
+#     split .spec/adr/ and .spec/lessons/ use.
+# Ids are REPOSITORY-WIDE either way, so a bare id in `depends_on` or `parent`
+# resolves from anywhere; find an item with **/.issue/<id>-*.yml.
+#
+# This file is the schema for a work item — the local stand-in for a GitHub
+# issue. It owns DELIVERY STATE; a Feature's .spec/README.md owns CONTENT.
+# Neither duplicates the other.
 #
 # A FEATURE ITEM IS CUT FROM AN EXISTING SPEC, never the reverse: the spec is
 # the agreement, this file is a slice of delivering it. So a `type: feature`
@@ -9,7 +19,8 @@
 # leaves `spec:` null until one is written.
 #
 # The whole file is YAML, with the prose fields as block scalars. Take <id>
-# from .issues/.sequence and bump it in the same commit. Claim the id AFTER
+# from .issue/.sequence at the repository root and bump it in the same commit.
+# Claim the id AFTER
 # rebasing: it is taken the moment someone else merges it.
 
 id: "0001" # string, so leading zeros survive. Never reused.

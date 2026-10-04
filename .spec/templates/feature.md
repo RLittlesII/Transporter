@@ -17,7 +17,7 @@ spec_status: draft
      `spec_status` is DOCUMENT maturity: draft | in-review | approved | superseded.
 
      Delivery state does NOT live here. `status`, `priority`, `value`, `risk`
-     and `rank` belong to the .issues/ item, which is the single authority for
+     and `rank` belong to the .issue/ item, which is the single authority for
      them — see .skills/spec-and-traceability/SKILL.md.
 
      Keep the section order. Replace the example rows. DO NOT DELETE A SECTION
@@ -208,14 +208,15 @@ spec_status: draft
 
 <!-- Owner: spec-author. The items cut from § 3 once the claims exist. Ids
      only — never restated titles, or the two records disagree. "None yet."
-     is valid while the spec is still being agreed. -->
+     is valid while the spec is still being agreed. The items are in .issue/
+     beside this file, so link each id to its own file. -->
 
 - [ ] 0002 — {{item_title}}
 
 ## Scoring
 
 <!-- Owner: spec-author, recording the item's value and risk when they change.
-     The authoritative values live in the .issues/ item. -->
+     The authoritative values live in the .issue/ item. -->
 
 | Date         | Field | From | To  | Rationale     |
 | ------------ | ----- | ---- | --- | ------------- |
