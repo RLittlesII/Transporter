@@ -1,0 +1,61 @@
+id: "0015"
+type: task
+title: Move work items beside the specification that generated them
+
+status: in-progress
+
+priority: medium
+value: 3
+risk: 2
+rank: 51
+
+parent: null
+children: []
+
+depends_on:
+  - "0014"
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  Work items lived in one flat repository-root `.issues/` directory, so nothing
+  in an item's path said which specification it was cut from — only its `spec:`
+  field did. A Feature's other records (`decisions/`, `lessons/`, `adr/`, its
+  `.feature` file) already sit beside its specification; its items were the one
+  artifact that did not.
+
+  Move each item into `features/<slug>/.issue/`, beside the specification it was
+  cut from, and put items that belong to no Feature — a bug, a spike, a chore —
+  in a repository-root `.issue/`, the same blast-radius split `.spec/adr/` and
+  `.spec/lessons/` already use.
+
+  depends_on 0014: `transponder-conventions` is a call site for this change and
+  exists only on the 0014/skills-portability branch, so this work branches from
+  that branch rather than from main.
+
+acceptance_criteria:
+  - "Every item sits in `features/<slug>/.issue/` for its own specification, or in the root `.issue/` when it has none; `.issues/` no longer exists."
+  - "No item is renumbered and no `depends_on`, `parent` or `claims` value changes; every id still resolves to exactly one file."
+  - "Ids stay repo-wide from one `.issue/.sequence`."
+  - "The CI path filter follows the move, regenerated from the attribute rather than hand-edited, and excludes only the `.issue/` directories."
+  - "No `.issues` path remains in any tracked file, and every relative link resolves."
+
+decisions:
+  - "2026-10-04 — rlittlesii: `.issue/` singular, reading as a sibling to `.spec/`."
+  - "2026-10-04 — rlittlesii: items with no specification go in a repository-root `.issue/`. Rejected keeping the old root `.issues/` for them, which would have left two directory names in play, and rejected forcing every item under a Feature, which would have meant inventing a pseudo-Feature to hold repository-wide work."
+  - "2026-10-04 — rlittlesii: ids stay repo-wide from one `.sequence`. Rejected renumbering per Feature to match the per-Feature B-00n scheme: seven `depends_on` edges already cross Features, so every one of them would have had to become slug-qualified and all fourteen items renumbered."
+  - "2026-10-04 — rlittlesii: `spec:` stays on the item even though the path now implies it, so a reader or a script gets the specification without parsing a directory name."
+  - "2026-10-04 — claude: edited in place in `transponder-conventions` rather than recorded as an ADR. A workflow or tooling rule is a convention, not an architecture decision."
+
+out_of_scope:
+  - "Renumbering any item, or changing any `depends_on`, `parent` or `claims` value."
+  - "Adding `.feature` files to the CI exclusion list. They are not excluded today, so a scenario-only pull request builds; that is a separate question."
+  - "The `type` enum's missing `chore` value, already recorded on item 0014."
