@@ -170,7 +170,7 @@ Behavioral detail — index-by-index reading, callsign trimming, squawk as a
 string, absent versus unknown category, token refresh, retry-after handling —
 is **not** in this record. Those are claims, in § 3 of
 [`features/aircraft-source/.spec/README.md`](../../features/aircraft-source/.spec/README.md)
-(B-001 – B-051).
+(B-001 – B-052).
 
 ## Consequences
 

@@ -76,6 +76,7 @@ claims:
   - B-049
   - B-050
   - B-051
+  - B-052
 
 created: "2026-10-04"
 updated: "2026-10-04"
@@ -96,7 +97,7 @@ summary: |
   time; it holds no work of its own.
 
 acceptance_criteria:
-  - "All 51 claims in § 3 of the spec — the children carry them in slices, and
+  - "All 52 claims in § 3 of the spec — the children carry them in slices, and
     no claim is delivered twice. Which child takes which claims is each
     child's own `claims:` list, indexed in the specification's `## Tasks`."
   - "§ 9 Traceability Matrix has no Missing row once every child is done — that
@@ -105,7 +106,7 @@ acceptance_criteria:
 decisions:
   - "2026-10-04 — spec-author — the layering is cut into six children, one per
     component boundary, rather than one item per claim group. Rejected: a
-    single item for all 51 claims, which no review could judge against a diff."
+    single item for all 52 claims, which no review could judge against a diff."
   - "2026-10-04 — spec-author — the three layer-boundary claims (B-045 – B-047)
     are assigned to the child that makes each falsifiable rather than to a
     seventh item of their own: B-045 to 0004, B-046 to 0005, B-047 to 0007. A

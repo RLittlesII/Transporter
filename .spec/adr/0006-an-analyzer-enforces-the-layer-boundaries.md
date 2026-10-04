@@ -13,7 +13,8 @@ type: adr
 [ADR-0002](0002-contract-client-strategy-tracker.md) gives every layer one
 responsibility and one name, and a third of this Feature's claims exist to keep
 those layers apart. They are not claims about what the code computes; they are
-claims about what may *name* what:
+claims about its shape — what may *name* what, and what a declaration or a
+registration may look like:
 
 - B-004 — no domain type, cache, strategy or view can name the positional row.
 - B-045 — the envelope and the row are referenced only by the contract's
@@ -26,13 +27,23 @@ claims about what may *name* what:
   strategy, a client, a cache or the decorator.
 - B-006, B-007, B-037, B-048 — what the contract may name, how many classes may
   implement it and how, and what the per-type seam may not grow.
+- B-002, B-005 — what the envelope may declare, and how many methods the
+  contract may have.
+- B-008 — what the container may resolve.
+- B-010's second clause — what may produce the contract's double.
 
 [`aircraft-source.feature`](../../features/aircraft-source/.spec/aircraft-source.feature)
 phrases these as "when every reference to them is identified" and "no domain
-type, cache, strategy, tracker or view can name either". Eleven of the
-fifty-one claims are of this kind — a fifth of the specification, and the fifth
-that keeps the other four apart — which is why the mechanism that proves them
-is a decision rather than a detail.
+type, cache, strategy, tracker or view can name either". Fifteen of the
+fifty-two claims are of this kind — close to a third of the specification, and
+the third that holds the rest apart — which is why the mechanism that proves
+them is a decision rather than a detail.
+
+Four of those fifteen arrived late. B-002, B-005, B-008 and B-010's second
+clause were given xUnit tests when § 9 was written, read this record as
+covering only the ids it had listed, and were moved here after review rejected
+the tests as brittle
+([lesson 0006](../lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)).
 
 The constraint that forces the choice: **a reference lives in a method body,
 and reflection cannot see method bodies.** `System.Reflection` reaches

@@ -457,3 +457,11 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       | velocity            | 231.5  | 231.5  | metres per second  |
       | vertical rate       | -2.6   | -2.6   | metres per second  |
       | true track          | 287.4  | 287.4  | degrees from north |
+
+  @B-052
+  Scenario: The chain the application constructs is a chain that runs
+    Given every registration the application makes
+     When the container is built and the fleet tracker is resolved
+     Then it is returned with every dependency it needs already satisfied
+      And the source behind it is the swap decorator rather than a strategy
+      And no registration was added after the decoration that should have preceded it

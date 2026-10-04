@@ -25,6 +25,7 @@ claims:
   - B-044
   - B-047
   - B-051
+  - B-052
 
 created: "2026-10-04"
 updated: "2026-10-04"
@@ -44,6 +45,10 @@ summary: |
   draws that line, and it is the easiest line in this feature to cross by
   accident.
 
+  It is also the first point at which there is a whole chain to resolve, which
+  is why B-052 lands here rather than on the item that wrote the first
+  registration.
+
   Runs after 0005, which declares the interface it wraps.
 
 acceptance_criteria:
@@ -55,9 +60,21 @@ acceptance_criteria:
   - "B-047 — what nothing downstream may reference. Falsifiable once the
     wrapper exists to be downstream of."
   - "B-051 — stale is marked and kept, never removed."
+  - "B-052 — the constructed container resolves the tracker with every
+    dependency satisfied and the decorator in place."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-04 — the person — B-052 is added to § 3 and assigned here: the
+    container the application constructs resolves `IFleetTracker` with every
+    dependency satisfied and every decorator applied. It lands on this item
+    under the same rule as B-047 — the child that makes the claim falsifiable
+    — because no earlier item has a whole chain to resolve. Rejected: a
+    per-registration claim on `0002`, which would read `Verified` from the
+    first registration onward while later ones arrived uncovered. `risk` and
+    `rank` are unchanged: the claim names a hazard ADR-0003 already recorded
+    against `0006` rather than a new one, and this item's own two hazards
+    stand."
   - "2026-10-04 — the person — the observed instant reaches this item's clock
     through one object written by the integration and read here, recorded in
     ADR-0007. Rejected: a second member on `ITrackerSource`, which widens the

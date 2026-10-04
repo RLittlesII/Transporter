@@ -30,14 +30,18 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
-Fifty-one claims, in nine groups — one per component, plus the boundary rules:
+Fifty-two claims, in nine groups — one per component, plus the boundary rules:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
 types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029 and
 B-050** the snapshot client; **B-030 – B-032** the cache; **B-033 – B-037** the
-tracker source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044
-and B-051** the fleet tracker; **B-045 – B-047** the layer boundaries.
+tracker source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044,
+B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries.
 
-B-048 – B-051 are out of numeric order because they were added after the rest
+B-052 sits in the last group because the fleet tracker is what the container
+has to hand back, not because composition belongs to that component: it is the
+one claim about the chain rather than about a layer of it.
+
+B-048 – B-052 are out of numeric order because they were added after the rest
 were written. Ids are permanent, so they keep the numbers they were given rather
 than being slotted into the sequence.
 
@@ -57,6 +61,7 @@ than being slotted into the sequence.
 | B-049 | A contract layer SHALL exist only where the provider is request/response shaped; a push provider's strategy SHALL have none, and no contract SHALL be invented to give a socket one. The surface every strategy shares SHALL be `ITrackerSource` and nothing above it. | Decided call; see § 4 row 4                                |
 | B-050 | The polling interval SHALL be configurable and SHALL default to 15 seconds; the bounding box SHALL be configurable with no default compiled in.                                                                                                                      | Decided call; decisions/0001                               |
 | B-051 | A vehicle past the staleness threshold SHALL remain in the collection and SHALL be observably stale; it SHALL NOT be removed for staleness. The threshold SHALL be configurable and SHALL default to five minutes.                                                   | Decided call; dynamic-data-pipeline § "Staleness and expiry"          |
+| B-052 | The container the application constructs SHALL resolve `IFleetTracker` with every dependency satisfied and every decorator applied, so a chain that compiles and a chain that runs are the same thing.                                                              | Decided call; ADR-0003 § Consequences                                  |
 | B-011 | The snapshot SHALL have value equality over every member it carries, so two snapshots reporting identical values compare equal and the differ emits no change for them.                                                      | Decided call — the client diffs records                    |
 | B-012 | The snapshot SHALL carry `icao24` as a non-optional member and SHALL be keyed on it.                                                                                                                                        | README.md index 0 ("the cache key")                        |
 | B-013 | The snapshot SHALL carry the wire's values in the wire's units and SHALL perform no conversion, derivation or interpretation; it is the server's record with names on it.                                                     | Decided call; mapping § "Conversions are explicit, never implicit"         |
@@ -150,7 +155,7 @@ than being slotted into the sequence.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 6 -->
 
-One row per concern, not per claim. Fifty-one rows would be § 3 with a column
+One row per concern, not per claim. Fifty-two rows would be § 3 with a column
 bolted on, and a second copy of a claim drifts from the first; instead each row
 names in its Notes the claim ids it answers for, so coverage is checked by
 reading the ids down the column rather than by counting rows. The rows follow
@@ -174,7 +179,7 @@ why it was allowed.
 | The contract carries no version the provider never published | Technical | § 4 row 3 is the whole argument, and it is a reading of someone else's rule against this provider rather than a judgment anyone outside the code has a stake in. B-048. |
 | A contract layer only where the provider is request/response shaped | Technical | § 4 row 4. The temptation it resists — making the two strategies look alike — is a presentation concern, and it is the last row of this table rather than this one. B-049. |
 | The contract's double is hand-written, not generated | Both | § 4 row 18. Technically a narrow conflict between two documents whose scopes differ. The business reason it resolves toward the hand-written fake: § 2 need 2 makes the repository the takeaway, and a double that returns `default` teaches the reader that a passing test means something it does not. B-010. |
-| One contract implementation per transport | Both | § 4 row 20. The business reason is § 2 need 5 — replay exists so a talk survives a venue network, and for no technical reason at all. The technical consequence is that substitution happens at the deepest layer that exists, which keeps B-045 from widening and keeps one positional-row reader in the repository. B-007, B-008. |
+| One contract implementation per transport | Both | § 4 row 20. The business reason is § 2 need 5 — replay exists so a talk survives a venue network, and for no technical reason at all. The technical consequence is that substitution happens at the deepest layer that exists, which keeps B-045 from widening and keeps one positional-row reader in the repository. B-007, B-008. Registration is also the only place the layers meet, so whether the assembled chain resolves at all is decided there and nowhere else — B-052. |
 | The snapshot is the server's record, not an interpretation of it | Technical | `mapping` § "Conversions are explicit"; `domain-model` § "Never add". B-012, B-013, B-014. |
 | A full snapshot becoming a changeset has an address in the source | Both | § 1: this is the step the audience needs and every DynamicData sample skips, so the feature exists to give it a name. The technical answer — the writer owns the write, `dynamic-data-pipeline` — would be the same even if nobody were watching. B-015, B-023. |
 | The cache stores and does nothing else | Technical | Three negative claims and no product stake. `dynamic-data-pipeline`. B-030, B-031, B-032. |
@@ -536,7 +541,7 @@ seam. The clock itself is registered alongside the chain and injected into
 | --------- | ------- | ------- | -------------- |
 | DI seams | Pass | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and the hand-written fake (B-010) is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. | — |
 | Behavior isolation | Pass | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043). | — |
-| Coverage potential | **Qualified** | Thirty-four claims are about a computed value and are ordinary tests. Fifteen are about structure — what may *name* what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it *can* reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the fifteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Four of them briefly had tests over a declaration or a container and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
+| Coverage potential | **Qualified** | Thirty-five claims are about a computed value and are ordinary tests. Fifteen are about structure — what may *name* what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it *can* reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the fifteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Four of them briefly had tests over a declaration or a container and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
 | Fixtures | Pass | Every value is synthetic and committed beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array and the 17-versus-18 element cases are two files rather than two code paths. | — |
 | Determinism | Pass | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it. | — |
 
@@ -563,13 +568,13 @@ will not move when the tests and the analyzer arrive.
 **Scenarios**
 
 Full Gherkin lives in [`aircraft-source.feature`](aircraft-source.feature)
-beside this file — forty-nine scenarios, each tagged with the `@B-00n` it
+beside this file — fifty scenarios, each tagged with the `@B-00n` it
 proves. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
 - Happy path → B-001 – B-003, B-005, B-008, B-011, B-012, B-015, B-016,
   B-019, B-020, B-023 – B-025, B-027, B-030 – B-035, B-038, B-039, B-041,
-  B-042, B-050
+  B-042, B-050, B-052
 - Failure mode → B-010, B-022, B-026 – B-029, B-040, B-043, B-051
 - Validation failure → B-004, B-006, B-007, B-009, B-013, B-014, B-017,
   B-021, B-036, B-037, B-044 – B-049
@@ -599,7 +604,7 @@ row 17.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and fifty of the fifty-one rows read `Missing`.** One is
+**This is the gate, and fifty-one of the fifty-two rows read `Missing`.** One is
 `Verified`: `0002` built the contract, its envelope, the positional row's
 converter, the HTTP transport and the hand-written fake, and the test this
 section names against B-001 passes in a run. Every other row names what will
@@ -673,13 +678,14 @@ no test", not an omission.
 | B-049 | `@B-049` | **Review** — no push provider exists, so there is nothing to analyze and no type to load. An obligation on the Feature that adds the second provider. | Missing |
 | B-050 | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault` | Missing |
 | B-051 | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale` | Missing |
+| B-052 | `@B-052` | `TransponderContainerTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator` | Missing |
 
-Fifty-one rows, fifty-one claims, each appearing once. A scenario existing is
+Fifty-two rows, fifty-two claims, each appearing once. A scenario existing is
 not coverage; this section is the only place a claim's build state is written,
-and fifty of its rows still say the claim is not proven. Fifteen of those wait
-on a mechanism rather than on an item: until the analyzer ADR-0006 decides on
-exists, no claim about structure can leave `Missing`, so no item can reach
-`done`.
+and fifty-one of its rows still say the claim is not proven. Fifteen of those
+wait on a mechanism rather than on an item: until the analyzer ADR-0006
+decides on exists, no claim about structure can leave `Missing`, so no item
+can reach `done`.
 
 ## 10. Lessons / Spec Deltas
 
@@ -687,10 +693,10 @@ exists, no claim about structure can leave `Missing`, so no item can reach
 
 No Feature-scoped lesson yet. Five repository-wide lessons bear on this
 document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
-is why § 3 keeps no build state that § 9 owns, and why every one of § 9's
-fifty-one rows reads `Missing` rather than inheriting the template's example
-`Verified`: a gate reporting a pass that nothing verified is the one failure
-nothing downstream can detect. It is also why §§ 6-9 said in words that they
+is why § 3 keeps no build state that § 9 owns, and why a § 9 row reads
+`Missing` until something proves it rather than inheriting the template's
+example `Verified`: a gate reporting a pass that nothing verified is the one
+failure nothing downstream can detect. It is also why §§ 6-9 said in words that they
 were unwritten, for as long as they were.
 [Lesson 0003](../../../.spec/lessons/0003-a-dedupe-is-a-move-and-a-move-has-a-destination.md)
 came out of writing § 7, which needed a member list a dedupe had removed from
@@ -719,7 +725,7 @@ open still points at the question it meant.
 | #   | Question | Owner | Target date |
 | --- | -------- | ----- | ----------- |
 | 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. B-028's ban needs a *where* in the same pass: the claim forbids an exception outright, its scenario forbids one only at the subscriber, and [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) makes the contract throw — so the transport as built satisfies the scenario and contradicts the sentence. Blocks `0004`. | `spec-author` | Before `0004` starts |
-| 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eleven claims — B-004, B-006, B-007, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those eleven rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
+| 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for fifteen claims — B-002, B-004 – B-008, B-010, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those fifteen rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
 
 Everything else this specification opened has been answered and recorded. How
 the envelope's reported time reaches the clock `IFleetTracker` owns is
@@ -767,13 +773,13 @@ neither here nor in this Feature's `adr/`.
 
 | Item                                                     | Claims                                          |
 | -------------------------------------------------------- | ----------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)             | all 51 — the parent; its children hold the work |
+| [`0001`](../.issue/0001-aircraft-source.yml)             | all 52 — the parent; its children hold the work |
 | [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001 – B-010, B-048, B-049                     |
 | [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml) | B-011 – B-014, B-030 – B-032                    |
 | [`0004`](../.issue/0004-aircraft-snapshot-client.yml)    | B-015 – B-029, B-045, B-050                     |
 | [`0005`](../.issue/0005-aircraft-tracker-source.yml)     | B-033 – B-037, B-046                            |
 | [`0006`](../.issue/0006-source-swap-decorator.yml)       | B-038 – B-040                                   |
-| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-041 – B-044, B-047, B-051                     |
+| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-041 – B-044, B-047, B-051, B-052              |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. The three

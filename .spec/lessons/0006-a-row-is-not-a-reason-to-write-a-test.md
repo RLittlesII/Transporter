@@ -34,7 +34,7 @@ thing and looking at it is the same test in a costume.
 ## Root cause
 
 The matrix is written before the tests exist, and it gives every claim a row
-with a test name in it. Writing § 9 therefore asks fifty-one times "what is
+with a test name in it. Writing § 9 therefore asks, once per claim, "what is
 this claim's test called?", and for a claim about structure the only answer
 that fits the column is a test that reads the structure. The row produced the
 test.
@@ -70,10 +70,13 @@ analyzer, so fifteen rows now wait on it rather than eleven. `Verified` drops
 from five rows to one — B-001, the only claim proven by what the code does
 rather than by how it is declared or registered.
 
-Deleting B-008's test left nothing exercising `AddOpenSky` at runtime, and no
-§ 3 claim covers "the constructed chain resolves". That is a gap rather than
-an oversight: the claim that would close it is `spec-author`'s to write, and
-`0002` records it.
+Deleting B-008's test left nothing exercising `AddOpenSky` at runtime, because
+B-008 constrains the registration's shape and not its outcome. B-052 was
+written for the outcome — the container the application constructs resolves
+`IFleetTracker` with every decorator applied — and assigned to `0007`, where a
+whole chain first exists to resolve. Finding the gap is the better half of
+this lesson: moving a claim to the mechanism that fits it is what exposed that
+no claim covered the other thing at all.
 
 B-010 keeps its xUnit test for the half that *is* behaviour, the throw on an
 unset response, and reads `Missing` because the other half names a mechanism

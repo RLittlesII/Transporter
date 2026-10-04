@@ -131,11 +131,12 @@ decisions:
     registration shape checked by building the thing and looking at it.
     `Verified` drops from two rows to one. Rejected: keeping it as a test with
     no § 9 row, which is a test no claim asks for."
-  - "2026-10-04 — implementer — deleting that test leaves nothing exercising
-    `AddOpenSky` at runtime, and no § 3 claim covers whether the constructed
-    chain resolves. B-008 constrains the registration's shape, not its
-    outcome. Closing the gap needs a claim, which is `spec-author`'s; until
-    there is one, the first thing to wire the chain is `src/Gui` under `0004`."
+  - "2026-10-04 — implementer — deleting that test left nothing exercising
+    `AddOpenSky` at runtime, because B-008 constrains the registration's shape
+    and not its outcome. B-052 now covers the outcome and is `0007`'s, since
+    that is where a whole chain first exists to resolve. This item's
+    registration is therefore uncovered until `0007` lands, which § 9 reports
+    rather than hides."
 
 out_of_scope:
   - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."
