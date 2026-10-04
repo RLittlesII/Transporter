@@ -125,6 +125,17 @@ decisions:
     hand-written. Rejected: a substitute in its place, which returns `default`
     on an unset call — the hazard § Scoring recorded against this item — and
     which B-010 forbids outright."
+  - "2026-10-04 — the person — B-008 goes to the analyzer as well. Its test
+    resolved the contract from a built container and asserted that the
+    implementation type did not, which reads as behaviour but is a
+    registration shape checked by building the thing and looking at it.
+    `Verified` drops from two rows to one. Rejected: keeping it as a test with
+    no § 9 row, which is a test no claim asks for."
+  - "2026-10-04 — implementer — deleting that test leaves nothing exercising
+    `AddOpenSky` at runtime, and no § 3 claim covers whether the constructed
+    chain resolves. B-008 constrains the registration's shape, not its
+    outcome. Closing the gap needs a claim, which is `spec-author`'s; until
+    there is one, the first thing to wire the chain is `src/Gui` under `0004`."
 
 out_of_scope:
   - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."

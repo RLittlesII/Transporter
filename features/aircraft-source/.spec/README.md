@@ -536,7 +536,7 @@ seam. The clock itself is registered alongside the chain and injected into
 | --------- | ------- | ------- | -------------- |
 | DI seams | Pass | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and the hand-written fake (B-010) is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. | — |
 | Behavior isolation | Pass | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043). | — |
-| Coverage potential | **Qualified** | Thirty-five claims are about a computed value and are ordinary tests. Fourteen are about structure — what may *name* what, how many methods a contract may declare, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it *can* reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the fourteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Three of them briefly had reflection tests and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
+| Coverage potential | **Qualified** | Thirty-four claims are about a computed value and are ordinary tests. Fifteen are about structure — what may *name* what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it *can* reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the fifteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Four of them briefly had tests over a declaration or a container and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
 | Fixtures | Pass | Every value is synthetic and committed beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array and the 17-versus-18 element cases are two files rather than two code paths. | — |
 | Determinism | Pass | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it. | — |
 
@@ -599,14 +599,14 @@ row 17.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and forty-nine of the fifty-one rows read `Missing`.** Two
-are `Verified`: `0002` built the contract, its envelope, the positional row's
-converter, the HTTP transport and the hand-written fake, and the tests this
-section names against B-001 and B-008 pass in a run. Every other row names what
-will prove its claim and records that it does not. A row's Status becomes
-`Verified` when **every** mechanism it names passes in a run, which is why a row
-naming a test that passes and an analyzer that does not exist still reads
-`Missing` — B-010 and B-037 are both that shape.
+**This is the gate, and fifty of the fifty-one rows read `Missing`.** One is
+`Verified`: `0002` built the contract, its envelope, the positional row's
+converter, the HTTP transport and the hand-written fake, and the test this
+section names against B-001 passes in a run. Every other row names what will
+prove its claim and records that it does not. A row's Status becomes `Verified`
+when **every** mechanism it names passes in a run, which is why a row naming a
+test that passes and an analyzer that does not exist still reads `Missing` —
+B-010 and B-037 are both that shape.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Ten claims carry two
@@ -629,7 +629,7 @@ no test", not an omission.
 | B-005 | `@B-005` | analyzer — `BoundaryAnalyzerTests.GivenAContractMethodThatIsNotOnePerEndpointOrDoesNotTakeCancellationLast_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-006 | `@B-006` | analyzer — `BoundaryAnalyzerTests.GivenAContractNamingAnObservableCacheBoxIntervalOrCredential_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-007 | `@B-007` | analyzer — `BoundaryAnalyzerTests.GivenASecondImplementationForOneTransportOrAPublicEndpointMethod_WhenAnalyzed_ThenItIsReported` | Missing |
-| B-008 | `@B-008` | `OpenSkyRegistrationTests.GivenTheConstructedChain_WhenTheContractIsResolved_ThenItsOwnImplementationArrivesAndNoImplementationTypeResolves` | Verified |
+| B-008 | `@B-008` | analyzer — `BoundaryAnalyzerTests.GivenAnImplementationTypeRegisteredOrResolvedOrASecondAliasForTheContract_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-009 | `@B-009` | **Review** — the precondition cannot be arranged: OpenSky has published no version. An obligation on the change that adds a versioned interface. | Missing |
 | B-010 | `@B-010` | `OpenSkyApiFakeTests.GivenAFakeWithNoResponseConfigured_WhenTheEndpointIsCalled_ThenItThrowsNamingTheUnsetResponse`; the mocking-framework half is analyzer — `BoundaryAnalyzerTests.GivenTheContractsDoubleProducedByAMockingFramework_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-011 | `@B-011` | `AircraftSnapshotTests.GivenTwoSnapshotsReportingIdenticalValues_WhenCompared_ThenTheyAreEqual` | Missing |
@@ -676,9 +676,9 @@ no test", not an omission.
 
 Fifty-one rows, fifty-one claims, each appearing once. A scenario existing is
 not coverage; this section is the only place a claim's build state is written,
-and forty-nine of its rows still say the claim is not proven. Fourteen of those
-wait on a mechanism rather than on an item: until the analyzer ADR-0006 decides
-on exists, no claim about structure can leave `Missing`, so no item can reach
+and fifty of its rows still say the claim is not proven. Fifteen of those wait
+on a mechanism rather than on an item: until the analyzer ADR-0006 decides on
+exists, no claim about structure can leave `Missing`, so no item can reach
 `done`.
 
 ## 10. Lessons / Spec Deltas
