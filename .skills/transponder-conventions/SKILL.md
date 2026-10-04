@@ -35,16 +35,16 @@ it. The traps:
 - **Interfaces** — `I`-prefixed. An abstract base class is not an interface and
   takes no prefix.
 - **Private fields** — `_camelCase`, at warning severity.
-- **No `Async` suffix on a method** (`AGENTS.md`). The return type says whether
-  it is asynchronous. This one catches everyone arriving from another .NET
+- **No `Async` suffix on a method.** The return type says whether it is
+  asynchronous. This one catches everyone arriving from another .NET
   codebase: `Refresh()`, not `RefreshAsync()`.
 - `csharp_preferred_modifier_order` is explicit and ends with `async`.
 - Braces on their own line, and before `else`, `catch`, `finally`. `System`
   using directives sort first.
 - Private fields sit at the **bottom** of the type in existing code. Follow it
   for consistency; it is a style choice, not a rule the build checks.
-- `CA2007` is excluded for async-void methods — read `AGENTS.md` before adding a
-  suppression of your own.
+- `CA2007` is excluded for async-void methods. A suppression of your own needs
+  a reason written beside it, not a second blanket exclusion.
 
 ### Project structure
 
@@ -75,9 +75,18 @@ All versions live in
 ### Generated files and guards
 
 - [`format.json`](../../format.json) and
-  [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) are generated —
-  see [`nuke-build`](../nuke-build/SKILL.md) for how the workflow is
-  regenerated. Mapperly's mappers are generated too
+  [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) are generated.
+  **Never hand-edit either** — the next regeneration discards the edit. The
+  workflow is regenerated deliberately, because `AutoGenerate` is off:
+
+  ```
+  ./build.sh --generate-configuration GitHubActions_ci --host GitHubActions
+  ```
+
+  Change the attribute, regenerate, and commit `.build/Build.cs` and `ci.yml`
+  together. [`nuke-build`](../nuke-build/SKILL.md) has the traps — what
+  regeneration also rewrites, and why a negative-only path filter kills the
+  workflow. Mapperly's mappers are generated too
   ([`mapping`](../mapping/SKILL.md)).
 - `obj/` and `bin/` are build output and never appear in a diff.
 
@@ -85,7 +94,7 @@ All versions live in
 
 - Every tracked markdown file opens with YAML frontmatter `title`,
   `description`, `type`, where `type` is one of `adr`, `spec`, `decision`,
-  `guide`, `readme`, `lesson`, `instructions`, `template` (`AGENTS.md`).
+  `guide`, `readme`, `lesson`, `instructions`, `template`.
 - **Skills and agent files declare `name` and `description` only**, with the
   type derived from the path. No `permalink` and no `metadata` block — a skill
   carrying either was copied from another repository.
@@ -160,7 +169,7 @@ enforced by review: say which claim ids survive, in the pull request body.
 - **xUnit**, in [`test/UnitTests`](../../test/UnitTests); `Xunit` is a global
   using in the project file. For xUnit's own attributes and fixtures, see
   [xunit.net](https://xunit.net).
-- **`GivenX_WhenY_ThenZ` method names** (`AGENTS.md`), with
+- **`GivenX_WhenY_ThenZ` method names**, with
   `// Given` / `// When` / `// Then` comments separating the phases inside.
 - **AwesomeAssertions** for assertions, **NSubstitute** for test doubles,
   `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything HTTP
@@ -173,7 +182,7 @@ enforced by review: say which claim ids survive, in the pull request body.
   runner, no bindings and no step definitions, so no `@ignore` tag and nothing
   else implying the scenarios run.
 - Fixtures are synthetic: invented callsigns, MMSIs, positions and countries
-  (`AGENTS.md`), committed as JSON beside the tests that use them.
+  committed as JSON beside the tests that use them.
 
 ---
 
