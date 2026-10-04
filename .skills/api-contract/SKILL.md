@@ -29,12 +29,14 @@ each of these is separate.
 
 // 2. The API contract — one method per endpoint. Task<T>, CancellationToken last.
 //    No IObservable, cache, changeset, bounding box, interval or credential on it.
+//    No version suffix: OpenSky publishes no version to be agnostic about.
 public interface IOpenSkyApiContract
 {
     Task<StatesResponse> GetAllStates(
         BoundingBox box, bool extended, CancellationToken cancellationToken);
 }
 // Exactly one internal sealed class implements it, explicitly, with nothing public.
+// Lives in src/Transponder/Integrations/OpenSky/, never under Features/.
 
 // 3. The snapshot — the server's record with names on it. Value equality over
 //    every member; keyed on icao24; converts, derives and interprets nothing.
@@ -103,8 +105,11 @@ Network"; the consequences are here.
 - **OpenSky publishes no API version either** — there is no `/v1/` in the path.
   The versioned-contract pattern's rule is that a suffix matches the
   *provider's* major version, so an invented `V1` would be the internal version
-  number that rule forbids. Unresolved; see the aircraft-source specification
-  § 11.
+  number that rule forbids. **So the contract carries no suffix and has no
+  marker above it.** The marker-and-versioned split arrives the day OpenSky
+  declares a version — there is nothing to be version-agnostic about until then,
+  and a split with one member on each side buys nothing. A provider that *does*
+  version gets the full pattern from its first line of code.
 - **`states` is an array of arrays.** Fields are positional, not named, so the
   rows are read by index in the client, and the index→field table is the
   contract. Read positions by index against that table; never by guessing from

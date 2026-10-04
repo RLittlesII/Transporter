@@ -52,6 +52,7 @@ When a bug fix reveals a specification gap, a lesson document in the Feature's `
 - Explicit modifier order, `async` last; `CA2007` async-void methods are excluded
 - Methods do not carry an `Async` suffix; return types indicate asynchronicity
 - Feature code lives under `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}` — follow this layout for new features
+- Integration code does **not** live under `Features/`. A provider's API contract, its implementation, and the client and cache above it go under `src/Transponder/Integrations/<Provider>/{Contracts,Http,Container}` — they belong to the provider, not to one feature, and two features can want the same provider
 - Use xUnit (`test/UnitTests`) with `GivenX_WhenY_ThenZ` test names, AwesomeAssertions for assertions, and NSubstitute for test doubles. AwesomeAssertions is not yet in `Directory.Packages.props`; the first issue that writes a test adds it
 - Use Mermaid for diagrams, synthetic data in tests
 - Never hand-edit generated files (`format.json`, the Nuke-generated `.github/workflows/ci.yml`). The `[GitHubActions]` attribute currently sets `AutoGenerate = false`, so the workflow is regenerated deliberately (`nuke --generate-configuration GitHubActions_ci --host GitHubActions`), never by a build

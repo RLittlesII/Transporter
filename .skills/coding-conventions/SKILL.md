@@ -44,9 +44,16 @@ disagree, `.editorconfig` wins — it is the one the compiler reads.
 - Feature code lives under
   `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}`. The existing
   `Features/Demo` pair is the template.
-- `src/Transponder` is the model and feature logic; `src/Gui` is the MAUI
-  host, pages and container wiring; `test/UnitTests` is the test project
-  (root namespace `Transponder.UnitTests`).
+- **Integration code does not live under `Features/`.** A provider's API
+  contract, its implementation and the client and cache above it belong to that
+  provider, not to one feature, and two features can want the same provider.
+  They go under `src/Transponder/Integrations/<Provider>/`, split
+  `Contracts/` (the interface callers name), `Http/` (the one `internal sealed`
+  implementation) and `Container/` (its registration). Nothing in `Features/`
+  may hold a contract, a wire type or a cache.
+- `src/Transponder` is the model, the feature logic and the integrations;
+  `src/Gui` is the MAUI host, pages and container wiring; `test/UnitTests` is
+  the test project (root namespace `Transponder.UnitTests`).
 - Container wiring extends the existing builder blocks —
   [`AkkaHostBuilder`](../../src/Gui/Container/AkkaHostBuilder.cs) and
   [`UserInterfaceBuilder`](../../src/Gui/Container/UserInterfaceBuilder.cs),

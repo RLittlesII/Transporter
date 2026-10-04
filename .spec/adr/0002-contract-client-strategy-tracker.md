@@ -89,8 +89,24 @@ Each component has one responsibility.
    anywhere on it. Exactly one `internal sealed` class implements it, with
    explicit interface implementation on every method and nothing public; DI
    aliases the contract to that instance and the class is not resolvable from
-   outside. A new provider version is a new interface, never an edit. Its test
-   double is a hand-written fake that throws naming the unset response.
+   outside. Its test double is a hand-written fake that throws naming the unset
+   response.
+
+   **No version suffix, and no marker interface above it.** The pattern's rule
+   is that a suffix matches the *provider's* major version, and OpenSky
+   publishes none — there is no `/v1/` in its path — so an invented `V1` would
+   be exactly the internal version number the rule forbids. A marker exists to
+   make domain code version-agnostic; with no version to be agnostic about, a
+   split with one member on each side buys nothing and costs a cast at every
+   call site. The versioned layer is introduced the day OpenSky declares a
+   version, and a provider that *does* version gets the full pattern from its
+   first line of code.
+
+   It lives under `src/Transponder/Integrations/OpenSky/`, split
+   `Contracts/`, `Http/` and `Container/` — **not** under `Features/`. A
+   provider's code belongs to the provider, not to one feature, and two
+   features can want the same provider. `AGENTS.md` governs feature layout and
+   was silent on integrations; it gains that line in this change.
 3. **The snapshot** — a named record: the server's values with names on them.
    Value equality over every member, keyed on `icao24`, converting and deriving
    nothing, and carrying no staleness flag or display label.
@@ -173,10 +189,16 @@ is **not** in this record. Those are claims, in § 3 of
   `Directory.Packages.props`: DynamicData for the caches and the pipeline, and
   whatever registers the decorator. Whether that second one warrants a package
   or a hand-written registration is an open question on the specification.
-- **Five questions are left open rather than answered**, and two of them block
-  the first file: what carries the contract's version when OpenSky publishes
-  none, and where integration code lives when the pattern's namespace layout
-  and `AGENTS.md`'s feature-folder layout disagree.
+- **Five questions are left open**, and none of them blocks the first file: the
+  bounding box and interval, what the audience sees on a swap, whether a stale
+  item is marked or expired, whether the vessel path earns four types of its
+  own, and whether the decorator warrants a decoration package. The two that
+  *did* block it — the version suffix and the integration layout — are settled
+  above.
+- **`AGENTS.md` gains a rule rather than losing an argument.** It governs
+  feature layout and said nothing about integrations, so there was no conflict
+  to resolve — only a gap, now filled in the same change as the specification
+  that needed it.
 - **The talk now has seven boxes, which is more than a slide wants.** What the
   audience is shown and what the repository contains are no longer the same
   diagram, and that is a presentation decision rather than a design one.

@@ -269,12 +269,21 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And every one of its contract methods is implemented explicitly
       And it exposes no public method for any endpoint
 
-  @B-009
-  Scenario: A new provider version adds an interface rather than editing one
-    Given a contract that an implementing class already satisfies
-     When the provider publishes a new API version
-     Then a new contract interface is added for it
+  @B-048
+  Scenario: The contract carries no version the provider never published
+    Given OpenSky publishes no API version and there is no version in its path
+     When the contract is named
+     Then it carries no version suffix
+      And there is no marker interface above it
+      And nothing in the code names a version OpenSky did not declare
+
+  @B-009 @B-048
+  Scenario: The provider publishing a version is what introduces the versioned layer
+    Given a contract with no version suffix that an implementing class satisfies
+     When OpenSky publishes an API version for the first time
+     Then a versioned contract interface is added for it
       And the existing contract interface is left unedited
+      And from then on a further provider version adds a further interface
 
   @B-013
   Scenario: A snapshot carries the reported values and interprets none of them
