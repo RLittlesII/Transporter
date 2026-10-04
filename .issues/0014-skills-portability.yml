@@ -51,6 +51,9 @@ decisions:
   - "2026-10-04 — rlittlesii: hybrid split rather than a companion per skill. Rejected a full two-tier mirror of the reference repository: it doubles the file count for nineteen skills, and only the five method skills have enough project specifics to be worth separating."
   - "2026-10-04 — rlittlesii: business-content skills move into the specification and are deleted, rather than kept with their narrative stripped."
   - "2026-10-04 — rlittlesii: point-in-time status notes come out. A skill states the rule; current state is read from the repository."
+  - "2026-10-04 — claude: three skills were folded rather than rewritten, and a specification Source cell naming one of them is left standing as provenance from the day its claim was written. Rejected rewriting ~20 Source cells across two Feature specs to name the new home: those cells are § 3 and § 4 content owned by spec-author, and renaming the origin of a claim falsifies where it came from. Root lesson 0001 carries the lookup table instead."
+  - "2026-10-04 — claude: filed as type task, not chore. .spec/templates/item.yml's enum is epic | feature | task | test | bug | spike, so `chore` is not an available value even though AGENTS.md and the skills use the word."
+  - "2026-10-04 — claude: no pull request exists. The repository has no remote configured, so the branch 0014/skills-portability cannot be pushed and steps 3-9 of deliver-change cannot run. The item stays in-progress until the branch lands."
 
 out_of_scope:
   - "Any change to source, tests, the build or CI. This is documentation only."
