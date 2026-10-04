@@ -46,7 +46,7 @@ renumbered into the groups they belong to — ids here are permanent; and
 Claim ids are per-Feature, per spec-and-traceability § "Claim IDs are
 `B-00n`". `B-001` here and `B-001` in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) are different
-claims: an `.issues/` item names its spec, and its `claims:` ids resolve
+claims: an `.issue/` item names its spec, and its `claims:` ids resolve
 against that spec.
 
 | ID    | Claim                                                                                                                                                                                                                                      | Source                                                        | Status |
@@ -299,16 +299,17 @@ this specification rather than a call made and reversed inside it.
 
 <!-- Owner: spec-author. The items cut from § 3 once the claims exist. Ids
      only — never restated titles, or the two records disagree. "None yet."
-     is valid while the spec is still being agreed. -->
+     is valid while the spec is still being agreed. The items are in .issue/
+     beside this file, so each id links to its own file. -->
 
-| Item   | Claims                                                    |
-| ------ | --------------------------------------------------------- |
-| `0008` | all 27 — the parent; its children hold the work            |
-| `0009` | B-001 – B-006                                             |
-| `0010` | B-007, B-008, B-011, B-012, B-014, B-027                   |
-| `0011` | B-009, B-010, B-013, B-022                                |
-| `0012` | B-015 – B-018, B-024 – B-026                              |
-| `0013` | B-019 – B-021, B-023                                      |
+| Item                                                  | Claims                                                    |
+| ----------------------------------------------------- | --------------------------------------------------------- |
+| [`0008`](../.issue/0008-replay-source.yml)            | all 27 — the parent; its children hold the work           |
+| [`0009`](../.issue/0009-recording-tap.yml)            | B-001 – B-006                                             |
+| [`0010`](../.issue/0010-playback-pacer.yml)           | B-007, B-008, B-011, B-012, B-014, B-027                  |
+| [`0011`](../.issue/0011-aircraft-replay-contract.yml) | B-009, B-010, B-013, B-022                                |
+| [`0012`](../.issue/0012-replay-selection.yml)         | B-015 – B-018, B-024 – B-026                              |
+| [`0013`](../.issue/0013-vessel-replay-strategy.yml)   | B-019 – B-021, B-023                                      |
 
 Every claim is carried by exactly one child, and `0008` carries all of them
 because the children are slices of it rather than work beside it. The cut
@@ -338,7 +339,7 @@ invariant above holds across all 27 again.
 ## Scoring
 
 <!-- Owner: spec-author, recording the item's value and risk when they change.
-     The authoritative values live in the .issues/ item. -->
+     The authoritative values live in the .issue/ item. -->
 
 | Date       | Field        | From | To | Rationale                                                                                                                                                              |
 | ---------- | ------------ | ---- | -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

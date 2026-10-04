@@ -300,17 +300,18 @@ neither here nor in this Feature's `adr/`.
 
 <!-- Owner: spec-author. The items cut from § 3 once the claims exist. Ids
      only — never restated titles, or the two records disagree. "None yet."
-     is valid while the spec is still being agreed. -->
+     is valid while the spec is still being agreed. The items are in .issue/
+     beside this file, so each id links to its own file. -->
 
-| Item   | Claims                                          |
-| ------ | ----------------------------------------------- |
-| `0001` | all 51 — the parent; its children hold the work  |
-| `0002` | B-001 – B-010, B-048, B-049                      |
-| `0003` | B-011 – B-014, B-030 – B-032                     |
-| `0004` | B-015 – B-029, B-045, B-050                      |
-| `0005` | B-033 – B-037, B-046                             |
-| `0006` | B-038 – B-040                                    |
-| `0007` | B-041 – B-044, B-047, B-051                      |
+| Item                                                     | Claims                                          |
+| -------------------------------------------------------- | ----------------------------------------------- |
+| [`0001`](../.issue/0001-aircraft-source.yml)             | all 51 — the parent; its children hold the work |
+| [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001 – B-010, B-048, B-049                     |
+| [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml) | B-011 – B-014, B-030 – B-032                    |
+| [`0004`](../.issue/0004-aircraft-snapshot-client.yml)    | B-015 – B-029, B-045, B-050                     |
+| [`0005`](../.issue/0005-aircraft-tracker-source.yml)     | B-033 – B-037, B-046                            |
+| [`0006`](../.issue/0006-source-swap-decorator.yml)       | B-038 – B-040                                   |
+| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-041 – B-044, B-047, B-051                     |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. The three
@@ -325,7 +326,7 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 ## Scoring
 
 <!-- Owner: spec-author, recording the item's value and risk when they change.
-     The authoritative values live in the .issues/ item. -->
+     The authoritative values live in the .issue/ item. -->
 
 | Date       | Field         | From | To | Rationale                                                                                                                                                 |
 | ---------- | ------------- | ---- | -- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
