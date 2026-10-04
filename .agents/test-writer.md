@@ -14,7 +14,7 @@ Turn a claim into a test that fails for the right reason. Never make it pass.
 Sections **8 Testing Strategy** and **9 Traceability Matrix** of the Feature's
 `.spec/README.md`, and the tests in [`test/UnitTests`](../test/UnitTests).
 Nothing else — the full table is in
-[`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md).
+[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
 
 ## Read first
 

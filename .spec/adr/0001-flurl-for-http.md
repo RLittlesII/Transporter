@@ -63,7 +63,7 @@ Use `Flurl.Http` for the polled source. Verified before adopting it:
 - `HttpTest` fakes responses and asserts URL, verb, query parameters, headers
   and call count.
 
-Usage rules are in [`http-client`](../../.skills/http-client/SKILL.md).
+Usage rules are in [`flurl-http-client`](../../.skills/flurl-http-client/SKILL.md).
 
 ## Consequences
 

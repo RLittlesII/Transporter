@@ -13,7 +13,7 @@ Make a red test green. The cited claims are the whole brief.
 
 Sections **6 Concern Separation** and **7 Technical Design** of the Feature's
 `.spec/README.md`, and the production code. Nothing else — the full table is in
-[`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md).
+[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
 
 **§ 7 is a compromise.** There is no separate architect role here and § 7 must
 have exactly one owner, so it sits with the role that writes the code. A design
@@ -38,14 +38,14 @@ request. Settling one quietly is the failure this note exists to prevent.
   [`coding-conventions`](../.skills/coding-conventions/SKILL.md) — naming, the
   no-`Async`-suffix rule, feature folders, central package versions.
 - The focused skill for every surface touched:
-  [`transponder-domain-model`](../.skills/transponder-domain-model/SKILL.md),
+  [`domain-model`](../.skills/domain-model/SKILL.md),
   [`api-contract`](../.skills/api-contract/SKILL.md),
   [`dynamic-data-pipeline`](../.skills/dynamic-data-pipeline/SKILL.md),
   [`akka-actor`](../.skills/akka-actor/SKILL.md),
   [`mvvm`](../.skills/mvvm/SKILL.md),
   [`mapping`](../.skills/mapping/SKILL.md),
   [`hot-swap-source`](../.skills/hot-swap-source/SKILL.md),
-  [`build-maui-ui`](../.skills/build-maui-ui/SKILL.md).
+  [`maui-ui`](../.skills/maui-ui/SKILL.md).
 
 ## Produce
 

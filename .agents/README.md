@@ -40,7 +40,7 @@ having: no stage has to reconstruct the reasoning of the stage before.
 Section numbers are the twelve sections of a Feature's `.spec/README.md`, whose
 blank is [`.spec/templates/feature.md`](../.spec/templates/feature.md). **The
 authoritative ownership table — including § 10, § 11 and Decisions — lives in
-[`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md)**, in one
+[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md)**, in one
 place, so it has nowhere to drift from. A role writes only its own sections;
 filling in someone else's is a boundary violation, not a favour.
 
@@ -55,7 +55,8 @@ milestones are not part of this workflow.
 
 `status: in-progress` on an item is the only signal it is taken. The schema,
 the status enum, and the authority split are in
-[`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md); the
+[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md), under the model
+[`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md) describes; the
 mechanics of claiming an item and publishing the work are in
 [`deliver-change`](../.skills/deliver-change/SKILL.md).
 

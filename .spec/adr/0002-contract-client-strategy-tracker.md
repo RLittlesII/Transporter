@@ -35,7 +35,7 @@ interface cannot carry that much, and the specific failures are three.
   its own dispatcher.
 
 Two further constraints bound the answer.
-[`transponder-domain-model`](../../.skills/transponder-domain-model/SKILL.md)
+[`domain-model`](../../.skills/domain-model/SKILL.md)
 forbids DynamicData types on the model, so neither a cache nor a projection can
 live inside it. And
 [`hot-swap-source`](../../.skills/hot-swap-source/SKILL.md) requires the

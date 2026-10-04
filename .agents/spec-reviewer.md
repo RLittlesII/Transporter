@@ -13,7 +13,7 @@ Ask one question: **does this satisfy the claims it cites, and nothing else?**
 
 Section **12 Sign-off** of the Feature's `.spec/README.md`. Authors no other
 section — findings go back to the role that owns the artifact. The full table
-is in [`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md).
+is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
 
 ## Read first
 
@@ -52,7 +52,7 @@ is in [`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md).
     delivery status written onto the spec, which belongs in the `.issues/` item.
 11. **The swap test**, for anything touching the UI or the seam: would
     flipping planes to ships need a view edit? If so the view knows too much
-    ([`build-maui-ui`](../.skills/build-maui-ui/SKILL.md)).
+    ([`maui-ui`](../.skills/maui-ui/SKILL.md)).
 
 ## Report
 

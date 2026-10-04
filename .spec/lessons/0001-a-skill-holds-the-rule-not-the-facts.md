@@ -56,6 +56,18 @@ for the facts. Skills are now one of three kinds — method, technology, or the
 project companion — and the facts that were in them are read from `README.md`,
 a feature specification, a decision record, or a library's own documentation.
 
+**Three skills were folded rather than rewritten**, because everything in them
+was already authoritative elsewhere. A specification's Source cell naming one of
+them is provenance from the day the claim was written, and is left standing
+rather than rewritten to name a file that did not then exist; this is where to
+look it up:
+
+| Folded skill | Its content now |
+|---|---|
+| `run-the-demo` | [`docs/runbook.md`](../../docs/runbook.md), plus `README.md` §§ "Limits", "Gotchas", "Demo resilience" |
+| `api-mock` | [`features/replay-source`](../../features/replay-source/.spec/README.md) and [ADR-0004](../adr/0004-ndjson-recording-format.md); its test rules in `test-from-scenarios` |
+| `ais-stream` | `README.md` § "Closing act"; the push-provider rules in `api-contract` and `akka-actor` |
+
 This lesson also establishes that **lessons split by blast radius exactly as
 decision records do**: one that binds every feature lives here, in the root
 `.spec/lessons/`, numbered repository-wide from `0001`; one scoped to a feature

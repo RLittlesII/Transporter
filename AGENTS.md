@@ -4,7 +4,7 @@ This document establishes development practices for the Transponder repository, 
 
 ## Core Principles
 
-**Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` (see the `specification` skill and `.skills/spec-and-traceability`). When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
+**Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` (see the `specification` skill, `.skills/spec-and-traceability` for the model and `.skills/transponder-conventions` for this repository's layout). When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
 
 **Specification-Driven Chain**: Development follows an artifact progression from specification (§§ 1-5 of the Feature's `.spec/README.md`) → claim (§ 3) → scenario (its `.feature` file) → work item (`.issues/<id>.yml`) → xUnit test → implementation. **The specification comes first and stands alone** — it needs no work item to exist, because it is the agreement that items are later cut from. The item sits where *delivery* begins, not where the thinking begins; a bug, spike or chore starts there instead, and may produce a spec delta afterwards. Every stage must be traceable through § 9 Traceability Matrix, and none can be skipped without documented exemption. Scenarios are documentation — there is no Gherkin runner in this repository; the tests in `test/UnitTests` are what execute.
 
@@ -28,7 +28,7 @@ Four roles own the specification chain, declared under `.agents/` (see `.agents/
 - **implementer** (`.agents/implementer.md`): §§ 6-7, and the production code
 - **spec-reviewer** (`.agents/spec-reviewer.md`): § 12, judging diffs against cited claims
 
-Each role trusts only the artifact from the preceding role. The authoritative ownership table — including §§ 10-11 and Decisions — lives in `.skills/spec-and-traceability/SKILL.md`. These files are documented contracts for whoever takes the role, a person or an agent; this repository ships no loadable agents, since the directory is `.agents/`, not `.claude/agents/`.
+Each role trusts only the artifact from the preceding role. The authoritative ownership table — including §§ 10-11 and Decisions — lives in `.skills/transponder-conventions/SKILL.md`. These files are documented contracts for whoever takes the role, a person or an agent; this repository ships no loadable agents, since the directory is `.agents/`, not `.claude/agents/`.
 
 ## Lessons and Bug Fixes
 
@@ -37,7 +37,7 @@ When a bug fix reveals a specification gap, a lesson document in the Feature's `
 ## Delivery Workflow
 
 - **A Feature begins with its specification**, authored with no work item; items are cut from its § 3 claims afterwards. A bug, spike or chore begins with an item outright
-- **Delivery is tracked locally.** Every change is *delivered* through a `.issues/<id>-<slug>.yml` item, which stands in for a GitHub issue. There are no issues, labels or milestones in this workflow; the schema and status enum are in `.skills/spec-and-traceability/SKILL.md`
+- **Delivery is tracked locally.** Every change is *delivered* through a `.issues/<id>-<slug>.yml` item, which stands in for a GitHub issue. There are no issues, labels or milestones in this workflow; the schema and status enum are in `.skills/transponder-conventions/SKILL.md`
 - `status: in-progress` is the only signal an item is taken — set it before the worktree, the branch, or the first edit, and never pick up an item that already carries it
 - A closed item stays, with `status: done` and a `closed:` date
 - Rebase onto fresh `origin/main` before committing (not just before pushing)
@@ -74,28 +74,45 @@ A knowledge graph can live at `graphify-out/`. **When `graphify-out/graph.json` 
 
 ## Skills Reference
 
-**Project skills live in `.skills/`**, one directory per skill, each a `SKILL.md` declaring `name` and `description`:
+**Project skills live in `.skills/`**, one directory per skill, each a `SKILL.md` declaring `name` and `description`. A skill holds the rule, the trap and the `Never add` list; facts live where they are authoritative and the skill links them (`coding-conventions` § "Skills", [lesson 0001](.spec/lessons/0001-a-skill-holds-the-rule-not-the-facts.md)).
+
+Skills come in three kinds, and a skill is never a mixture of them.
+
+**Method** — portable to another repository; names no path, command or provider. Each one's **Project rules** preamble points at the companion:
 
 | Skill | Covers |
 | --- | --- |
-| `transponder-domain-model` | `TransportVehicle` and its subclasses, units, optional values |
-| `api-contract` | the snapshot seam, the OpenSky facts, credits, credentials |
-| `http-client` | satisfying the contracts with Flurl: URLs, tokens, rate limits, `HttpTest` |
-| `ais-stream` | the AISStream vessel feed (stretch goal) |
-| `api-mock` | record, replay, and simulated sources |
-| `dynamic-data-pipeline` | `EditDiff` through `Bind`, staleness and expiry |
-| `hot-swap-source` | swapping the live source mid-demo |
-| `akka-actor` | actor shape, registration, supervision |
-| `mapping` | Mapperly at the wire boundary |
-| `language-ext-usage` | `Option`/`Either`, and where they stop |
-| `build-maui-ui` | C# markup, binding surface, the swap test |
-| `mvvm` | thin view models: user input in, actor message out, projection back |
-| `coding-conventions` | naming, layout, central packages |
-| `test-from-scenarios` | xUnit, injected schedulers, synthetic fixtures |
-| `spec-and-traceability` | where a specification lives, `B-00n` claims |
-| `deliver-change` | issue → worktree → PR → checks |
-| `clarify-requirements` | when to ask versus decide |
-| `nuke-build` | targets, CI, generated files |
-| `run-the-demo` | stage-day runbook |
+| `deliver-change` | item → worktree → specification → pull request → checks |
+| `coding-conventions` | orient, stop on a gap, keep the design direct, put a rule where it runs, what a skill is for |
+| `test-from-scenarios` | a claim first, an injected clock, synthetic fixtures, an assertion that can fail |
+| `clarify-requirements` | when to ask versus decide, and writing the answer back |
+| `spec-and-traceability` | the specification model: two records, one authority each; claims and blast radius |
 
-Each skill covers this repository's usage and links the library's own documentation for the rest. Read the skills a role names before acting in that role.
+**Companion** — the only skill that names this repository:
+
+| Skill | Covers |
+| --- | --- |
+| `transponder-conventions` | paths, layout, `.editorconfig` traps, central packages, the `.issues/` tracker, the build and test commands, the `B-00n` scheme, the twelve sections and who owns each |
+
+**Technology** — about a library or tool, and silent about the product:
+
+| Skill | Covers |
+| --- | --- |
+| `flurl-http-client` | the client cache, URL building, keeping the response, 429 as data, tokens, `HttpTest` |
+| `dynamic-data-pipeline` | `EditDiff` in the client through `Bind`, staleness and expiry |
+| `akka-actor` | actor shape, registration, supervision, what an actor is for |
+| `mapping` | Mapperly at one boundary; conversions and derived values stay explicit |
+| `language-ext-usage` | `Option`/`Either`, and where they stop |
+| `mvvm` | thin view models: user input in, actor message out, projection back |
+| `maui-ui` | C# markup, the binding surface, the swap test |
+| `nuke-build` | targets, the CI path-filter trap, regenerating the workflow |
+
+**Architecture** — this system's shape, with the reasoning in an ADR:
+
+| Skill | Covers |
+| --- | --- |
+| `api-contract` | the components between a provider and the domain, and which responsibility each owns ([ADR-0002](.spec/adr/0002-contract-client-strategy-tracker.md)) |
+| `hot-swap-source` | the swap decorator, disposal discipline, what must not be rebuilt ([ADR-0003](.spec/adr/0003-scrutor-for-decorator-registration.md)) |
+| `domain-model` | the abstract base, units, optional values ([ADR-0005](.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)) |
+
+Read the method skill your work belongs to **and** `transponder-conventions`, plus the skills a role names before acting in that role. The stage-day runbook is [`docs/runbook.md`](docs/runbook.md), not a skill — it is operational, not a rule.
