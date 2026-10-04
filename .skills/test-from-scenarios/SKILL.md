@@ -1,107 +1,105 @@
 ---
 name: test-from-scenarios
-description: Turn a specification claim into a failing xUnit test in test/UnitTests — GivenX_WhenY_ThenZ naming, synthetic data, injected schedulers for every time-based operator, and no network. Use when writing or reviewing tests.
+description: Turn a specification claim into a test that fails for the right reason — synthetic fixtures, an injected clock, no network, and an assertion that can actually fail. Use when writing or reviewing tests.
 ---
 
 # Tests from scenarios
 
-Project companion for the `test-writer` role
-([`.agents/test-writer.md`](../../.agents/test-writer.md)). That agent turns a
-claim into a test that fails for the right reason; this file says what the
-test looks like in this repo.
+**Project rules.** A project may extend this skill with a companion skill that
+names this one; its agent instructions (`AGENTS.md`) list it. Read both. The
+companion holds the test stack, the runner, the naming, the project's
+boundaries, and what its tests must cover, and wins where they differ.
 
-**Scenarios are documentation; the tests execute.** A Feature's `.feature`
-file is the readable specification, and each xUnit test cites the `@B-00n`
-claim it proves. **There is no Gherkin runner here** — no Reqnroll, no
-bindings, no step definitions — and none is planned for a demo. So "a scenario
-exists" never means a claim is covered: the § 9 Traceability Matrix row does,
-and it points at a test
-([`spec-and-traceability`](../spec-and-traceability/SKILL.md)).
+## A claim comes first
 
-## Where and what
+**The specification is the brief.** A test that encodes a fact no claim states
+is a question for the specification author, not a decision to make in the test
+file ([`spec-and-traceability`](../spec-and-traceability/SKILL.md)).
 
-- **xUnit**, in [`test/UnitTests`](../../test/UnitTests) — root namespace
-  `Transponder.UnitTests`, `Xunit` is a global using in the project file.
-- **`GivenX_WhenY_ThenZ` method names** (`AGENTS.md`). The name states the
-  claim; a reader should not need the body to know what broke. Inside the
-  method, `// Given` / `// When` / `// Then` comments separate the phases. For
-  xUnit's own attributes and fixtures, see [xunit.net](https://xunit.net).
-- **AwesomeAssertions** for assertions and **NSubstitute** for test doubles.
-  Neither is in
-  [`Directory.Packages.props`](../../Directory.Packages.props) yet — the first
-  issue that writes a test adds them there, and nothing in the repository
-  asserts anything until then.
-- **Set the system under test up inside the test**, in its `// Given`, not in a
-  constructor or a field. No state shared between tests.
-- `coverlet.collector` is referenced, so coverage is collectible. No coverage
-  threshold is enforced and none is proposed for a demo.
-- **A claim comes first.** The specification is the brief — see
-  [`spec-and-traceability`](../spec-and-traceability/SKILL.md). A test that
-  encodes a fact no claim states is a question for the specification author,
-  not a decision to make in the test file.
+Where scenarios are documentation rather than executable — no runner binds them
+— **"a scenario exists" never means a claim is covered.** The traceability row
+does, and it points at a test. Know which of the two the project is before
+claiming coverage for anything.
+
+- **A built claim counts only when its test passes in a run.** One that fails,
+  is skipped at run time, or never runs — filtered out, or in a suite nobody
+  runs — is not covered, whatever the specification says.
+- A claim may be marked unbuilt while its test is still missing, naming the item
+  that will build it. **A decision that supersedes a claim deletes its
+  scenario**, in the change that records the decision; parking it leaves the
+  repository stating something false.
+
+## Write from the scenario, not the conversation
+
+- A test that needs a fact the scenario does not state means the scenario is
+  incomplete — amend it rather than encoding the fact in test code.
+- **A test that asserts nothing proves nothing.** Never point at another suite
+  ("covered by the integration tests"). Prove it here, or remove the sentence.
+- The name states the claim. A reader should not need the body to know what
+  broke.
+- **Set the system under test up inside the test.** No state shared between
+  tests, and no setup hidden in a base class a reader has to go find.
+- A claim proven only against an inner method does not prove the outer boundary
+  calls it. When the claim describes what a request or a submission does, one
+  test goes through that boundary.
 
 ## Time is injected, always
 
-Half of what this demo teaches is time-based — poll intervals, staleness,
-`ExpireAfter`, throttled search input. So:
-
-- **Every time-based operator takes an injected scheduler.** A test advances
-  it deliberately and asserts what happened.
-- **Never `DateTime.UtcNow` inline.** The staleness clock is a dependency, in
-  production as well as in tests — which is also what lets replay age items
-  the same way live does ([`api-mock`](../api-mock/SKILL.md)).
-- **No `Thread.Sleep`, no real delay, no retry-until-true.** If a test takes a
-  second, it is reading the wrong clock.
+- **Every time-based operator takes an injected clock or scheduler.** A test
+  advances it deliberately and asserts what happened.
+- **Never read the ambient clock inline.** A staleness or expiry clock is a
+  dependency in production as well as in tests — which is also what lets a
+  recorded source age items the same way a live one does.
+- **No sleeps, no real delays, no retry-until-true.** If a test takes a second,
+  it is reading the wrong clock.
 
 ## No network, ever
 
-No test reaches `opensky-network.org`, `stream.aisstream.io`, or the backup
-source. A test that needs a credential to pass is a test that will fail on
-someone else's machine and on CI.
-
-**For anything HTTP, use Flurl's `HttpTest`** — never a hand-rolled
-`HttpMessageHandler` or `HttpClient` fake. It queues responses, simulates a
-timeout, and asserts the request that was made (URL, verb, query parameters,
-headers, count), which is the half a stubbed handler usually leaves untested.
-One caveat that shapes the design: its interception follows the logical async
-call context and **does not reach inside an actor on its own dispatcher**, so
-test the client class directly and give the actor a stubbed source —
-[`http-client`](../http-client/SKILL.md) has the detail.
+- No test reaches a live provider. A test that needs a credential to pass is a
+  test that will fail on someone else's machine and in continuous integration.
+- Use the transport library's own test double rather than a hand-rolled one. It
+  queues responses, simulates a timeout, and **asserts the request that was
+  made** — which is the half a hand-rolled stub usually leaves untested.
+- Know where that interception reaches. A faking mechanism that follows the
+  logical call context does not follow a message handed to something processing
+  on its own thread; test the plain class directly and give the concurrent part
+  a stubbed dependency.
 
 ## Fixtures are synthetic
 
-- Invented callsigns, MMSIs, positions, countries (`AGENTS.md`). Committed as
-  JSON beside the tests that use them.
-- A fixture for the OpenSky converter keeps the **positional array exactly as
-  the wire sends it**, nulls included — surviving a sparse row is that
+- Invented identifiers, positions and names, committed beside the tests that use
+  them. Never real personal data.
+- A fixture for a wire-format converter keeps the payload **exactly as the
+  provider sends it**, nulls and all — surviving a sparse payload is that
   converter's whole job.
-- A rehearsal recording is operational data, not a fixture. Scrub before
-  reuse.
+- **Operational data is not a fixture.** A recording captured from a live
+  provider is scrubbed before it is reused as one.
+- A rule over seeded data is tested against what the project's own seeding
+  produces, loaded the way production loads it, never against a stand-in built
+  by a factory. The two can differ in key, flags or wording, and a test on the
+  stand-in proves nothing about the real one.
 
-## What is worth testing here
+## What is worth testing
 
-The demo is small; these are the parts where a bug would be invisible on
-stage until it is not:
+Pick the places where a bug would be invisible until it is expensive:
 
-- **`EditDiff`**: two snapshots — one item added, one updated, one gone —
-  asserting exactly three changes and no churn on the untouched rows.
-- **The positional `JsonConverter`**: a full row, a sparse row, a row without
-  `category` (no `extended=1`), and a padded callsign that must come out
-  trimmed.
-- **Staleness and expiry**: advance the scheduler past the threshold and
-  assert the indicator, then removal.
-- **The source swap**: swap the selector and assert the cache and
-  subscriptions behave as
-  [`hot-swap-source`](../hot-swap-source/SKILL.md) says — including that an
-  in-flight result from the outgoing source never lands.
-- **View models**: plain classes taking an observable and a scheduler.
+- **The differ** — the component that decides what changed between two sets.
+  Two sets, one item added, one updated, one gone: assert exactly three changes
+  and no churn on the untouched items.
+- **The wire-format converter** — a full payload, a sparse one, one missing an
+  optional section, and a padded field that must come out trimmed.
+- **Anything derived from time** — advance the clock past the threshold and
+  assert the state, then the removal.
+- **A swap or substitution seam** — assert that a result from the outgoing
+  implementation never lands after the switch.
+- **Translators** — a class whose job is turning one shape into another is
+  tested on the translation, not on what the far side did with it.
 
 ## Never add
 
-- A test that touches a network, a credential, or the wall clock.
-- `Thread.Sleep` or a real delay.
-- A weakened assertion to get to green. A test that cannot fail proves
-  nothing.
-- Production code written to pass your own test — that is the implementer's
-  job ([`.agents/implementer.md`](../../.agents/implementer.md)).
+- A test that touches a network, a credential, or the ambient clock.
+- A sleep or a real delay.
+- A weakened assertion to get to green. A test that cannot fail proves nothing.
+- Production code written to pass your own test — that is the implementing
+  role's job.
 - Real recorded traffic as a fixture without scrubbing it.
