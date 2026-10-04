@@ -31,14 +31,20 @@ one Feature's internals does not. The first root ADR is
 [`0001-flurl-for-http.md`](../../.spec/adr/0001-flurl-for-http.md), which also
 shows the shape.
 
-## Today: the README is the specification
+## Today: the README is the project specification
 
-[`README.md`](../../README.md) is currently the only specification Transponder
-has — audience, core idea, the app, the operator list, the data source and its
-limits, demo resilience, the closing act, alternatives considered, and the open
-items. Treat it as authoritative until a `.spec/` exists, and **keep it true**:
-a decision made in conversation that contradicts it is a README edit in the
-same change.
+[`README.md`](../../README.md) is the project-wide specification — audience,
+core idea, the app, the operator list, the data source and its limits, demo
+resilience, the closing act, alternatives considered, and the open items. Treat
+it as authoritative wherever no Feature `.spec/` covers the question, and **keep
+it true**: a decision made in conversation that contradicts it is a README edit
+in the same change.
+
+One Feature specification exists so far —
+[`features/aircraft-source/.spec/README.md`](../../features/aircraft-source/.spec/README.md),
+`spec_status: draft` — and it is authoritative over its own subject: the API
+types, the snapshot, the seam, the cache and the tracker. Where it and the
+README overlap, the Feature spec is the narrower and more recent record.
 
 ## Where a spec starts
 

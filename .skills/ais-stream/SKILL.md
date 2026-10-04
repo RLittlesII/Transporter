@@ -19,9 +19,15 @@ here — that is the entire point.
 ## Facts
 
 - **WebSocket, not polling.** Connect, then receive. There is no snapshot
-  endpoint, so this source does not use `EditDiff`; it writes `AddOrUpdate` /
-  `Remove` to the cache directly. See
-  [`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md).
+  endpoint, so this source assembles its own current known set and emits it as
+  a snapshot set like every other source; **the cache diffs that set** exactly
+  as it diffs a poll's. See
+  [`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md) and
+  [ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md). How it holds
+  that set without becoming a second collection of tracked items is the open
+  question this source has to answer — § 11 of the aircraft-source
+  specification — and it is the first thing to settle when this source is
+  specified.
 - **Keyed by MMSI.** The cache key for a vessel, the way `icao24` is for an
   aircraft.
 - **Subscribe with a bounding box.** Filtering happens server-side on the

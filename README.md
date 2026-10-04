@@ -105,8 +105,8 @@ Credit cost per `/states/all` call by bounding box area: ≤25 sq° = 1, 25–10
 
 ## Demo resilience
 
-- Put the data source behind a single interface that produces snapshots (or an `IObservable` of snapshots).
-- Implementations: live OpenSky, and **replay from recorded snapshots**.
+- Put the data source behind a single interface that produces an `IObservable` of snapshot sets — each set being the records the source currently knows about, plus the instant it observed them. A snapshot is the server's record with names on it; the cache stores and diffs those, and a separate tracker projects them into domain vehicles. Four layers, two mappings — see [ADR-0002](.spec/adr/0002-four-layers-wire-to-fleet.md).
+- Implementations: live OpenSky, and **replay from recorded snapshots** — a recorded fixture is literally a set of snapshots, so replay re-derives nothing.
 - Record several minutes of snapshots during rehearsal. Be able to switch to replay on stage if the venue network fails.
 - This also makes a teaching point: the pipeline doesn't care where the data comes from.
 

@@ -100,12 +100,12 @@ for Flurl:
 private static readonly ISerializer StatesSerializer =
     new DefaultJsonSerializer(new JsonSerializerOptions
     {
-        Converters = { new StateVectorConverter() },
+        Converters = { new AircraftSnapshotConverter() },
     });
 ```
 
-The converter turns OpenSky's array-of-arrays into a named wire DTO; the
-mapper takes it from there
+The converter turns OpenSky's array-of-arrays into `AircraftSnapshot`, a named
+record; the mapper takes it from there, inside `IFleetTracker`'s projection
 ([`mapping`](../mapping/SKILL.md)). Set the serializer **on the named client**,
 so a second provider with named fields is unaffected.
 

@@ -14,8 +14,9 @@ already referenced in
 
 ## One mapper per boundary
 
-- A `[Mapper]` partial class sits at each wire boundary: OpenSky payload →
-  domain, AISStream payload → domain. That is it.
+- A `[Mapper]` partial class sits at each wire boundary, run from
+  `IFleetTracker`'s projection: OpenSky snapshot → domain, AISStream snapshot →
+  domain. That is it.
 - **No domain-to-domain mappers.** If two domain types need converting
   between each other, one of them is wrong — fix the model instead
   ([`transponder-domain-model`](../transponder-domain-model/SKILL.md)).
@@ -26,13 +27,17 @@ already referenced in
 
 ## The positional array stops here
 
-OpenSky's `states` entries are positional arrays, so the custom
-`JsonConverter` ([`api-contract`](../api-contract/SKILL.md)) produces a named
-wire DTO and **the mapper runs from the DTO, not from the array**. Mapperly
-maps names; it has nothing to say about index 7 meaning barometric altitude.
+OpenSky's `states` entries are positional arrays, so
+`AircraftSnapshotConverter` ([`api-contract`](../api-contract/SKILL.md))
+produces `AircraftSnapshot` — a named record — and **the mapper runs from the
+snapshot, not from the array**. Mapperly maps names; it has nothing to say
+about index 7 meaning barometric altitude.
 
-Two steps, each testable: converter (array → named DTO), mapper (DTO →
-domain).
+Two steps, each testable: converter (array → snapshot), mapper (snapshot →
+domain). Those are the two mapping layers
+[ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md) names, and the
+second one runs inside `IFleetTracker`'s projection — the cache in between
+stores and diffs snapshots and maps nothing.
 
 ## Unmapped members are errors
 

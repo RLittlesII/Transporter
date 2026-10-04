@@ -1,33 +1,62 @@
 ---
 name: api-contract
-description: Define the single source-agnostic snapshot seam every Transponder data source implements, and the hand-written OpenSky client behind it (positional JSON, OAuth2 tokens, credits, rate limits). Use when touching a client, a contract, or credentials.
+description: Define the four layers between a provider and the fleet — API types, the internal snapshot, the source-agnostic seam, and the store-and-diff cache — and the hand-written OpenSky client behind them (positional JSON, OAuth2 tokens, credits, rate limits). Use when touching a client, a contract, or credentials.
 ---
 
 # The Transponder API contract
 
-This file covers **the one seam every data source implements, and what OpenSky
-actually does behind it**. The provider's own documentation is
+This file covers **the layers between a provider and the cache, and what
+OpenSky actually does behind them**. The provider's own documentation is
 [the OpenSky REST API](https://openskynetwork.github.io/opensky-api/rest.html);
 the facts below are the consequences of it for this demo.
 
-## The seam is the whole design
+## Four layers, and the seam is the third
 
-One interface, producing snapshots of tracked items:
+One responsibility each, named so a reader can tell from a signature which
+layer they are in — see
+[ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md):
 
 ```csharp
+// 1. API types — what OpenSky sends. Positional; the converter is their only reader.
+//    StatesResponse, and the row it carries.
+
+// 2. The internal snapshot — the server's record with names on it.
+//    Value equality over every member; keyed on icao24; derives nothing.
+public sealed record AircraftSnapshot( /* … */ );
+
+// 3. The seam — what every source satisfies.
 public interface ITrackingSource
 {
-    IObservable<IReadOnlyCollection<TransportVehicle>> Snapshots { get; }
+    IObservable<SnapshotSet<AircraftSnapshot>> Snapshots { get; }
+}
+
+// 4. The cache — stores and diffs snapshots. Nothing else: no domain type, no clock.
+public interface IVehicleCache
+{
+    IObservable<IChangeSet<AircraftSnapshot, string>> Connect();
 }
 ```
 
-Everything else in the demo sits on one side of that line or the other.
+A `SnapshotSet` carries the complete set the source currently knows about
+**and the instant it was observed**, so "as of when" is data rather than
+something a consumer answers with an ambient clock.
 
-- **It is deliberately not OpenSky-shaped.** No bounding box, no credits, no
-  token, no polling interval in the signature. A push source satisfies it by
-  emitting the current known set; a replay source satisfies it by reading
-  files. That is what makes the live plane-to-ship swap possible — see
-  [`hot-swap-source`](../hot-swap-source/SKILL.md).
+Downstream of the cache, `IFleetTracker` projects those changesets into
+`TransportVehicle` — that is the second mapping layer and the first place a
+domain object exists. It belongs to
+[`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md), not here.
+
+The wire shape sits above layer 2 and the collection sits below layer 4;
+neither can see the other.
+
+- **The seam is deliberately not OpenSky-shaped.** No bounding box, no
+  credits, no token, no polling interval in the signature. A replay source
+  satisfies it by reading files; a push source satisfies it by emitting its
+  current known set, and the cache diffs that set exactly as it diffs a poll's.
+  That is what makes the live plane-to-ship swap possible — see
+  [`hot-swap-source`](../hot-swap-source/SKILL.md). How a push feed assembles a
+  full set without holding a second collection is an open question on the
+  aircraft-source specification (§ 11), not settled here.
 - Implementations to date: live OpenSky (polled), AISStream vessels (push,
   the stretch goal), replay-from-recording, and a simulated source — see
   [`api-mock`](../api-mock/SKILL.md).
@@ -37,10 +66,12 @@ Everything else in the demo sits on one side of that line or the other.
   columns make sense — does so through a separate small description, not by
   widening this interface.
 
-The item type is the abstract `TransportVehicle` from
-[`transponder-domain-model`](../transponder-domain-model/SKILL.md) — a source
-emits its own subclass (`Aircraft`, `Vessel`) and the seam only ever names the
-base. The `JsonConverter` is the last place the wire shape exists.
+The item type at the seam and in the cache is the **snapshot**, not the domain
+object. `TransportVehicle` and its subclasses from
+[`transponder-domain-model`](../transponder-domain-model/SKILL.md) first appear
+at `IFleetTracker`, and the seam names neither them nor a DynamicData type.
+`AircraftSnapshotConverter` is the last place the positional wire shape exists;
+`AircraftSnapshot` is the last place the wire's vocabulary exists.
 
 ## OpenSky: facts, not preferences
 
@@ -50,8 +81,10 @@ Network"; the consequences are here.
 
 - **No OpenAPI spec exists**, so there is no generator to look for. The client
   is written with Flurl over `System.Text.Json` —
-  [`http-client`](../http-client/SKILL.md) has the mechanics, and
-  [ADR-0001](../../.spec/adr/0001-flurl-for-http.md) the reasoning.
+  [`http-client`](../http-client/SKILL.md) has the mechanics,
+  [ADR-0001](../../.spec/adr/0001-flurl-for-http.md) the reasoning for Flurl,
+  and [ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md) the
+  reasoning for the four layers above.
 - **`states` is an array of arrays.** Fields are positional, not named, so a
   custom `JsonConverter` is mandatory, and the index→field table is the
   contract. Read positions by index against that table; never by guessing from
@@ -100,6 +133,12 @@ default.
 - A second seam. Two source interfaces means the swap has to bridge them, and
   the teaching point of the demo dies.
 - OpenSky concepts (credits, bounding boxes, tokens) on the shared interface.
+- An `IChangeSet` or any other DynamicData type on `ITrackingSource`. A source
+  that has to build a cache to say "here are four aircraft" is not a seam.
+- A cache owned by, or constructed inside, a source. One cache outlives every
+  source, which is what makes the swap a clear rather than a rebuild.
+- A domain type held, constructed or returned by the cache, or a clock read
+  inside it. The cache stores and diffs snapshots; staleness is the tracker's.
 - A generated client, or a positional array read by anything but the converter.
 - A retry that ignores `X-Rate-Limit-Retry-After-Seconds`, or a poll loop with
   no interval ceiling. Burning the daily credit budget before the talk is a

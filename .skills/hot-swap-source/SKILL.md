@@ -24,21 +24,26 @@ One observable of "which source is live", and `Switch` doing the work:
 // Provisional: this shape is a first reading of the Rx/DynamicData docs.
 private readonly BehaviorSubject<ITrackingSource> _selected = new(initialSource);
 
-IObservable<IReadOnlyCollection<TransportVehicle>> snapshots =
+IObservable<SnapshotSet<AircraftSnapshot>> snapshots =
     _selected.Select(static source => source.Snapshots).Switch();
 ```
 
 - `Switch` unsubscribes from the outgoing source's inner sequence and
-  subscribes to the incoming one. The pipeline *after* this point never knows
-  it happened.
+  subscribes to the incoming one. The cache, the tracker and the pipeline
+  *after* this point never know it happened.
 - The selector holds `ITrackingSource` from
   [`api-contract`](../api-contract/SKILL.md), so live OpenSky, live AISStream,
   a replay and a simulated source are all swap targets — including
   replay-as-fallback ([`api-mock`](../api-mock/SKILL.md)). **One switch, not
-  two**: there is no separate offline mode.
-- A polled source feeds `EditDiff`; a push source writes to the cache
-  directly. Both land in the same cache — see
-  [`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md).
+  two**: there is no separate offline mode, and no second source interface for
+  the `Switch` to bridge.
+- Every source emits a snapshot set, and **the cache diffs every set it is
+  given** — a push feed included. That is what keeps one seam here rather than
+  two, and it is why the swap is a cache clear at most. See
+  [`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md) and
+  [ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md). How the vessel
+  feed assembles its own full set is an open question on the aircraft-source
+  specification (§ 11), for the closing-act feature.
 
 ## What the cache does on swap — a real decision
 
@@ -73,6 +78,7 @@ DynamicData rather than in the demo.
 The whole proof is that these survive untouched:
 
 - the cache itself,
+- the tracker that projects it,
 - `Filter` predicates and the search box wiring,
 - `Sort` comparers and the user's chosen column,
 - `Group` and the per-group aggregates,
