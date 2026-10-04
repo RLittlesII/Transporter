@@ -99,19 +99,27 @@ All versions live in
 
 ### The tracker
 
-**Work is tracked locally.** `.issues/<id>-<slug>.yml` stands in for a GitHub
+**Work is tracked locally.** A `<id>-<slug>.yml` item stands in for a GitHub
 issue, and there are **no issues, labels or milestones** in this workflow. Code
 still pushes to GitHub, so branches, pull requests and CI stay — though no
 remote is configured yet, so those conventions apply from the first push
 onward. The schema and the status enum are below under
 `spec-and-traceability`.
 
+**An item sits beside the specification it was cut from**:
+`features/<slug>/.issue/`, a sibling of that Feature's `.spec/`. An item that
+belongs to no Feature — a bug, a spike, a chore — goes in the repository-root
+`.issue/`, the same blast-radius split `.spec/adr/` and `.spec/lessons/` use.
+**Ids stay repository-wide** from one `.issue/.sequence`, so a bare id in
+`depends_on` or `parent` resolves from any Feature; find one with
+`**/.issue/<id>-*.yml`.
+
 - `status: in-progress` is the mark that an item is taken; `in-review` once the
   pull request opens; `done` with a `closed:` date when it lands. Bump
   `updated:` on every edit.
-- A pull request body says `Delivers .issues/<id>`, or
-  `Specifies features/<slug>` when authoring a specification — there is no issue
-  for `Closes` to close.
+- A pull request body says `Delivers <id>` — the bare id, since one id has one
+  item wherever it lives — or `Specifies features/<slug>` when authoring a
+  specification. There is no issue for `Closes` to close.
 
 ### Worktree and branch
 
@@ -205,7 +213,8 @@ asking.
 | [`.spec/adr/`](../../.spec/adr/) | **cross-cutting** technical decisions, numbered repository-wide from `0001` |
 | [`.spec/lessons/`](../../.spec/lessons/) | **cross-cutting** lessons, numbered repository-wide from `0001` |
 | [`.spec/templates/`](../../.spec/templates/) | the blanks |
-| `.issues/<id>-<slug>.yml` | one work item; `.issues/.sequence` is the last id handed out |
+| `features/<slug>/.issue/<id>-<slug>.yml` | one work item cut from that Feature's specification |
+| [`.issue/`](../../.issue/) | **cross-cutting** work items — a bug, spike or chore with no specification; `.issue/.sequence` is the last id handed out, repository-wide |
 
 There is no epic directory: an epic is an item of `type: epic` whose `children`
 list the Features under it.
@@ -218,7 +227,7 @@ list the Features under it.
 | [`adr.md`](../../.spec/templates/adr.md) | one `adr/` record |
 | [`decision.md`](../../.spec/templates/decision.md) | one `decisions/` record |
 | [`lesson.md`](../../.spec/templates/lesson.md) | one `lessons/` record |
-| [`item.yml`](../../.spec/templates/item.yml) | one `.issues/` work item |
+| [`item.yml`](../../.spec/templates/item.yml) | one `.issue/` work item |
 
 **[`item.yml`](../../.spec/templates/item.yml) is the item schema**, commented
 field by field — `type`, `status`, `risk` and `title` are never omitted, and
@@ -252,7 +261,7 @@ start again in every Feature.
 
 | Written in full | Scheme |
 |---|---|
-| `.issues/0001-aircraft-source.yml` | work item, repository-wide sequence |
+| `features/aircraft-source/.issue/0001-aircraft-source.yml` | work item, repository-wide sequence |
 | `ADR-0001` | root ADR, repository-wide |
 | `lesson 0001` | root lesson, repository-wide |
 | `features/<slug>/.spec/decisions/0001` | that Feature's decisions |
@@ -283,7 +292,7 @@ written**; each role file names its own sections and links here.
 | 11 Open Questions | any blocked role |
 | 12 Sign-off | `spec-reviewer` |
 | Decisions (index) | the role that made or reversed the call |
-| `## Tasks` | `spec-author`, from the `.issues/` items |
+| `## Tasks` | `spec-author`, from that Feature's `.issue/` items |
 | `## Scoring` | `spec-author`, from the item's value and risk |
 
 **`implementer` owning § 7 is a compromise.** There is no separate architect
@@ -294,7 +303,7 @@ settled inside an implementation pull request.
 
 ### Never add
 
-- A GitHub issue, label or milestone as part of this workflow. `.issues/` is the
+- A GitHub issue, label or milestone as part of this workflow. An `.issue/` is the
   tracker; a remote is for code.
 - An `@ignore` tag, a step definition, or anything else implying the scenarios
   execute.
