@@ -9,15 +9,13 @@ spec_status: draft
 
 ## 1. Business Goal
 
-<!-- Owner: spec-author. One paragraph. The outcome, not the implementation.
-     Name the failure state being removed. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 1 -->
 
 The demo exists to break a belief: that a reactive collection needs a push feed. Its audience polls REST endpoints and runs SQL queries, so the one step they need — a full snapshot becoming a changeset — is the step every DynamicData example skips. This feature builds that step for live aircraft, and it gives every thing the step passes through one responsibility and one name. Today a single interface carries the provider's payload, the domain set and the collection all at once, which is why the word "snapshot" means three things in conversation: `Snapshots` hands back domain objects even though a snapshot is the record you map *into* a domain object. Worse, the thing that actually varies between an aircraft feed and a vessel feed — how a provider's record becomes a `TransportVehicle` — has no owner at all, so it ends up smeared across whichever component happens to be holding both types. The outcome is a typed API contract that mirrors what OpenSky publishes, a client that caches what it fetches, a per-type projection that is the only place a domain object is built, and a swap that happens behind a decorator rather than in the pipeline. The failure state removed is a demo whose headline mechanism and whose extension point both have no address in its own source.
 
 ## 2. User Needs
 
-<!-- Owner: spec-author. The audience for this project is specific — see
-     README.md § "Audience" — so do not write a generic persona. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 2 -->
 
 | #   | Persona                                                                                                                              | Need                                                                                                      | Pain point today                                                                                                                                                 |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -30,10 +28,7 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 ## 3. Acceptance Criteria
 
-<!-- Owner: spec-author. Numbered, falsifiable, SHALL / SHALL NOT. One claim
-     per row. These ids are what § 9 and the .feature file are anchored to, so
-     they are permanent: never renumbered, never reused. A withdrawn claim is
-     marked Withdrawn, not deleted. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
 Fifty-one claims, in nine groups — one per component, plus the boundary rules:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
@@ -100,15 +95,9 @@ than being slotted into the sequence.
 | B-046 | The snapshot SHALL be referenced by the snapshot client, its cache, and its tracker source's projection, and by nothing downstream of that projection.                                                                        | Decided call — the snapshot dies at the projection         | Draft  |
 | B-047 | No consumer downstream of `IFleetTracker` SHALL reference an API contract, a client, a cache, a snapshot, or a concrete `ITrackerSource`.                                                                                     | Decided call; hot-swap-source                              | Draft  |
 
-<!-- Status: Draft | Built | Withdrawn. "Built" means a test cites it and § 9
-     says Verified. -->
-
 ## 4. Constraints
 
-<!-- Owner: spec-author. Impact states what the constraint rules out, so § 7
-     has something concrete to satisfy. Many of this project's constraints are
-     the data provider's and are not ours to simplify — credit budgets, token
-     expiry, blocked hyperscaler IPs (README.md). -->
+<!-- Rules: ../../../.spec/templates/feature.md § 4 -->
 
 | #   | Constraint                                                                                                                                                | Source                                   | Impact                                                                                                                                                                                                                      |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -128,15 +117,14 @@ than being slotted into the sequence.
 | 14  | No test may touch a network or the wall clock.                                                                                                             | api-mock; test-from-scenarios            | Rules out `Thread.Sleep`, a real delay, a retry-until-true, and a hand-rolled `HttpMessageHandler`. Every time-based element takes an injected scheduler or clock in production, not only in tests.                             |
 | 15  | Flurl's `HttpTest` intercepts through the logical asynchronous call context and does not follow a message into an actor on its own dispatcher.             | ADR-0001 § "Consequences"                | Rules out testing a poller actor with `HttpTest`. The contract's implementation stays a plain class tested directly — and the hand-written contract fake (B-010) is what lets everything above it be tested with no HTTP at all. |
 | 16  | The domain model references only the framework and LanguageExt — no DynamicData, Flurl, `HttpClient` or `System.Text.Json` types.                           | domain-model § "Never add"   | Rules out the cache, the strategies or the tracker living inside the model. It is why each is a separate component rather than a member on `TransportVehicle`.                                                                 |
-| 17  | `DynamicData` and `Scrutor` are not in `Directory.Packages.props`; neither are AwesomeAssertions or NSubstitute. The Nuke build has no `Test` target.        | dynamic-data-pipeline; ADR-0003; AGENTS.md | Rules out assuming the packages are available. The first item that builds a cache adds `DynamicData`; the first that builds the decorator adds `Scrutor` (ADR-0003); the first that writes a test adds the assertion and mocking packages. A green build does not mean tests ran. |
-| 18  | The versioned-contract pattern bans a mocking framework for the contract's test double; `AGENTS.md:55` mandates NSubstitute.                                | api-contract (global) § scrutiny; AGENTS.md | A narrow conflict, resolved narrowly: the API contract's double is hand-written (B-010); NSubstitute remains correct for everything else. Neither document is wrong; the scope of each differs.                                 |
+| 17  | A package is available only once it is in `Directory.Packages.props`, and the build runs only the targets it declares.                                      | dynamic-data-pipeline; ADR-0003; `nuke-build` | Rules out assuming a package is referenced: the first item that needs one adds it centrally, never pinned in a `.csproj`. Read the file and the build rather than this row — which packages and targets exist today is repository state, not a constraint. A green build proves only that the declared targets ran. |
+| 18  | The versioned-contract pattern bans a mocking framework for the contract's test double; this repository's conventions mandate NSubstitute (`transponder-conventions`).                                | api-contract (global) § scrutiny; `transponder-conventions` | A narrow conflict, resolved narrowly: the API contract's double is hand-written (B-010); NSubstitute remains correct for everything else. Neither document is wrong; the scope of each differs.                                 |
 | 19  | The versioned-contract pattern is silent on caching, observables and streaming, and defines no layer above the contract.                                    | api-contract (global)                    | Rules out claiming conformance for the client, the cache, the strategies, the decorator or the tracker. Only B-005 – B-010 are governed by it; everything above is this repository's own design and says so.                   |
 | 20  | Replay must be selectable at the `ITrackerSource` seam, and a recording is the provider's own envelope written verbatim.                                     | api-mock § "Replay"; hot-swap-source; ADR-0004 | Rules out the pattern's "exactly one production class" for the contract: replay substitutes *at the contract*, so a second implementation reads the recording and the same client, cache and projection sit above it unchanged. B-007 is therefore one implementation **per transport** and B-008 aliases per constructed chain. A narrow, deliberate departure from the global pattern, recorded here rather than discovered — the same treatment row 18 gives the NSubstitute conflict. The alternative, a replay client of its own, would have required widening B-045 and keeping a second positional row reader correct. |
 
 ## 5. Out of Scope
 
-<!-- Owner: spec-author. The section nobody writes. Without it, a demo grows a
-     feature nobody asked for. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 5 -->
 
 | #   | Item                                                                                                             | Exclusion reason                                                                                                                                                                                                                       |
 | --- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -149,110 +137,84 @@ than being slotted into the sequence.
 | 7   | The grid, the detail pane, the search box, the dropdowns, the grouped view, the stale indicator's rendering, and the summary tiles | UI (`maui-ui`, `mvvm`). A view's obligations are not written into a scenario here, and no scenario names a UI mechanic.                                                                                                            |
 | 8   | The optional map view                                                                                            | README.md § "The app" lists it as optional. Nothing in § 3 needs it, and a map is the most expensive way to prove a changeset arrived.                                                                                                   |
 | 9   | A generated OpenSky client, or an OpenAPI document written by us to generate from                                 | Rejected in ADR-0001 and foreclosed by Constraint 1. Writing a specification for someone else's undocumented API to feed a generator is a project, not a step.                                                                           |
-| 10  | A Gherkin runner, Reqnroll, step definitions, or bindings                                                        | Constraint 11. Scenarios are documentation. A runner would make the `.feature` file executable and move the coverage gate off § 9, which is where AGENTS.md puts it.                                                                     |
+| 10  | A Gherkin runner, Reqnroll, step definitions, or bindings                                                        | § 4 row 13. Scenarios are documentation. A runner would make the `.feature` file executable and move the coverage gate off § 9, which is where AGENTS.md puts it.                                                                     |
 | 11  | Unit conversion to feet, knots or local time, and display formatting of an `Option<T>`                           | A display concern (domain-model § "Units"). SI is canonical in the model (B-035); conversion happens at the view in a named method.                                                                                           |
 | 12  | OpenSky's `sensors` field (index 12)                                                                             | Explicitly excluded by B-021. Recorded as a decision rather than left as an omission, so a later reader does not add it believing it was overlooked.                                                                                      |
 | 13  | A second strategy seam, and any source-describing metadata — display name, which columns make sense, an icon      | B-037 forbids widening a per-type interface for this. A source that genuinely needs to describe itself gets a separate small type in a separate feature.                                                                                  |
 | 14  | Persisting snapshots, snapshot history, or a track per aircraft                                                  | Each cache holds current state. A history store is a second collection, which dynamic-data-pipeline § "Never add" rules out, and nothing in § 3 or README.md asks for a trail.                                                            |
 | 15  | Registering the OpenSky account, creating the API client, and provisioning the credentials                       | Operational tasks tracked in README.md § "Open items". B-029 claims the application's *behavior* when a credential is absent; obtaining one is not code.                                                                                  |
-| 16  | The poller's hosting — actor shape, supervision, registration, and whether a view model uses `Tell` or `Ask`      | `akka-actor` and `mvvm`. This spec claims the client's observable behavior (B-015 – B-029), not where it runs. `Tell`-vs-`Ask` is a repo-wide undecided listed in spec-and-traceability.                                                  |
-| 17  | A `Test` target in the Nuke build                                                                                | A repo-wide undecided (spec-and-traceability § "Decisions this demo still owes a record"). Deciding it inside a feature specification would settle a build convention by side effect.                                                     |
+| 16  | The poller's hosting — actor shape, supervision, registration, and whether a view model uses `Tell` or `Ask`      | `akka-actor` and `mvvm`. This spec claims the client's observable behavior (B-015 – B-029), not where it runs. `Tell`-vs-`Ask` is a repository-wide undecided, open at README.md § "Open items".                                                  |
+| 17  | A `Test` target in the Nuke build                                                                                | A repository-wide undecided, open at README.md § "Open items". Deciding it inside a feature specification would settle a build convention by side effect.                                                     |
 
 ## 6. Concern Separation
 
-<!-- Owner: implementer. Classifies each item Business, Technical, or Both —
-     the mechanism that stops business and technical judgment collapsing into
-     one undifferentiated paragraph. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 6 -->
 
-| Item     | Classification | Notes     |
-| -------- | -------------- | --------- |
-| {{item}} | Business       | {{notes}} |
+Unwritten. `implementer` owes it, and it is the classification that keeps a
+business judgment from being settled as a technical one. The claims most likely
+to need it are the ones § 4 rows 18 and 20 resolve as narrow departures from the
+global contract pattern: each is a technical shape chosen for a business reason
+that § 1 names, and the two readings should not collapse into one paragraph.
 
 ## 7. Technical Design
 
-<!-- Owner: implementer. One owner by design, and a compromise: a decision
-     bigger than this item — a new seam, a changed boundary, a technology
-     choice — is a question for the person, not something to settle here. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 7 -->
 
-**Domain model**
+Unwritten. `implementer` owes it. The layering it would otherwise have had to
+settle is already decided repository-wide in
+[ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md), the
+decoration package in
+[ADR-0003](../../../.spec/adr/0003-scrutor-for-decorator-registration.md), and
+the tracked item's base in
+[ADR-0005](../../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md) —
+none of them here, because each binds more than this Feature.
 
-| Field     | Type     | Notes     |
-| --------- | -------- | --------- |
-| {{field}} | {{type}} | {{notes}} |
+What is left for this section is this Feature's own shape: the snapshot's
+members and the positional indices they read from, the domain model's fields,
+the Mermaid diagram of the constructed chain, and the interface declarations
+B-005 – B-010 constrain. No open decisions — § 11 records that every question
+this specification opened has been answered.
 
-**Diagrams**
-
-<!-- Mermaid (AGENTS.md). Declare every type; one that does not apply says
-     `Not applicable — <reason>` rather than being silently dropped. Never
-     summarize a diagram into prose and delete the diagram. -->
-
-```mermaid
-{{diagram}}
-```
-
-**Interface changes**
-
-{{interface_changes}}
-
-**Decision required**
-
-> | Option | Summary     | Tradeoff     |
-> | ------ | ----------- | ------------ |
-> | A.     | {{summary}} | {{tradeoff}} |
->
-> **Recommendation:** {{recommendation}}
-> **Awaiting:** {{decision_owner}}
-
-<!-- Omit the block when nothing is open, but say so: "No open decisions." -->
+Until it lands, every `risk` in `## Scoring` is provisional and every item sits
+at `ready-for-architecture`.
 
 ## 8. Testing Strategy
 
-<!-- Owner: test-writer. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 8 -->
 
-**Testability assessment**
+Unwritten. `test-writer` owes both the testability assessment and the scenario
+grouping. The constraints it has to satisfy are already stated: no test touches
+a network or the wall clock (§ 4 row 14), `HttpTest` cannot follow a message
+into an actor (§ 4 row 15), and the contract's double is hand-written rather
+than mocked (B-010, § 4 row 18).
 
-| Dimension          | Verdict | Finding     | Recommendation |
-| ------------------ | ------- | ----------- | -------------- |
-| DI seams           | Pass    | {{finding}} | —              |
-| Behavior isolation | Pass    | {{finding}} | —              |
-| Coverage potential | Pass    | {{finding}} | —              |
-
-**Scenarios**
-
-<!-- Full Gherkin lives in <feature-slug>.feature beside this file, not
-     inlined here. Each scenario carries the @B-00n tag of the claim it
-     proves. Scenarios are documentation; the xUnit tests execute. -->
-
-- Happy path → {{claim_ids}}
-- Failure mode → {{claim_ids}}
-- Validation failure → {{claim_ids}}
-- Data-driven → {{claim_ids}}
+The scenarios themselves exist, in
+[`aircraft-source.feature`](aircraft-source.feature) beside this file, each
+tagged with the `@B-00n` it proves. Scenarios are documentation; the xUnit
+tests execute, and none has been written yet.
 
 ## 9. Traceability Matrix
 
-<!-- Owner: test-writer. The gate. A `Missing` row blocks ship — it is not a
-     note, it is a stop sign. Every id in § 3 appears here exactly once,
-     anchored to the scenario's @B-00n TAG rather than to the title in the
-     Scenario column. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-| Claim ID | Scenario     | Test     | Status   |
-| -------- | ------------ | -------- | -------- |
-| B-001    | {{scenario}} | {{test}} | Verified |
+Unwritten, and **this is the gate**. `test-writer` owes one row per § 3 claim,
+anchored to the scenario's `@B-00n` tag and naming the xUnit test that proves
+it. Until those rows exist no claim is covered, so the matrix stands `Missing`
+in its entirety and implementation does not start — which is why every item
+sits at `ready-for-architecture` rather than `ready-for-implementation`.
 
-<!-- Status: Verified | Missing. -->
+A scenario existing is not coverage. This section is the only place a claim's
+build state is written, and a row here naming no test is what blocks ship.
 
 ## 10. Lessons / Spec Deltas
 
-<!-- Owner: whichever role closed the bug. Index only — one file per lesson in
-     lessons/ beside this file, from .spec/templates/lesson.md. Append only. A
-     delta that adds behavior also needs a § 3 row, which is spec-author's to
-     write. "None yet." is a valid body. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
 None yet.
 
 ## 11. Open Questions
 
-<!-- Owner: whoever is blocked. "None." is a valid body. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
 None. Every question this specification opened has been answered and recorded:
 the bounding box and interval in [decisions/0001](decisions/0001-houston-bounding-box.md)
@@ -267,10 +229,7 @@ date — rather than settled in conversation.
 
 ## 12. Sign-off
 
-<!-- Owner: spec-reviewer. 🟡 Draft | 🟢 Approved | 🔴 Blocked — state the
-     reason on a Blocked row. Overall goes 🟢 only when every row is 🟢 and
-     § 9 has no Missing row. Overall 🟢 is what flips spec_status to
-     approved. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
 | Sections                                                                  | Owner          | Status   |
 | ------------------------------------------------------------------------- | -------------- | -------- |
@@ -281,10 +240,7 @@ date — rather than settled in conversation.
 
 ## Decisions
 
-<!-- Owner: the role that made or reversed the call. Index only — one file per
-     decision in decisions/ beside this file, from
-     .spec/templates/decision.md. A product or scope call goes there; a
-     durable technical choice goes to adr/ instead. "None yet." is valid. -->
+<!-- Rules: ../../../.spec/templates/feature.md § Decisions -->
 
 - [0001 — Houston is the bounding box, and the interval starts at 15 seconds](decisions/0001-houston-bounding-box.md) — decided
 - [0002 — A busy indicator covers the swap, then the new fleet arrives](decisions/0002-busy-indicator-on-swap.md) — decided
@@ -298,10 +254,7 @@ neither here nor in this Feature's `adr/`.
 
 ## Tasks
 
-<!-- Owner: spec-author. The items cut from § 3 once the claims exist. Ids
-     only — never restated titles, or the two records disagree. "None yet."
-     is valid while the spec is still being agreed. The items are in .issue/
-     beside this file, so each id links to its own file. -->
+<!-- Rules: ../../../.spec/templates/feature.md § Tasks -->
 
 | Item                                                     | Claims                                          |
 | -------------------------------------------------------- | ----------------------------------------------- |
@@ -325,8 +278,7 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 
 ## Scoring
 
-<!-- Owner: spec-author, recording the item's value and risk when they change.
-     The authoritative values live in the .issue/ item. -->
+<!-- Rules: ../../../.spec/templates/feature.md § Scoring -->
 
 | Date       | Field         | From | To | Rationale                                                                                                                                                 |
 | ---------- | ------------- | ---- | -- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
