@@ -1,45 +1,40 @@
 ---
 name: mapping
-description: Map wire payloads to the Transponder domain with Mapperly at the boundary, keeping unit conversions and derived values in explicit named methods. Use when adding a mapper, a wire field, or a conversion.
+description: Map wire payloads to the domain with Mapperly at one boundary, keeping unit conversions and derived values in explicit named methods. Use when adding a mapper, a wire field, or a conversion.
 ---
 
 # Mapping wire to domain
 
-This file covers **where mapping is allowed to happen in this repository**. For
-Mapperly's own API and attributes, see
-[riok/mapperly](https://github.com/riok/mapperly). `Riok.Mapperly` is a decided
-technology ([`README.md`](../../README.md) § "Technology Decisions") and is
-already referenced in
-[`Directory.Packages.props`](../../Directory.Packages.props).
+This file covers **where mapping is allowed to happen**. For Mapperly's own API
+and attributes, see [riok/mapperly](https://github.com/riok/mapperly).
 
 ## One mapper per boundary
 
-- A `[Mapper]` partial class sits in each per-type tracker source, which is the
-  only place a domain object is built: aircraft snapshot → `Aircraft` in
-  `IAirplaneTrackerSource`, vessel snapshot → `Vessel` in
-  `IVesselTrackerSource`. That is it.
-- **No domain-to-domain mappers.** If two domain types need converting
-  between each other, one of them is wrong — fix the model instead
-  ([`transponder-domain-model`](../transponder-domain-model/SKILL.md)).
-- **No view-model mappers.** View models project from the bound collection;
-  they do not receive a mapped copy.
-- Generated mapper source is never hand-edited (`AGENTS.md`). If the output is
-  wrong, the input shape or an attribute is wrong.
+- A `[Mapper]` partial class sits in each per-type strategy, which is **the only
+  place a domain object is built**
+  ([`api-contract`](../api-contract/SKILL.md)). That is it.
+- **No domain-to-domain mappers.** If two domain types need converting between
+  each other, one of them is wrong — fix the model instead
+  ([`domain-model`](../domain-model/SKILL.md)).
+- **No view-model mappers.** A view model projects from the bound collection; it
+  does not receive a mapped copy ([`mvvm`](../mvvm/SKILL.md)).
+- Generated mapper source is never hand-edited. If the output is wrong, the
+  input shape or an attribute is wrong.
 
-## The positional array stops here
+## A positional wire format stops before the mapper
 
-OpenSky's `states` entries are positional arrays, so **Mapperly never sees
-them**. The client reads rows by index into a named snapshot record by hand, and
-**the mapper runs from the snapshot, not from the array**. Mapperly maps names;
-it has nothing to say about index 7 meaning barometric altitude.
+**Mapperly maps names.** It has nothing to say about which index of an array
+means which field, so a positional payload never reaches it: the client reads
+the payload into a named record by index, by hand, as its first act, and the
+mapper runs from that record.
 
 Two mappings, two owners, two mechanisms — the arrangement
 [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md) records:
 
 | Mapping | Owner | Mechanism |
 |---|---|---|
-| rows → snapshot | the client, as its first act | hand-written, by index |
-| snapshot → domain | the per-type tracker source | Mapperly |
+| wire payload → snapshot | the client, as its first act | hand-written, by index |
+| snapshot → domain | the per-type strategy | Mapperly |
 
 The cache in between stores snapshots and maps nothing.
 
@@ -47,37 +42,36 @@ The cache in between stores snapshots and maps nothing.
 
 A new wire field must be **deliberately mapped or deliberately ignored**.
 Configure Mapperly's unmapped-member diagnostics as errors rather than
-warnings, so adding a field to the DTO and forgetting the domain side fails
-the build instead of silently dropping data. A field we genuinely do not want
-(OpenSky's `sensors`) is explicitly ignored, which records the decision.
+warnings, so adding a field on one side and forgetting the other fails the build
+instead of silently dropping data. A field the domain genuinely does not want is
+explicitly ignored, which records the decision.
 
 ## Conversions are explicit, never implicit
 
-- **Units stay SI through the mapper.** Metres in, metres stored. Feet and
-  knots are a display concern.
-- A conversion gets a named method a human can read and a test can call —
-  `MetresToFeet`, `MetresPerSecondToKnots` — invoked from the view layer or
-  from an explicitly declared user-implemented mapping. Never buried in a
-  generated member mapping where nobody will find it.
+- **Canonical units stay canonical through the mapper.** Display units are a
+  view concern ([`domain-model`](../domain-model/SKILL.md)).
+- A conversion gets a named method a human can read and a test can call, invoked
+  from the view layer or from an explicitly declared user-implemented mapping.
+  Never buried in a generated member mapping where nobody will find it.
 - **Derived values are not mappings.** Staleness derives from last contact
-  against an injected clock; display labels derive from callsign or vessel
-  name. Those are domain or view behavior with their own tests, not mapper
-  configuration.
-- Trim OpenSky's 8-character-padded callsign on the way in, and say so at the
-  mapping so the next reader knows the padding was not lost by accident.
+  against an injected clock; a display label derives from whichever identifying
+  field is present. Those are domain or view behavior with their own tests, not
+  mapper configuration.
+- Where the wire pads or decorates a value, trim it on the way in and **say so
+  at the mapping**, so the next reader knows the padding was not lost by
+  accident.
 
 ## Optional values
 
-The wires are full of nulls. The mapper's job is turning a nullable wire
-field into the model's `Option<T>` deliberately — see
-[`language-ext-usage`](../language-ext-usage/SKILL.md). A nullable that maps
-to a default (`0`, `false`, `DateTime.MinValue`) is data loss dressed up as a
-value: a missing altitude is not sea level.
+The mapper's job is turning a nullable wire field into the model's `Option<T>`
+deliberately — see [`language-ext-usage`](../language-ext-usage/SKILL.md). A
+nullable that maps to a default (`0`, `false`, a minimum date) is data loss
+dressed up as a value.
 
 ## Never add
 
 - A hand edit to generated mapper source.
 - A domain-to-domain or view-model mapper.
-- A mapper reading a positional array.
+- A mapper reading a positional payload.
 - A unit conversion or a derived value inside a generated mapping.
 - A null-to-default mapping that invents data the source never sent.
