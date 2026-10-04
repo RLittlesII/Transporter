@@ -35,13 +35,14 @@ The talk's claim is that polled data can still be reactive, and it is proved by 
      they are permanent: never renumbered, never reused. A withdrawn claim is
      marked Withdrawn, not deleted. -->
 
-Twenty-two claims in five groups: **B-001 – B-006** the recording;
+Twenty-three claims in five groups: **B-001 – B-006** the recording;
 **B-007 – B-014** playback; **B-015 – B-018** selection and swap;
-**B-019 – B-021** the vessel half; **B-022** the substitution point, appended
-after § 11 row 1 was answered rather than renumbered into the group it belongs
-to — ids here are permanent.
+**B-019 – B-021** the vessel half; **B-022 and B-023** the substitution point
+of each half, appended as § 11 rows 1 and 2 were answered rather than
+renumbered into the groups they belong to — ids here are permanent.
 
-Claim ids are per-Feature. `B-001` here and `B-001` in
+Claim ids are per-Feature, per spec-and-traceability § "Claim IDs are
+`B-00n`". `B-001` here and `B-001` in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) are different
 claims: an `.issues/` item names its spec, and its `claims:` ids resolve
 against that spec.
@@ -69,7 +70,8 @@ against that spec.
 | B-019 | A vessel recording SHALL use the same format and the same selection path as an aircraft recording, with one line per received message; messages SHALL NOT be batched into poll-shaped snapshots to make a push feed resemble a polled one.   | api-mock § "Strategies on the same seam"; ais-stream           | Draft  |
 | B-020 | A recorded vessel fallback SHALL exist before the closing act is presented.                                                                                                                                                                  | run-the-demo § "Never add"                                     | Draft  |
 | B-021 | Replay SHALL introduce no vehicle, record or snapshot type of its own; it SHALL reproduce whatever the recorded provider's own Feature defines.                                                                                               | aircraft-source § 5 row 3; § 5 row 2 below                     | Draft  |
-| B-022 | Replay SHALL substitute at the provider's own API contract, handing back recorded envelopes, and SHALL introduce no snapshot client, cache, converter or projection of its own; the live path's snapshot client SHALL be the one constructed over it. | Decided call; see § 11 row 1 | Draft  |
+| B-022 | Replay SHALL substitute at the provider's own API contract, handing back recorded envelopes, and SHALL introduce no snapshot client, cache, converter or projection of its own; the live path's snapshot client SHALL be the one constructed over it. | ADR-0002 § "Decision" item 2; § 11 row 1 | Draft  |
+| B-023 | Vessel replay SHALL substitute at the strategy — an `ITrackerSource` fed by a recording — because a push provider has no contract to stand in for; it SHALL reach the seam the same way every other source does. | ADR-0002 § "Consequences"; § 4 row 5 | Draft  |
 
 <!-- Status: Draft | Built | Withdrawn. "Built" means a test cites it and § 9
      says Verified. -->
@@ -87,7 +89,7 @@ against that spec.
 | 2   | OpenSky blocks AWS and other hyperscaler IPs, and the venue network is outside our control.                                                                             | README.md § "Gotchas"; run-the-demo                | Rules out treating replay as a test convenience: it is the stage contingency and a CI prerequisite. Also rules out any replay path that needs the provider reachable to start.                                                                                        |
 | 3   | The observed instant comes from the provider's own envelope, and no consumer reads an ambient clock to supply one.                                                       | aircraft-source B-003                             | Rules out the recorded arrival instant being used as the observed instant. The arrival instant paces playback (B-007) and nothing else — two times on one line, one job each.                                                                                         |
 | 4   | The response envelope and the positional row may be referenced only by the class implementing the API contract and by the snapshot client; the snapshot dies at the projection. | aircraft-source B-045, B-046                      | Satisfied rather than relaxed. Replay substitutes at the contract and brings no client of its own (B-022), so the envelope and the positional row stay referenced by exactly the two components B-045 names. **B-045 is not widened**, and a replay component that parses a recorded payload itself remains ruled out.                                 |
-| 5   | A contract layer exists only where the provider is request/response shaped; a push provider's strategy has none.                                                        | aircraft-source B-049; § 4 row 4 of that spec      | Rules out one uniform substitution point across both feeds. Aircraft replay has a contract it could stand in for; vessel replay has none, so the two halves cannot be assumed symmetric below the seam. See § 11 row 2.                                               |
+| 5   | A contract layer exists only where the provider is request/response shaped; a push provider's strategy has none.                                                        | aircraft-source B-049; § 4 row 4 of that spec      | Rules out one uniform substitution point across both feeds. Aircraft replay has a contract it could stand in for; vessel replay has none, so the two halves substitute at different depths — B-022 for aircraft, B-023 for vessels. Both reach the seam, which is the only symmetry a swap target needs.                                               |
 | 6   | `Vessel`, the vessel client, its cache and its tracker source are unspecified — deferred by the aircraft-source specification.                                          | aircraft-source § 5 row 3                         | Rules out any claim here about a vessel record's members, keys or units. B-019 and B-021 claim replay behavior over whatever that Feature defines, and no more.                                                                                                       |
 | 7   | A rehearsal recording is operational data — real callsigns, real positions — and credentials are never committed, logged, or placed in a fixture.                        | api-mock § "Never add"; aircraft-source § 4 row 12 | Rules out committing a recording, shipping one as a fixture, and any test that reads one. `recordings/` is git-ignored (ADR-0004); fixtures stay synthetic and committed beside their tests.                                                                          |
 | 8   | No test may touch a network or the wall clock.                                                                                                                          | api-mock § "Tests"; test-from-scenarios            | Rules out `Thread.Sleep`, a real delay, and a test that replays in real time. Replay's cadence is driven by an injected scheduler, so a test advances time deliberately — in production as well as in tests.                                                          |
@@ -134,8 +136,9 @@ against that spec.
      choice — is a question for the person, not something to settle here. -->
 
 Unwritten. The substitution point it would otherwise have had to settle is
-already answered — B-022 — and recorded repository-wide rather than here,
-because it binds any provider's contract and not this Feature alone. What is
+already answered — B-022, recorded repository-wide in [ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md)
+rather than here, because it binds any provider's contract and not this Feature
+alone. What is
 left for this section is the replay contract implementation's own shape: how a
 recording is opened and read, how the recorded spacing reaches an injected
 scheduler, and where § 11 row 3's configuration lands.
@@ -189,12 +192,12 @@ None yet.
 
 <!-- Owner: whoever is blocked. "None." is a valid body. -->
 
-Row 1 has been answered and left the table; rows 2 and 3 keep their numbers,
-because § 4 row 5 and § 7 reference them.
+Rows 1 and 2 have been answered and left the table; row 3 keeps its number,
+because § 7 references it. An answered question stays below rather than being
+deleted — it is a record of what was asked, not clutter.
 
 | #   | Question                                                                                                    | Owner       | Target date |
 | --- | ----------------------------------------------------------------------------------------------------------- | ----------- | ----------- |
-| 2   | Where does vessel replay substitute, given a push provider has no contract layer to stand in for?           | the person  | before § 7  |
 | 3   | How is the recording to replay chosen at launch, and where does it live relative to the running application? | implementer | before § 7  |
 
 **Row 1 — answered: replay substitutes at the API contract, and selection stays
@@ -215,16 +218,19 @@ place B-003 had to be honoured. A boundary rule honoured in two implementations
 is one that drifts.
 
 The decision binds any provider's contract rather than this Feature alone, so it
-is recorded in a repository-wide ADR rather than in this Feature's `adr/`. This
-specification links that record once it exists — a link to an ADR that does not
-yet exist is forbidden outright by spec-and-traceability § "Never add".
+is recorded in [ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md)
+— amended there rather than given a record of its own, because that ADR's
+subject already is the layering and where each thing substitutes in it.
 
-**Row 2.** Vessel replay cannot mirror row 1's answer, because there is no
-vessel contract to stand in for (§ 4 row 5). The asymmetry is now real rather
-than hypothetical: aircraft replay substitutes *below* the snapshot client,
-while the vessel half must substitute somewhere else — at the socket's message
-source — and that point is undecided. Deliberate asymmetry is tolerable;
-discovering it during implementation is not.
+**Row 2 — answered: vessel replay substitutes at the strategy.** It cannot
+mirror row 1, because there is no vessel contract to stand in for (§ 4 row 5),
+so the two halves substitute at different depths: aircraft replay below the
+snapshot client, vessel replay at the strategy itself. B-023 claims it, and
+ADR-0002 § "Consequences" accepts the asymmetry as following from its own
+reading rather than from anything about the vessel feed. Both halves still reach
+`ITrackerSource`, so the symmetry a swap target actually needs is untouched —
+what makes something selectable is the seam it lands on, not the depth it
+substitutes at.
 
 **Row 3.** ADR-0004 fixes the format and the shape of a recording's name; it
 deliberately says nothing about which recording a run selects or where the
@@ -257,8 +263,8 @@ None yet.
 The recording format this specification is written against binds both replay
 feeds rather than this Feature alone, so it is recorded in the
 repository-wide [ADR-0004](../../../.spec/adr/0004-ndjson-recording-format.md),
-as the layering is in
-[ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md) —
+as the layering and each half's
+substitution point are in [ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md) —
 neither here nor in this Feature's `adr/`. The scope call that this Feature
 covers both replay feeds while the simulated source becomes its own is recorded
 as § 5 row 1 rather than as a `decisions/` file, because it is a boundary of

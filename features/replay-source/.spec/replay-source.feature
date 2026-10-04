@@ -138,6 +138,15 @@ Feature: Replay source — recording, playback, and selection
       And the snapshot client above it is the same class the live path uses
       And replay declares no snapshot client, cache, converter or projection of its own
 
+  @B-023
+  Scenario: Vessel replay stands in at the strategy, because there is no contract to stand in for
+    Given a recording of vessel messages
+      And the vessel provider is a socket with no contract layer
+     When vessel replay is built
+     Then it is an `ITrackerSource` fed by the recording
+      And it reaches the seam the same way the live vessel source does
+      And no contract is invented for the socket so that replay can substitute below it
+
   # ───────────────────────────── Selection and swap ──────────────────────────
 
   @B-015
