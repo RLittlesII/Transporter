@@ -2,7 +2,7 @@ id: "0019"
 type: feature
 title: Report the layer-boundary claims as compiler diagnostics
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 value: 5

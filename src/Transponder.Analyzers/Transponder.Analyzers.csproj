@@ -13,6 +13,19 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- The analyzer's own tests name Diagnostics and Layers; nothing widens to let them.
+             transponder-conventions § test-from-scenarios: a test reaches an internal type through
+             InternalsVisibleTo, not by making the type public. -->
+        <InternalsVisibleTo Include="Transponder.UnitTests"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Release tracking: the record of every id handed out, which is what B-007 needs and
+             what RS2008 asks for. -->
+        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <!-- PrivateAssets="all": Roslyn is the host's, not ours to carry anywhere. This is also
              B-015 — the application takes no dependency the analyzer takes, and the reverse. -->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>

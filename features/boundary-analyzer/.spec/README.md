@@ -299,32 +299,42 @@ describes.
 
 | Claim ID | Scenario  | Test                                                                                                                              | Status  |
 | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| B-001    | `@B-001`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenEachIsMappedToAClaim_ThenTheMappingIsOneToOne`                   | Missing |
-| B-002    | `@B-002`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreRead_ThenEachIsTrnPrefixedAndCarriesNoClaimNumber`      | Missing |
-| B-003    | `@B-003`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheTitlesAndMessagesAreRead_ThenEachNamesItsSpecificationAndClaim` | Missing |
-| B-004    | `@B-004`  | `BoundaryAnalyzerTests.GivenAViolationInAMethodBody_WhenAnalyzed_ThenTheDiagnosticIsReportedAtThatNodeAndNamesTheSymbol`           | Missing |
-| B-005    | `@B-005`  | `BoundaryAnalyzerTests.GivenAViolationInGeneratedSource_WhenAnalyzed_ThenNothingIsReported`                                        | Missing |
-| B-006    | `@B-006`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheDefaultSeveritiesAreRead_ThenEveryOneIsError`                 | Missing |
-| B-007    | `@B-007`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreCompared_ThenNoneIsDuplicatedAndNoRetiredIdIsReused`    | Missing |
-| B-008    | `@B-008`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheEighteenAndNothingMore`  | Missing |
+| B-001    | `@B-001`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenEachIsMappedToAClaim_ThenTheMappingIsOneToOne`                   | Verified |
+| B-002    | `@B-002`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreRead_ThenEachIsTrnPrefixedAndCarriesNoClaimNumber`      | Verified |
+| B-003    | `@B-003`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheTitlesAndMessagesAreRead_ThenEachNamesItsSpecificationAndClaim` | Verified |
+| B-004    | `@B-004`  | `BoundaryAnalyzerTests.GivenAViolationInAMethodBody_WhenAnalyzed_ThenTheDiagnosticIsReportedAtThatNodeAndNamesTheSymbol`           | Verified |
+| B-005    | `@B-005`  | `BoundaryAnalyzerTests.GivenAViolationInGeneratedSource_WhenAnalyzed_ThenNothingIsReported`                                        | Verified |
+| B-006    | `@B-006`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheDefaultSeveritiesAreRead_ThenEveryOneIsError`                 | Verified |
+| B-007    | `@B-007`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreCompared_ThenNoneIsDuplicatedAndNoRetiredIdIsReused`    | Verified |
+| B-008    | `@B-008`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheEighteenAndNothingMore`  | Verified |
 | B-009    | `@B-009`  | `BoundaryAnalyzerTests.GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported`                          | Missing |
 | B-010    | `@B-010`  | `BoundaryAnalyzerTests.GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration`                          | Missing |
 | B-011    | `@B-011`  | `BoundaryAnalyzerTests.GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall`                            | Missing |
 | B-012    | `@B-012`  | `BoundaryAnalyzerTests.GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall`                  | Missing |
-| B-013    | `@B-013`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenEachClaimIsClassified_ThenNoneIsAClaimAboutAComputedValue`               | Missing |
-| B-014    | `@B-014`  | **Review** — the analyzer's reference shape is a build-file fact. The obligation is on the pull request that adds the project: an analyzer reference with no assembly reference, and no analyzer assembly in the app's output. | Missing |
-| B-015    | `@B-015`  | **Review** — same pull request: the package the analyzer needs is not added to an application project, and no application or test file names an analyzer type.                      | Missing |
+| B-013    | `@B-013`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenEachClaimIsClassified_ThenNoneIsAClaimAboutAComputedValue`               | Verified |
+| B-014    | `@B-014`  | **Review**, done on `0020` — `OutputItemType="Analyzer"` with `ReferenceOutputAssembly="false"`, and no copy of `Transponder.Analyzers.dll` under `src/Transponder/bin`, `src/Gui/bin` or `test/UnitTests/bin`. | Verified |
+| B-015    | `@B-015`  | **Review**, done on `0020` and `0021` — `Microsoft.CodeAnalysis.CSharp` is referenced by the analyzer project and by the tests that drive it, by no application project, and no application file names an analyzer type. | Verified |
 | B-016    | `@B-016`  | **Review** — a cite check, not a behaviour: each test name in `aircraft-source` § 9 exists in `test/UnitTests` spelled that way. A test asserting its own name proves nothing.      | Missing |
-| B-017    | `@B-017`  | **Review** — `./build.sh` fails on a seeded violation, observed once when the first rule lands. Asserting it in xUnit would assert the harness rather than the build.               | Missing |
-| B-018    | `@B-018`  | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoClaimInTheMappingTable_WhenTheDescriptorsAreRead_ThenItIsReportedAsUnclaimed` | Missing |
-| B-019    | `@B-019`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenARowIsRead_ThenItNamesASpecificationAndClaimAndRestatesNeitherTextNorTest` | Missing |
+| B-017    | `@B-017`  | **Review**, done on `0021` — a seeded reference to the row from `DemoViewModel` failed `./build.sh` with `error TRN0001` at that line and column, and the seed was reverted. | Verified |
+| B-018    | `@B-018`  | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoClaimInTheMappingTable_WhenTheDescriptorsAreRead_ThenItIsReportedAsUnclaimed` | Verified |
+| B-019    | `@B-019`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenARowIsRead_ThenItNamesASpecificationAndClaimAndRestatesNeitherTextNorTest` | Verified |
 
-Nineteen rows, nineteen claims, every one `Missing` — **and this is the gate**.
-No rule exists yet, so nothing here is coverage, and the eighteen rows in
-[`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 that wait on this
-Feature stay `Missing` too. That specification's § 9 remains the only place
-those eighteen claims' build state is written; this matrix carries this
-Feature's own claims and nothing about theirs.
+Fourteen rows `Verified`, five `Missing` — **and the five are the gate**. What
+is proven is the analyzer's surface: the ids, the messages, the severities, the
+release record, the mapping against this document's own § 7 table, the
+exclusion of generated code, and a diagnostic that lands on the node and names
+the symbol. What is not is four of the five rule families — B-009 – B-012, on
+`0022` – `0024` — and B-016, which cannot be `Verified` until the eighteen test
+names exist, and one of them does.
+
+The eighteen rows in
+[`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 are a separate
+gate and mostly still `Missing`. Exactly one is now provable — its B-004, by
+`BoundaryAnalyzerTests.GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach`,
+which `0021` wrote under the name that matrix gave it. Recording it there is
+that specification's `test-writer`'s edit, not this document's: its § 9 is the
+only place those claims' build state is written, and its prose counts the
+`Missing` rows.
 
 Four rows name a review obligation rather than a test, for the reason § 8's
 coverage row gives: a test over a project file or a build script asserts the

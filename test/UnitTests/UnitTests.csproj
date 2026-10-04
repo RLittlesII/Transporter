@@ -12,6 +12,7 @@
     <ItemGroup>
         <PackageReference Include="AwesomeAssertions"/>
         <PackageReference Include="coverlet.collector"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk"/>
         <PackageReference Include="NSubstitute"/>
         <PackageReference Include="Rocket.Surgery.Extensions.Testing.AutoFixtures"/>
@@ -32,12 +33,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- An analyzer reference, not an assembly reference: csc loads it and the application
-             never sees it (B-014). ReferenceOutputAssembly="false" is what keeps
-             Transponder.Analyzers.dll out of this project's output. -->
+        <!-- Both an analyzer reference and an assembly reference, which is the one project where
+             that is right: csc loads it over this project's own code, and the tests name
+             BoundaryAnalyzer in order to test it (B-015). -->
         <ProjectReference Include="../../src/Transponder.Analyzers/Transponder.Analyzers.csproj"
                           OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false"/>
+                          ReferenceOutputAssembly="true"/>
     </ItemGroup>
 
 </Project>
