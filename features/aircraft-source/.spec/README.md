@@ -571,50 +571,168 @@ snapshot, it would differ on every poll and the differ would emit churn.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 8 -->
 
-Unwritten. `test-writer` owes both the testability assessment and the scenario
-grouping. The constraints it has to satisfy are already stated: no test touches
-a network or the wall clock (§ 4 row 14), `HttpTest` cannot follow a message
-into an actor (§ 4 row 15), and the contract's double is hand-written rather
-than mocked (B-010, § 4 row 18).
+**Testability assessment**
 
-The scenarios themselves exist, in
-[`aircraft-source.feature`](aircraft-source.feature) beside this file, each
-tagged with the `@B-00n` it proves. Scenarios are documentation; the xUnit
-tests execute, and none has been written yet.
+| Dimension | Verdict | Finding | Recommendation |
+| --------- | ------- | ------- | -------------- |
+| DI seams | Pass | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and the hand-written fake (B-010) is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. | — |
+| Behavior isolation | Pass | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043). | — |
+| Coverage potential | **Qualified** | Thirty-eight claims are about a computed value and are ordinary tests. Eleven are about what may *name* what, and reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047 — it would pass a view model that builds an envelope inside a method. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the eleven as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. |
+| Fixtures | Pass | Every value is synthetic and committed beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array and the 17-versus-18 element cases are two files rather than two code paths. | — |
+| Determinism | Pass | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it. | — |
+
+**Two mechanisms, and which proves what**
+
+A claim about a value the code computes is an xUnit test. A claim about which
+types may reference which is an analyzer diagnostic. The split is not a
+preference — § 9's Test column names one or the other for every claim, and
+ADR-0006 § Context is why the second exists at all. Nothing is asserted twice:
+a diagnostic is not re-tested in xUnit, and a computed value is not checked by
+an analyzer.
+
+**B-009 and B-049 take neither**, for the reason ADR-0006 § Decision gives:
+each constrains code this repository does not contain, so there is nothing to
+load and nothing to analyze. § 9 marks them Review. They are the honest form of
+"a row naming no test", not an oversight — and the only two rows whose Status
+will not move when the tests and the analyzer arrive.
+
+**Scenarios**
+
+Full Gherkin lives in [`aircraft-source.feature`](aircraft-source.feature)
+beside this file — forty-nine scenarios, each tagged with the `@B-00n` it
+proves. Scenarios are documentation; the xUnit tests and the analyzer's
+diagnostics are what execute.
+
+- Happy path → B-001 – B-003, B-005, B-008, B-011, B-012, B-015, B-016,
+  B-019, B-020, B-023 – B-025, B-027, B-030 – B-035, B-038, B-039, B-041,
+  B-042, B-050
+- Failure mode → B-010, B-022, B-026 – B-029, B-040, B-043, B-051
+- Validation failure → B-004, B-006, B-007, B-009, B-013, B-014, B-017,
+  B-021, B-036, B-037, B-044 – B-049
+- Data-driven → B-018 – B-020, B-022, B-035
+
+Ten claims carry two scenarios each, because each states two things a single
+scenario would have had to prove at once — B-026's expiry and its `401`,
+B-028's deferral and its every-other-status clause, B-051's marking and its
+threshold. § 9 still gives each claim exactly one row; the row's tag anchors
+both scenarios.
+
+**What the tests need before any of them can be written**
+
+`transponder-conventions` mandates AwesomeAssertions and NSubstitute, and
+neither is in [`Directory.Packages.props`](../../../Directory.Packages.props)
+yet — nor is DynamicData, which `0003` adds under § 4 row 17. The first item to
+write a test adds the two test packages centrally, the same way. Nothing here
+is blocked on a decision; it is a step, recorded so it is not discovered as a
+surprise.
 
 ## 9. Traceability Matrix
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-Unwritten, and **this is the gate**. `test-writer` owes one row per § 3 claim,
-anchored to the scenario's `@B-00n` tag and naming the xUnit test that proves
-it. Until those rows exist no claim is covered, so the matrix stands `Missing`
-in its entirety and implementation does not start — which is why every item
-sits at `ready-for-architecture` rather than `ready-for-implementation`.
+**This is the gate, and it reports `Missing` on all fifty-one.** No test in
+this repository executes yet — `test/UnitTests` contains no `.cs` file — so
+every row below names what will prove its claim and records that it does not.
+A row's Status becomes `Verified` when the named test passes in a run, and not
+before.
 
-A scenario existing is not coverage. This section is the only place a claim's
-build state is written, and a row here naming no test is what blocks ship.
+The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
+retitled scenario does not silently orphan a row. Ten claims carry two
+scenarios; the tag anchors both.
+
+Three kinds of entry appear in Test. An **xUnit test** proves a computed value.
+An **analyzer diagnostic** proves a claim about what may name what — the
+mechanism is [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md),
+the analyzer does not exist, and its tests are what these rows name. **Review**
+appears twice, for the two claims that constrain code the repository does not
+contain; § 8 says why, and those two rows are the honest form of "a row naming
+no test", not an omission.
+
+| Claim ID | Scenario | Test | Status |
+| -------- | -------- | ---- | ------ |
+| B-001 | `@B-001` | `OpenSkyStatesResponseTests.GivenAReportedTimeAndThreeRows_WhenTheResponseIsRead_ThenBothArriveNamedAsTheProviderNamesThem` | Missing |
+| B-002 | `@B-002` | `OpenSkyStatesResponseTests.GivenTheEnvelope_WhenItsMembersAreInspected_ThenStatesIsPositionalAndNoMemberIsAPerAircraftType` | Missing |
+| B-003 | `@B-003` | `AircraftSnapshotClientTests.GivenAResponseReportingAnInstant_WhenTheSetIsApplied_ThenThatInstantIsTheObservedOne` | Missing |
+| B-004 | `@B-004` | analyzer — `BoundaryAnalyzerTests.GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach` | Missing |
+| B-005 | `@B-005` | `OpenSkyApiContractTests.GivenTheContract_WhenItsMethodsAreInspected_ThenOnePerEndpointReturnsTaskAndTakesCancellationLast` | Missing |
+| B-006 | `@B-006` | analyzer — `BoundaryAnalyzerTests.GivenAContractNamingAnObservableCacheBoxIntervalOrCredential_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-007 | `@B-007` | analyzer — `BoundaryAnalyzerTests.GivenASecondImplementationForOneTransportOrAPublicEndpointMethod_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-008 | `@B-008` | `OpenSkyRegistrationTests.GivenTheConstructedChain_WhenTheContractIsResolved_ThenItsOwnImplementationArrivesAndNoImplementationTypeResolves` | Missing |
+| B-009 | `@B-009` | **Review** — the precondition cannot be arranged: OpenSky has published no version. An obligation on the change that adds a versioned interface. | Missing |
+| B-010 | `@B-010` | `OpenSkyApiFakeTests.GivenAFakeWithNoResponseConfigured_WhenTheEndpointIsCalled_ThenItThrowsNamingTheUnsetResponse` | Missing |
+| B-011 | `@B-011` | `AircraftSnapshotTests.GivenTwoSnapshotsReportingIdenticalValues_WhenCompared_ThenTheyAreEqual` | Missing |
+| B-012 | `@B-012` | `AircraftSnapshotTests.GivenASnapshot_WhenItsKeyIsRead_ThenItIsTheNonOptionalIcao24` | Missing |
+| B-013 | `@B-013` | `AircraftSnapshotTests.GivenAWireRow_WhenTheSnapshotIsBuilt_ThenEveryValueIsTheWiresAndNoneIsConverted` | Missing |
+| B-014 | `@B-014` | `AircraftSnapshotTests.GivenTheSnapshot_WhenItsMembersAreInspected_ThenNoneIsStalenessLabelOrGroupingKey` | Missing |
+| B-015 | `@B-015` | `AircraftSnapshotClientTests.GivenTheClient_WhenItIsConstructed_ThenItTakesContractAndCacheAndConstructsNeither` | Missing |
+| B-016 | `@B-016` | `AircraftSnapshotClientTests.GivenAnEighteenElementRow_WhenItIsRead_ThenEveryMemberComesFromItsOwnIndex` | Missing |
+| B-017 | `@B-017` | `AircraftSnapshotClientTests.GivenANullElement_WhenTheRowIsRead_ThenTheValueIsAbsentRatherThanADefault` | Missing |
+| B-018 | `@B-018` | `AircraftSnapshotClientTests.GivenASeventeenElementRowAndAnEighteenElementRowEndingInZero_WhenBothAreRead_ThenTheirCategoriesDiffer` | Missing |
+| B-019 | `@B-019` | `AircraftSnapshotClientTests.GivenAPaddedCallsign_WhenTheRowIsRead_ThenPaddingIsRemovedAndPaddingAloneIsAbsent` | Missing |
+| B-020 | `@B-020` | `AircraftSnapshotClientTests.GivenASquawkOfZeroZeroTwoOne_WhenTheRowIsRead_ThenItIsFourCharactersAndNotTwentyOne` | Missing |
+| B-021 | `@B-021` | `AircraftSnapshotClientTests.GivenARowWithSensors_WhenItIsRead_ThenIndexTwelveReachesNoSnapshotOrVehicleMember` | Missing |
+| B-022 | `@B-022` | `AircraftSnapshotClientTests.GivenOneUnreadableRowAmongSeveral_WhenTheSetIsRead_ThenItIsExcludedAndCountedAndTheRestSurvive` | Missing |
+| B-023 | `@B-023` | `AircraftSnapshotClientTests.GivenAFetchedSet_WhenItIsApplied_ThenTheCacheTakesOneDifferentialUpdateOverTheWholeSet` | Missing |
+| B-024 | `@B-024` | `AircraftSnapshotClientTests.GivenABoxAndAnInterval_WhenTheClientIsBuilt_ThenBothArriveAsInputAndNeitherIsOnTheContract` | Missing |
+| B-025 | `@B-025` | `AircraftSnapshotClientTests.GivenCategoryGroupingIsOffered_WhenThePollIsSent_ThenTheRequestAsksForExtendedRows` | Missing |
+| B-026 | `@B-026` | `OpenSkyHttpApiTests.GivenAnExpiredTokenAndGivenAnUnauthorizedResponse_WhenAPollIsSent_ThenTheTokenRefreshesAndTheRequestRetriesOnce` | Missing |
+| B-027 | `@B-027` | `OpenSkyHttpApiTests.GivenAPollAndATokenRefresh_WhenBothAreLogged_ThenRemainingCreditIsRecordedAtDebugAndNoSecretAppears` | Missing |
+| B-028 | `@B-028` | `OpenSkyHttpApiTests.GivenAThrottledResponseAndGivenAServerError_WhenEachIsHandled_ThenTheFirstDefersByTheHeaderAndTheSecondStaysAnException` | Missing |
+| B-029 | `@B-029` | `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` and `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors` | Missing |
+| B-030 | `@B-030` | `AircraftSnapshotCacheTests.GivenTheCache_WhenItIsInspected_ThenItHasNoDiffPolicyNoProjectionAndNoClock` | Missing |
+| B-031 | `@B-031` | `AircraftSnapshotCacheTests.GivenTwoClients_WhenEachIsDisposed_ThenEachHasItsOwnCacheAndTheCacheOutlivesIt` | Missing |
+| B-032 | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-033 | `@B-033` | `AircraftTrackerSourceTests.GivenTheSeam_WhenItIsInspected_ThenItDeclaresTheTransportVehicleChangesetAndNothingElse` | Missing |
+| B-034 | `@B-034` | `AircraftTrackerSourceTests.GivenASnapshotChangeset_WhenItIsProjected_ThenTheStrategyIsWhereAnAircraftFirstExists` | Missing |
+| B-035 | `@B-035` | `AircraftSnapshotMapperTests.GivenMetresMetresPerSecondAndDegrees_WhenProjected_ThenEachReachesTheVehicleUnconverted` | Missing |
+| B-036 | `@B-036` | `AircraftSnapshotMapperTests.GivenAnAbsentAltitudeAndAnAbsentPosition_WhenProjected_ThenNeitherBecomesZeroAndBothAltitudesSurvive` | Missing |
+| B-037 | `@B-037` | `AircraftSnapshotMapperTests.GivenAnUppercaseIcao24_WhenProjected_ThenTheKeyIsLowercase`; the seam-widening half is analyzer — `BoundaryAnalyzerTests.GivenAPerTypeSeamWithASourceDescribingMember_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-038 | `@B-038` | `SwappingTrackerSourceTests.GivenTwoStrategies_WhenTheLiveOneIsSelected_ThenTheDecoratorChoosesAndNoResolverTypeExists` | Missing |
+| B-039 | `@B-039` | `SwappingTrackerSourceTests.GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt` | Missing |
+| B-040 | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped` | Missing |
+| B-041 | `@B-041` | analyzer — `BoundaryAnalyzerTests.GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-042 | `@B-042` | `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction` | Missing |
+| B-043 | `@B-043` | `FleetTrackerTests.GivenAnInjectedClockAdvancedPastTheThreshold_WhenStalenessIsRead_ThenItDerivesFromLastContactAndNoAmbientClockIsRead` | Missing |
+| B-044 | `@B-044` | analyzer — `BoundaryAnalyzerTests.GivenCodeAddingToOrRemovingFromABoundCollection_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-045 | `@B-045` | analyzer — `BoundaryAnalyzerTests.GivenATypeOtherThanTheContractImplementationOrClientNamingTheEnvelopeOrRow_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-046 | `@B-046` | analyzer — `BoundaryAnalyzerTests.GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-047 | `@B-047` | analyzer — `BoundaryAnalyzerTests.GivenAConsumerOfTheFleetTrackerNamingAnythingUpstream_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-048 | `@B-048` | analyzer — `BoundaryAnalyzerTests.GivenAContractCarryingAVersionSuffixOrAMarkerAboveIt_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-049 | `@B-049` | **Review** — no push provider exists, so there is nothing to analyze and no type to load. An obligation on the Feature that adds the second provider. | Missing |
+| B-050 | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault` | Missing |
+| B-051 | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale` | Missing |
+
+Fifty-one rows, fifty-one claims, each appearing once. A scenario existing is
+not coverage; this section is the only place a claim's build state is written,
+and nothing here is `Verified`.
 
 ## 10. Lessons / Spec Deltas
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
-No Feature-scoped lesson yet. One repository-wide lesson bears on this
-document: [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
-which is why §§ 6-9 above say in words that they are unwritten rather than
-carrying a template row, and why § 3 no longer keeps a build state § 9 owns.
+No Feature-scoped lesson yet. Two repository-wide lessons bear on this
+document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
+is why § 3 keeps no build state that § 9 owns, and why every one of § 9's
+fifty-one rows reads `Missing` rather than inheriting the template's example
+`Verified`: a gate reporting a pass that nothing verified is the one failure
+nothing downstream can detect. It is also why §§ 6-9 said in words that they
+were unwritten, for as long as they were.
+[Lesson 0003](../../../.spec/lessons/0003-a-dedupe-is-a-move-and-a-move-has-a-destination.md)
+came out of writing § 7, which needed a member list a dedupe had removed from
+the repository while naming a record that never received it.
 
 ## 11. Open Questions
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-Two, both opened by § 7. Writing the design is what surfaced them; neither was
-visible while the section was a stub.
+Three. The first two were opened by § 7 and the third by § 8; writing a section
+is what surfaces them, which is why a stub opens none.
 
 | #   | Question | Owner | Target date |
 | --- | -------- | ----- | ----------- |
 | 1   | How does the envelope's reported time reach the clock `IFleetTracker` owns? B-003 makes it the observed instant for everything downstream and bans a consumer from reading an ambient clock; B-043 puts the clock in the tracker; nothing connects them, and § 7 rules out the obvious answer of carrying it on the snapshot. § 7 "Decision required" states three options and recommends the first. Blocks `0007`, and binds [`features/replay-source`](../../replay-source/.spec/README.md). | `implementer` → the person | Before `0007` starts |
 | 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. Blocks `0004`. | `spec-author` | Before `0004` starts |
+| 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eleven claims — B-004, B-006, B-007, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those eleven rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
 
 Everything else this specification opened has been answered and recorded: the
 bounding box and interval in [decisions/0001](decisions/0001-houston-bounding-box.md)
