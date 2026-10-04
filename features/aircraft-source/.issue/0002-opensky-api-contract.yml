@@ -5,8 +5,8 @@ title: Declare the OpenSky API contract and the response envelope
 status: ready-for-architecture
 
 priority: high
-risk: 3
-rank: 96
+risk: 4
+rank: 93
 
 parent: "0001"
 children: []

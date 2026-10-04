@@ -5,8 +5,8 @@ title: Add the aircraft snapshot record and its cache
 status: ready-for-architecture
 
 priority: high
-risk: 2
-rank: 99
+risk: 1
+rank: 102
 
 parent: "0001"
 children: []

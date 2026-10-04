@@ -5,8 +5,8 @@ title: Wrap ITrackerSource in IFleetTracker and give it the clock
 status: ready-for-architecture
 
 priority: high
-risk: 3
-rank: 91
+risk: 4
+rank: 88
 
 parent: "0001"
 children: []

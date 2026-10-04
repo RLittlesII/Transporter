@@ -6,8 +6,8 @@ status: ready-for-architecture
 
 priority: high
 value: 5
-risk: 4
-rank: 88
+risk: 3
+rank: 91
 
 parent: null
 children:
@@ -116,5 +116,7 @@ out_of_scope:
     themselves (row 1), the vessel feed (row 3), the replay and simulated
     strategies (row 4), the swap control and stage choreography (row 5), and
     all UI (row 7)."
-  - "Writing §§ 6-7 of the spec. That is the implementer's, and it is what the
-    children's ready-for-architecture status is waiting on."
+  - "Writing the spec's §§ 6-9. §§ 6-7 are the implementer's and have landed;
+    §§ 8-9 are the test-writer's and have not. § 9 is now the only thing every
+    child's ready-for-architecture status is waiting on, plus the two questions
+    § 11 opened for `0004` and `0007`."

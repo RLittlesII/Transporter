@@ -5,8 +5,8 @@ title: Project cached snapshots into domain vehicles behind ITrackerSource
 status: ready-for-architecture
 
 priority: high
-risk: 3
-rank: 106
+risk: 2
+rank: 109
 
 parent: "0001"
 children: []
