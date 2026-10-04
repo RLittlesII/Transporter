@@ -33,12 +33,12 @@ summary: |
   analyzer and not as an assembly, with its Roslyn packages added to
   Directory.Packages.props and referenced nowhere else.
 
-  It lands with one trivial diagnostic rather than none, because the only way to
-  tell a correctly loaded analyzer from a silently inert one is to see it report.
-  CS8032 — "an instance of analyzer X cannot be created" — is a *warning*, and
-  this repository watched a version bump leave every RSA rule inactive with a
-  green build on 2026-10-04. A reference shape that compiles and analyzes
-  nothing is this item's whole hazard.
+  A reference shape that compiles and analyzes nothing is this item's whole
+  hazard: CS8032 — "an instance of analyzer X cannot be created" — is a
+  *warning*, and this repository watched a version bump leave every RSA rule
+  inactive with a green build on 2026-10-04. The load is therefore proven by a
+  rule that fires rather than by the build going green, and that rule is
+  TRN0001, which 0021 lands immediately after this item.
 
   B-017 is proven the same way: seed a violation, run ./build.sh as the
   pull-request workflow runs it, and watch the build fail at the line. Nothing
@@ -59,8 +59,8 @@ acceptance_criteria:
 decisions: []
 
 out_of_scope:
-  - "The descriptor conventions — B-001 – B-008, B-013, B-016, B-018, B-019 on
-    0021. The diagnostic this item lands exists to prove the load, and 0021 is
-    what makes it conform."
+  - "The descriptor conventions and the first rule — B-001 – B-008, B-013,
+    B-016, B-018, B-019 and TRN0001 on 0021, which is what proves this item's
+    reference shape actually loaded."
   - "Any of the eighteen rules themselves — 0022, 0023 and 0024 by family."
   - "Analyzing the .build project — § 5 row 7."
