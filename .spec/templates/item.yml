@@ -37,10 +37,24 @@ title: Poll OpenSky for aircraft snapshots
 # edit.
 status: ready
 
-priority: high # DERIVED from value and risk — recompute, never hand-edit
+# `value` and `risk` are AUTHORED; `priority` and `rank` are DERIVED from them
+# and recomputed, never hand-edited. The derivation:
+#
+#   rank = (value × 20) − (risk × 3) + (unblocks × 5)
+#
+#   priority = high   when rank is 60 or above
+#              medium when rank is 40 to 59
+#              low    when rank is below 40
+#
+# `unblocks` is the count of items whose `depends_on` names this one — the same
+# ids `blocks` lists below — counted across EVERY Feature. So cutting an item
+# in one Feature that waits on an item in another moves that item's rank with
+# no change to its value or risk. Recompute rather than read, and recompute the
+# dependents too when a `depends_on` edge is added.
+priority: high # DERIVED — see above
 value: 4 # 1-5. Optional on a child: omit to inherit the parent's
 risk: 3 # 1-5. REQUIRED, and never inherited
-rank: 1 # DERIVED. Orders items inside one priority bucket
+rank: 1 # DERIVED — see above. Orders items inside one priority bucket
 
 parent: null # id of the epic or feature this hangs under
 children: [] # ids carved out of this item, so its own scope shrank

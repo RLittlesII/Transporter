@@ -235,7 +235,9 @@ field by field — `type`, `status`, `risk` and `title` are never omitted, and
 
 **Status enum**: `needs-decomposition`, `ready-for-architecture`,
 `ready-for-implementation`, `ready`, `in-progress`, `in-review`, `blocked`,
-`done`. `priority`, `rank` and `blocks` are derived.
+`done`. `priority`, `rank` and `blocks` are derived, and
+[`item.yml`](../../.spec/templates/item.yml) carries the derivation beside the
+fields it applies to.
 
 ### Claim ids are `B-00n`
 
