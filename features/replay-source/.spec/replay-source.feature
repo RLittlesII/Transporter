@@ -128,6 +128,16 @@ Feature: Replay source — recording, playback, and selection
      Then the corrected behavior is observed
       And the recording did not have to be captured again
 
+  # ─────────────────────────── The substitution point ────────────────────────
+
+  @B-022
+  Scenario: Replay stands in for the provider's contract and brings nothing else
+    Given a recording of aircraft payloads
+     When replay is built
+     Then it is an implementation of the provider's own API contract, handing back recorded envelopes
+      And the snapshot client above it is the same class the live path uses
+      And replay declares no snapshot client, cache, converter or projection of its own
+
   # ───────────────────────────── Selection and swap ──────────────────────────
 
   @B-015
