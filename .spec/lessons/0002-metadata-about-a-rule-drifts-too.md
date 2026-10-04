@@ -58,6 +58,11 @@ restated in the wrong place is wrong when the *rule* changes — and a rule abou
 where something is written changes every time the layout does, which is more
 often.
 
+Underneath both: **no skill said how to write a specification**, only what a
+specification is. The model was documented — two records, one authority each,
+claims tracing to tests — and the act of producing the document from a blank was
+not, so every failure above happened in that gap.
+
 ## Spec delta
 
 No product delta. The specifications lost no claim, constraint or decision;
@@ -76,9 +81,23 @@ the gate, which is why every item sits at `ready-for-architecture`.
 
 ## Skill
 
-[`coding-conventions`](../../.skills/coding-conventions/SKILL.md) already holds
-the rule this generalizes; what changed are the documents that were outside its
-reach:
+[`spec-and-traceability`](../../.skills/spec-and-traceability/SKILL.md) gained
+the authoring rules, because it is the skill that would have prevented this and
+it had nothing to say about the act of filling a blank in:
+
+> A copy of a template is not a document until the template's instructions come
+> out of it. A placeholder is not content. An unwritten section says so in
+> words, and names the role that owes it. Within one specification, no section
+> stores what another section derives — and writing the dependency down is not
+> the same as removing it. A cite names something that exists.
+
+It also gained the rule the fake matrix row is the case study for: **a gate
+reporting that it passed when nothing has been verified** is worse than no gate,
+because it is the one failure nothing downstream can detect.
+
+[`coding-conventions`](../../.skills/coding-conventions/SKILL.md) already held
+the rule all of that generalizes. What else changed are the documents that were
+outside its reach:
 
 - [`.spec/templates/feature.md`](../../.spec/templates/feature.md) states that
   its per-section guidance belongs to the template and is reduced to a one-line

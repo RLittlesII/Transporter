@@ -64,6 +64,62 @@ order.
   specific wrong answer and the claim it breaks, and the rationale becomes an
   instruction instead of a restatement of the score.
 
+## Filling the blank
+
+A specification is written by copying a template, and **a copy of a template is
+not a document until the template's instructions come out of it.** The blank
+carries guidance per section — who owns it, what belongs in it, what the rows
+mean. That guidance belongs to the blank. Left in the copy it becomes a second
+statement of a rule the blank already owns, and the copies reword themselves
+over time until nothing says which one governs.
+
+Reduce it to a pointer back at the template, or remove it. Either way the
+document is content, and the instruction is read where it is maintained.
+
+**A placeholder is not content.** An unreplaced example row reads as an answer —
+a filled table, a populated matrix — and a reader cannot tell it apart from one.
+This is worse than an empty section, because an empty section asks a question
+and a leftover placeholder answers it wrongly.
+
+So: **an unwritten section says so in words, and names the role that owes it.**
+Not deleted, because deleting it destroys the signal that the question was
+asked. Not left as a template row, because that signals the opposite of the
+truth. "Unwritten; `<role>` owns it; what is left to settle is X" is the honest
+form, and it is also the useful one — it tells the next reader what is missing
+rather than making them diff against the blank to find out.
+
+**An unwritten section that gates something says that too.** Where a section is
+the coverage gate, its emptiness *is* the gate holding, and the document should
+say which downstream stage is therefore blocked. A gate that looks satisfied is
+worse than no gate: it is the one failure mode nothing downstream can detect,
+because every reader takes it at its word.
+
+## One answer, one section
+
+Within a single specification, **no section stores what another section
+derives.** Two sections holding one answer is the same defect as a specification
+and an item holding one answer, and it fails the same way — by hand, in the copy
+nobody recomputed.
+
+- A per-claim build state derives from the coverage matrix. The claim rows do
+  not store it.
+- An overall verdict derives from the per-owner sign-offs and the matrix. The
+  document's maturity field is that verdict, not a mirror of a row that repeats
+  it.
+- A score's rationale is the specification's; the score itself is the item's.
+  Carry the reasoning and cite the number.
+
+**Writing the dependency down is not the same as removing it.** A note saying
+"this field mirrors that row" documents a mirror and leaves it in place, which
+reads as managed and behaves as duplicated. The remedy is one store, not a
+better comment.
+
+**A cite names something that exists.** A reference to a section is as
+load-bearing as a link to a file, and nothing checks either: a cite to a heading
+that was renamed, abbreviated or never written fails silently and survives every
+review that reads the sentence rather than following it. When a section moves or
+is renamed, the cites to it are part of the change.
+
 ## Claims and traceability
 
 - Claims are numbered rows in the acceptance-criteria section. Each scenario
@@ -149,5 +205,12 @@ number and rewrite every reference; renaming is cheap.
 - A renumbered or reused claim id, or a withdrawn claim deleted rather than
   marked.
 - A tracker-shaped record the project's workflow does not use.
-- A link to a decision record that does not exist.
+- **The template's authoring guidance, carried into the document it produced.**
+- **A placeholder row left where content belongs**, or a deleted section where
+  an empty one would have recorded the question.
+- **A section storing what another section derives**, or a note explaining the
+  mirror instead of removing it.
+- **A gate reporting that it passed when nothing has been verified.** An
+  unwritten gate reports that it is unwritten.
+- A cite to a file, a record or a section that does not exist.
 - A hand-kept index of files that a tool could generate. It falls behind.
