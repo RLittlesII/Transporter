@@ -303,7 +303,7 @@ graph LR
 
   subgraph contracts["Integrations/OpenSky/Contracts"]
     api["IOpenSkyApi"]
-    env["OpenSkyStatesResponse<br/>OpenSkyStateRow<br/>OpenSkyThrottled"]
+    env["OpenSkyStatesResponse<br/>OpenSkyStateRow<br/>OpenSkyThrottledException"]
   end
 
   subgraph http["Integrations/OpenSky/Http"]
@@ -329,7 +329,7 @@ graph LR
   httpApi -.->|implements| api
   env --- api
   replay -.->|implements, second transport| api
-  api -->|"Either(throttled, response)"| client
+  api -->|OpenSkyStatesResponse| client
   client -->|"EditDiff over the whole set"| cache
   cache -->|"changeset of AircraftSnapshot"| strategy
   mapper --- strategy
@@ -369,7 +369,7 @@ sequenceDiagram
     H->>H: refresh the token, retry this request once (B-026)
   else 429
     P-->>H: 429 and X-Rate-Limit-Retry-After-Seconds
-    H-->>C: Left(OpenSkyThrottled)
+    H-->>C: throws OpenSkyThrottledException
     C->>S: defer the next poll by exactly that many seconds (B-028)
   else 5xx, timeout, unreadable body
     P-->>H: failure
@@ -399,7 +399,7 @@ them. The contract first:
 ```csharp
 internal interface IOpenSkyApi
 {
-    Task<Either<OpenSkyThrottled, OpenSkyStatesResponse>> GetStates(
+    Task<OpenSkyStatesResponse> GetStates(
         double lamin,
         double lomin,
         double lamax,
@@ -422,11 +422,16 @@ keys, so the signature matches the provider's documentation line for line while
 the configured box stays on `OpenSkyOptions`. A request record holding the four
 would be a bounding box under another name.
 
-**`Either` because B-028 makes a `429` data.** The envelope cannot carry the
-throttle — B-001 says it mirrors what OpenSky sends — and an exception is what
-B-028 forbids. `language-ext-usage` names a throttle response as its case, and
-B-005's `Task<T>` is satisfied, since `Either` is a `T`. Every other non-2xx
-remains an exception, per B-028's second half.
+**The payload, and nothing beside it.**
+[ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md)
+settles what a contract returns when a call produces no payload, and carries
+the options it was chosen over — an earlier draft of this section answered
+`Either<OpenSkyThrottled, OpenSkyStatesResponse>` and that record is why it no
+longer does. What this Feature owes it is one line of transport behaviour: the
+`429` is read off the Flurl response *before* it is thrown, so the seconds
+OpenSky asked for travel on the exception rather than being lost with the
+headers. B-001 is why the envelope could never have carried the throttle
+itself.
 
 ```csharp
 internal sealed record OpenSkyStatesResponse
@@ -453,7 +458,14 @@ internal sealed class OpenSkyStateRow
     private readonly IReadOnlyList<JsonElement> _elements;
 }
 
-internal sealed record OpenSkyThrottled(TimeSpan RetryAfter);
+internal sealed class OpenSkyThrottledException : Exception
+{
+    public OpenSkyThrottledException(TimeSpan retryAfter)
+        : base($"OpenSky throttled the request and asked to be left alone for {retryAfter}.") =>
+        RetryAfter = retryAfter;
+
+    public TimeSpan RetryAfter { get; }
+}
 ```
 
 Two members on the envelope, named as OpenSky names them (B-001), and no member
@@ -464,8 +476,10 @@ type B-002 forbids, while still being something B-004 and B-045 can point at and
 something the converter can attach to. `Count` is what B-016's element count and
 B-022's 17–18 test read. It is a `class` rather than a `record` because a
 `record` over a list advertises value equality it cannot honour — the type that
-needs equality is the snapshot, one table above. `OpenSkyThrottled` carries
-exactly the header's seconds and no invented backoff.
+needs equality is the snapshot, one table above. `OpenSkyThrottledException`
+carries exactly the header's seconds and no invented backoff, and it sits in
+`Contracts/` rather than in `Http/` for the reason ADR-0008 gives under its
+third decision item.
 
 ```csharp
 internal sealed class OpenSkyHttpApi : IOpenSkyApi
@@ -477,7 +491,7 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
         _logger = logger;
     }
 
-    Task<Either<OpenSkyThrottled, OpenSkyStatesResponse>> IOpenSkyApi.GetStates(
+    Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(
         double lamin,
         double lomin,
         double lamax,
@@ -537,7 +551,7 @@ src/Transponder/Model/                           TransportVehicle, Aircraft, Geo
 src/Transponder/Tracking/                        ITrackerSource, IFleetTracker, FleetTracker, SwappingTrackerSource,
                                                  IObservedClock, IObservedClockWriter, ObservedClock
 src/Transponder/Tracking/Sources/                IAircraftTrackerSource, AircraftTrackerSource, AircraftSnapshotMapper
-src/Transponder/Integrations/OpenSky/Contracts/  IOpenSkyApi, OpenSkyStatesResponse, OpenSkyStateRow, OpenSkyThrottled
+src/Transponder/Integrations/OpenSky/Contracts/  IOpenSkyApi, OpenSkyStatesResponse, OpenSkyStateRow, OpenSkyThrottledException
 src/Transponder/Integrations/OpenSky/Http/       OpenSkyHttpApi, OpenSkyStateRowConverter, IOpenSkyTokenSource, OpenSkyTokenSource
 src/Transponder/Integrations/OpenSky/            AircraftSnapshot, AircraftSnapshotClient, OpenSkyOptions, OpenSkyCredentials, BoundingBox
 src/Transponder/Integrations/OpenSky/Container/  OpenSkyRegistration
@@ -729,7 +743,7 @@ open still points at the question it meant.
 
 | #   | Question | Owner | Target date |
 | --- | -------- | ----- | ----------- |
-| 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. Blocks `0004`. | `spec-author` | Before `0004` starts |
+| 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. B-028's ban needs a *where* in the same pass: the claim forbids an exception outright, its scenario forbids one only at the subscriber, and [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) makes the contract throw — so the transport as built satisfies the scenario and contradicts the sentence. Blocks `0004`. | `spec-author` | Before `0004` starts |
 | 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eleven claims — B-004, B-006, B-007, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those eleven rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
 
 Everything else this specification opened has been answered and recorded. How
@@ -818,6 +832,7 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 | 2026-10-04 | `0006` | risk | 4, unchanged. § 7 adds nothing it was waiting for — ADR-0003 already carried both hazards. The row exists because the blanket provisional sentence it previously sat under is gone, and an unrestated number would read as an oversight. |
 | 2026-10-04 | `0007` | risk | 3 → 4. § 7 raises it: open question 1 lands on this item, and B-043's clock cannot be specified until the observed instant has a route to it. The two hazards recorded above stand. |
 | 2026-10-04 | `0007` | risk | 4 → 3, reversing the row above. ADR-0007 gives the observed instant its route, so B-043's clock is a type this item is injected with rather than a design it has to invent. The clock is also the mechanism that makes the two original hazards testable: a swap-then-swap assertion and a staleness assertion both advance one object. What keeps it at 3 rather than 2 is that `IObservedClock` reading `MinValue` before any source reports is a quiet default, and a test that forgets to observe an instant passes for the wrong reason. |
+| 2026-10-04 | `0002` | risk | 4 → 3. [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) retires the larger of the two hazards the 3 → 4 row recorded: the contract no longer returns a shape a reviewer of the governed pattern has to be taught before reading, and the thrown-`429` is now the design rather than the defect that moved here. What replaces them is smaller and both sit in the transport — an exception raised without first reading `X-Rate-Limit-Retry-After-Seconds` loses the only value the caller needs, and the next item's `catch` has to be narrow enough not to swallow a defect along with the throttle. The `JsonConverter` and `InternalsVisibleTo` hazards are retired by having landed and passed. |
 
 Why `0001` carries a `value` and no child does: a child omits it to inherit the
 parent's, and `risk` is never inherited. The derivation of `priority` and `rank`
@@ -840,8 +855,10 @@ children do.
 
 **ADR-0007 has since answered question 1**, so `0007` is
 `ready-for-implementation` too and `0004` is the only child still held by a
-question. That answer is the one re-score below: nothing else about the design
-moved with it.
+question.
+
+**ADR-0008 has since replaced the contract's return shape.** Those two answers
+are the two re-scores below; nothing else about the design moved with either.
 
 Nothing is re-scored for §§ 8-9. The risks above were set against § 7's design
 and §§ 8-9 changed none of it, and re-scoring against a mechanism that does not
