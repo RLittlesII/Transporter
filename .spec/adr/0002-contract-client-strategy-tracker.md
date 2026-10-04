@@ -71,6 +71,9 @@ seriously and gives each step an owner.
 | The strategy seam at the wire boundary, carrying snapshots               | What `ITrackingSource` did: every source emits snapshots and something downstream projects them.   | Puts the seam where sources are *similar* rather than where they *differ*. Both feeds produce records; what differs is the projection. A seam at the wire boundary therefore leaves the varying part unowned, which is the second failure above.                                                                                   |
 | A cache per app, holding a common snapshot base                         | One cache, one stream, with `AircraftSnapshot` and `VesselSnapshot` deriving from a shared base.   | Adds a second inheritance hierarchy beside `TransportVehicle`'s, mirroring it for no new reason, and the base can only carry what both feeds happen to share. Per-client caches cost nothing downstream, because the invariant that matters is one *domain* collection.                                                            |
 | `IStrategyResolver` plus `IStrategy`                                     | The conventional shape: a resolver knows the strategies and callers ask it which to use.           | The resolver is a second place the strategy set is known, and every caller has to ask. Registering every strategy as `ITrackerSource` and putting the selection in a decorator makes the swap invisible to callers — nobody asks anything.                                                                                         |
+| Replay as a strategy with its own client and cache                       | Replay reads recorded envelopes through a replay client, parallel to the snapshot client.          | Needs B-045 widened — the envelope and the positional row are restricted to the contract's implementation and the snapshot client — and leaves a second positional row reader to keep correct against the same index table. Worse, it is a second place B-003 has to be honoured, and B-003 is what makes staleness behave on replay exactly as it does live. A boundary rule honoured in two implementations is one that drifts. |
+| Replay at the contract, selection below the seam                         | A replay contract, but the source choice made where the contract is resolved.                      | Keeps B-045 and B-007 untouched and still costs nothing in duplication, but replay stops being an `ITrackerSource` and therefore stops being a swap target — contradicting `api-mock` § "Replay" and `hot-swap-source`, which both require replay to be selected by the same mechanism as the live swap.                            |
+| **Replay at the contract, selection at the seam**                        | **Chosen.** A second contract implementation; the live chain above it unchanged; the chain registers as `ITrackerSource`. | —                                                                                                                                                                                                                                                                                                                  |
 | **Contract → client → cache → strategy → decorator → tracker**           | **Chosen.**                                                                                       | —                                                                                                                                                                                                                                                                                                                                |
 
 ## Decision
@@ -86,11 +89,24 @@ Each component has one responsibility.
 2. **The API contract** — a typed interface mirroring the provider's API: one
    method per endpoint, `Task<T>`, `CancellationToken` last, and no
    `IObservable`, cache, changeset, bounding box, interval or credential
-   anywhere on it. Exactly one `internal sealed` class implements it, with
-   explicit interface implementation on every method and nothing public; DI
-   aliases the contract to that instance and the class is not resolvable from
-   outside. Its test double is a hand-written fake that throws naming the unset
-   response.
+   anywhere on it. Exactly one `internal sealed` class implements it **per
+   transport**, with explicit interface implementation on every method and
+   nothing public; DI aliases the contract to one implementation per
+   constructed chain, and no implementing class is resolvable from outside. Its
+   test double is a hand-written fake that throws naming the unset response.
+
+   **Per transport, because this is where replay substitutes.** One
+   implementation reaches OpenSky over HTTP; another reads a recording. The
+   snapshot client, its cache and its projection are constructed over whichever
+   one, unchanged, and that whole chain registers as an `ITrackerSource` — so
+   replay is a swap target at the seam (B-038 – B-040) while standing in below
+   the client. A recording is the provider's own envelope written verbatim
+   ([ADR-0004](0004-ndjson-recording-format.md)), which is what makes this
+   possible: the recorded envelope carries the provider's reported time, so the
+   observed instant and staleness-on-replay come free, with no second
+   implementation to honour them in. This is a deliberate departure from the
+   versioned-contract pattern's "exactly one production class" — see the
+   consequences.
 
    **No version suffix, and no marker interface above it.** The pattern's rule
    is that a suffix matches the *provider's* major version, and OpenSky
@@ -154,7 +170,7 @@ Behavioral detail — index-by-index reading, callsign trimming, squawk as a
 string, absent versus unknown category, token refresh, retry-after handling —
 is **not** in this record. Those are claims, in § 3 of
 [`features/aircraft-source/.spec/README.md`](../../features/aircraft-source/.spec/README.md)
-(B-001 – B-047).
+(B-001 – B-051).
 
 ## Consequences
 
@@ -171,6 +187,20 @@ is **not** in this record. Those are claims, in § 3 of
   the contract's test double, while `AGENTS.md` mandates NSubstitute. Resolved
   narrowly — the contract's double is hand-written; NSubstitute stays correct
   everywhere else. Neither document is wrong; their scopes differ.
+- **A second, wider departure from that pattern: "exactly one production
+  class" becomes one per transport.** The rule exists so a caller cannot pick
+  an implementation, and that purpose survives intact — DI aliases the contract
+  per constructed chain and no consumer is offered a choice. What changes is the
+  count, because replay is a transport rather than a caller. Recorded here and
+  as a constraint on the specification, not left to be discovered the first time
+  someone counts implementors.
+- **Aircraft replay and vessel replay substitute at different depths, and that
+  asymmetry is accepted.** Aircraft replay stands in below the snapshot client,
+  at the contract. A push provider has no contract to stand in for, so vessel
+  replay must substitute higher — at the strategy itself. This follows from
+  *this* record's reading rather than from anything about the vessel feed, which
+  is why it is stated here. The symmetry that matters is unchanged: both land on
+  `ITrackerSource` and both are swap targets.
 - **Only the contract layer claims conformance to that pattern.** The pattern is
   silent on caching, observables and streaming, and defines no layer above the
   contract except a CQRS handler. The client, the cache, the strategies, the
@@ -193,8 +223,9 @@ is **not** in this record. Those are claims, in § 3 of
   `README.md` rather than leaving a reversed plan standing as current.
 - **Two dependencies join the list**, neither yet in
   `Directory.Packages.props`: DynamicData for the caches and the pipeline, and
-  whatever registers the decorator. Whether that second one warrants a package
-  or a hand-written registration is an open question on the specification.
+  Scrutor for the decorator's registration
+  ([ADR-0003](0003-scrutor-for-decorator-registration.md)). Each is added by the
+  first work item that needs it, not ahead of one.
 - **Strategies are not required to be the same shape, and that is the design
   working rather than fraying.** The vessel strategy has no contract layer,
   because a socket has no endpoint to declare, and no hand-written rows step,
@@ -203,11 +234,14 @@ is **not** in this record. Those are claims, in § 3 of
   slide and a lie in the code. What makes the strategies substitutable is
   `ITrackerSource`, at the domain boundary — the only place both feeds genuinely
   look alike, and the reason the seam is there and not at the wire.
-- **Four questions are left open**, and none of them blocks the first file: the
-  bounding box and interval, what the audience sees on a swap, whether a stale
-  item is marked or expired, and whether the decorator warrants a decoration
-  package. The three that *did* block it — the version suffix, the integration
-  layout, and whether a push provider needs a contract — are settled above.
+- **No questions are left open.** The three that blocked the first file — the
+  version suffix, the integration layout, and whether a push provider needs a
+  contract — are settled above. The four that did not have since been answered
+  and recorded: the bounding box and interval in the Feature's `decisions/0001`,
+  what the audience sees on a swap in its `decisions/0002`, staleness as marked
+  and kept in claim B-051, and the decoration package in
+  [ADR-0003](0003-scrutor-for-decorator-registration.md). Where replay
+  substitutes was asked and answered after that, and is settled in this record.
 - **`AGENTS.md` gains a rule rather than losing an argument.** It governs
   feature layout and said nothing about integrations, so there was no conflict
   to resolve — only a gap, now filled in the same change as the specification

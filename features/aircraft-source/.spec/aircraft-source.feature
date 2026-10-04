@@ -29,8 +29,9 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      When the contract is inspected
      Then it declares exactly one method for that endpoint
       And that method returns a task and takes a cancellation token last
-      And resolving the contract yields the implementing instance
-      And the implementing type cannot be resolved or named from outside the integration code
+      And resolving the contract yields the implementation its own chain was built with
+      And no implementing type can be resolved or named from outside the integration code
+      And no consumer is offered a choice between implementations
 
   @B-016 @B-019 @B-020
   Scenario: A complete row becomes one snapshot with every field read by index
@@ -286,13 +287,15 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And it names no bounding box, no polling interval, and no credential
 
   @B-007
-  Scenario: One internal sealed class implements the contract, with nothing public on it
+  Scenario: One internal sealed class implements the contract per transport, with nothing public on it
     Given the production code
+      And the provider is reached over HTTP and, on replay, from a recording
      When every implementor of the contract is identified
-     Then exactly one is found
-      And it is internal and sealed
-      And every one of its contract methods is implemented explicitly
-      And it exposes no public method for any endpoint
+     Then exactly one is found for each of those two transports
+      And neither transport has a second implementation
+      And each is internal and sealed
+      And every one of their contract methods is implemented explicitly
+      And neither exposes a public method for any endpoint
 
   @B-049
   Scenario: A push provider gets no contract layer, and none is invented for it

@@ -44,9 +44,16 @@ internal sealed class SwappingTrackerSource : ITrackerSource
   which wraps what is **already** registered — so a strategy registered after
   the decorate call is resolved raw, silently. Register strategies first.
 - Live OpenSky, live AISStream, a replay and a simulated source are all swap
-  targets, because all four are strategies — including replay-as-fallback
+  targets, because all four reach the seam as an `ITrackerSource`
   ([`api-mock`](../api-mock/SKILL.md)). **One switch, not two**: there is no
-  separate offline mode and no second seam to bridge.
+  separate offline mode and no second seam to bridge. They do not all get there
+  the same way, and they do not have to: aircraft replay is the *aircraft*
+  strategy constructed over a replay implementation of the contract, not a
+  strategy of its own, while vessel replay substitutes at the strategy because
+  a push provider has no contract to stand in for
+  ([ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md),
+  [`replay-source`](../../features/replay-source/.spec/README.md)). What makes
+  something a swap target is the seam it lands on, not its depth.
 - The seam carries **domain vehicles**, not snapshots. That is the point: both
   feeds produce provider records, and what differs is the projection, so the
   place they genuinely look alike is after it. See

@@ -54,8 +54,10 @@ acceptance_criteria:
   - "B-004 — the positional row type is invisible outside the integration code."
   - "B-005, B-006 — contract shape: one method per endpoint, and nothing about
     caching, changesets, boxes, intervals or credentials on it."
-  - "B-007, B-008 — one `internal sealed` concretion, explicit implementation,
-    unresolvable by its own type; dependency injection aliases the contract."
+  - "B-007, B-008 — one `internal sealed` concretion per transport, explicit
+    implementation, unresolvable by its own type; dependency injection aliases
+    the contract per constructed chain. This item builds the HTTP one; the
+    recording one belongs to the replay Feature (§ 4 row 20)."
   - "B-009 — a new provider version produces a new interface, not an edit."
   - "B-010 — hand-written fake that throws naming the unset response; no
     mocking framework for this double, and this double only (§ 4 row 18)."
@@ -65,7 +67,14 @@ acceptance_criteria:
     shaped; nothing here is generalised into a surface a socket must satisfy
     (§ 4 row 4)."
 
-decisions: []
+decisions:
+  - "2026-10-04 — user — the contract takes one implementation per transport, so
+    replay substitutes at the contract with this item's client, cache and
+    projection unchanged above it. Rejected: replay as a strategy with its own
+    client, which needed B-045 widened and left a second positional row reader
+    and a second place B-003 had to be honoured. Recorded in ADR-0002 and as
+    § 4 row 20; B-007 and B-008 amended. This item still builds only the HTTP
+    implementation."
 
 out_of_scope:
   - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."

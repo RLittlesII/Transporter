@@ -35,7 +35,9 @@ public interface IOpenSkyApiContract
     Task<StatesResponse> GetAllStates(
         BoundingBox box, bool extended, CancellationToken cancellationToken);
 }
-// Exactly one internal sealed class implements it, explicitly, with nothing public.
+// Exactly one internal sealed class implements it PER TRANSPORT, explicitly,
+// with nothing public: one over HTTP, one reading a recording. Replay
+// substitutes here, so the client, cache and projection above it are unchanged.
 // Lives in src/Transponder/Integrations/OpenSky/, never under Features/.
 
 // 3. The snapshot — the server's record with names on it. Value equality over
@@ -87,8 +89,13 @@ strategy. That asymmetry costs nothing: what the strategies share is
 contract wrapping a socket buys symmetry on a diagram and a lie in the code.
 
 - Strategies to date: live OpenSky (polled), AISStream vessels (push, the
-  stretch goal), replay-from-recording, and a simulated source — see
-  [`api-mock`](../api-mock/SKILL.md).
+  stretch goal), and a simulated source — see
+  [`api-mock`](../api-mock/SKILL.md). **Replay is not in that list**, and that
+  is the point: for a request/response provider it substitutes at the contract,
+  so the aircraft strategy is replayed without a strategy of its own
+  ([`replay-source`](../../features/replay-source/.spec/README.md)). A push
+  provider has no contract to stand in for, so vessel replay substitutes at the
+  strategy instead. Different depths, same seam.
 - Source-specific controls (bounding box, interval, credentials) are constructor
   or options input to one client, never on a contract or a seam.
 - A source that needs to tell the UI *about itself* — display name, which
@@ -176,8 +183,10 @@ wired in by default.
 - OpenSky concepts (credits, bounding boxes, tokens) on a contract or a seam.
 - An `IObservable`, a cache or a changeset on the API contract. The pattern's
   rule is `Task<T>` per endpoint, and a contract that streams is not a contract.
-- More than one production class implementing the contract, a `public` endpoint
-  method on it, or its type being resolvable from outside the integration code.
+- More than one production class implementing the contract **for the same
+  transport**, a `public` endpoint method on it, or any implementing type being
+  resolvable from outside the integration code. One per transport is the rule —
+  HTTP and recording — and no consumer is offered a choice between them.
 - An edit to a contract interface a class already implements. A new provider
   version is a new interface.
 - A cache with a diff policy, a projection, or a clock. The writer owns the
