@@ -225,7 +225,7 @@ table.
 | ----- | ---- | ----- |
 | `Key` | `string` | *(base)* The snapshot's `icao24` lowercased, by a named `ToKey` in the mapper rather than inside a generated member mapping (B-037, `mapping` § "Conversions are explicit"). Plain `string`: a cache key is where `Option` stops (`language-ext-usage`). |
 | `LastContact` | `DateTimeOffset` | *(base)* Index 4's Unix seconds, converted by a named method. |
-| `Position` | `Option<GeoPosition>` | *(base)* Indices 5 and 6 combined. `GeoPosition` is a `readonly record struct` of latitude and longitude in degrees. One optional rather than two, because no source reports half a fix and combining makes B-036's "no position, not `0,0`" a thing the compiler enforces rather than a thing a test must catch. |
+| `Position` | `Option<GeoPosition>` | *(base — ADR-0005 defines it and why it is one optional rather than two)* What this Feature adds: it is fed from indices 5 and 6, combined by the mapper's `ToPosition`. |
 | `IsStale(asOf, threshold)` | `bool` | *(base)* Derived, never stored. Takes the instant rather than holding a clock, because B-043 puts the clock in `IFleetTracker`. |
 | `Label` | `string` | *(base, abstract — overridden here)* `Callsign` when present, else `Key`. Derived, which is why B-014 keeps it off the snapshot. |
 | `Callsign` | `Option<string>` | Index 1, padding removed; all-padding is `None`, never `""` (B-019). |
@@ -242,10 +242,10 @@ table.
 | `PositionSource` | `Option<PositionSource>` | Index 16, a four-value enum named from the README's index table. `None` means a code this build does not name, which is a different absence from an unreported field — B-018's warning applied to an enum. No `Unknown` member: that would be a value the source never sent. |
 | `Category` | `Option<int>` | Index 17, left as the wire's integer. § 4 row 1 makes the README index table the contract, and it publishes no value list, so naming the codes would invent a contract OpenSky did not. Display naming is a view concern, the same treatment § 5 row 11 gives units. |
 
-The grouping member ADR-0005 item 2 names is deliberately not implemented here:
-aircraft have two grouping dimensions a view would plausibly use, and § 5 rows 1
-and 7 defer both the grouped view and `Group`. ADR-0005 carries the same note so
-the gap has one home rather than two.
+The grouping member ADR-0005 item 2 names is deliberately not implemented here.
+ADR-0005 § "The members" says why it has no single answer for this source; § 5
+rows 1 and 7 are what make leaving it unanswered affordable, since both the
+grouped view and `Group` belong to the next Feature.
 
 **The snapshot, and the index each member reads from**
 
@@ -273,7 +273,7 @@ be visible rather than inferred from a gap.
 | 14 | `squawk` | `Squawk` | `Option<string>` | Read with `GetString()`, never `GetInt32()`: `"0021"` is four characters (B-020). |
 | 15 | `spi` | `Spi` | `bool` | Non-optional. |
 | 16 | `position_source` | `PositionSource` | `int` | The wire integer, uninterpreted (B-013). Named at the domain. |
-| 17 | `category` | `Category` | `Option<int>` | **The hazard a converter collapses (B-018).** A 17-element row ⇒ `None`; an 18-element row whose index 17 is `0` ⇒ `Some(0)`. Presence is decided by element count and element count alone — never by whether `extended=1` was requested, because the two can disagree. |
+| 17 | `category` | `Category` | `Option<int>` | **The hazard a converter collapses (B-018).** `Option<int>` is what makes the claim's two cases two values rather than two spellings of one. Presence is decided by element count and element count alone — never by whether `extended=1` was requested, because the two can disagree. |
 
 Three things follow from the table:
 
@@ -286,9 +286,10 @@ Three things follow from the table:
   every poll, so the differ would emit a change for every aircraft every
   interval and the headline mechanism would produce nothing but churn. Where it
   goes instead is the open decision below.
-- **Element count is read first.** A count outside 17–18, an element of the
-  wrong type, or an absent index 0 excludes one row and is counted (B-022);
-  nothing aborts the batch.
+- **Element count is read first.** B-022 lists three ways a row can be
+  unreadable and two of them are answerable before any member is parsed, so the
+  count is the first thing the reader looks at and the row is excluded there
+  rather than part-way through being built.
 
 **Diagrams**
 
