@@ -60,6 +60,16 @@ it. The traps:
   (the interface callers name), `Http/` (the implementation) and `Container/`
   (its registration). Nothing under `Features/` holds a contract, a wire type or
   a cache.
+- **The three folders are for the provider's own surface, not for everything
+  above it.** `Contracts/` holds the interface and the types its methods name,
+  `Http/` the implementation and its converters, `Container/` the registration
+  and nothing else. A snapshot record, the client that fills a cache from it,
+  and the options and credentials the provider needs sit directly under
+  `src/Transponder/Integrations/<Provider>/` — they belong to the provider but
+  are not its wire surface. The domain model and the per-type strategies are
+  not the provider's at all: they go under `src/Transponder/Model/` and
+  `src/Transponder/Tracking/`, because they survive the provider being
+  replaced.
 - Container wiring extends the existing builder blocks in `src/Gui/Container/`,
   which use C# `extension(MauiAppBuilder)` members, rather than piling
   registrations into [`MauiProgram`](../../src/Gui/MauiProgram.cs).
@@ -177,6 +187,12 @@ enforced by review: say which claim ids survive, in the pull request body.
   trap).
 - `coverlet.collector` is referenced, so coverage is collectible; no threshold
   is enforced.
+- **A test reaches an `internal` type through `InternalsVisibleTo`, not by
+  widening the type.** An integration keeps its contract, its wire types and
+  its implementation `internal` so nothing outside can name them; the project
+  that holds them grants `InternalsVisibleTo("Transponder.UnitTests")` once, in
+  its `.csproj`. Making a type `public` so a test can see it is the visibility
+  claim being lost to the convenience of testing it.
 - **Scenarios here are documentation.** A Feature's `.feature` file is the
   readable specification and the xUnit tests execute; there is no Gherkin
   runner, no bindings and no step definitions, so no `@ignore` tag and nothing
