@@ -9,15 +9,13 @@ spec_status: draft
 
 ## 1. Business Goal
 
-<!-- Owner: spec-author. One paragraph. The outcome, not the implementation.
-     Name the failure state being removed. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 1 -->
 
 The talk's claim is that polled data can still be reactive, and it is proved by a grid filling on stage. That proof currently depends on a venue network and on a provider that blocks hyperscaler IPs, rate-limits by credit, and hands out tokens that expire in thirty minutes — so the demo's headline mechanism and the venue wifi share a single point of failure. This feature removes it by recording what a live provider actually sent during rehearsal and feeding those payloads back at their original spacing through the same `ITrackerSource` seam and the same selector the live sources use. The outcome is a fallback the presenter can reach with the control they already have, for aircraft and for vessels both, and a second thing for free: because nothing downstream can tell a recording from a live feed, replay *is* the demonstration that the pipeline does not care where the data comes from. The failure state removed is a demo that only works on a good network — which, as the [stage-day runbook](../../../docs/runbook.md) puts it, is a gamble, not a demo.
 
 ## 2. User Needs
 
-<!-- Owner: spec-author. The audience for this project is specific — see
-     README.md § "Audience" — so do not write a generic persona. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 2 -->
 
 | #   | Persona                                                                                                                      | Need                                                                                                     | Pain point today                                                                                                                                              |
 | --- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -30,10 +28,7 @@ The talk's claim is that polled data can still be reactive, and it is proved by 
 
 ## 3. Acceptance Criteria
 
-<!-- Owner: spec-author. Numbered, falsifiable, SHALL / SHALL NOT. One claim
-     per row. These ids are what § 9 and the .feature file are anchored to, so
-     they are permanent: never renumbered, never reused. A withdrawn claim is
-     marked Withdrawn, not deleted. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
 Twenty-seven claims in six groups: **B-001 – B-006** the recording;
 **B-007 – B-014** playback; **B-015 – B-018** selection and swap;
@@ -79,15 +74,9 @@ against that spec.
 | B-026 | A configured recording that is absent, unreadable, or shorter than the staleness threshold SHALL be reported when the application starts, and SHALL NOT first be discovered when replay is selected. | adr/0001; aircraft-source B-029 | Draft  |
 | B-027 | The component that paces a recording SHALL be handed an opened payload stream rather than a path, and SHALL perform no file resolution of its own. | adr/0001; § 4 row 8 | Draft  |
 
-<!-- Status: Draft | Built | Withdrawn. "Built" means a test cites it and § 9
-     says Verified. -->
-
 ## 4. Constraints
 
-<!-- Owner: spec-author. Impact states what the constraint rules out, so § 7
-     has something concrete to satisfy. Many of this project's constraints are
-     the data provider's and are not ours to simplify — credit budgets, token
-     expiry, blocked hyperscaler IPs (README.md). -->
+<!-- Rules: ../../../.spec/templates/feature.md § 4 -->
 
 | #   | Constraint                                                                                                                                                              | Source                                            | Impact                                                                                                                                                                                                                                                              |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -106,8 +95,7 @@ against that spec.
 
 ## 5. Out of Scope
 
-<!-- Owner: spec-author. The section nobody writes. Without it, a demo grows a
-     feature nobody asked for. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 5 -->
 
 | #   | Item                                                                                            | Exclusion reason                                                                                                                                                                                                                                      |
 | --- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -127,19 +115,17 @@ against that spec.
 
 ## 6. Concern Separation
 
-<!-- Owner: implementer. Classifies each item Business, Technical, or Both —
-     the mechanism that stops business and technical judgment collapsing into
-     one undifferentiated paragraph. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 6 -->
 
-| Item     | Classification | Notes     |
-| -------- | -------------- | --------- |
-| {{item}} | Business       | {{notes}} |
+Unwritten. `implementer` owes it. The judgment it has to keep separate is the
+one § 1 turns on: a recording exists for a business reason — a venue network
+this demo does not control — and the technical shape that follows from it is a
+second contract implementation rather than a second client (§ 11 row 1). Those
+are two readings of one decision and should not be written as one.
 
 ## 7. Technical Design
 
-<!-- Owner: implementer. One owner by design, and a compromise: a decision
-     bigger than this item — a new seam, a changed boundary, a technology
-     choice — is a question for the person, not something to settle here. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 7 -->
 
 Unwritten. The substitution point it would otherwise have had to settle is
 already answered — B-022, recorded repository-wide in [ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md)
@@ -151,52 +137,39 @@ scheduler, and where § 11 row 3's configuration lands.
 
 ## 8. Testing Strategy
 
-<!-- Owner: test-writer. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 8 -->
 
-**Testability assessment**
+Unwritten. `test-writer` owes both the testability assessment and the scenario
+grouping. The hard constraint is already stated: playback spacing comes from an
+injected scheduler and a recorded instant, never the wall clock, so no test
+waits in real time.
 
-| Dimension          | Verdict | Finding     | Recommendation |
-| ------------------ | ------- | ----------- | -------------- |
-| DI seams           | Pass    | {{finding}} | —              |
-| Behavior isolation | Pass    | {{finding}} | —              |
-| Coverage potential | Pass    | {{finding}} | —              |
-
-**Scenarios**
-
-<!-- Full Gherkin lives in <feature-slug>.feature beside this file, not
-     inlined here. Each scenario carries the @B-00n tag of the claim it
-     proves. Scenarios are documentation; the xUnit tests execute. -->
-
-- Happy path → {{claim_ids}}
-- Failure mode → {{claim_ids}}
-- Validation failure → {{claim_ids}}
-- Data-driven → {{claim_ids}}
+The scenarios themselves exist, in
+[`replay-source.feature`](replay-source.feature) beside this file, each tagged
+with the `@B-00n` it proves. Scenarios are documentation; the xUnit tests
+execute, and none has been written yet.
 
 ## 9. Traceability Matrix
 
-<!-- Owner: test-writer. The gate. A `Missing` row blocks ship — it is not a
-     note, it is a stop sign. Every id in § 3 appears here exactly once,
-     anchored to the scenario's @B-00n TAG rather than to the title in the
-     Scenario column. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-| Claim ID | Scenario     | Test     | Status   |
-| -------- | ------------ | -------- | -------- |
-| B-001    | {{scenario}} | {{test}} | Verified |
+Unwritten, and **this is the gate**. `test-writer` owes one row per § 3 claim,
+anchored to the scenario's `@B-00n` tag and naming the xUnit test that proves
+it. Until those rows exist no claim is covered, so the matrix stands `Missing`
+in its entirety and implementation does not start.
 
-<!-- Status: Verified | Missing. -->
+A scenario existing is not coverage. This section is the only place a claim's
+build state is written, and a row here naming no test is what blocks ship.
 
 ## 10. Lessons / Spec Deltas
 
-<!-- Owner: whichever role closed the bug. Index only — one file per lesson in
-     lessons/ beside this file, from .spec/templates/lesson.md. Append only. A
-     delta that adds behavior also needs a § 3 row, which is spec-author's to
-     write. "None yet." is a valid body. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
 None yet.
 
 ## 11. Open Questions
 
-<!-- Owner: whoever is blocked. "None." is a valid body. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
 None. All three questions this specification opened have been answered and are
 recorded below rather than deleted — an answered question is a record of what
@@ -258,10 +231,7 @@ rather than at the swap.
 
 ## 12. Sign-off
 
-<!-- Owner: spec-reviewer. 🟡 Draft | 🟢 Approved | 🔴 Blocked — state the
-     reason on a Blocked row. Overall goes 🟢 only when every row is 🟢 and
-     § 9 has no Missing row. Overall 🟢 is what flips spec_status to
-     approved. -->
+<!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
 | Sections                                                                  | Owner          | Status   |
 | ------------------------------------------------------------------------- | -------------- | -------- |
@@ -272,10 +242,7 @@ rather than at the swap.
 
 ## Decisions
 
-<!-- Owner: the role that made or reversed the call. Index only — one file per
-     decision in decisions/ beside this file, from
-     .spec/templates/decision.md. A product or scope call goes there; a
-     durable technical choice goes to adr/ instead. "None yet." is valid. -->
+<!-- Rules: ../../../.spec/templates/feature.md § Decisions -->
 
 None yet.
 
@@ -297,10 +264,7 @@ this specification rather than a call made and reversed inside it.
 
 ## Tasks
 
-<!-- Owner: spec-author. The items cut from § 3 once the claims exist. Ids
-     only — never restated titles, or the two records disagree. "None yet."
-     is valid while the spec is still being agreed. The items are in .issue/
-     beside this file, so each id links to its own file. -->
+<!-- Rules: ../../../.spec/templates/feature.md § Tasks -->
 
 | Item                                                  | Claims                                                    |
 | ----------------------------------------------------- | --------------------------------------------------------- |
@@ -338,8 +302,7 @@ invariant above holds across all 27 again.
 
 ## Scoring
 
-<!-- Owner: spec-author, recording the item's value and risk when they change.
-     The authoritative values live in the .issue/ item. -->
+<!-- Rules: ../../../.spec/templates/feature.md § Scoring -->
 
 | Date       | Field        | From | To | Rationale                                                                                                                                                              |
 | ---------- | ------------ | ---- | -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
