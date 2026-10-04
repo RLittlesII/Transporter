@@ -2,7 +2,7 @@ id: "0005"
 type: task
 title: Project cached snapshots into domain vehicles behind ITrackerSource
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 risk: 2

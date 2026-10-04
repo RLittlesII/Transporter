@@ -828,12 +828,15 @@ guess at the design. Four moved down, because § 7 turned a hazard a test had to
 catch into one the compiler catches; two moved up, because writing the design
 found hazards that were not visible from the claims alone.
 
-**No item's `status` changes on this.** Two things held every item at
-`ready-for-architecture` and § 7 clears only the first: § 9 is still empty, and
-a claim with no row there is not covered. Moving an item now would be recording
-a gate as passed that nothing has verified, which is the failure
-[lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
-is about. What each item is waiting on, so the next change need not re-derive
-it: `0002`, `0003`, `0005` and `0006` wait on § 9 alone; `0004` waits on § 9 and
-§ 11 question 2; `0007` waits on § 9 and § 11 question 1; `0001` moves when its
+**§§ 8-9 have since landed too**, which is what moved the items. § 9 said
+implementation waits on its rows existing, not on them reading `Verified` — a
+`Missing` row blocks ship, which is a different gate. So `0002`, `0003`, `0005`
+and `0006` are `ready-for-implementation`; `0004` and `0007` stay at
+`ready-for-architecture` behind § 11 questions 2 and 1; `0001` moves when its
 children do.
+
+Nothing is re-scored for §§ 8-9. The risks above were set against § 7's design
+and §§ 8-9 changed none of it, and re-scoring against a mechanism that does not
+exist yet would be churn rather than assessment. The analyzer's effect on
+`0001`'s boundary-claim hazard is ADR-0006 § Consequences' to state; it becomes
+a row here the day the analyzer does.

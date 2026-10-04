@@ -116,7 +116,11 @@ out_of_scope:
     themselves (row 1), the vessel feed (row 3), the replay and simulated
     strategies (row 4), the swap control and stage choreography (row 5), and
     all UI (row 7)."
-  - "Writing the spec's §§ 6-9. §§ 6-7 are the implementer's and have landed;
-    §§ 8-9 are the test-writer's and have not. § 9 is now the only thing every
-    child's ready-for-architecture status is waiting on, plus the two questions
-    § 11 opened for `0004` and `0007`."
+  - "Writing the spec's §§ 6-9. All four have landed — §§ 6-7 the
+    implementer's, §§ 8-9 the test-writer's — so `0002`, `0003`, `0005` and
+    `0006` are ready for implementation. `0004` and `0007` wait on § 11
+    questions 2 and 1."
+  - "Building the boundary analyzer. ADR-0006 makes it the mechanism for
+    eleven of this Feature's claims and its own Feature, not work under this
+    parent. Until it exists those eleven § 9 rows stay `Missing`, so every
+    child but `0006` can be implemented and none can reach `done`."
