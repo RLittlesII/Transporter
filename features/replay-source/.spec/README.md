@@ -165,7 +165,10 @@ build state is written, and a row here naming no test is what blocks ship.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
-None yet.
+No Feature-scoped lesson yet. One repository-wide lesson bears on this
+document: [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
+which is why §§ 6-9 above say in words that they are unwritten rather than
+carrying a template row, and why § 3 no longer keeps a build state § 9 owns.
 
 ## 11. Open Questions
 
