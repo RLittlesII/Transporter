@@ -13,11 +13,13 @@ it is what goes on stage when the venue wifi dies.
 It also makes the teaching point for free: **the pipeline does not care where
 the data comes from.**
 
-## Implementations of the same seam
+## Strategies on the same seam
 
-All of these implement `ITrackingSource` from
-[`api-contract`](../api-contract/SKILL.md). Nothing downstream can tell them
-apart.
+All of these adhere to `ITrackerSource` from
+[`api-contract`](../api-contract/SKILL.md), so the swap decorator treats them
+like any other strategy and nothing downstream can tell them apart. Each is a
+client and a cache of its own; a replay source substitutes for the live
+provider's contract, so it needs no HTTP and no clock of its own.
 
 | Source | Purpose |
 |---|---|

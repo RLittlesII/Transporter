@@ -12,22 +12,27 @@ cache is unchanged. The README records the intent (`[X] Intend to show
 ships`), and it fits the "fleet" framing better than the alternatives
 considered.
 
-It implements `ITrackingSource` like every other source
-([`api-contract`](../api-contract/SKILL.md)). Nothing downstream learns it is
-here — that is the entire point.
+It is a **strategy**: its own contract, its own client, its own cache, and an
+`IVesselTrackerSource` that adheres to `ITrackerSource` like every other
+strategy ([`api-contract`](../api-contract/SKILL.md)). Nothing downstream learns
+it is here — that is the entire point. Whether four more types are justified for
+a stretch goal is an open question on the aircraft-source specification (§ 11);
+the thinner alternative skips the contract layer and breaks the symmetry the
+seam depends on.
 
 ## Facts
 
 - **WebSocket, not polling.** Connect, then receive. There is no snapshot
-  endpoint, so this source assembles its own current known set and emits it as
-  a snapshot set like every other source; **the cache diffs that set** exactly
-  as it diffs a poll's. See
+  endpoint, and this client does not need one: **the writer owns the write**, so
+  it adds and removes on its own cache exactly what the feed told it about. It
+  never assembles a full set, and no shared differ runs over it. See
   [`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md) and
-  [ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md). How it holds
-  that set without becoming a second collection of tracked items is the open
-  question this source has to answer — § 11 of the aircraft-source
-  specification — and it is the first thing to settle when this source is
-  specified.
+  [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md).
+- **A WebSocket does not fit the contract shape.** The versioned-contract
+  pattern is one `Task<T>` per endpoint, which a subscribe-then-receive socket
+  is not. Either the vessel contract covers only what is request/response
+  shaped, or this strategy has no contract layer and says so. Part of the § 11
+  question above, and the first thing to settle when this source is specified.
 - **Keyed by MMSI.** The cache key for a vessel, the way `icao24` is for an
   aircraft.
 - **Subscribe with a bounding box.** Filtering happens server-side on the

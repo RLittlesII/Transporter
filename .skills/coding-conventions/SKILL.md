@@ -15,7 +15,7 @@ disagree, `.editorconfig` wins — it is the one the compiler reads.
 - **Types** (class, struct, interface, enum) — PascalCase.
 - **Non-field members** (property, event, method) — PascalCase, at every
   accessibility.
-- **Interfaces** — `I`-prefixed: `ITrackingSource`. An abstract base class is
+- **Interfaces** — `I`-prefixed: `ITrackerSource`. An abstract base class is
   not an interface and takes no prefix: `TransportVehicle`, never
   `ITransportVehicle`.
 - **Private fields** — `_camelCase`. The underscore prefix is a naming rule

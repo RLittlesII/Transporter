@@ -14,9 +14,10 @@ already referenced in
 
 ## One mapper per boundary
 
-- A `[Mapper]` partial class sits at each wire boundary, run from
-  `IFleetTracker`'s projection: OpenSky snapshot → domain, AISStream snapshot →
-  domain. That is it.
+- A `[Mapper]` partial class sits in each per-type tracker source, which is the
+  only place a domain object is built: aircraft snapshot → `Aircraft` in
+  `IAirplaneTrackerSource`, vessel snapshot → `Vessel` in
+  `IVesselTrackerSource`. That is it.
 - **No domain-to-domain mappers.** If two domain types need converting
   between each other, one of them is wrong — fix the model instead
   ([`transponder-domain-model`](../transponder-domain-model/SKILL.md)).
@@ -27,17 +28,20 @@ already referenced in
 
 ## The positional array stops here
 
-OpenSky's `states` entries are positional arrays, so
-`AircraftSnapshotConverter` ([`api-contract`](../api-contract/SKILL.md))
-produces `AircraftSnapshot` — a named record — and **the mapper runs from the
-snapshot, not from the array**. Mapperly maps names; it has nothing to say
-about index 7 meaning barometric altitude.
+OpenSky's `states` entries are positional arrays, so **Mapperly never sees
+them**. The client reads rows by index into a named snapshot record by hand, and
+**the mapper runs from the snapshot, not from the array**. Mapperly maps names;
+it has nothing to say about index 7 meaning barometric altitude.
 
-Two steps, each testable: converter (array → snapshot), mapper (snapshot →
-domain). Those are the two mapping layers
-[ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md) names, and the
-second one runs inside `IFleetTracker`'s projection — the cache in between
-stores and diffs snapshots and maps nothing.
+Two mappings, two owners, two mechanisms — the arrangement
+[ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md) records:
+
+| Mapping | Owner | Mechanism |
+|---|---|---|
+| rows → snapshot | the client, as its first act | hand-written, by index |
+| snapshot → domain | the per-type tracker source | Mapperly |
+
+The cache in between stores snapshots and maps nothing.
 
 ## Unmapped members are errors
 

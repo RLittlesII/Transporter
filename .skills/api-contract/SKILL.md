@@ -1,77 +1,92 @@
 ---
 name: api-contract
-description: Define the four layers between a provider and the fleet — API types, the internal snapshot, the source-agnostic seam, and the store-and-diff cache — and the hand-written OpenSky client behind them (positional JSON, OAuth2 tokens, credits, rate limits). Use when touching a client, a contract, or credentials.
+description: Define the typed OpenSky API contract, the client that caches what it fetches, the per-type strategy that projects snapshots to domain vehicles, and the decorator the fleet tracker wraps — plus what OpenSky actually does (positional JSON, OAuth2 tokens, credits, rate limits). Use when touching a contract, a client, a strategy, or credentials.
 ---
 
 # The Transponder API contract
 
-This file covers **the layers between a provider and the cache, and what
+This file covers **the components between a provider and the fleet, and what
 OpenSky actually does behind them**. The provider's own documentation is
 [the OpenSky REST API](https://openskynetwork.github.io/opensky-api/rest.html);
 the facts below are the consequences of it for this demo.
 
-## Four layers, and the seam is the third
+**Two skills share this name.** There is a general `api-contract` skill
+describing the versioned-contract pattern — marker, versioned interface, one
+`internal sealed` concretion with explicit interface implementation. It governs
+*only* the contract layer below. Everything above the contract — the client,
+the cache, the strategies, the decorator, the tracker — is this repository's own
+design, because that pattern is silent on caching, observables and streaming and
+defines no layer above the contract. Do not claim conformance for them.
 
-One responsibility each, named so a reader can tell from a signature which
-layer they are in — see
-[ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md):
+## One responsibility each
+
+See [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md) for why
+each of these is separate.
 
 ```csharp
-// 1. API types — what OpenSky sends. Positional; the converter is their only reader.
-//    StatesResponse, and the row it carries.
+// 1. API types — what OpenSky sends. The envelope mirrors the provider: its
+//    reported time plus positional rows. The row type does not escape here.
 
-// 2. The internal snapshot — the server's record with names on it.
-//    Value equality over every member; keyed on icao24; derives nothing.
+// 2. The API contract — one method per endpoint. Task<T>, CancellationToken last.
+//    No IObservable, cache, changeset, bounding box, interval or credential on it.
+public interface IOpenSkyApiContract
+{
+    Task<StatesResponse> GetAllStates(
+        BoundingBox box, bool extended, CancellationToken cancellationToken);
+}
+// Exactly one internal sealed class implements it, explicitly, with nothing public.
+
+// 3. The snapshot — the server's record with names on it. Value equality over
+//    every member; keyed on icao24; converts, derives and interprets nothing.
 public sealed record AircraftSnapshot( /* … */ );
 
-// 3. The seam — what every source satisfies.
-public interface ITrackingSource
-{
-    IObservable<SnapshotSet<AircraftSnapshot>> Snapshots { get; }
-}
+// 4. The client — contract and cache by constructor; constructs neither.
+//    Reads rows into snapshots, writes the whole set as one differential update.
+//    Owns the bounding box, the interval, the token, the credit header and 429.
 
-// 4. The cache — stores and diffs snapshots. Nothing else: no domain type, no clock.
-public interface IVehicleCache
+// 5. The cache — a plain keyed store of snapshots. One per client, typed to that
+//    client's snapshot. No diff policy of its own, no projection, no clock.
+
+// 6. The strategy seam — where sources genuinely look alike.
+public interface ITrackerSource
 {
-    IObservable<IChangeSet<AircraftSnapshot, string>> Connect();
+    IObservable<IChangeSet<TransportVehicle, string>> Connect();
 }
+// IAirplaneTrackerSource and IVesselTrackerSource adhere to it, and each owns its
+// own Mapperly projection. THIS is the first and only place a domain object is built.
+
+// 7. The decorator — registered as ITrackerSource, selects the live strategy at
+//    runtime. No resolver type; nobody asks which strategy to use.
+
+// 8. IFleetTracker — wraps ITrackerSource, owns the pipeline and the injected clock.
+//    What view models depend on. See dynamic-data-pipeline.
 ```
 
-A `SnapshotSet` carries the complete set the source currently knows about
-**and the instant it was observed**, so "as of when" is data rather than
-something a consumer answers with an ambient clock.
+**The writer owns the write.** A polling client applies a differential update
+over a whole fetched set; a push client adds and removes what it was told about.
+The cache cannot tell the difference and has no opinion either way — which is
+what lets each transport write the way it can, instead of forcing a push feed to
+assemble a full set so a shared differ can run.
 
-Downstream of the cache, `IFleetTracker` projects those changesets into
-`TransportVehicle` — that is the second mapping layer and the first place a
-domain object exists. It belongs to
-[`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md), not here.
+**The seam is at the domain boundary, not the wire one.** Both feeds produce
+records; what *differs* is how a record becomes a `TransportVehicle`. Putting
+the seam where sources differ is what makes the plane-to-ship swap a new
+strategy rather than a new pipeline — see
+[`hot-swap-source`](../hot-swap-source/SKILL.md).
 
-The wire shape sits above layer 2 and the collection sits below layer 4;
-neither can see the other.
-
-- **The seam is deliberately not OpenSky-shaped.** No bounding box, no
-  credits, no token, no polling interval in the signature. A replay source
-  satisfies it by reading files; a push source satisfies it by emitting its
-  current known set, and the cache diffs that set exactly as it diffs a poll's.
-  That is what makes the live plane-to-ship swap possible — see
-  [`hot-swap-source`](../hot-swap-source/SKILL.md). How a push feed assembles a
-  full set without holding a second collection is an open question on the
-  aircraft-source specification (§ 11), not settled here.
-- Implementations to date: live OpenSky (polled), AISStream vessels (push,
-  the stretch goal), replay-from-recording, and a simulated source — see
+- Strategies to date: live OpenSky (polled), AISStream vessels (push, the
+  stretch goal), replay-from-recording, and a simulated source — see
   [`api-mock`](../api-mock/SKILL.md).
-- Source-specific controls (bounding box, interval, credentials) are
-  constructor or options input to one implementation, never on the interface.
+- Source-specific controls (bounding box, interval, credentials) are constructor
+  or options input to one client, never on a contract or a seam.
 - A source that needs to tell the UI *about itself* — display name, which
   columns make sense — does so through a separate small description, not by
-  widening this interface.
+  widening a per-type interface.
 
-The item type at the seam and in the cache is the **snapshot**, not the domain
-object. `TransportVehicle` and its subclasses from
-[`transponder-domain-model`](../transponder-domain-model/SKILL.md) first appear
-at `IFleetTracker`, and the seam names neither them nor a DynamicData type.
-`AircraftSnapshotConverter` is the last place the positional wire shape exists;
-`AircraftSnapshot` is the last place the wire's vocabulary exists.
+Two mappings, two owners, two mechanisms: **rows → snapshot** is hand-written in
+the client, because positional arrays are not something Mapperly can map;
+**snapshot → domain** is Mapperly in the strategy. See
+[`mapping`](../mapping/SKILL.md).
 
 ## OpenSky: facts, not preferences
 
@@ -79,16 +94,24 @@ All of this is the provider's behavior and is not ours to simplify. The
 details live in [`README.md`](../../README.md) § "Data source: OpenSky
 Network"; the consequences are here.
 
-- **No OpenAPI spec exists**, so there is no generator to look for. The client
-  is written with Flurl over `System.Text.Json` —
+- **No OpenAPI spec exists**, so there is no generator to look for. The
+  contract's implementation is written with Flurl over `System.Text.Json` —
   [`http-client`](../http-client/SKILL.md) has the mechanics,
   [ADR-0001](../../.spec/adr/0001-flurl-for-http.md) the reasoning for Flurl,
-  and [ADR-0002](../../.spec/adr/0002-four-layers-wire-to-fleet.md) the
-  reasoning for the four layers above.
-- **`states` is an array of arrays.** Fields are positional, not named, so a
-  custom `JsonConverter` is mandatory, and the index→field table is the
+  and [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md) the
+  reasoning for the components above.
+- **OpenSky publishes no API version either** — there is no `/v1/` in the path.
+  The versioned-contract pattern's rule is that a suffix matches the
+  *provider's* major version, so an invented `V1` would be the internal version
+  number that rule forbids. Unresolved; see the aircraft-source specification
+  § 11.
+- **`states` is an array of arrays.** Fields are positional, not named, so the
+  rows are read by index in the client, and the index→field table is the
   contract. Read positions by index against that table; never by guessing from
   a sample payload.
+- **The envelope carries the provider's own reported time.** That is the
+  observed instant for everything downstream, so nothing reads an ambient clock
+  to answer "as of when".
 - **`extended=1` is what supplies category.** Without it the field is absent,
   and grouping by category silently has nothing to group. If the UI offers
   category grouping, the request sets `extended=1`.
@@ -125,21 +148,27 @@ Network"; the consequences are here.
 `airplanes.live` (README § "Backup source") has named JSON fields and would be
 easier to consume, but **its access terms are unresolved** — the README says
 to email them first. So: it is a legal open question, not a technical one. It
-implements the same seam if and when that clears; it is not wired in by
-default.
+gets its own contract, client and strategy if and when that clears; it is not
+wired in by default.
 
 ## Never add
 
-- A second seam. Two source interfaces means the swap has to bridge them, and
+- A second strategy seam. Two of them means the swap has to bridge them, and
   the teaching point of the demo dies.
-- OpenSky concepts (credits, bounding boxes, tokens) on the shared interface.
-- An `IChangeSet` or any other DynamicData type on `ITrackingSource`. A source
-  that has to build a cache to say "here are four aircraft" is not a seam.
-- A cache owned by, or constructed inside, a source. One cache outlives every
-  source, which is what makes the swap a clear rather than a rebuild.
-- A domain type held, constructed or returned by the cache, or a clock read
-  inside it. The cache stores and diffs snapshots; staleness is the tracker's.
-- A generated client, or a positional array read by anything but the converter.
+- OpenSky concepts (credits, bounding boxes, tokens) on a contract or a seam.
+- An `IObservable`, a cache or a changeset on the API contract. The pattern's
+  rule is `Task<T>` per endpoint, and a contract that streams is not a contract.
+- More than one production class implementing the contract, a `public` endpoint
+  method on it, or its type being resolvable from outside the integration code.
+- An edit to a contract interface a class already implements. A new provider
+  version is a new interface.
+- A cache with a diff policy, a projection, or a clock. The writer owns the
+  write; the projection is the strategy's; the clock is `IFleetTracker`'s.
+- A domain type held, constructed or returned by a cache, or a domain object
+  built anywhere but a strategy's projection.
+- A strategy resolver that callers ask which strategy to use. The decorator is
+  registered as the seam and nobody asks it anything.
+- A generated client, or a positional row read outside the client.
 - A retry that ignores `X-Rate-Limit-Retry-After-Seconds`, or a poll loop with
   no interval ceiling. Burning the daily credit budget before the talk is a
   self-inflicted outage.

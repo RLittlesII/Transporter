@@ -1,14 +1,15 @@
 ---
 name: http-client
-description: How an ITrackingSource implementation talks to a provider over HTTP with Flurl — URL building, bearer-token refresh, rate-limit headers, 429 handling, the positional-array serializer, and HttpTest. Use when writing or changing a client, or testing one.
+description: How the OpenSky API contract's implementation talks to the provider over HTTP with Flurl — URL building, bearer-token refresh, rate-limit headers, 429 handling, the positional-array serializer, and HttpTest. Use when writing or changing that implementation, or testing one.
 ---
 
 # The HTTP client
 
-This file covers **how the source seam is satisfied over HTTP**. The seam
-itself and the provider's own behavior live in
-[`api-contract`](../api-contract/SKILL.md); the library's API lives at
-[flurl.dev](https://flurl.dev).
+This file covers **how the API contract is satisfied over HTTP**. The one
+`internal sealed` class that implements the contract is what the code below
+lives inside; the contract itself, the client above it and the provider's own
+behavior live in [`api-contract`](../api-contract/SKILL.md). The library's API
+lives at [flurl.dev](https://flurl.dev).
 
 `Flurl.Http` is referenced by `src/Transponder` and pinned in
 [`Directory.Packages.props`](../../Directory.Packages.props). The reasoning and
@@ -100,14 +101,17 @@ for Flurl:
 private static readonly ISerializer StatesSerializer =
     new DefaultJsonSerializer(new JsonSerializerOptions
     {
-        Converters = { new AircraftSnapshotConverter() },
+        Converters = { new StatesArrayConverter() },
     });
 ```
 
-The converter turns OpenSky's array-of-arrays into `AircraftSnapshot`, a named
-record; the mapper takes it from there, inside `IFleetTracker`'s projection
-([`mapping`](../mapping/SKILL.md)). Set the serializer **on the named client**,
-so a second provider with named fields is unaffected.
+The converter's job stops at making the array-of-arrays readable as the
+envelope's rows — the rows stay positional, because the contract mirrors what
+the provider sends. Reading those rows into a named snapshot is the **client's**
+first act, by index and by hand, and the Mapperly mapper runs later still, in
+the per-type tracker source ([`mapping`](../mapping/SKILL.md)). Set the
+serializer **on the named client**, so a second provider with named fields is
+unaffected.
 
 ## Testing with `HttpTest`
 
@@ -144,10 +148,12 @@ actor that is processing on its own dispatcher.
 
 So:
 
-- **Test the client class directly under `HttpTest`.** It is a plain class;
-  give it the cache and call it.
-- **Test the poller actor against a stubbed `ITrackingSource`**, never by
-  hoping `HttpTest` reaches inside it.
+- **Test the contract's implementation directly under `HttpTest`.** It is a
+  plain class; give it the Flurl cache and call it.
+- **Test everything above it against a hand-written fake of the contract**,
+  never by hoping `HttpTest` reaches inside an actor. That fake is the seam the
+  constraint pushed us toward, and it means the client, the cache, the
+  strategies and the tracker are all testable with no HTTP at all.
 
 This is the same split [`akka-actor`](../akka-actor/SKILL.md) and
 [`mvvm`](../mvvm/SKILL.md) already ask for — keep the logic in a plain class
@@ -157,8 +163,8 @@ the actor calls — now with a concrete reason to hold the line.
 
 AISStream is a **WebSocket**, so Flurl has nothing to offer it. That source
 uses `ClientWebSocket` or the community package
-([`ais-stream`](../ais-stream/SKILL.md)). Both sources still satisfy the same
-seam; only the polled one goes through this file.
+([`ais-stream`](../ais-stream/SKILL.md)). Both strategies still land on the
+same `ITrackerSource` seam; only the polled one goes through this file.
 
 ## Never add
 
