@@ -192,6 +192,30 @@ So an unbuilt claim is marked in two places that already exist, and nowhere
 else: the § 3 `Status` column, and a § 9 row reading `Missing`. There is no
 runner to hide a scenario from, so there is no `@ignore`.
 
+## Four-digit ids collide — always write the scheme
+
+Claims carry a `B-` prefix and identify themselves. **Nothing else here does.**
+Three schemes number from `0001` independently, and a per-Feature scheme starts
+again in every Feature, so a bare four-digit number is ambiguous on sight.
+`0001` alone currently has four referents:
+
+| Written in full                                             | Scheme                            |
+| ----------------------------------------------------------- | --------------------------------- |
+| `.issues/0001-aircraft-source.yml`                          | work item, repo-wide sequence     |
+| [`ADR-0001`](../../.spec/adr/0001-flurl-for-http.md)        | root ADR, repo-wide               |
+| `features/aircraft-source/.spec/decisions/0001`             | that Feature's decisions          |
+| `features/replay-source/.spec/adr/0001`                     | that Feature's own ADRs           |
+
+**In prose, write the scheme with the number**: `item 0003`, `ADR-0003`,
+`decisions/0001`, `replay-source adr/0001`. A number may appear bare only where
+its field says what it is — `parent: "0001"` in an item, or a `## Tasks` table
+whose column reads *Item*.
+
+This is a writing rule, not a renumbering one. Per-scheme numbering from `0001`
+is deliberate: it is what lets a Feature carry its own records without reserving
+numbers from a shared pool, exactly as per-Feature claim ids do above. The
+collision is only ever in how a number is *referred to*.
+
 ## Section ownership
 
 Every section has **exactly one owning role** — four roles, declared in
