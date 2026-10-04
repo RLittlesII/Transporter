@@ -40,16 +40,46 @@ items. Treat it as authoritative until a `.spec/` exists, and **keep it true**:
 a decision made in conversation that contradicts it is a README edit in the
 same change.
 
+## Where a spec starts
+
+**A Feature starts with its specification, not with a work item.** The
+specification is the design authority (`AGENTS.md` § "Core Principles"), so it
+cannot be made to wait on the tracker that delivers it.
+
+- **The trigger is a decided need** — today that means
+  [`README.md`](../../README.md) and a conversation that settled something.
+  Not an item; there is no item yet.
+- **§§ 1-5 come first**: business goal, user needs, the `B-00n` claims,
+  constraints, out of scope. That is the agreement.
+- **§§ 6-7 follow**: concern separation and technical design.
+- **Items are cut from § 3 afterwards**, each citing the claims it delivers.
+  A feature item cannot exist before its claims do, because it references
+  them.
+
+So: **a feature item names its spec; a spec never names an item.** One
+direction, nothing to keep in sync. The spec's `## Tasks` lists the ids cut
+from it, and `"None yet."` is the honest state while the agreement is still
+being reached.
+
+**Features only.** A **bug, spike or chore starts with an item** — its trigger
+is an observation, not an agreement — and leaves `spec:` null. A bug that
+reveals a specification gap then produces a spec delta: a § 10 lesson and the
+§ 3 claim that proves the delta held.
+
+Put the other way round: the spec is where *agreement* starts; the item is
+where *delivery* starts. They are different questions, and the chain in
+`AGENTS.md` answers them in that order.
+
 ## Two records, one authority each
 
 Work is tracked **locally**. There are no GitHub issues, labels or milestones in
 this workflow — `.issues/` does that job — while code still pushes to GitHub as
 branches and pull requests.
 
-| Record | Authority over | Never holds |
-|---|---|---|
-| `.issues/<id>-<slug>.yml` | **delivery state** — status, priority, value/risk/rank, dependencies, what is being worked on | requirements, design, test plans |
-| `features/<slug>/.spec/README.md` | **content** — the twelve sections: requirements, constraints, design, testing strategy, traceability | the live status of the work |
+| Record | Authority over | Never holds | Exists first? |
+|---|---|---|---|
+| `features/<slug>/.spec/README.md` | **content** — the twelve sections: requirements, constraints, design, testing strategy, traceability | the live status of the work | **yes, for a feature** |
+| `.issues/<id>-<slug>.yml` | **delivery state** — status, priority, value/risk/rank, dependencies, what is being worked on | requirements, design, test plans | yes, for a bug, spike or chore |
 
 - A spec carries `spec_status` — its own **document** maturity (`draft`,
   `in-review`, `approved`, `superseded`) — and nothing about delivery. The
@@ -57,7 +87,8 @@ branches and pull requests.
   only there. Two copies of a status is two answers to one question.
 - The spec's `## Tasks` section lists `.issues/` **ids**, not restated titles.
 - One claim lives in one place: § 3 Acceptance Criteria. An item's `claims:`
-  field **references** ids; it never restates the claim text.
+  field **references** ids; it never restates the claim text. Those ids are
+  always already there — the spec was written first.
 
 ## `.issues/` — the local tracker
 
@@ -83,8 +114,8 @@ parent: null
 children: []
 depends_on: []           # hard prerequisites, by id
 blocks: []               # derived from other items' depends_on
-spec: features/aircraft-source/.spec/README.md   # null until one exists
-claims: [B-001, B-002]   # ids only, never the claim text
+spec: features/aircraft-source/.spec/README.md   # required for a feature
+claims: [B-001, B-002]   # ids only; they already exist, the spec came first
 summary: |
   As a <persona> I want <capability> so that <outcome>.
 ```

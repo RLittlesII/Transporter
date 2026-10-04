@@ -18,6 +18,27 @@ The other adjacent skills carry the rest of the detail:
 
 ## Start
 
+**Which way in depends on what this is.**
+
+- **A new Feature starts with its specification**, authored with no work item —
+  the spec is the agreement, and items are cut from its § 3 claims afterwards
+  ([`spec-and-traceability`](../spec-and-traceability/SKILL.md) "Where a spec
+  starts"). Skip to "Author a specification" below.
+- **Everything else starts with an item**: a bug, a spike, a chore, or
+  delivering a claim a spec already carries.
+
+### Author a specification
+
+- No item, so nothing to claim and nothing to label. The branch is named for
+  the Feature slug — `spec/<feature-slug>` — and the rest of this skill's
+  worktree, commit, rebase and publish rules apply unchanged.
+- Copy [`.spec/templates/feature.md`](../../.spec/templates/feature.md) to
+  `features/<feature-slug>/.spec/README.md`, and write §§ 1-5. The role
+  contract is [`.agents/spec-author.md`](../../.agents/spec-author.md).
+- The pull request body cites the **Feature slug and the claim ids it
+  introduces**, since there is no item id to name.
+- Items come next, each citing the claims it delivers — "File a new item".
+
 ### Claim the item
 
 - Work from one focused `.issues/` item.
@@ -62,6 +83,12 @@ Write `.issues/<id>-<slug>.yml` with the full frontmatter from
 inherited. Take the id from `.issues/.sequence`, after rebasing (see "Commit,
 rebase, claim identifiers"), and bump it in the same commit.
 
+**A `type: feature` item is cut from a spec that already exists**: it carries
+`spec:` and the `claims:` it delivers, and those claim ids are already written
+in § 3. An item that would need a claim invented for it is not ready to be
+filed — the specification changes first. A bug, spike or chore carries
+`spec: null`.
+
 Body: a `## Summary` that is user-story shaped for a feature (`As a … I want …
 so that …`), and acceptance criteria that **cite `B-00n` claim ids** rather
 than restating them. An item with no spec yet carries `spec: null`.
@@ -96,8 +123,10 @@ because the field is now YAML:
 
 - **Never work on a branch in the primary checkout.** Create a worktree off
   fresh `origin/main`:
-  `git fetch origin main && git worktree add -b <id>/<short-description> .claude/worktrees/<id>/<short-description> origin/main`,
-  where `<id>` is the `.issues/` item id (`0001/poll-opensky`).
+  `git fetch origin main && git worktree add -b <branch> .claude/worktrees/<branch> origin/main`,
+  where `<branch>` is `<id>/<short-description>` from the `.issues/` item id
+  (`0001/poll-opensky`) — or `spec/<feature-slug>` when authoring a
+  specification, which has no item to take an id from.
   Several agents share the repository; a worktree per item means none switches
   a branch out from under another.
 - **Keep the primary checkout's `main` current, and change nothing in it.**
@@ -110,9 +139,10 @@ because the field is now YAML:
   create the worktree. A resumed session or a plain "continue" does not look
   like starting an item, which is exactly when this gets skipped.
 - **Push the branch at once**, from the worktree:
-  `git push -u origin <id>/<short-description>`.
+  `git push -u origin <branch>`.
 - Open every final report with `[<id> · PR #<pr>]` (just `[<id>]` before the
-  pull request exists), even a one-line report.
+  pull request exists), even a one-line report. Authoring a specification has
+  no id, so use the Feature slug: `[aircraft-source · PR #<pr>]`.
 - Do all work in the worktree. It comes down once the pull request is open.
 - **Never use a bare `git stash` or `git stash pop` in a worktree.** There is
   one stash per clone, shared by every worktree and session: a bare stash takes
@@ -149,9 +179,13 @@ because the field is now YAML:
 
 ### Specification
 
+- **A specification is not documentation of the change; it is the thing the
+  change serves.** It was written before this item existed, and it outlives the
+  item. Amending it is editing an agreement, so the edit is deliberate and the
+  pull request says what moved.
 - [`README.md`](../../README.md) is the specification today; a Feature's
-  specification goes in `features/<slug>/.spec/README.md` when one is authored.
-  Claim ids are `B-00n`, and each section has exactly one owning role — see
+  specification lives in `features/<slug>/.spec/README.md`. Claim ids are
+  `B-00n`, and each section has exactly one owning role — see
   [`spec-and-traceability`](../spec-and-traceability/SKILL.md). Write only the
   sections your role owns.
 - Every relative link in tracked markdown resolves. Moving a file rewrites
@@ -292,7 +326,8 @@ this conversation.
     - **Never merge directly, bypass protections, or enqueue explicitly.**
       Someone with the authority to merge does that by hand.
     - Keep working until the required checks are green.
-5. **PR body**: the item id on its own line (`Delivers .issues/0001` — there is
+5. **PR body**: the item id on its own line (`Delivers .issues/0001`, or
+   `Specifies features/aircraft-source` when authoring a spec — there is
    no issue for `Closes` to close), the `B-00n` claims it satisfies, and what
    changed upstream. Built something the specification does not describe?
    Either fix the specification or the change exceeded its scope.

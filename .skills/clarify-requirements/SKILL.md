@@ -37,6 +37,10 @@ In the same change:
 
 - the answer becomes a claim, a scenario, a README edit, or an out-of-scope
   line, so the next run starts from the answer rather than re-asking;
+- **the specification is where it lands first.** A Feature is specified before
+  any item exists, so § 3, § 5 or § 11 is the record; an item's Decisions
+  section is for a call made after the item was filed, not a substitute for
+  the agreement;
 - a design change updates the affected specification —
   [`spec-and-traceability`](../spec-and-traceability/SKILL.md) says where that
   lives and which role owns the section — and the `.issues/` item's acceptance

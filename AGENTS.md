@@ -6,7 +6,7 @@ This document establishes development practices for the Transponder repository, 
 
 **Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` (see the `specification` skill and `.skills/spec-and-traceability`). When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
 
-**Specification-Driven Chain**: Development follows an artifact progression from work item (`.issues/<id>.yml`) → claim (§ 3 of the Feature's `.spec/README.md`) → scenario (its `.feature` file) → xUnit test → implementation. Every stage must be traceable through § 9 Traceability Matrix, and none can be skipped without documented exemption. Scenarios are documentation — there is no Gherkin runner in this repository; the tests in `test/UnitTests` are what execute.
+**Specification-Driven Chain**: Development follows an artifact progression from specification (§§ 1-5 of the Feature's `.spec/README.md`) → claim (§ 3) → scenario (its `.feature` file) → work item (`.issues/<id>.yml`) → xUnit test → implementation. **The specification comes first and stands alone** — it needs no work item to exist, because it is the agreement that items are later cut from. The item sits where *delivery* begins, not where the thinking begins; a bug, spike or chore starts there instead, and may produce a spec delta afterwards. Every stage must be traceable through § 9 Traceability Matrix, and none can be skipped without documented exemption. Scenarios are documentation — there is no Gherkin runner in this repository; the tests in `test/UnitTests` are what execute.
 
 **Four Mandatory Rules**:
 1. Author or amend scenarios before implementing changes
@@ -36,7 +36,8 @@ When a bug fix reveals a specification gap, a lesson document in the Feature's `
 
 ## Delivery Workflow
 
-- **Work is tracked locally.** Every change begins with a `.issues/<id>-<slug>.yml` item, which stands in for a GitHub issue. There are no issues, labels or milestones in this workflow; the schema and status enum are in `.skills/spec-and-traceability/SKILL.md`
+- **A Feature begins with its specification**, authored with no work item; items are cut from its § 3 claims afterwards. A bug, spike or chore begins with an item outright
+- **Delivery is tracked locally.** Every change is *delivered* through a `.issues/<id>-<slug>.yml` item, which stands in for a GitHub issue. There are no issues, labels or milestones in this workflow; the schema and status enum are in `.skills/spec-and-traceability/SKILL.md`
 - `status: in-progress` is the only signal an item is taken — set it before the worktree, the branch, or the first edit, and never pick up an item that already carries it
 - A closed item stays, with `status: done` and a `closed:` date
 - Rebase onto fresh `origin/main` before committing (not just before pushing)

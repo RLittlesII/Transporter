@@ -15,8 +15,14 @@ boundary.
 ## The chain
 
 ```
-spec-author  →  test-writer  →  implementer  →  spec-reviewer
+need  →  spec-author  →  test-writer  →  implementer  →  spec-reviewer
+         (spec, §§1-5)    (§§8-9, tests)   (§§6-7, code)   (§12)
 ```
+
+**`spec-author` goes first, with nothing upstream but the need.** A Feature's
+specification is authored before any work item exists — it is the agreement
+that items are cut from — so the chain starts at a decided need, not at a
+tracker entry. Items appear after § 3 carries claims to cut them from.
 
 **Each role trusts only the artifact from the role before it.** The test writer
 works from the claim, not from the conversation that produced it. The
@@ -42,8 +48,10 @@ filling in someone else's is a boundary violation, not a favour.
 
 **Locally.** `.issues/<id>-<slug>.yml` stands in for a GitHub issue and holds
 delivery state — status, priority, scoring, dependencies. The specification
-holds the content. Code still pushes to GitHub as branches and pull requests;
-issues, labels and milestones are not part of this workflow.
+holds the content, and **comes first**: a feature item names its spec, a spec
+never names an item. A bug, spike or chore starts at an item instead. Code
+still pushes to GitHub as branches and pull requests; issues, labels and
+milestones are not part of this workflow.
 
 `status: in-progress` on an item is the only signal it is taken. The schema,
 the status enum, and the authority split are in

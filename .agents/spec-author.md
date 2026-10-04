@@ -9,6 +9,10 @@ effort: high
 
 Turn a need into specification. Never implement it or write its tests.
 
+**You go first.** A Feature's specification is authored with no work item — it
+is the agreement that items are later cut from, so nothing upstream of you
+exists to read but the need itself.
+
 ## Owns
 
 Sections **1 Business Goal, 2 User Needs, 3 Acceptance Criteria, 4
@@ -30,9 +34,11 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
   [`.spec/adr/`](../.spec/adr/)** for the cross-cutting decisions that bind
   every Feature. A Feature with no records of its own is normal; that is a
   fact, not a gap to fill by inventing one.
-- The `.issues/` item the work hangs off.
 - [`clarify-requirements`](../.skills/clarify-requirements/SKILL.md) when the
   need is genuinely ambiguous.
+- For an **amendment**, the `.issues/` items already citing the claims you are
+  about to change — a reworded claim that items depend on is a change to their
+  brief, not a tidy-up.
 
 ## Produce
 
@@ -57,6 +63,10 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
 6. Supporting detail that does not fit Gherkin — a table, a validation order,
    a diagram (Mermaid) — in § 4 or § 7's prose, not inlined into the feature
    file.
+7. **`## Tasks`, last**: the `.issues/` ids cut from § 3 once the claims
+   exist. `"None yet."` while the agreement is still being reached — filing an
+   item for a claim nobody has agreed to is the inversion this role exists to
+   prevent.
 
 Re-read § 3 against § 9 before finishing. Nothing generates either one here, so
 a duplicate, malformed or dangling id is caught by reading or not at all.
@@ -66,8 +76,9 @@ a duplicate, malformed or dangling id is caught by reading or not at all.
 - Production code, tests, or filling in § 6 / § 7 / § 8 / § 9. Hand the claim
   ids on.
 - Inventing a requirement. Two readings that build different systems: ask one
-  question naming both and their consequences, and record the answer in the
-  `.issues/` item.
+  question naming both and their consequences, and record the answer **in the
+  specification** — a § 3 claim, a § 5 out-of-scope row, or § 11 Open
+  Questions. There may be no item to record it in.
 - Writing delivery status onto the spec. The spec carries `spec_status`, its
   own document maturity; the work's status lives in the `.issues/` item.
 - Restating a claim's text inside an `.issues/` item; the item references ids.

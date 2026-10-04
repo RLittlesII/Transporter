@@ -2,13 +2,18 @@
 title: "Specification: {{feature_title}}"
 description: "{{one_line_summary}}"
 type: spec
-item: "{{item_id}}"
 spec_status: draft
 ---
 
 <!-- Copy this file to features/<feature-slug>/.spec/README.md and fill it in.
 
-     `item` is the .issues/ work item this Feature is tracked by.
+     THIS FILE COMES FIRST. A Feature specification stands on its own: it needs
+     no work item to exist, because it is the agreement that work items are
+     later cut from. `## Tasks` below lists the items derived from § 3.
+
+     A FEATURE ITEM NAMES ITS SPEC; A SPEC NEVER NAMES AN ITEM. One direction,
+     so there is nothing to keep in sync.
+
      `spec_status` is DOCUMENT maturity: draft | in-review | approved | superseded.
 
      Delivery state does NOT live here. `status`, `priority`, `value`, `risk`
@@ -201,8 +206,9 @@ spec_status: draft
 
 ## Tasks
 
-<!-- Owner: spec-author, from the .issues/ items. Ids only — never restated
-     titles, or the two records disagree. -->
+<!-- Owner: spec-author. The items cut from § 3 once the claims exist. Ids
+     only — never restated titles, or the two records disagree. "None yet."
+     is valid while the spec is still being agreed. -->
 
 - [ ] 0002 — {{item_title}}
 
