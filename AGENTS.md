@@ -77,7 +77,8 @@ A knowledge graph can live at `graphify-out/`. **When `graphify-out/graph.json` 
 | Skill | Covers |
 | --- | --- |
 | `transponder-domain-model` | `TransportVehicle` and its subclasses, units, optional values |
-| `api-contract` | the snapshot seam, the OpenSky client, credits, credentials |
+| `api-contract` | the snapshot seam, the OpenSky facts, credits, credentials |
+| `http-client` | satisfying the contracts with Flurl: URLs, tokens, rate limits, `HttpTest` |
 | `ais-stream` | the AISStream vessel feed (stretch goal) |
 | `api-mock` | record, replay, and simulated sources |
 | `dynamic-data-pipeline` | `EditDiff` through `Bind`, staleness and expiry |

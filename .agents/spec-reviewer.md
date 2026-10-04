@@ -19,8 +19,9 @@ is in [`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md).
 
 - The diff, and the `B-00n` claims it cites with their § 3 rows and scenarios.
 - § 9 Traceability Matrix: what else the changed code is claimed to satisfy.
-- § 5 Out of Scope, and the `adr/` records the claims touch. **This repo has
-  no ADRs yet** — so "contradicts an ADR" cannot be a finding until one exists.
+- § 5 Out of Scope, and every `adr/` record the claims touch — the Feature's
+  own, **and the root [`.spec/adr/`](../.spec/adr/)**, whose decisions bind
+  every Feature whether or not the diff mentions them.
 - The `.issues/` item: its acceptance criteria, its `claims:` list, and whether
   its `status` matches reality.
 - `AGENTS.md` and the skill for each surface the diff touches.

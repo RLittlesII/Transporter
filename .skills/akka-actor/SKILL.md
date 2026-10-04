@@ -75,8 +75,10 @@ From `ClickActor`:
 
 - **The poller** schedules itself at the credit-budgeted interval, refreshes
   the OpenSky token on expiry or `401`, and honors
-  `X-Rate-Limit-Retry-After-Seconds` on a `429` — see
-  [`api-contract`](../api-contract/SKILL.md).
+  `X-Rate-Limit-Retry-After-Seconds` on a `429`. It owns *when* and *how often*;
+  the HTTP mechanics belong to a plain client class it calls
+  ([`http-client`](../http-client/SKILL.md)), which is also what keeps that
+  client testable — `HttpTest` does not reach inside an actor.
 - **The WebSocket reader** (the ships stretch goal) owns the socket lifetime:
   connect, subscribe with the bounding box, read, and reconnect when the
   socket drops — see [`ais-stream`](../ais-stream/SKILL.md). A dropped socket

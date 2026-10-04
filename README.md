@@ -45,7 +45,7 @@ In roughly the order the audience meets them:
 - **Endpoint:** `GET /states/all`
     - Bounding box: `lamin`, `lomin`, `lamax`, `lomax`
     - `extended=1` adds aircraft category (useful for grouping)
-- **No OpenAPI spec.** Write the client by hand with `HttpClient` and `System.Text.Json`.
+- **No OpenAPI spec**, so there is nothing to generate a client from. The client is written with [Flurl](https://flurl.dev) over `System.Text.Json` — fluent query parameters for the bounding box, hooks for token refresh, readable rate-limit headers, and `HttpTest` instead of a hand-rolled message handler. See [ADR-0001](.spec/adr/0001-flurl-for-http.md).
 
 ### Response shape
 
@@ -145,3 +145,4 @@ Replace the polled source with a push source and show that everything downstream
 - [C# Language Extensions](https://github.com/louthy/language-ext)
 - [Akka](https://github.com/akkadotnet/akka.net)
 - [Mapperly](https://github.com/riok/mapperly)
+- [Flurl](https://flurl.dev) — the polled HTTP client ([ADR-0001](.spec/adr/0001-flurl-for-http.md))

@@ -17,9 +17,19 @@ describes are committed in [`.spec/templates/`](../../.spec/templates/) —
 | [`lesson.md`](../../.spec/templates/lesson.md) | one `lessons/` record |
 | [`item.yml`](../../.spec/templates/item.yml) | one `.issues/` work item |
 
-**`.spec/` means two things, so keep them straight**: `.spec/templates/` at the
-repository root holds the blanks; `features/<slug>/.spec/` holds one Feature's
-real specification and its records.
+**`.spec/` means three things, so keep them straight**:
+
+| Path | Holds |
+|---|---|
+| `.spec/templates/` | the blanks, listed above |
+| `.spec/adr/` | **cross-cutting** technical decisions — ones that bind every Feature, numbered repo-wide from `0001` |
+| `features/<slug>/.spec/` | one Feature's specification, its `.feature` file, and its own `decisions/`, `lessons/` and `adr/` |
+
+A decision goes in the root `adr/` or a Feature's by **blast radius**: a
+library, a transport or a layout rule binds everything, while a choice about
+one Feature's internals does not. The first root ADR is
+[`0001-flurl-for-http.md`](../../.spec/adr/0001-flurl-for-http.md), which also
+shows the shape.
 
 ## Today: the README is the specification
 
@@ -167,9 +177,8 @@ Two honest notes:
 
 - `decisions/` — product and scope calls that were decided, reneged, or
   redirected.
-- `adr/` — durable technical choices. **Nothing in this repo has one yet**, so
-  no skill links to an ADR; the technology list in README § "Technology
-  Decisions" is a list, not a record.
+- `adr/` — durable technical choices **scoped to this Feature**. One that binds
+  every Feature goes in the root `.spec/adr/` instead.
 - `lessons/` — one file per lesson: symptom, root cause, spec delta, and the
   claim proving the delta held. A bug fix that reveals a specification gap
   ships its lesson in the same change (`AGENTS.md`).

@@ -203,14 +203,16 @@ because the field is now YAML:
 
 ### ADRs
 
-- One ADR per real architecture decision, in the Feature's `.spec/adr/`, in the
-  same pull request. A real decision is a new rule about the system, a reversed
-  one, or a technology choice with a rejected alternative. UI polish and
-  routine details need none.
-- **This repository has no ADRs yet.** The technology list in README §
-  "Technology Decisions" is a list, not a record, and no skill links to an ADR
-  that does not exist. The open decisions worth a record are enumerated in
-  [`spec-and-traceability`](../spec-and-traceability/SKILL.md).
+- One ADR per real architecture decision, in the same pull request. A real
+  decision is a new rule about the system, a reversed one, or a technology
+  choice with a rejected alternative. UI polish and routine details need none.
+- **Which `adr/`** depends on blast radius: `.spec/adr/` at the root for a
+  decision that binds every Feature, a Feature's own `.spec/adr/` for one
+  scoped to it. [`spec-and-traceability`](../spec-and-traceability/SKILL.md)
+  has the rule; [ADR-0001](../../.spec/adr/0001-flurl-for-http.md) is the
+  worked example, and `.spec/templates/adr.md` the blank.
+- The technology list in README § "Technology Decisions" is a list, not a
+  record — an entry there that carries a rejected alternative owes an ADR too.
 - **Not an ADR**: a process or tooling rule is a convention, edited in place in
   the skill that owns it; interface detail is a scenario.
 - **An accepted ADR is immutable.** Only its status changes. A change to the

@@ -62,6 +62,10 @@ apart.
 - A fixture exercising the positional-array converter keeps the array shape
   exactly as OpenSky sends it, including the nulls — that converter's whole
   job is surviving a sparse row.
+- **The same fixtures serve the client tests**, replayed through Flurl's
+  `HttpTest` with `RespondWithJson`
+  ([`http-client`](../http-client/SKILL.md)). One body of synthetic data, two
+  uses: the replay source feeds the pipeline, and `HttpTest` feeds the client.
 
 ## Never add
 

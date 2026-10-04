@@ -48,8 +48,10 @@ All of this is the provider's behavior and is not ours to simplify. The
 details live in [`README.md`](../../README.md) § "Data source: OpenSky
 Network"; the consequences are here.
 
-- **No OpenAPI spec exists.** The client is hand-written with `HttpClient` and
-  `System.Text.Json`. Do not go looking for a generator.
+- **No OpenAPI spec exists**, so there is no generator to look for. The client
+  is written with Flurl over `System.Text.Json` —
+  [`http-client`](../http-client/SKILL.md) has the mechanics, and
+  [ADR-0001](../../.spec/adr/0001-flurl-for-http.md) the reasoning.
 - **`states` is an array of arrays.** Fields are positional, not named, so a
   custom `JsonConverter` is mandatory, and the index→field table is the
   contract. Read positions by index against that table; never by guessing from

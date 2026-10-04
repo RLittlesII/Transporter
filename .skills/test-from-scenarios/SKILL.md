@@ -59,6 +59,15 @@ No test reaches `opensky-network.org`, `stream.aisstream.io`, or the backup
 source. A test that needs a credential to pass is a test that will fail on
 someone else's machine and on CI.
 
+**For anything HTTP, use Flurl's `HttpTest`** — never a hand-rolled
+`HttpMessageHandler` or `HttpClient` fake. It queues responses, simulates a
+timeout, and asserts the request that was made (URL, verb, query parameters,
+headers, count), which is the half a stubbed handler usually leaves untested.
+One caveat that shapes the design: its interception follows the logical async
+call context and **does not reach inside an actor on its own dispatcher**, so
+test the client class directly and give the actor a stubbed source —
+[`http-client`](../http-client/SKILL.md) has the detail.
+
 ## Fixtures are synthetic
 
 - Invented callsigns, MMSIs, positions, countries (`AGENTS.md`). Committed as

@@ -9,6 +9,7 @@
     <ItemGroup>
       <PackageReference Include="Akka" />
       <PackageReference Include="Akka.Hosting" />
+      <PackageReference Include="Flurl.Http" />
       <PackageReference Include="LanguageExt.Core" />
       <PackageReference Include="Microsoft.Maui.Controls.Core" />
       <PackageReference Include="ReactiveMarbles.Mvvm" />

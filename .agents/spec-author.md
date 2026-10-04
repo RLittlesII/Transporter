@@ -26,8 +26,10 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
   budget, the resilience plan, the open items).
 - The Feature's `.spec/README.md` if it exists: § 3 for what is already
   claimed, § 4 for the constraints in force, § 11 for the questions still open.
-- Its `decisions/` and `adr/` records. **This repo has no ADRs yet**, so there
-  may be none to read — that is a fact, not a gap to fill by inventing one.
+- Its `decisions/` and `adr/` records, **and the root
+  [`.spec/adr/`](../.spec/adr/)** for the cross-cutting decisions that bind
+  every Feature. A Feature with no records of its own is normal; that is a
+  fact, not a gap to fill by inventing one.
 - The `.issues/` item the work hangs off.
 - [`clarify-requirements`](../.skills/clarify-requirements/SKILL.md) when the
   need is genuinely ambiguous.

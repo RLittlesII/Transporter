@@ -4,7 +4,13 @@ description: "{{one_line_summary}}"
 type: adr
 ---
 
-<!-- Copy to features/<feature-slug>/.spec/adr/{{NNNN}}-{{decision-slug}}.md.
+<!-- WHICH adr/ DIRECTORY:
+       - .spec/adr/ at the repository root, for a CROSS-CUTTING decision that
+         binds every Feature — a library, a transport, a layout rule. Numbered
+         repo-wide, starting at 0001.
+       - features/<feature-slug>/.spec/adr/, for a decision scoped to that one
+         Feature. Numbered per Feature, starting at 0001.
+     Pick by blast radius, not by who happened to make it.
 
      An ADR records a durable technical or architecture decision: a new rule
      about the system, a reversed one, or a technology choice with a rejected
