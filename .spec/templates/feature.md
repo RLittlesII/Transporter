@@ -1,0 +1,216 @@
+---
+title: "Specification: {{feature_title}}"
+description: "{{one_line_summary}}"
+type: spec
+item: "{{item_id}}"
+spec_status: draft
+---
+
+<!-- Copy this file to features/<feature-slug>/.spec/README.md and fill it in.
+
+     `item` is the .issues/ work item this Feature is tracked by.
+     `spec_status` is DOCUMENT maturity: draft | in-review | approved | superseded.
+
+     Delivery state does NOT live here. `status`, `priority`, `value`, `risk`
+     and `rank` belong to the .issues/ item, which is the single authority for
+     them — see .skills/spec-and-traceability/SKILL.md.
+
+     Keep the section order. Replace the example rows. DO NOT DELETE A SECTION
+     BECAUSE IT IS EMPTY — an empty section is a decision ("out of scope", "no
+     open questions") and says so in words. Deleting it destroys the signal
+     that the question was asked.
+
+     Each section names the role that owns it. A role writes only its own
+     sections; filling in someone else's is a boundary violation, not a
+     favour. -->
+
+# Specification: {{feature_title}}
+
+## 1. Business Goal
+
+<!-- Owner: spec-author. One paragraph. The outcome, not the implementation.
+     Name the failure state being removed. -->
+
+{{business_goal}}
+
+## 2. User Needs
+
+<!-- Owner: spec-author. The audience for this project is specific — see
+     README.md § "Audience" — so do not write a generic persona. -->
+
+| #   | Persona     | Need     | Pain point today |
+| --- | ----------- | -------- | ---------------- |
+| 1   | {{persona}} | {{need}} | {{pain}}         |
+
+## 3. Acceptance Criteria
+
+<!-- Owner: spec-author. Numbered, falsifiable, SHALL / SHALL NOT. One claim
+     per row. These ids are what § 9 and the .feature file are anchored to, so
+     they are permanent: never renumbered, never reused. A withdrawn claim is
+     marked Withdrawn, not deleted. -->
+
+| ID    | Claim     | Source     | Status |
+| ----- | --------- | ---------- | ------ |
+| B-001 | {{claim}} | {{source}} | Draft  |
+
+<!-- Status: Draft | Built | Withdrawn. "Built" means a test cites it and § 9
+     says Verified. -->
+
+## 4. Constraints
+
+<!-- Owner: spec-author. Impact states what the constraint rules out, so § 7
+     has something concrete to satisfy. Many of this project's constraints are
+     the data provider's and are not ours to simplify — credit budgets, token
+     expiry, blocked hyperscaler IPs (README.md). -->
+
+| #   | Constraint     | Source     | Impact     |
+| --- | -------------- | ---------- | ---------- |
+| 1   | {{constraint}} | {{source}} | {{impact}} |
+
+## 5. Out of Scope
+
+<!-- Owner: spec-author. The section nobody writes. Without it, a demo grows a
+     feature nobody asked for. -->
+
+| #   | Item     | Exclusion reason |
+| --- | -------- | ---------------- |
+| 1   | {{item}} | {{reason}}       |
+
+## 6. Concern Separation
+
+<!-- Owner: implementer. Classifies each item Business, Technical, or Both —
+     the mechanism that stops business and technical judgment collapsing into
+     one undifferentiated paragraph. -->
+
+| Item     | Classification | Notes     |
+| -------- | -------------- | --------- |
+| {{item}} | Business       | {{notes}} |
+
+## 7. Technical Design
+
+<!-- Owner: implementer. One owner by design, and a compromise: a decision
+     bigger than this item — a new seam, a changed boundary, a technology
+     choice — is a question for the person, not something to settle here. -->
+
+**Domain model**
+
+| Field     | Type     | Notes     |
+| --------- | -------- | --------- |
+| {{field}} | {{type}} | {{notes}} |
+
+**Diagrams**
+
+<!-- Mermaid (AGENTS.md). Declare every type; one that does not apply says
+     `Not applicable — <reason>` rather than being silently dropped. Never
+     summarize a diagram into prose and delete the diagram. -->
+
+```mermaid
+{{diagram}}
+```
+
+**Interface changes**
+
+{{interface_changes}}
+
+**Decision required**
+
+> | Option | Summary     | Tradeoff     |
+> | ------ | ----------- | ------------ |
+> | A.     | {{summary}} | {{tradeoff}} |
+>
+> **Recommendation:** {{recommendation}}
+> **Awaiting:** {{decision_owner}}
+
+<!-- Omit the block when nothing is open, but say so: "No open decisions." -->
+
+## 8. Testing Strategy
+
+<!-- Owner: test-writer. -->
+
+**Testability assessment**
+
+| Dimension          | Verdict | Finding     | Recommendation |
+| ------------------ | ------- | ----------- | -------------- |
+| DI seams           | Pass    | {{finding}} | —              |
+| Behavior isolation | Pass    | {{finding}} | —              |
+| Coverage potential | Pass    | {{finding}} | —              |
+
+**Scenarios**
+
+<!-- Full Gherkin lives in <feature-slug>.feature beside this file, not
+     inlined here. Each scenario carries the @B-00n tag of the claim it
+     proves. Scenarios are documentation; the xUnit tests execute. -->
+
+- Happy path → {{claim_ids}}
+- Failure mode → {{claim_ids}}
+- Validation failure → {{claim_ids}}
+- Data-driven → {{claim_ids}}
+
+## 9. Traceability Matrix
+
+<!-- Owner: test-writer. The gate. A `Missing` row blocks ship — it is not a
+     note, it is a stop sign. Every id in § 3 appears here exactly once,
+     anchored to the scenario's @B-00n TAG rather than to the title in the
+     Scenario column. -->
+
+| Claim ID | Scenario     | Test     | Status   |
+| -------- | ------------ | -------- | -------- |
+| B-001    | {{scenario}} | {{test}} | Verified |
+
+<!-- Status: Verified | Missing. -->
+
+## 10. Lessons / Spec Deltas
+
+<!-- Owner: whichever role closed the bug. Index only — one file per lesson in
+     lessons/ beside this file, from .spec/templates/lesson.md. Append only. A
+     delta that adds behavior also needs a § 3 row, which is spec-author's to
+     write. "None yet." is a valid body. -->
+
+- [{{NNNN}} — {{lesson_title}}](lessons/{{NNNN}}-{{lesson-slug}}.md) — {{date}}
+
+## 11. Open Questions
+
+<!-- Owner: whoever is blocked. "None." is a valid body. -->
+
+| #   | Question     | Owner     | Target date |
+| --- | ------------ | --------- | ----------- |
+| 1   | {{question}} | {{owner}} | {{date}}    |
+
+## 12. Sign-off
+
+<!-- Owner: spec-reviewer. 🟡 Draft | 🟢 Approved | 🔴 Blocked — state the
+     reason on a Blocked row. Overall goes 🟢 only when every row is 🟢 and
+     § 9 has no Missing row. Overall 🟢 is what flips spec_status to
+     approved. -->
+
+| Sections                                                                  | Owner          | Status   |
+| ------------------------------------------------------------------------- | -------------- | -------- |
+| Business Goal, User Needs, Acceptance Criteria, Constraints, Out of Scope  | spec-author    | 🟡 Draft |
+| Concern Separation, Technical Design                                      | implementer    | 🟡 Draft |
+| Testing Strategy, Traceability Matrix                                     | test-writer    | 🟡 Draft |
+| Overall                                                                   | spec-reviewer  | 🟡 Draft |
+
+## Decisions
+
+<!-- Owner: the role that made or reversed the call. Index only — one file per
+     decision in decisions/ beside this file, from
+     .spec/templates/decision.md. A product or scope call goes there; a
+     durable technical choice goes to adr/ instead. "None yet." is valid. -->
+
+- [{{NNNN}} — {{decision_title}}](decisions/{{NNNN}}-{{decision-slug}}.md) — {{status}}
+
+## Tasks
+
+<!-- Owner: spec-author, from the .issues/ items. Ids only — never restated
+     titles, or the two records disagree. -->
+
+- [ ] 0002 — {{item_title}}
+
+## Scoring
+
+<!-- Owner: spec-author, recording the item's value and risk when they change.
+     The authoritative values live in the .issues/ item. -->
+
+| Date         | Field | From | To  | Rationale     |
+| ------------ | ----- | ---- | --- | ------------- |
+| {{date}}     | value | —    | 4   | {{rationale}} |

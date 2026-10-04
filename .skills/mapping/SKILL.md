@@ -5,10 +5,11 @@ description: Map wire payloads to the Transponder domain with Mapperly at the bo
 
 # Mapping wire to domain
 
-Extends the global `riok-mapperly` skill. That one owns Mapperly's API; this
-one owns where mapping is allowed to happen in this repo. `Riok.Mapperly` is
-a decided technology ([`README.md`](../../README.md) § "Technology
-Decisions") and is already referenced in
+This file covers **where mapping is allowed to happen in this repository**. For
+Mapperly's own API and attributes, see
+[riok/mapperly](https://github.com/riok/mapperly). `Riok.Mapperly` is a decided
+technology ([`README.md`](../../README.md) § "Technology Decisions") and is
+already referenced in
 [`Directory.Packages.props`](../../Directory.Packages.props).
 
 ## One mapper per boundary

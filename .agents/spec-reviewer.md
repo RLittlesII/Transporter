@@ -9,8 +9,6 @@ effort: high
 
 Ask one question: **does this satisfy the claims it cites, and nothing else?**
 
-Counterpart in the installed council: `stinkmeaner`, with `vane`'s sign-off.
-
 ## Owns
 
 Section **12 Sign-off** of the Feature's `.spec/README.md`. Authors no other
@@ -45,11 +43,12 @@ is in [`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md).
    cites standing. One covering a behavior change is a finding; the remedy is
    the claim.
 9. **A record off its rules** — an accepted ADR's body edited or an ADR
-   deleted; a new one off the template or without considered options; a process
+   deleted; a new one off [`.spec/templates/adr.md`](../.spec/templates/adr.md)
+   or without considered options; a process
    rule filed as an ADR; a lesson missing symptom, root cause, spec delta, or
    its claim.
 10. **Section boundaries** — a role writing a section it does not own, or
-    delivery status hand-edited onto the spec instead of mirrored from the item.
+    delivery status written onto the spec, which belongs in the `.issues/` item.
 11. **The swap test**, for anything touching the UI or the seam: would
     flipping planes to ships need a view edit? If so the view knows too much
     ([`build-maui-ui`](../.skills/build-maui-ui/SKILL.md)).

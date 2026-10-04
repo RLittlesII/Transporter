@@ -1,0 +1,68 @@
+# Copy to .issues/<id>-<slug>.yml. This file is the schema for a work item —
+# the local stand-in for a GitHub issue. It owns DELIVERY STATE; a Feature's
+# .spec/README.md owns CONTENT. Neither duplicates the other.
+#
+# The whole file is YAML, with the prose fields as block scalars. Take <id>
+# from .issues/.sequence and bump it in the same commit. Claim the id AFTER
+# rebasing: it is taken the moment someone else merges it.
+
+id: "0001" # string, so leading zeros survive. Never reused.
+type: feature # epic | feature | task | test | bug | spike
+title: Poll OpenSky for aircraft snapshots
+
+# ready-for-architecture -> ready-for-implementation -> in-progress ->
+# in-review -> done, with needs-decomposition before an epic or feature is
+# split, ready once dependencies are resolved, and blocked at any point work
+# bounces back.
+#
+# in-progress is the ONLY signal an item is taken: never pick up an item that
+# already carries it, and set it before the worktree, the branch, or the first
+# edit.
+status: ready
+
+priority: high # DERIVED from value and risk — recompute, never hand-edit
+value: 4 # 1-5. Optional on a child: omit to inherit the parent's
+risk: 3 # 1-5. REQUIRED, and never inherited
+rank: 1 # DERIVED. Orders items inside one priority bucket
+
+parent: null # id of the epic or feature this hangs under
+children: [] # ids carved out of this item, so its own scope shrank
+
+# HARD prerequisites, by id: this cannot be built or verified until those
+# land. Not "touches similar code" — that is no relation at all. Say why in
+# the summary.
+depends_on: []
+blocks: [] # DERIVED: the inverse of other items' depends_on
+spikes: [] # ids of investigations this waits on
+
+spec: features/aircraft-source/.spec/README.md # null until one is written
+
+# The § 3 claims this item delivers — ids ONLY, never the claim text, or the
+# two records disagree.
+claims:
+  - B-001
+  - B-002
+
+created: "2026-10-04"
+updated: "2026-10-04" # bump on every edit
+closed: null # the date it went done. A closed item STAYS: permanent history.
+
+# User-story shaped for a feature. For a task, test or bug, plain prose is
+# fine — do not force a story onto a chore. Name any depends_on reason here.
+summary: |
+  As a <persona> I want <capability> so that <outcome>.
+
+# CITE claim ids; do not restate them. § 3 of the spec is the one place a
+# claim's text lives. An item with `spec: null` states its criteria in prose
+# here until the claims exist, then is updated to cite them.
+acceptance_criteria:
+  - "B-001 — <short reference>"
+
+# Appended as the work proceeds: each decision, who made it, the date, and the
+# rejected option where there was one. A decision recorded only in chat is not
+# recorded. A decision that changes behavior also belongs in the
+# specification — a § 3 claim is spec-author's to write.
+decisions: []
+
+# What this item will not do, so the next reader does not assume it did.
+out_of_scope: []

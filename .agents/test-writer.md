@@ -9,8 +9,6 @@ effort: medium
 
 Turn a claim into a test that fails for the right reason. Never make it pass.
 
-Counterpart in the installed council: `behavior-driver`.
-
 ## Owns
 
 Sections **8 Testing Strategy** and **9 Traceability Matrix** of the Feature's

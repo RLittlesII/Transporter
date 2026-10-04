@@ -23,15 +23,14 @@ and it points at a test
 - **xUnit**, in [`test/UnitTests`](../../test/UnitTests) — root namespace
   `Transponder.UnitTests`, `Xunit` is a global using in the project file.
 - **`GivenX_WhenY_ThenZ` method names** (`AGENTS.md`). The name states the
-  claim; a reader should not need the body to know what broke. Where the
-  global `xunit` skill's `Condition_Action_Outcome` naming differs, this
-  repository's form wins; its `// Given` / `// When` / `// Then` body comments
-  and its local-setup rule apply unchanged.
-- **AwesomeAssertions** for assertions and **NSubstitute** for test doubles —
-  the stack the global `xunit` skill documents. Neither is in
-  [`Directory.Packages.props`](../../Directory.Packages.props) yet; the first
-  issue that writes a test adds them, and nothing in the repository asserts
-  anything until then.
+  claim; a reader should not need the body to know what broke. Inside the
+  method, `// Given` / `// When` / `// Then` comments separate the phases. For
+  xUnit's own attributes and fixtures, see [xunit.net](https://xunit.net).
+- **AwesomeAssertions** for assertions and **NSubstitute** for test doubles.
+  Neither is in
+  [`Directory.Packages.props`](../../Directory.Packages.props) yet — the first
+  issue that writes a test adds them there, and nothing in the repository
+  asserts anything until then.
 - **Set the system under test up inside the test**, in its `// Given`, not in a
   constructor or a field. No state shared between tests.
 - `coverlet.collector` is referenced, so coverage is collectible. No coverage

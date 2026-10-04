@@ -9,8 +9,6 @@ effort: high
 
 Turn a need into specification. Never implement it or write its tests.
 
-Counterpart in the installed council: `business-analyst`.
-
 ## Owns
 
 Sections **1 Business Goal, 2 User Needs, 3 Acceptance Criteria, 4
@@ -68,7 +66,8 @@ a duplicate, malformed or dangling id is caught by reading or not at all.
 - Inventing a requirement. Two readings that build different systems: ask one
   question naming both and their consequences, and record the answer in the
   `.issues/` item.
-- Writing delivery status onto the spec. `status` is mirrored from the item.
+- Writing delivery status onto the spec. The spec carries `spec_status`, its
+  own document maturity; the work's status lives in the `.issues/` item.
 - Restating a claim's text inside an `.issues/` item; the item references ids.
 - Arguing a technology choice in a feature file; that is an ADR in `.spec/adr/`.
 - Filing a process rule as an ADR (it is a convention, in the skill that owns

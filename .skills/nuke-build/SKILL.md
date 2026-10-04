@@ -5,8 +5,9 @@ description: Build Transponder through Nuke (.build/Build.cs) — Clean, Restore
 
 # Building with Nuke
 
-Extends the global `nuke` skill, which owns Nuke's API. This file is about
-[`.build/Build.cs`](../../.build/Build.cs) as it actually stands.
+This file is about [`.build/Build.cs`](../../.build/Build.cs) as it actually
+stands. For Nuke's own API — targets, parameters, tooling, the CI attributes —
+see [nuke.build](https://nuke.build).
 
 ## Run it
 

@@ -231,7 +231,10 @@ because the field is now YAML:
 
 - Every tracked markdown file opens with YAML frontmatter (`title`,
   `description`, `type`) — `type` being one of `adr`, `spec`, `guide`,
-  `readme`, `lesson`, `instructions`, `template` (`AGENTS.md`).
+  `decision`, `readme`, `lesson`, `instructions`, `template` (`AGENTS.md`).
+  The blanks for each live in
+  [`.spec/templates/`](../../.spec/templates/) — copy one rather than
+  reconstructing its shape.
 - **Skills and agents are the exception**: `name` and `description` only, with
   the type derived from the path. No `permalink`, no `metadata` block — a
   skill carrying either was copied from another repository.

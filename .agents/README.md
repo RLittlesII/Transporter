@@ -7,10 +7,10 @@ type: instructions
 # Role agents
 
 Four roles own the specification chain for Transponder. Each is a **documented
-contract**, not a loadable agent: this directory is `.agents/`, not
-`.claude/agents/`, so Claude Code does not resolve these by name. The agents
-that *are* loadable are the user-level council in `~/.claude/agents/`, and each
-file here names its counterpart there so an escalation has an address.
+contract for whoever takes that role** — a person or an agent. This repository
+ships no loadable agents: the directory is `.agents/`, not `.claude/agents/`,
+so nothing here is resolved by name. Read the file, take the role, honour the
+boundary.
 
 ## The chain
 
@@ -31,9 +31,9 @@ having: no stage has to reconstruct the reasoning of the stage before.
 | `implementer` | [`implementer.md`](implementer.md) | § 6, § 7, and the production code |
 | `spec-reviewer` | [`spec-reviewer.md`](spec-reviewer.md) | § 12 |
 
-Section numbers are the twelve sections of a Feature's `.spec/README.md`. **The
-authoritative ownership table — including § 10, § 11, Decisions, and the
-council counterparts — lives in
+Section numbers are the twelve sections of a Feature's `.spec/README.md`, whose
+blank is [`.spec/templates/feature.md`](../.spec/templates/feature.md). **The
+authoritative ownership table — including § 10, § 11 and Decisions — lives in
 [`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md)**, in one
 place, so it has nowhere to drift from. A role writes only its own sections;
 filling in someone else's is a boundary violation, not a favour.

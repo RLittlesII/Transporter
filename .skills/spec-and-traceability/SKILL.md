@@ -5,10 +5,21 @@ description: Where a Transponder specification lives, who owns each of its twelv
 
 # Specification and traceability
 
-Project companion to the global `specification` skill, which owns the
-`.spec/README.md` contract, its twelve sections, and the section-ownership
-table. This file says where that lands in this repository, who owns what here,
-and which parts are real today.
+This file owns the specification model: where a specification lives, who owns
+each section, how claims trace to tests, and how work is tracked. The blanks it
+describes are committed in [`.spec/templates/`](../../.spec/templates/) —
+
+| Template | Produces |
+|---|---|
+| [`feature.md`](../../.spec/templates/feature.md) | a Feature's `.spec/README.md`, twelve sections in order |
+| [`adr.md`](../../.spec/templates/adr.md) | one `adr/` record — a durable technical choice |
+| [`decision.md`](../../.spec/templates/decision.md) | one `decisions/` record — a product or scope call |
+| [`lesson.md`](../../.spec/templates/lesson.md) | one `lessons/` record |
+| [`item.yml`](../../.spec/templates/item.yml) | one `.issues/` work item |
+
+**`.spec/` means two things, so keep them straight**: `.spec/templates/` at the
+repository root holds the blanks; `features/<slug>/.spec/` holds one Feature's
+real specification and its records.
 
 ## Today: the README is the specification
 
@@ -30,11 +41,10 @@ branches and pull requests.
 | `.issues/<id>-<slug>.yml` | **delivery state** — status, priority, value/risk/rank, dependencies, what is being worked on | requirements, design, test plans |
 | `features/<slug>/.spec/README.md` | **content** — the twelve sections: requirements, constraints, design, testing strategy, traceability | the live status of the work |
 
-- The spec's `status` frontmatter is **mirrored** from its item's `status` — the
-  global skill mirrors it from a GitHub `status:*` label, and here that label's
-  job belongs to `.issues/`. Do not hand-edit it on the spec.
-- `priority` stays authored in the spec's own frontmatter, exactly as the global
-  skill says, because no label ever carried it.
+- A spec carries `spec_status` — its own **document** maturity (`draft`,
+  `in-review`, `approved`, `superseded`) — and nothing about delivery. The
+  work's `status`, `priority`, `value`, `risk` and `rank` live in the item, and
+  only there. Two copies of a status is two answers to one question.
 - The spec's `## Tasks` section lists `.issues/` **ids**, not restated titles.
 - One claim lives in one place: § 3 Acceptance Criteria. An item's `claims:`
   field **references** ids; it never restates the claim text.
@@ -46,39 +56,37 @@ branches and pull requests.
 .issues/0001-poll-opensky.yml       # one file per work item
 ```
 
+**The schema is [`.spec/templates/item.yml`](../../.spec/templates/item.yml)**,
+commented field by field. Copy it; do not re-derive it from an example. In
+outline:
+
 ```yaml
-id: "0001"
+id: "0001"               # string, so leading zeros survive
 type: feature            # epic | feature | task | test | bug | spike
 title: Poll OpenSky for aircraft snapshots
 status: ready
-priority: high
+priority: high           # derived from value and risk
 value: 4                 # optional on a child — inherits its parent's
 risk: 3                  # required, never inherited
-rank: 1
-parent: null             # id of the epic or feature it hangs under
+rank: 1                  # derived; orders items inside a priority bucket
+parent: null
 children: []
 depends_on: []           # hard prerequisites, by id
 blocks: []               # derived from other items' depends_on
-spikes: []
 spec: features/aircraft-source/.spec/README.md   # null until one exists
-claims: [B-001, B-002]
-created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
-github_issue: null       # stamped only if these ever migrate
+claims: [B-001, B-002]   # ids only, never the claim text
+summary: |
+  As a <persona> I want <capability> so that <outcome>.
 ```
 
-Field names come from the installed `local-epic-manager`
-(`assets/child.md`) so a later migration to real issues is mechanical rather
-than a rewrite.
+The whole file is YAML — `summary`, `acceptance_criteria`, `decisions` and
+`out_of_scope` are fields, not a markdown body, so an item can be read by a
+script as easily as by a person.
 
-Below the frontmatter, markdown: a `## Summary` that is **user-story shaped**
-for a feature (`As a … I want … so that …`), and acceptance criteria that cite
-claim ids.
-
-**Status enum**, from `github-project-manager/references/labels.md`:
-`needs-decomposition`, `ready-for-architecture`, `ready-for-implementation`,
-`ready`, `in-progress`, `in-review`, `blocked`, `done`.
+**Status enum**: `needs-decomposition`, `ready-for-architecture`,
+`ready-for-implementation`, `ready`, `in-progress`, `in-review`, `blocked`,
+`done`. An item moves forward through those and back to `blocked` whenever a
+gate fails.
 
 - `priority`, `rank` and `blocks` are **derived** — recompute, never hand-edit.
 - **A closed item stays.** `status: done` and a `closed:` date; the file is
@@ -97,11 +105,10 @@ features/<feature-slug>/.spec/<feature-slug>.feature
 features/<feature-slug>/.spec/{decisions,lessons,adr}/
 ```
 
-`.spec/README.md` is **permanent** — never archived, never frozen. Because
-`.issues/` stands in for the issue, the document root is the global skill's
-issue-exists form (`features/<name>/`) rather than the `epics/` tree it uses
-when there is no tracker at all. An epic is simply an item of `type: epic`
-whose `children` list the features under it.
+`.spec/README.md` is **permanent** — never archived, never frozen. One
+directory per Feature under `features/`, named for the Feature's slug; there is
+no epic directory tree, because an epic is simply an item of `type: epic` whose
+`children` list the features under it.
 
 ## Claim IDs are `B-00n`
 
@@ -122,35 +129,35 @@ runner to hide a scenario from, so there is no `@ignore`.
 
 ## Section ownership
 
-The global skill assigns the twelve sections to eight council agents. This
-repository has four local roles ([`.agents/`](../../.agents/README.md)), so the
-table collapses onto them. **This is the only place the mapping is written**;
-each role file names its own sections and links here.
+Every section has **exactly one owning role** — four roles, declared in
+[`.agents/`](../../.agents/README.md). **This is the only place the mapping is
+written**; each role file names its own sections and links here.
 
-| Section | Owner | Council counterpart |
-|---|---|---|
-| 1 Business Goal | `spec-author` | `business-analyst` |
-| 2 User Needs | `spec-author` | `business-analyst` |
-| 3 Acceptance Criteria | `spec-author` | `business-analyst` |
-| 4 Constraints | `spec-author` | `business-analyst` |
-| 5 Out of Scope | `spec-author` | `business-analyst` |
-| 6 Concern Separation | `implementer` | `the-architect` |
-| 7 Technical Design | `implementer` | `the-architect`, then `mr-anderson` |
-| 8 Testing Strategy | `test-writer` | `behavior-driver` |
-| 9 Traceability Matrix | `test-writer` | `behavior-driver` |
-| 10 Lessons / Spec Deltas | the role that closed the bug | `the-orkin-man`, `thoth` |
-| 11 Open Questions | any blocked role | any blocked agent |
-| 12 Sign-off | `spec-reviewer` | `stinkmeaner`, `vane` |
-| Decisions (index) | the role that made or reversed the call | `the-orkin-man`, `thoth` |
-| `## Tasks` | `spec-author`, from the `.issues/` items | `vane` |
-| `## Scoring` | `spec-author`, from the item's value and risk | `feature-prioritization` |
+| Section | Owner |
+|---|---|
+| 1 Business Goal | `spec-author` |
+| 2 User Needs | `spec-author` |
+| 3 Acceptance Criteria | `spec-author` |
+| 4 Constraints | `spec-author` |
+| 5 Out of Scope | `spec-author` |
+| 6 Concern Separation | `implementer` |
+| 7 Technical Design | `implementer` |
+| 8 Testing Strategy | `test-writer` |
+| 9 Traceability Matrix | `test-writer` |
+| 10 Lessons / Spec Deltas | the role that closed the bug |
+| 11 Open Questions | any blocked role |
+| 12 Sign-off | `spec-reviewer` |
+| Decisions (index) | the role that made or reversed the call |
+| `## Tasks` | `spec-author`, from the `.issues/` items |
+| `## Scoring` | `spec-author`, from the item's value and risk |
 
-Two honest notes about the collapse:
+Two honest notes:
 
-- **`implementer` owning § 7 is a compromise.** There is no local architect
-  role and § 7 must have exactly one owner. For a design decision bigger than
-  the item in hand, escalate to the installed `the-architect` rather than
-  settling it inside an implementation pull request.
+- **`implementer` owning § 7 is a compromise.** There is no separate architect
+  role here and § 7 must have exactly one owner, so it sits with the role that
+  writes the code. A design decision bigger than the item in hand stops and
+  goes to the person, with the options and the tradeoff named, rather than
+  being settled inside an implementation pull request.
 - **A role writes only its own sections.** `implementer` filling in a missing
   § 3 claim is a boundary violation, not a favour — escalate to `spec-author`.
   A § 10 lesson that adds behavior also needs a § 3 row, which is

@@ -5,7 +5,9 @@ description: Use LanguageExt Option and Either at Transponder's wire boundaries,
 
 # LanguageExt in Transponder
 
-Extends the global `language-ext` skill, which owns the library's API.
+This file covers **how far functional style goes in this repository, and where
+it stops**. For the library's own API, see
+[louthy/language-ext](https://github.com/louthy/language-ext).
 `LanguageExt.Core` is a decided technology ([`README.md`](../../README.md) §
 "Technology Decisions") and is referenced by `src/Transponder`.
 

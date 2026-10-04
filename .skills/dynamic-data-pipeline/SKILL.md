@@ -13,8 +13,9 @@ is an ordinary DynamicData pipeline — which is exactly the point being made to
 an audience of line-of-business developers whose data lives behind
 request/response services.
 
-Project companion to the global `dynamic-data` skill; that one owns the
-operator reference and `SourceCache` deep detail.
+This file covers **the pipeline this demo builds and the order the audience
+meets it in**. For the operator reference and `SourceCache` detail, see
+[reactivemarbles/DynamicData](https://github.com/reactivemarbles/DynamicData).
 
 **`DynamicData` is not yet in
 [`Directory.Packages.props`](../../Directory.Packages.props).** Adding it

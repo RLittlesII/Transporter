@@ -5,10 +5,10 @@ description: Define the single source-agnostic snapshot seam every Transponder d
 
 # The Transponder API contract
 
-Extends the global `api-contract` skill (versioned interface hierarchy,
-interface segregation, explicit interface implementation). That skill owns the
-general shape; this one owns what OpenSky and AISStream actually do. Where
-they differ, this file wins.
+This file covers **the one seam every data source implements, and what OpenSky
+actually does behind it**. The provider's own documentation is
+[the OpenSky REST API](https://openskynetwork.github.io/opensky-api/rest.html);
+the facts below are the consequences of it for this demo.
 
 ## The seam is the whole design
 

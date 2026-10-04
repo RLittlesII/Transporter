@@ -18,7 +18,7 @@ This document establishes development practices for the Transponder repository, 
 
 ## Traceability and Identifiers
 
-Claims are numbered rows in § 3 Acceptance Criteria of a Feature's `.spec/README.md`, using `B-00n` identifiers that never change or get reused. Each scenario in the companion `.feature` file carries the matching `@B-00n` tag, and § 9 Traceability Matrix is the gate: every claim appears there exactly once, and a `Missing` row blocks ship. This matches the global `specification` skill, which owns the template and the tooling. There is no separate generated `docs/traceability.md` and no build-time ID check in this repository.
+Claims are numbered rows in § 3 Acceptance Criteria of a Feature's `.spec/README.md`, using `B-00n` identifiers that never change or get reused. Each scenario in the companion `.feature` file carries the matching `@B-00n` tag, and § 9 Traceability Matrix is the gate: every claim appears there exactly once, and a `Missing` row blocks ship. The blank is `.spec/templates/feature.md`. Nothing generates or checks these — there is no `docs/traceability.md` and no build-time ID check, so a duplicate, malformed or dangling id is caught by reading or not at all.
 
 ## Roles and Workflow
 
@@ -28,7 +28,7 @@ Four roles own the specification chain, declared under `.agents/` (see `.agents/
 - **implementer** (`.agents/implementer.md`): §§ 6-7, and the production code
 - **spec-reviewer** (`.agents/spec-reviewer.md`): § 12, judging diffs against cited claims
 
-Each role trusts only the artifact from the preceding role. The authoritative ownership table — including §§ 10-11, Decisions, and each role's counterpart in the installed agent council — lives in `.skills/spec-and-traceability/SKILL.md`. These files are documented contracts, not loadable agents: the directory is `.agents/`, not `.claude/agents/`.
+Each role trusts only the artifact from the preceding role. The authoritative ownership table — including §§ 10-11 and Decisions — lives in `.skills/spec-and-traceability/SKILL.md`. These files are documented contracts for whoever takes the role, a person or an agent; this repository ships no loadable agents, since the directory is `.agents/`, not `.claude/agents/`.
 
 ## Lessons and Bug Fixes
 
@@ -59,15 +59,20 @@ When a bug fix reveals a specification gap, a lesson document in the Feature's `
 
 ## Documentation Structure
 
-Every tracked markdown file opens with YAML frontmatter (`title`, `description`, `type`). Types include `adr`, `spec`, `guide`, `readme`, `lesson`, `instructions`, or `template`. Skills and agents declare `name` and `description` only; their type is path-derived. Runtime prompts are exempt from frontmatter requirements.
+Every tracked markdown file opens with YAML frontmatter (`title`, `description`, `type`). Types are `adr`, `spec`, `decision`, `guide`, `readme`, `lesson`, `instructions`, or `template`. Skills and agents declare `name` and `description` only; their type is path-derived. The blanks in `.spec/templates/` carry the type of the file they produce, so a copied template needs no frontmatter edit beyond its title and description. Runtime prompts are exempt from frontmatter requirements.
 
 ## Knowledge Graph Integration
 
-The `graphify` tool maintains a codebase knowledge graph. Queries, path analysis, and concept explanations surface relevant architecture before full browsing. The specification reaches the graph through each Feature's `.spec/README.md` — which carries the claims in § 3 and their coverage in § 9 — rather than from `.feature` files, since graphify ingests markdown, not Gherkin.
+A knowledge graph can live at `graphify-out/`. **When `graphify-out/graph.json` exists, query it before browsing the tree**: `graphify query "<question>"` for a scoped subgraph, `path` for how two concepts relate, `explain` for a single concept.
+
+- If you keep a graph, run `graphify update .` after changing code, or the next query answers from a stale tree.
+- A changed `.graphifyignore` needs a full rebuild (`graphify . --force`): an existing graph keeps a newly ignored path, because `update` never prunes it.
+- **The output stays local and is never committed** — `.gitignore` excludes `graphify-out/`. Nothing in this repository depends on a graph existing, so a clone without one loses nothing.
+- The specification reaches the graph as the markdown it already is — each Feature's `.spec/README.md`, with its claims in § 3 and their coverage in § 9 — not from `.feature` files, since graphify does not ingest Gherkin. No fragment or export script exists, and none is needed.
 
 ## Skills Reference
 
-**Project skills live in `.skills/`** and win over a global skill of the same name where they differ:
+**Project skills live in `.skills/`**, one directory per skill, each a `SKILL.md` declaring `name` and `description`:
 
 | Skill | Covers |
 | --- | --- |
@@ -90,4 +95,4 @@ The `graphify` tool maintains a codebase knowledge graph. Queries, path analysis
 | `nuke-build` | targets, CI, generated files |
 | `run-the-demo` | stage-day runbook |
 
-Relevant global skills: `dynamic-data`, `specification`, `riok-mapperly`, `language-ext`, `nuke`, `xunit`, `dotnet-build`, `domain-driven-design`, `logging`. Consult the project skill extending each role agent before acting in that role.
+Each skill covers this repository's usage and links the library's own documentation for the rest. Read the skills a role names before acting in that role.
