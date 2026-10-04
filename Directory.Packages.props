@@ -10,6 +10,7 @@
     <PackageVersion Include="CommunityToolkit.Maui.Markup" Version="8.0.0" />
     <PackageVersion Include="Flurl" Version="4.0.0" />
     <PackageVersion Include="Flurl.Http" Version="4.0.2" />
+    <PackageVersion Include="DynamicData" Version="9.4.33" />
     <PackageVersion Include="LanguageExt.Core" Version="4.4.9" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Maui.Controls.Core" Version="10.0.110" />

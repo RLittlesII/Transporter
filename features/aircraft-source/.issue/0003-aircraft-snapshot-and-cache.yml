@@ -2,7 +2,7 @@ id: "0003"
 type: task
 title: Add the aircraft snapshot record and its cache
 
-status: ready-for-implementation
+status: in-review
 
 priority: high
 risk: 1
@@ -54,6 +54,17 @@ decisions:
   - "2026-10-04 — spec-author — the snapshot and its cache are one item rather
     than two. The cache's whole specification is three negative claims, and a
     store with nothing to store cannot be reviewed against a diff."
+  - "2026-10-04 — implementer — B-014, B-030 and B-031 move to the analyzer
+    before a test is written for them. § 9 named them `WhenItsMembersAreInspected`
+    and `WhenItIsInspected`, which is a test of a declaration wearing a method
+    name; all three are absences or registration shapes, which ADR-0006 makes
+    the analyzer's. Three of this item's seven claims are therefore `Missing`
+    on delivery. Recorded against lesson 0006, which is the same move made
+    three times now."
+  - "2026-10-04 — implementer — the cache is registered as
+    `SourceCache<AircraftSnapshot, string>` in `AddOpenSky` rather than given a
+    type of its own, per § 7. There is nothing else to build for B-030: the
+    absence of a wrapper is the claim."
 
 out_of_scope:
   - "The differential write itself — B-023, which belongs to the client (0004).

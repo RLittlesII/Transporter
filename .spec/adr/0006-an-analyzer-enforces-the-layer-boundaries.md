@@ -30,19 +30,21 @@ registration may look like:
 - B-002, B-005 — what the envelope may declare, and how many methods the
   contract may have.
 - B-008 — what the container may resolve.
+- B-014, B-030, B-031 — what the snapshot may declare, whether the cache is
+  wrapped in a type of its own, and what lifetime it is registered with.
 - B-010's second clause — what may produce the contract's double.
 
 [`aircraft-source.feature`](../../features/aircraft-source/.spec/aircraft-source.feature)
 phrases these as "when every reference to them is identified" and "no domain
-type, cache, strategy, tracker or view can name either". Fifteen of the
-fifty-two claims are of this kind — close to a third of the specification, and
-the third that holds the rest apart — which is why the mechanism that proves
+type, cache, strategy, tracker or view can name either". Eighteen of the
+fifty-two claims are of this kind — a third of the specification, and the third
+that holds the rest apart — which is why the mechanism that proves
 them is a decision rather than a detail.
 
-Four of those fifteen arrived late. B-002, B-005, B-008 and B-010's second
-clause were given xUnit tests when § 9 was written, read this record as
-covering only the ids it had listed, and were moved here after review rejected
-the tests as brittle
+Seven of those eighteen arrived late. B-002, B-005, B-008, B-010's second
+clause, B-014, B-030 and B-031 were given xUnit tests when § 9 was written,
+read this record as covering only the ids it had listed, and were moved here
+after review rejected the first of them as brittle
 ([lesson 0006](../lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)).
 
 The constraint that forces the choice: **a reference lives in a method body,

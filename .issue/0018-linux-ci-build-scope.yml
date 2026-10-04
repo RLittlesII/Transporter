@@ -2,7 +2,7 @@ id: "0018"
 type: task
 title: Build on Linux CI by keeping the Apple-only MAUI heads out of its scope
 
-status: in-review
+status: done
 
 priority: high
 value: 4
@@ -22,7 +22,7 @@ claims: []
 
 created: "2026-10-04"
 updated: "2026-10-04"
-closed: null
+closed: "2026-10-04"
 
 summary: |
   Pull request #1 is the first this repository has ever opened, and CI failed

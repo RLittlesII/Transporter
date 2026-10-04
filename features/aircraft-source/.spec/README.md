@@ -541,7 +541,7 @@ seam. The clock itself is registered alongside the chain and injected into
 | --------- | ------- | ------- | -------------- |
 | DI seams | Pass | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and the hand-written fake (B-010) is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. | — |
 | Behavior isolation | Pass | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043). | — |
-| Coverage potential | **Qualified** | Thirty-five claims are about a computed value and are ordinary tests. Fifteen are about structure — what may *name* what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it *can* reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the fifteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Four of them briefly had tests over a declaration or a container and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
+| Coverage potential | **Qualified** | Thirty-two claims are about a computed value and are ordinary tests. Eighteen are about structure — what may *name* what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it *can* reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the eighteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Seven of them briefly had tests over a declaration, a container or a registration's lifetime and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
 | Fixtures | Pass | Every value is synthetic and committed beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array and the 17-versus-18 element cases are two files rather than two code paths. | — |
 | Determinism | Pass | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it. | — |
 
@@ -604,10 +604,11 @@ row 17.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and fifty-one of the fifty-two rows read `Missing`.** One is
-`Verified`: `0002` built the contract, its envelope, the positional row's
-converter, the HTTP transport and the hand-written fake, and the test this
-section names against B-001 passes in a run. Every other row names what will
+**This is the gate, and forty-eight of the fifty-two rows read `Missing`.** Four
+are `Verified`: `0002` built the contract, its envelope, the positional row's
+converter, the HTTP transport and the hand-written fake, and `0003` the snapshot
+and its cache — the tests this section names against B-001 and B-011 – B-013
+pass in a run. Every other row names what will
 prove its claim and records that it does not. A row's Status becomes `Verified`
 when **every** mechanism it names passes in a run, which is why a row naming a
 test that passes and an analyzer that does not exist still reads `Missing` —
@@ -637,10 +638,10 @@ no test", not an omission.
 | B-008 | `@B-008` | analyzer — `BoundaryAnalyzerTests.GivenAnImplementationTypeRegisteredOrResolvedOrASecondAliasForTheContract_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-009 | `@B-009` | **Review** — the precondition cannot be arranged: OpenSky has published no version. An obligation on the change that adds a versioned interface. | Missing |
 | B-010 | `@B-010` | `OpenSkyApiFakeTests.GivenAFakeWithNoResponseConfigured_WhenTheEndpointIsCalled_ThenItThrowsNamingTheUnsetResponse`; the mocking-framework half is analyzer — `BoundaryAnalyzerTests.GivenTheContractsDoubleProducedByAMockingFramework_WhenAnalyzed_ThenItIsReported` | Missing |
-| B-011 | `@B-011` | `AircraftSnapshotTests.GivenTwoSnapshotsReportingIdenticalValues_WhenCompared_ThenTheyAreEqual` | Missing |
-| B-012 | `@B-012` | `AircraftSnapshotTests.GivenASnapshot_WhenItsKeyIsRead_ThenItIsTheNonOptionalIcao24` | Missing |
-| B-013 | `@B-013` | `AircraftSnapshotTests.GivenAWireRow_WhenTheSnapshotIsBuilt_ThenEveryValueIsTheWiresAndNoneIsConverted` | Missing |
-| B-014 | `@B-014` | `AircraftSnapshotTests.GivenTheSnapshot_WhenItsMembersAreInspected_ThenNoneIsStalenessLabelOrGroupingKey` | Missing |
+| B-011 | `@B-011` | `AircraftSnapshotTests.GivenTwoSnapshotsReportingIdenticalValues_WhenCompared_ThenTheyAreEqual` | Verified |
+| B-012 | `@B-012` | `AircraftSnapshotTests.GivenASnapshot_WhenItsKeyIsRead_ThenItIsTheNonOptionalIcao24` | Verified |
+| B-013 | `@B-013` | `AircraftSnapshotTests.GivenAWireRow_WhenTheSnapshotIsBuilt_ThenEveryValueIsTheWiresAndNoneIsConverted` | Verified |
+| B-014 | `@B-014` | analyzer — `BoundaryAnalyzerTests.GivenASnapshotMemberThatIsDerivedRatherThanReported_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-015 | `@B-015` | `AircraftSnapshotClientTests.GivenTheClient_WhenItIsConstructed_ThenItTakesContractAndCacheAndConstructsNeither` | Missing |
 | B-016 | `@B-016` | `AircraftSnapshotClientTests.GivenAnEighteenElementRow_WhenItIsRead_ThenEveryMemberComesFromItsOwnIndex` | Missing |
 | B-017 | `@B-017` | `AircraftSnapshotClientTests.GivenANullElement_WhenTheRowIsRead_ThenTheValueIsAbsentRatherThanADefault` | Missing |
@@ -656,8 +657,8 @@ no test", not an omission.
 | B-027 | `@B-027` | `OpenSkyHttpApiTests.GivenAPollAndATokenRefresh_WhenBothAreLogged_ThenRemainingCreditIsRecordedAtDebugAndNoSecretAppears` | Missing |
 | B-028 | `@B-028` | `OpenSkyHttpApiTests.GivenAThrottledResponseAndGivenAServerError_WhenEachIsHandled_ThenTheFirstDefersByTheHeaderAndTheSecondStaysAnException` | Missing |
 | B-029 | `@B-029` | `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` and `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors` | Missing |
-| B-030 | `@B-030` | `AircraftSnapshotCacheTests.GivenTheCache_WhenItIsInspected_ThenItHasNoDiffPolicyNoProjectionAndNoClock` | Missing |
-| B-031 | `@B-031` | `AircraftSnapshotCacheTests.GivenTwoClients_WhenEachIsDisposed_ThenEachHasItsOwnCacheAndTheCacheOutlivesIt` | Missing |
+| B-030 | `@B-030` | analyzer — `BoundaryAnalyzerTests.GivenACacheWrappedInATypeOfItsOwn_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-031 | `@B-031` | analyzer — `BoundaryAnalyzerTests.GivenACacheRegisteredWithAnyLifetimeButTheApplicationsOrSharedBetweenClients_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-032 | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-033 | `@B-033` | `AircraftTrackerSourceTests.GivenTheSeam_WhenItIsInspected_ThenItDeclaresTheTransportVehicleChangesetAndNothingElse` | Missing |
 | B-034 | `@B-034` | `AircraftTrackerSourceTests.GivenASnapshotChangeset_WhenItIsProjected_ThenTheStrategyIsWhereAnAircraftFirstExists` | Missing |
@@ -682,8 +683,8 @@ no test", not an omission.
 
 Fifty-two rows, fifty-two claims, each appearing once. A scenario existing is
 not coverage; this section is the only place a claim's build state is written,
-and fifty-one of its rows still say the claim is not proven. Fifteen of those
-wait on a mechanism rather than on an item: until the analyzer ADR-0006
+and forty-eight of its rows still say the claim is not proven. Eighteen of
+those wait on a mechanism rather than on an item: until the analyzer ADR-0006
 decides on exists, no claim about structure can leave `Missing`, so no item
 can reach `done`.
 
@@ -716,16 +717,18 @@ why a row naming two mechanisms reads `Missing` until both of them pass.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-Two open, of three asked. The first two were opened by § 7 and the third by
-§ 8; writing a section is what surfaces them, which is why a stub opens none.
-Question 1 has been answered and moved to the closing paragraph. Its number is
-not reused and the two below keep theirs, so a reference written while it was
-open still points at the question it meant.
+Three open, of four asked. The first two were opened by § 7, the third by § 8
+and the fourth by review of pull request #1; writing a section surfaces a
+question, and so does reading the code it produced. Question 1 has been
+answered and moved to the closing paragraph. Its number is not reused and the
+others keep theirs, so a reference written while it was open still points at
+the question it meant.
 
 | #   | Question | Owner | Target date |
 | --- | -------- | ----- | ----------- |
 | 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. B-028's ban needs a *where* in the same pass: the claim forbids an exception outright, its scenario forbids one only at the subscriber, and [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) makes the contract throw — so the transport as built satisfies the scenario and contradicts the sentence. Blocks `0004`. | `spec-author` | Before `0004` starts |
-| 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for fifteen claims — B-002, B-004 – B-008, B-010, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those fifteen rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
+| 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eighteen claims — B-002, B-004 – B-008, B-010, B-014, B-030 – B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those eighteen rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
+| 4   | Should B-010 still forbid a mocking framework for the contract's double? The claim says the double **SHALL** be hand-written and **SHALL NOT** be produced by one, and `0002` built it that way — but the repository has since adopted `Rocket.Surgery.Extensions.Testing.AutoFixtures`, and review of pull request #1 accepted the hand-written fake "for now" while saying the double should be built with it. The two halves of the claim can move independently: a generated fixture that *builds* a hand-written fake already satisfies both, which is what `0002` ships, so what is actually in question is whether a substitute may stand in at this seam at all. Weigh it against the hazard § Scoring recorded — a double that returns `default` on an unset call makes every test above it pass for the wrong reason. Blocks nothing; `0004` and later are the items that would feel it. | `spec-author` | Before `0004` writes a test above the contract |
 
 Everything else this specification opened has been answered and recorded. How
 the envelope's reported time reaches the clock `IFleetTracker` owns is
