@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Flurl.Http.Configuration;
 using Flurl.Http.Testing;
+using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Http;
 
@@ -14,10 +15,10 @@ public class OpenSkyHttpApiTests
         // Given
         using var http = new HttpTest();
         http.RespondWithJson(new { time = 1791124330, states = Array.Empty<object[]>() });
-        IOpenSkyApi transport = new OpenSkyHttpApi(Cache());
+        OpenSkyHttpApi sut = new OpenSkyHttpApiFixture();
 
         // When
-        var response = await transport.GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
+        var response = await ((IOpenSkyApi) sut).GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
 
         // Then
         response.Time.Should().Be(1791124330);
@@ -39,16 +40,20 @@ public class OpenSkyHttpApiTests
         http.RespondWith(
             status: 429,
             headers: new Dictionary<string, string> { [OpenSkyHttpApi.RetryAfterHeader] = "42" });
-        IOpenSkyApi transport = new OpenSkyHttpApi(Cache());
+        OpenSkyHttpApi sut = new OpenSkyHttpApiFixture();
 
         // When
-        var call = async () => await transport.GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
+        var call = async () => await ((IOpenSkyApi) sut).GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
 
         // Then
         (await call.Should().ThrowAsync<OpenSkyThrottledException>())
             .Which.RetryAfter.Should().Be(TimeSpan.FromSeconds(42));
     }
+}
 
-    private static IFlurlClientCache Cache() =>
-        new FlurlClientCache().Add(OpenSkyHttpApi.ClientName, "https://opensky.invalid/api");
+[AutoFixture(typeof(OpenSkyHttpApi))]
+internal partial class OpenSkyHttpApiFixture
+{
+    public OpenSkyHttpApiFixture() =>
+        WithCache(new FlurlClientCache().Add(OpenSkyHttpApi.ClientName, "https://opensky.invalid/api"));
 }
