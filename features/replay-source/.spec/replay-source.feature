@@ -178,6 +178,42 @@ Feature: Replay source — recording, playback, and selection
      Then the tracker, its collection, the filter, the sort, the groups and the bindings are the same instances
       And the fleet refills from the recording
 
+  # ──────────────────────── Which recording a run loads ──────────────────────
+
+  @B-024
+  Scenario: Configuration names the recording, and names nothing about what is live
+    Given configuration naming one recording for the aircraft replay source
+      And no recording named for the vessel replay source
+     When the application starts
+     Then the aircraft replay source is registered and selectable
+      And the vessel replay source is neither registered nor selectable
+      And the live aircraft source is still the one selected, because configuration decided only which recording
+
+  @B-025
+  Scenario: A named recording resolves against the configured recordings root
+    Given a recordings root configured as "recordings"
+      And a recording named "aircraft-2026-10-04T14-22-01Z.ndjson"
+     When the recording is opened
+     Then it is read from "recordings/aircraft-2026-10-04T14-22-01Z.ndjson" relative to the running application
+      And neither the configuration nor the recording's name carried an absolute path
+
+  @B-026
+  Scenario: A recording that cannot serve is reported at startup, not at the swap
+    Given a staleness threshold of five minutes
+      And configuration naming a recording that spans ninety seconds
+      And configuration naming a second recording that does not exist
+     When the application starts
+     Then both are reported — one as too short to show staleness, one as absent
+      And neither was first discovered at the moment replay was selected
+
+  @B-027
+  Scenario: The pacer is handed a stream and resolves nothing
+    Given a recording that has already been opened
+     When the pacer is constructed
+     Then it is handed the opened payload stream
+      And it reads no configuration and resolves no path
+      And a test can drive it with synthetic lines and no file system
+
   # ───────────────────────────────── Vessels ─────────────────────────────────
 
   @B-019

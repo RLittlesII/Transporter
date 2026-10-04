@@ -35,11 +35,13 @@ The talk's claim is that polled data can still be reactive, and it is proved by 
      they are permanent: never renumbered, never reused. A withdrawn claim is
      marked Withdrawn, not deleted. -->
 
-Twenty-three claims in five groups: **B-001 – B-006** the recording;
+Twenty-seven claims in six groups: **B-001 – B-006** the recording;
 **B-007 – B-014** playback; **B-015 – B-018** selection and swap;
 **B-019 – B-021** the vessel half; **B-022 and B-023** the substitution point
 of each half, appended as § 11 rows 1 and 2 were answered rather than
-renumbered into the groups they belong to — ids here are permanent.
+renumbered into the groups they belong to — ids here are permanent; and
+**B-024 – B-027** which recording a run loads, answered in
+[adr/0001](adr/0001-recording-selected-by-configuration.md).
 
 Claim ids are per-Feature, per spec-and-traceability § "Claim IDs are
 `B-00n`". `B-001` here and `B-001` in
@@ -72,6 +74,10 @@ against that spec.
 | B-021 | Replay SHALL introduce no vehicle, record or snapshot type of its own; it SHALL reproduce whatever the recorded provider's own Feature defines.                                                                                               | aircraft-source § 5 row 3; § 5 row 2 below                     | Draft  |
 | B-022 | Replay SHALL substitute at the provider's own API contract, handing back recorded envelopes, and SHALL introduce no snapshot client, cache, converter or projection of its own; the live path's snapshot client SHALL be the one constructed over it. | ADR-0002 § "Decision" item 2; § 11 row 1 | Draft  |
 | B-023 | Vessel replay SHALL substitute at the strategy — an `ITrackerSource` fed by a recording — because a push provider has no contract to stand in for; it SHALL reach the seam the same way every other source does. | ADR-0002 § "Consequences"; § 4 row 5 | Draft  |
+| B-024 | The recording each replay source reads SHALL be named in configuration, one key per source, through the same mechanism the interval and the bounding box use; no recording SHALL be compiled in as a default, a source with none named SHALL NOT be registered or selectable, and configuration SHALL NOT determine whether replay is the live source. | adr/0001; aircraft-source B-050 | Draft  |
+| B-025 | A named recording SHALL resolve against a single configured recordings root, defaulting to `recordings/` relative to the running application and overridable, so a rehearsal writes and a replay reads the same place without either naming an absolute path. | adr/0001; ADR-0004 § "Decision" | Draft  |
+| B-026 | A configured recording that is absent, unreadable, or shorter than the staleness threshold SHALL be reported when the application starts, and SHALL NOT first be discovered when replay is selected. | adr/0001; aircraft-source B-029 | Draft  |
+| B-027 | The component that paces a recording SHALL be handed an opened payload stream rather than a path, and SHALL perform no file resolution of its own. | adr/0001; § 4 row 8 | Draft  |
 
 <!-- Status: Draft | Built | Withdrawn. "Built" means a test cites it and § 9
      says Verified. -->
@@ -192,13 +198,10 @@ None yet.
 
 <!-- Owner: whoever is blocked. "None." is a valid body. -->
 
-Rows 1 and 2 have been answered and left the table; row 3 keeps its number,
-because § 7 references it. An answered question stays below rather than being
-deleted — it is a record of what was asked, not clutter.
-
-| #   | Question                                                                                                    | Owner       | Target date |
-| --- | ----------------------------------------------------------------------------------------------------------- | ----------- | ----------- |
-| 3   | How is the recording to replay chosen at launch, and where does it live relative to the running application? | implementer | before § 7  |
+None. All three questions this specification opened have been answered and are
+recorded below rather than deleted — an answered question is a record of what
+was asked. A question arriving later is added here as a row — `#`, Question,
+Owner, Target date — rather than settled in conversation.
 
 **Row 1 — answered: replay substitutes at the API contract, and selection stays
 at the seam.** A replay implementation of the provider's contract hands back
@@ -232,13 +235,26 @@ reading rather than from anything about the vessel feed. Both halves still reach
 what makes something selectable is the seam it lands on, not the depth it
 substitutes at.
 
-**Row 3.** ADR-0004 fixes the format and the shape of a recording's name; it
-deliberately says nothing about which recording a run selects or where the
-directory sits relative to the application. Configuration, not format, and
-answerable without reopening the ADR. It surfaces where replay is selected,
-because selecting replay is selecting a recording; the pacer needs only to know
-whether it is handed an opened stream or a path; and the substitution point
-(B-022) never resolves a recording at all, since it is handed payloads.
+**Row 3 — answered: configuration names the recording, and the pacer is handed
+a stream.** ADR-0004 fixed the format and said nothing about which recording a
+run loads; [adr/0001](adr/0001-recording-selected-by-configuration.md) answers
+it, scoped to this Feature because nothing outside it is bound. One key per
+replay source names the recording, through the same configuration mechanism the
+interval and the bounding box use, with **no default compiled in** — a source
+with no recording named is not registered and so is not selectable, which is a
+visible absence rather than a wrong recording. Paths resolve against one
+configured recordings root, defaulting to `recordings/` beside the running
+application. Configuration never decides *whether* replay is live; the selector
+does (B-015), and a recording named but never selected is normal. B-024 – B-027
+carry it.
+
+The alternative worth naming is newest-wins — order by the UTC instant already
+in the filename and take the most recent, so a rehearsal needs no configuration
+edit. It was rejected because a thirty-second test capture taken after the real
+rehearsal silently becomes the stage recording, and B-005 then fails invisibly
+at the one moment it matters. The cost of the chosen answer is one configuration
+edit per rehearsal, and B-026 is what makes a forgotten edit visible at startup
+rather than at the swap.
 
 ## 12. Sign-off
 
@@ -262,6 +278,12 @@ whether it is handed an opened stream or a path; and the substitution point
      durable technical choice goes to adr/ instead. "None yet." is valid. -->
 
 None yet.
+
+One record of this Feature's own:
+[adr/0001](adr/0001-recording-selected-by-configuration.md) — which recording a
+run loads, named in configuration rather than discovered. It is scoped here
+because nothing outside this Feature is bound by it; the two records below bind
+every Feature and sit at the root.
 
 The recording format this specification is written against binds both replay
 feeds rather than this Feature alone, so it is recorded in the
@@ -307,10 +329,12 @@ to run above it, and selection needs the decorator. Those dependencies are
 recorded in the items, where `depends_on` is authoritative, and are deliberately
 not restated here as ids.
 
-§ 11 row 3 is still open, and it surfaces at `0012`, where selecting replay is
-selecting a recording. It reaches `0010` only narrowly — whether the pacer is
-handed an opened stream or a path to resolve — and does not reach `0011` at all,
-which is handed payloads and never resolves a recording of its own.
+§ 11 row 3 is answered, which added B-024 – B-027 after these items were cut.
+**No item carries them yet**, so the one-claim-one-item invariant above holds
+only for B-001 – B-023 until that is fixed. Where they belong follows from the
+answer: B-024, B-025 and B-026 to `0012`, where a run's recording surfaces and
+where startup reporting sits, and B-027 to `0010`, whose stream-or-path question
+the answer settles. Adding them is an edit to the items, not to this table.
 
 ## Scoring
 
