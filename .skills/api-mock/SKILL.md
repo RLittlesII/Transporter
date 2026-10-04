@@ -30,9 +30,10 @@ provider's contract, so it needs no HTTP and no clock of its own.
 ## Recording
 
 - Record during rehearsal, not on the day. The README's open items track it.
-- Write **raw** snapshots as received, one file or one line per snapshot, with
-  the instant it arrived. Raw means replay can be re-parsed after a converter
-  fix; parsed means a bug in the converter is baked into the recording.
+- Write **raw** snapshots as received, with the instant each arrived, in the
+  format [ADR-0004](../../.spec/adr/0004-ndjson-recording-format.md) fixes. Raw
+  means replay can be re-parsed after a converter fix; parsed means a bug in
+  the converter is baked into the recording.
 - Keep the recording long enough to show the behavior being taught: aircraft
   appearing, updating, and going stale. A 30-second loop shows updates but
   never shows expiry.

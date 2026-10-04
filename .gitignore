@@ -356,3 +356,6 @@ appsettings.*.json
 
 # graphify - all generated output stays local, nothing committed
 graphify-out/
+
+# Rehearsal recordings - operational data, scrub before reuse (ADR-0004)
+recordings/

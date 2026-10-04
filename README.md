@@ -106,7 +106,7 @@ Credit cost per `/states/all` call by bounding box area: ≤25 sq° = 1, 25–10
 ## Demo resilience
 
 - Put each data source behind a typed API contract that mirrors the provider, a client that caches what it fetches, and a per-type strategy that projects those cached records into domain vehicles. The strategies all adhere to one seam, and a decorator picks which is live — so swapping sources is a new strategy, not a new pipeline. See [ADR-0002](.spec/adr/0002-contract-client-strategy-tracker.md).
-- Implementations: live OpenSky, and **replay from recorded snapshots** — a recorded fixture is a set of the provider's own records, so replay re-derives nothing.
+- Implementations: live OpenSky, and **replay from recorded snapshots** — a recorded fixture is a set of the provider's own records, so replay re-derives nothing. Recordings are an NDJSON append log, one line per snapshot, per [ADR-0004](.spec/adr/0004-ndjson-recording-format.md).
 - Record several minutes of snapshots during rehearsal. Be able to switch to replay on stage if the venue network fails.
 - This also makes a teaching point: the pipeline doesn't care where the data comes from.
 
