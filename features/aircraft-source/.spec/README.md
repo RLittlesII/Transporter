@@ -716,16 +716,18 @@ why a row naming two mechanisms reads `Missing` until both of them pass.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-Two open, of three asked. The first two were opened by § 7 and the third by
-§ 8; writing a section is what surfaces them, which is why a stub opens none.
-Question 1 has been answered and moved to the closing paragraph. Its number is
-not reused and the two below keep theirs, so a reference written while it was
-open still points at the question it meant.
+Three open, of four asked. The first two were opened by § 7, the third by § 8
+and the fourth by review of pull request #1; writing a section surfaces a
+question, and so does reading the code it produced. Question 1 has been
+answered and moved to the closing paragraph. Its number is not reused and the
+others keep theirs, so a reference written while it was open still points at
+the question it meant.
 
 | #   | Question | Owner | Target date |
 | --- | -------- | ----- | ----------- |
 | 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. B-028's ban needs a *where* in the same pass: the claim forbids an exception outright, its scenario forbids one only at the subscriber, and [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) makes the contract throw — so the transport as built satisfies the scenario and contradicts the sentence. Blocks `0004`. | `spec-author` | Before `0004` starts |
 | 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for fifteen claims — B-002, B-004 – B-008, B-010, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those fifteen rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
+| 4   | Should B-010 still forbid a mocking framework for the contract's double? The claim says the double **SHALL** be hand-written and **SHALL NOT** be produced by one, and `0002` built it that way — but the repository has since adopted `Rocket.Surgery.Extensions.Testing.AutoFixtures`, and review of pull request #1 accepted the hand-written fake "for now" while saying the double should be built with it. The two halves of the claim can move independently: a generated fixture that *builds* a hand-written fake already satisfies both, which is what `0002` ships, so what is actually in question is whether a substitute may stand in at this seam at all. Weigh it against the hazard § Scoring recorded — a double that returns `default` on an unset call makes every test above it pass for the wrong reason. Blocks nothing; `0004` and later are the items that would feel it. | `spec-author` | Before `0004` writes a test above the contract |
 
 Everything else this specification opened has been answered and recorded. How
 the envelope's reported time reaches the clock `IFleetTracker` owns is

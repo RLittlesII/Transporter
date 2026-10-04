@@ -2,7 +2,7 @@ id: "0017"
 type: task
 title: Run the tests in the build, so a green build means a green test run
 
-status: in-review
+status: done
 
 priority: high
 value: 4
@@ -22,7 +22,7 @@ claims: []
 
 created: "2026-10-04"
 updated: "2026-10-04"
-closed: null
+closed: "2026-10-04"
 
 summary: |
   Nuke's `Default` target is Clean, Restore, Format, Compile. It runs no

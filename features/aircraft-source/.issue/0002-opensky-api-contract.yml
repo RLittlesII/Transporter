@@ -2,7 +2,7 @@ id: "0002"
 type: task
 title: Declare the OpenSky API contract and the response envelope
 
-status: in-review
+status: blocked
 
 priority: high
 risk: 3
@@ -131,6 +131,18 @@ decisions:
     registration shape checked by building the thing and looking at it.
     `Verified` drops from two rows to one. Rejected: keeping it as a test with
     no § 9 row, which is a test no claim asks for."
+  - "2026-10-04 — implementer — this item landed in pull request #1 and is
+    `blocked` rather than `done`. Five of its twelve claims — B-002, B-004,
+    B-006, B-007, B-048, and B-010's second clause — stand `Missing` in § 9
+    because ADR-0006 makes them the analyzer's and the analyzer is its own
+    Feature. `deliver-change` says an item whose claims are unbuilt is not
+    done. The blocker is § 11 question 3."
+  - "2026-10-04 — the person — B-010's `SHALL NOT be produced by a mocking
+    framework` is accepted as written for now and queued for revision: the
+    double should be built with `Rocket.Surgery.Extensions.Testing.AutoFixtures`
+    instead. Raised in review of pull request #1 and recorded as § 11
+    question 4, which is `spec-author`'s. The hand-written fake stands until
+    the claim changes."
   - "2026-10-04 — implementer — deleting that test left nothing exercising
     `AddOpenSky` at runtime, because B-008 constrains the registration's shape
     and not its outcome. B-052 now covers the outcome and is `0007`'s, since
