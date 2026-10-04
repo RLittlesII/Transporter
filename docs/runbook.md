@@ -57,7 +57,8 @@ Rehearse:
 
 - the swap, more than once in a row, watching memory and budget burn stay flat;
 - the swap with the recorded vessel replay as the target, so a dead network does
-  not take the ending with it;
+  not take the ending with it. **A stretch goal that only works on a good
+  network is a gamble, not a demo**;
 - swapping while a poll is in flight — the late response must not land;
 - swapping twice quickly, because someone will ask.
 

@@ -76,8 +76,8 @@ leaving both open would mean two things to decide later instead of none.
 - § 4 row 8 — the credit arithmetic, restated at 15 seconds.
 - `README.md` § "Open items" — "Pick the bounding box and polling interval" is
   now done.
-- `ais-stream` — the vessel subscription uses this same box, which is the
-  reason the geography was chosen.
+- `README.md` § "Closing act" — the vessel subscription uses this same box,
+  which is the reason the geography was chosen.
 
 ## Reversal
 
