@@ -120,6 +120,40 @@ that was renamed, abbreviated or never written fails silently and survives every
 review that reads the sentence rather than following it. When a section moves or
 is renamed, the cites to it are part of the change.
 
+## A declaration belongs to the file that compiles
+
+A specification designs types before they exist, and writing the declaration
+out is how that design gets stated — there is nowhere else for it to live yet.
+That stops being true the moment the file exists. From then on the compiler is
+the authority on the signature, and the copy in the document is a second store
+with no build to keep it honest.
+
+- **Replace the declaration with a row**: the type, the file, and what the
+  declaration was there to make visible. The reasoning stays — why that name,
+  why that shape, which claims it answers — because that lives nowhere else and
+  is the specification's own.
+- **A diagram is not a declaration.** Naming a type to show a relationship is
+  not a second statement of its signature. Leave diagrams alone.
+- **A record is not a living document.** A decision record argues from the
+  declaration as it stood on its date, and an accepted one is immutable
+  regardless. Only the documents that claim to describe the present track the
+  code.
+
+The change that creates the file is where this happens, not a tidy-up
+afterwards.
+
+**This is not a hand-kept index of files**, which § "Never add" rules out and
+which would fall behind. It lists what this section designed and where each
+one landed — a set the section already owns and already has to keep complete —
+and every row is a link, so the link check reports a move. An index of the
+tree would be neither.
+
+**Deleting a declaration is a move, and the destination has to hold
+everything** ([lesson 0003](../../.spec/lessons/0003-a-dedupe-is-a-move-and-a-move-has-a-destination.md)).
+A pasted declaration often carries design that is not built yet — a
+constructor parameter a later item adds, a member nothing calls. The file does
+not hold that, so the prose has to, or it leaves with the paste.
+
 ## Claims and traceability
 
 - Claims are numbered rows in the acceptance-criteria section. Each scenario

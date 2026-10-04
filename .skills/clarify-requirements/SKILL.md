@@ -36,6 +36,12 @@ undecided is recorded as an open question rather than asked again.
     - the impact of each;
     - the smallest decision needed to continue.
 
+- **Ask what rule the answer follows, not only which option wins.** A ruling
+  recorded with no rule behind it is one the next reader cannot check, and a
+  standing convention the person holds but has never written down will
+  contradict it sooner or later — usually after the code is built. Where the
+  answer comes from a rule, the rule is the thing to write down; the ruling
+  then follows from it instead of standing on its own.
 - **Never resolve a material ambiguity by assumption**, or by picking whichever
   reading is easiest to build, even under a "spike" or "just get it working"
   framing.

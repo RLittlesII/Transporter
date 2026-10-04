@@ -120,10 +120,8 @@ All versions live in
 
 **Work is tracked locally.** A `<id>-<slug>.yml` item stands in for a GitHub
 issue, and there are **no issues, labels or milestones** in this workflow. Code
-still pushes to GitHub, so branches, pull requests and CI stay — though no
-remote is configured yet, so those conventions apply from the first push
-onward. The schema and the status enum are below under
-`spec-and-traceability`.
+still pushes to GitHub, so branches, pull requests and CI stay. The schema and
+the status enum are below under `spec-and-traceability`.
 
 **An item sits beside the specification it was cut from**:
 `features/<slug>/.issue/`, a sibling of that Feature's `.spec/`. An item that
@@ -263,6 +261,15 @@ field by field — `type`, `status`, `risk` and `title` are never omitted, and
 `done`. `priority`, `rank` and `blocks` are derived, and
 [`item.yml`](../../.spec/templates/item.yml) carries the derivation beside the
 fields it applies to.
+
+### Declarations in § 7
+
+§ 7 Technical Design writes a type's declaration out only while its file does
+not exist. Once the file exists the declaration becomes a row in § 7's type
+table — `| Type | File | Claims it makes visible |`, the file as a relative
+link so the link check catches a move — and the folder the type sat in drops
+out of § 7's layout block. The prose around it stays: the naming argument and
+the claim it answers are the specification's own and live nowhere else.
 
 ### Claim ids are `B-00n`
 

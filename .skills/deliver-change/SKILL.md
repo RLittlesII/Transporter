@@ -250,6 +250,13 @@ stronger one** — that judgment is the whole point:
   accepted record moves only to superseded or deprecated, linking the record
   that replaced or retired it; the other three are terminal. There is no partial
   supersession.
+- **Argue from the constraint, not from the repository's state.** A record
+  whose reasoning rests on what the tree happens to hold — a target that does
+  not exist, a package not referenced, a suite nothing runs — carries an
+  argument that expires the day someone changes it, and nothing reports the
+  expiry. Say what is durable; where the state is the point, say what about it
+  is durable. Follow every cite as you write it, too: a link to a file that was
+  never created reads exactly like a link to one that was.
 - Number it after rebasing. Keep the filename and the heading in step.
 - Keep rationale and requirements apart: never restate acceptance criteria in a
   decision record, and never argue a technology choice in a scenario file.
