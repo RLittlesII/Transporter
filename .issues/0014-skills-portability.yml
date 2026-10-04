@@ -1,0 +1,58 @@
+id: "0014"
+type: task
+title: Make the skills portable — rule in the skill, facts in the specification
+
+status: in-progress
+
+priority: medium
+value: 3
+risk: 2
+rank: 50
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  The nineteen skills under .skills/ had absorbed three kinds of content that
+  do not belong in a skill: project paths and commands inside skills meant to
+  carry a method, provider and talk specifics inside skills meant to carry a
+  library, and facts restated from README.md, a feature specification or an
+  ADR. Four skills also carried point-in-time status notes that go stale the
+  moment the work they describe lands.
+
+  Rewrite them against the pattern the reference repository uses — a generic
+  method skill naming a project companion that holds the specifics — so a
+  method skill is portable, a technology skill is about the library, and every
+  fact has exactly one authoritative home.
+
+  No type `chore` exists in .spec/templates/item.yml's enum
+  (epic | feature | task | test | bug | spike), so this is filed as a task.
+
+acceptance_criteria:
+  - "The five method skills name a project companion and contain no project path, command, claim-id scheme or provider name."
+  - "The technology skills contain no provider facts, no talk or audience framing, and no status notes."
+  - "Every fact deleted from a skill is verifiably already held by README.md, a feature specification, an ADR or a decision record."
+  - "A root .spec/lessons/ process lesson records why, and coding-conventions carries the rule it produced."
+  - "Every relative link in .skills/, .agents/ and AGENTS.md resolves, and AGENTS.md's skills table matches the directory."
+
+decisions:
+  - "2026-10-04 — rlittlesii: hybrid split rather than a companion per skill. Rejected a full two-tier mirror of the reference repository: it doubles the file count for nineteen skills, and only the five method skills have enough project specifics to be worth separating."
+  - "2026-10-04 — rlittlesii: business-content skills move into the specification and are deleted, rather than kept with their narrative stripped."
+  - "2026-10-04 — rlittlesii: point-in-time status notes come out. A skill states the rule; current state is read from the repository."
+
+out_of_scope:
+  - "Any change to source, tests, the build or CI. This is documentation only."
+  - "Rewriting README.md or a feature specification, beyond linking content moved out of a deleted skill."
+  - "The global user-level skills outside this repository."
