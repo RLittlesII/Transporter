@@ -6,7 +6,13 @@ using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-[GitHubActions("ci", GitHubActionsImage.UbuntuLatest, AutoGenerate = false, OnPullRequestBranches = ["main"])]
+[GitHubActions(
+    "ci",
+    GitHubActionsImage.UbuntuLatest,
+    AutoGenerate = false,
+    OnPullRequestBranches = ["main"],
+    OnPullRequestIncludePaths = ["**/*"],
+    OnPullRequestExcludePaths = ["**/*.md", ".skills/**", ".agents/**", ".issues/**", "LICENSE"])]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
