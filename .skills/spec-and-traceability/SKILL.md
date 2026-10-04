@@ -164,6 +164,18 @@ Claims are numbered rows in § 3 Acceptance Criteria. Scenarios in the companion
 is the gate**: every claim appears there exactly once, and a `Missing` row
 blocks ship.
 
+**Ids are scoped to their Feature, not to the repository.** Every spec numbers
+from `B-001`, so `aircraft-source`'s B-007 and `replay-source`'s B-007 are
+different claims and neither is renumbered for the other. What identifies a
+claim is the pair — an `.issues/` item carries `claims:` alongside the `spec:`
+those claims live in, and § 3 and § 9 are both per-Feature sections, so an id is
+only ever read against a named § 3. Permanence is per-Feature too: within one
+spec an id is never renumbered and never reused. Compare the two schemes that
+*are* repo-wide, each of which says so and has a mechanism — the root
+[`adr/`](../../.spec/adr/) is numbered repo-wide from `0001`, and item ids come
+from `.issues/.sequence`. Claims need no sequence file, which is what lets two
+Features be specified at once without colliding.
+
 **Scenarios are documentation.** The `.feature` file is the readable
 specification; **xUnit tests are what execute**, each citing the claim it
 proves. There is no Gherkin runner in this repository — no Reqnroll, no

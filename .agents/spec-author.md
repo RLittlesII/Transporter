@@ -43,7 +43,10 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
 ## Produce
 
 1. **§ 3 claims**: numbered, falsifiable `SHALL` / `SHALL NOT` rows, one claim
-   each, with `B-00n` ids. Ids are permanent — never renumbered, never reused.
+   each, with `B-00n` ids. Ids are permanent — never renumbered, never reused —
+   and **scoped to this Feature**, so a new spec starts again at `B-001` and two
+   specs may share an id without either giving way
+   ([`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md)).
    A withdrawn claim is marked `Withdrawn`, not deleted; § 9 and the `.feature`
    file are anchored to it.
 2. **Scenarios** in the Feature's `.feature` file: declarative
