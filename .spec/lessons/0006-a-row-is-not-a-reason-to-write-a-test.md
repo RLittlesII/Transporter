@@ -44,6 +44,11 @@ moved exactly the three claims that had comments on them and left B-008, which
 is the same kind of claim, because no one had pointed at it. That is the root
 cause below, applied a second time by the person who had just written it down.
 
+Three more followed when `0003` was built: B-014, B-030 and B-031 had named
+tests reading `WhenItsMembersAreInspected` and `WhenItIsInspected`, which is
+the shape in the method name. Those were moved before being written, which is
+the only time this costs nothing.
+
 The decision that should have stopped it was already in the repository and
 already made the argument.
 [ADR-0006](../adr/0006-an-analyzer-enforces-the-layer-boundaries.md) says the
@@ -66,7 +71,8 @@ from a new direction.
 ## Spec delta
 
 § 9 moves B-002, B-005, B-008 and B-010's mocking-framework clause to the
-analyzer, so fifteen rows now wait on it rather than eleven. `Verified` drops
+analyzer, and B-014, B-030 and B-031 followed when `0003` reached them, so
+eighteen rows now wait on it rather than eleven. `Verified` drops
 from five rows to one — B-001, the only claim proven by what the code does
 rather than by how it is declared or registered.
 

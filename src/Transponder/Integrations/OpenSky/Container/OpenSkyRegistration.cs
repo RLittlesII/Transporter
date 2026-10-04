@@ -1,3 +1,4 @@
+using DynamicData;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Transponder.Integrations.OpenSky.Contracts;
@@ -12,7 +13,10 @@ namespace Transponder.Integrations.OpenSky.Container;
 public static class OpenSkyRegistration
 {
     /// <summary>
-    /// Adds the OpenSky API contract, aliased to the transport that reaches the provider over HTTP.
+    /// Adds the OpenSky API contract, aliased to the transport that reaches the provider over HTTP, and the
+    /// snapshot cache the client writes into. The cache is a plain keyed store with the application's lifetime:
+    /// it has no diff policy, no projection and no clock, and the absence of a wrapper is what makes that true
+    /// by construction rather than by assertion.
     /// </summary>
     /// <param name="services">The collection to register into.</param>
     /// <param name="baseUrl">The provider's base URL.</param>
@@ -21,6 +25,7 @@ public static class OpenSkyRegistration
     {
         services.AddSingleton<IFlurlClientCache>(_ => new FlurlClientCache().Add(OpenSkyHttpApi.ClientName, baseUrl));
         services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
+        services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
 
         return services;
     }

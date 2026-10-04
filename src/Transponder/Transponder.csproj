@@ -9,6 +9,7 @@
     <ItemGroup>
       <PackageReference Include="Akka" />
       <PackageReference Include="Akka.Hosting" />
+      <PackageReference Include="DynamicData" />
       <PackageReference Include="Flurl.Http" />
       <PackageReference Include="LanguageExt.Core" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
