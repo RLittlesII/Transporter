@@ -1,9 +1,7 @@
 using System.Net;
 using Flurl.Http;
 using Flurl.Http.Configuration;
-using LanguageExt;
 using Transponder.Integrations.OpenSky.Contracts;
-using static LanguageExt.Prelude;
 
 namespace Transponder.Integrations.OpenSky.Http;
 
@@ -16,7 +14,7 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
     internal const string RetryAfterHeader = "X-Rate-Limit-Retry-After-Seconds";
 
     /// <inheritdoc/>
-    async Task<Either<OpenSkyThrottled, OpenSkyStatesResponse>> IOpenSkyApi.GetStates(
+    async Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(
         double lamin,
         double lomin,
         double lamax,
@@ -32,10 +30,10 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
 
         if (response.StatusCode == (int) HttpStatusCode.TooManyRequests)
         {
-            return Left<OpenSkyThrottled, OpenSkyStatesResponse>(new OpenSkyThrottled(RetryAfter(response)));
+            throw new OpenSkyThrottledException(RetryAfter(response));
         }
 
-        return Right<OpenSkyThrottled, OpenSkyStatesResponse>(await response.GetJsonAsync<OpenSkyStatesResponse>());
+        return await response.GetJsonAsync<OpenSkyStatesResponse>();
     }
 
     private static TimeSpan RetryAfter(IFlurlResponse response) =>

@@ -17,10 +17,10 @@ public class OpenSkyHttpApiTests
         IOpenSkyApi transport = new OpenSkyHttpApi(Cache());
 
         // When
-        var result = await transport.GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
+        var response = await transport.GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
 
         // Then
-        result.IsRight.Should().BeTrue();
+        response.Time.Should().Be(1791124330);
         http.ShouldHaveCalled("*/states/all")
             .WithVerb(HttpMethod.Get)
             .WithQueryParam("lamin", 29.4)
@@ -32,7 +32,7 @@ public class OpenSkyHttpApiTests
     }
 
     [Fact]
-    public async Task GivenAThrottledResponse_WhenAPollIsSent_ThenTheRetryAfterHeaderArrivesAsDataRatherThanAnException()
+    public async Task GivenAThrottledResponse_WhenAPollIsSent_ThenItThrowsCarryingTheSecondsTheProviderAsked()
     {
         // Given
         using var http = new HttpTest();
@@ -42,12 +42,11 @@ public class OpenSkyHttpApiTests
         IOpenSkyApi transport = new OpenSkyHttpApi(Cache());
 
         // When
-        var result = await transport.GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
+        var call = async () => await transport.GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
 
         // Then
-        result.IsLeft.Should().BeTrue();
-        result.Match(Right: static _ => TimeSpan.MinValue, Left: static throttled => throttled.RetryAfter)
-            .Should().Be(TimeSpan.FromSeconds(42));
+        (await call.Should().ThrowAsync<OpenSkyThrottledException>())
+            .Which.RetryAfter.Should().Be(TimeSpan.FromSeconds(42));
     }
 
     private static IFlurlClientCache Cache() =>

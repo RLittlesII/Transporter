@@ -1,5 +1,4 @@
 using AwesomeAssertions;
-using LanguageExt;
 using Transponder.Integrations.OpenSky.Contracts;
 
 namespace Transponder.UnitTests.Integrations.OpenSky;
@@ -20,7 +19,7 @@ public class OpenSkyApiContractTests
 
         var endpoint = methods.Single();
         endpoint.Name.Should().Be("GetStates").And.NotEndWith("Async");
-        endpoint.ReturnType.Should().Be(typeof(Task<Either<OpenSkyThrottled, OpenSkyStatesResponse>>));
+        endpoint.ReturnType.Should().Be(typeof(Task<OpenSkyStatesResponse>));
         endpoint.GetParameters()[^1].ParameterType.Should().Be(typeof(CancellationToken));
     }
 }

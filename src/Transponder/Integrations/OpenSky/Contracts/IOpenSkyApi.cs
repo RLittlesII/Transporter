@@ -1,5 +1,3 @@
-using LanguageExt;
-
 namespace Transponder.Integrations.OpenSky.Contracts;
 
 /// <summary>
@@ -16,8 +14,9 @@ internal interface IOpenSkyApi
     /// <param name="lomax">The box's upper longitude bound, in degrees.</param>
     /// <param name="extended">Whether to ask the provider for the aircraft category element.</param>
     /// <param name="cancellationToken">Cancels the request.</param>
-    /// <returns>The provider's response, or the throttle it answered with.</returns>
-    Task<Either<OpenSkyThrottled, OpenSkyStatesResponse>> GetStates(
+    /// <returns>What the provider sent.</returns>
+    /// <exception cref="OpenSkyThrottledException">The provider answered with a throttle instead of a payload.</exception>
+    Task<OpenSkyStatesResponse> GetStates(
         double lamin,
         double lomin,
         double lamax,

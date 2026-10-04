@@ -1,4 +1,3 @@
-using LanguageExt;
 using Transponder.Integrations.OpenSky.Contracts;
 
 namespace Transponder.UnitTests.Integrations.OpenSky;
@@ -9,10 +8,10 @@ namespace Transponder.UnitTests.Integrations.OpenSky;
 /// </summary>
 internal sealed class OpenSkyApiFake : IOpenSkyApi
 {
-    public Either<OpenSkyThrottled, OpenSkyStatesResponse>? NextStates { get; set; }
+    public OpenSkyStatesResponse? NextStates { get; set; }
 
     /// <inheritdoc/>
-    Task<Either<OpenSkyThrottled, OpenSkyStatesResponse>> IOpenSkyApi.GetStates(
+    Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(
         double lamin,
         double lomin,
         double lamax,
