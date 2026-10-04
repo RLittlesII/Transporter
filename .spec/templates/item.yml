@@ -86,10 +86,21 @@ summary: |
   As a <persona> I want <capability> so that <outcome>.
 
 # CITE claim ids; do not restate them. § 3 of the spec is the one place a
-# claim's text lives. A bug or chore with `spec: null` states its criteria in
-# prose here, and cites claim ids once a spec delta adds them.
+# claim's text lives, and a paraphrase with the SHALL stripped off is the form
+# that drifts from it. The shape is the id plus a FEW WORDS to locate the
+# claim — not a sentence. Where the item's hazard is worth naming, name the
+# hazard; if a row needs a sentence to be understood, the sentence belongs in
+# § 3 and this row cites it.
+#
+# Every id in `claims:` above appears here, and the last row is the gate:
+# § 9 carries a row naming a test for each of them. A criterion that reads as
+# satisfied is not coverage.
+#
+# A bug or chore with `spec: null` states its criteria in prose here, and cites
+# claim ids once a spec delta adds them.
 acceptance_criteria:
   - "B-001 — <short reference>"
+  - "§ 9 carries a row naming a test for each id above."
 
 # Appended as the work proceeds: each decision, who made it, the date, and the
 # rejected option where there was one. A decision recorded only in chat is not
@@ -98,4 +109,8 @@ acceptance_criteria:
 decisions: []
 
 # What this item will not do, so the next reader does not assume it did.
+# CITE and ROUTE: name the thing, cite the spec's § 5 row that excludes it, and
+# say which sibling item or Feature owns it where one does. Do not re-explain
+# the exclusion reason — § 5 is where that lives, and a second copy of it
+# drifts. "Everything in § 5 of the spec" is a valid whole-section cite.
 out_of_scope: []
