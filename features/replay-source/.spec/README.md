@@ -235,7 +235,10 @@ substitutes at.
 **Row 3.** ADR-0004 fixes the format and the shape of a recording's name; it
 deliberately says nothing about which recording a run selects or where the
 directory sits relative to the application. Configuration, not format, and
-answerable without reopening the ADR.
+answerable without reopening the ADR. It surfaces where replay is selected,
+because selecting replay is selecting a recording; the pacer needs only to know
+whether it is handed an opened stream or a path; and the substitution point
+(B-022) never resolves a recording at all, since it is handed payloads.
 
 ## 12. Sign-off
 
@@ -304,8 +307,10 @@ to run above it, and selection needs the decorator. Those dependencies are
 recorded in the items, where `depends_on` is authoritative, and are deliberately
 not restated here as ids.
 
-§ 11 row 3 is still open and lands on `0010` and `0011`: neither can be designed
-without knowing which recording a run loads and where it lives.
+§ 11 row 3 is still open, and it surfaces at `0012`, where selecting replay is
+selecting a recording. It reaches `0010` only narrowly — whether the pacer is
+handed an opened stream or a path to resolve — and does not reach `0011` at all,
+which is handed payloads and never resolves a recording of its own.
 
 ## Scoring
 
@@ -318,7 +323,7 @@ without knowing which recording a run loads and where it lives.
 | 2026-10-04 | `0013` value | —    | 3  | README makes the closing act optional, while B-020 makes a fallback mandatory *once it is presented*. Conditional on the act happening, so below the parent rather than dropped. |
 | 2026-10-04 | `0008` risk  | —    | 4  | Spans recording, playback, selection and both feeds, and crosses two boundaries it is forbidden to duplicate — the provider's contract and the seam.                     |
 | 2026-10-04 | `0009` risk  | —    | 3  | B-004 makes transparency the claim: a tap that perturbs what the fleet sees fails in a way nothing downstream reports, and B-003 forbids buying correctness with a second poll. |
-| 2026-10-04 | `0010` risk  | —    | 3  | Time-base work throughout — pacing from recorded instants on an injected scheduler, the loop boundary, the torn final line — and § 11 row 3 is unanswered beneath it.    |
+| 2026-10-04 | `0010` risk  | —    | 3  | Time-base work throughout — pacing from recorded instants on an injected scheduler, the loop boundary, the torn final line — with § 11 row 3 bearing on it only as stream-or-path. |
 | 2026-10-04 | `0011` risk  | —    | 3  | Substitutes below a client it must not duplicate (B-022) while carrying the two claims most easily confused with each other: the reported time against the arrival instant (B-009, B-010). |
 | 2026-10-04 | `0012` risk  | —    | 3  | § 4 row 12 is the hazard: a strategy registered after Scrutor's `Decorate<>` resolves raw and silently, so the failure appears on stage rather than in a build.           |
 | 2026-10-04 | `0013` risk  | —    | 4  | Claims behaviour over a feed no specification defines yet (§ 5 row 2), and substitutes at a depth nothing else in this Feature uses (B-023).                             |
