@@ -239,9 +239,11 @@ row.
 
 ## Scoring
 
-<!-- Owner: spec-author, recording the item's value and risk when they change.
-     The authoritative values live in the .issue/ item. -->
+<!-- Owner: spec-author, recording WHY an item's value or risk is where it
+     is, and why it moved. The numbers themselves live in the .issue/ item,
+     which is authoritative for them — this table carries rationale only, so
+     the two cannot disagree. -->
 
-| Date         | Field | From | To  | Rationale     |
-| ------------ | ----- | ---- | --- | ------------- |
-| {{date}}     | value | —    | 4   | {{rationale}} |
+| Date     | Item       | Field | Rationale     |
+| -------- | ---------- | ----- | ------------- |
+| {{date}} | `{{item}}` | value | {{rationale}} |

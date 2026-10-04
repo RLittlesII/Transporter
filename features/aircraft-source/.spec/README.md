@@ -283,35 +283,22 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 
 <!-- Rules: ../../../.spec/templates/feature.md § Scoring -->
 
-| Date       | Field         | From | To | Rationale                                                                                                                                                 |
-| ---------- | ------------- | ---- | -- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-04 | `0001` value  | —    | 5  | § 1 names four outcomes — the contract, the caching client, the per-type projection and the decorated swap — and the business goal fails without any of them. |
-| 2026-10-04 | `0001` risk   | —    | 4  | The boundary claims B-045 – B-047 are the ones nothing verifies until both sides of each boundary exist, so they are the claims most likely to be "satisfied" by absence rather than by a test. Aim a test at each from the far side: name the envelope from a view model and fail. |
-| 2026-10-04 | `0002` risk   | —    | 3  | B-010's fake is the hazard: a double that returns `default` instead of throwing on an unset response makes every test above it pass for the wrong reason, and nothing anywhere reports it. Second, B-007's explicit implementation compiles either way — an implicit `public` method satisfies the compiler and breaks the claim silently. |
-| 2026-10-04 | `0003` risk   | —    | 2  | Lowest risk, one hazard, and it is the headline's foundation: a snapshot with a mutable or collection member makes two identical reports compare unequal (B-011), so the differ reports changes for aircraft that did not change. Nothing errors — the grid just churns. Aim at equality with a repeated report. |
-| 2026-10-04 | `0004` risk   | —    | 4  | Four hazards, each a silent wrong answer rather than a failure. Absent versus present-zero category is the distinction a converter collapses (B-018). Squawk `"0021"` becomes the number 21 (B-020). A `null` element becomes `0`, `false` or `""` (B-017). One malformed row takes the whole batch down (B-022). A fifth if the transport is sloppy: a `429` thrown instead of deferred (B-028). |
-| 2026-10-04 | `0005` risk   | —    | 3  | Mapperly will do the wrong thing here without complaining: an absent altitude mapped to `0` is an aircraft at sea level, and an absent position mapped to `0,0` is one in the Gulf of Guinea (B-036). Both render as plausible data. Also aim at B-037 — an uppercase hex key splits one aircraft into two cache entries. |
-| 2026-10-04 | `0006` risk   | —    | 4  | Both hazards are invisible at runtime. Scrutor's `Decorate<>` wraps only what is **already** registered, so a strategy registered after the call resolves raw and the swap silently does nothing (ADR-0003). And an outgoing source that is not stopped keeps spending OpenSky credits with nothing on screen to show it (B-040). |
-| 2026-10-04 | `0007` risk   | —    | 3  | One inline `DateTime.UtcNow` in a staleness check (B-043) makes the behaviour untestable *and* wrong under replay, where time comes from the recording. Then B-042: a pipeline rebuilt on swap leaks, and a leak in a demo reads as a memory bug on a projector. Aim at a swap followed by a second swap. |
+| Date       | Item   | Field | Rationale |
+| ---------- | ------ | ----- | --------- |
+| 2026-10-04 | `0001` | value | § 1 names four outcomes — the contract, the caching client, the per-type projection and the decorated swap — and the business goal fails without any of them. |
+| 2026-10-04 | `0001` | risk | The boundary claims B-045 – B-047 are the ones nothing verifies until both sides of each boundary exist, so they are the claims most likely to be "satisfied" by absence rather than by a test. Aim a test at each from the far side: name the envelope from a view model and fail. |
+| 2026-10-04 | `0002` | risk | B-010's fake is the hazard: a double that returns `default` instead of throwing on an unset response makes every test above it pass for the wrong reason, and nothing anywhere reports it. Second, B-007's explicit implementation compiles either way — an implicit `public` method satisfies the compiler and breaks the claim silently. |
+| 2026-10-04 | `0003` | risk | Lowest risk, one hazard, and it is the headline's foundation: a snapshot with a mutable or collection member makes two identical reports compare unequal (B-011), so the differ reports changes for aircraft that did not change. Nothing errors — the grid just churns. Aim at equality with a repeated report. |
+| 2026-10-04 | `0004` | risk | Four hazards, each a silent wrong answer rather than a failure. Absent versus present-zero category is the distinction a converter collapses (B-018). Squawk `"0021"` becomes the number 21 (B-020). A `null` element becomes `0`, `false` or `""` (B-017). One malformed row takes the whole batch down (B-022). A fifth if the transport is sloppy: a `429` thrown instead of deferred (B-028). |
+| 2026-10-04 | `0005` | risk | Mapperly will do the wrong thing here without complaining: an absent altitude mapped to `0` is an aircraft at sea level, and an absent position mapped to `0,0` is one in the Gulf of Guinea (B-036). Both render as plausible data. Also aim at B-037 — an uppercase hex key splits one aircraft into two cache entries. |
+| 2026-10-04 | `0006` | risk | Both hazards are invisible at runtime. Scrutor's `Decorate<>` wraps only what is **already** registered, so a strategy registered after the call resolves raw and the swap silently does nothing (ADR-0003). And an outgoing source that is not stopped keeps spending OpenSky credits with nothing on screen to show it (B-040). |
+| 2026-10-04 | `0007` | risk | One inline `DateTime.UtcNow` in a staleness check (B-043) makes the behaviour untestable *and* wrong under replay, where time comes from the recording. Then B-042: a pipeline rebuilt on swap leaks, and a leak in a demo reads as a memory bug on a projector. Aim at a swap followed by a second swap. |
 
-`value` is inherited: no child carries one, so each resolves to `0001`'s 5 at
-read time. `risk` is never inherited and is set per item above.
-
-`priority` and `rank` on each item are **derived** from those two —
-`rank = (value × 20) − (risk × 3) + (unblocks × 5)`, bucketed `high` at 60 and
-above — so they are recomputed, never hand-edited. Every item lands in `high`,
-which means the bucket orders nothing here: `rank` does. `0003` at 99 is the
-highest-ranked item with no prerequisite, so it is the queue head; `0005` ranks
-highest overall at 106 because three items wait on it, and still runs after
-`0004`.
-
-Three of those ranks moved when the replay Feature's items were cut, because
-`unblocks` counts dependents from **any** Feature: replay's recording tap waits
-on `0004` (93 → 98), its aircraft substitution on `0005` (101 → 106), and its
-selection on `0006` (88 → 93). No `value` or `risk` changed, so the table above
-has no row for it — `rank` is derived, and the moves are the formula working on
-a dependency that did not exist when the items were cut. `0003` is still the
-queue head.
+Why `0001` carries a `value` and no child does: a child omits it to inherit the
+parent's, and `risk` is never inherited. The derivation of `priority` and `rank`
+from the two, and the fact that a dependency cut in another Feature moves a rank
+here with no row in this table, are the item schema's —
+[`item.yml`](../../../.spec/templates/item.yml).
 
 **Every `risk` above is provisional.** §§ 6-7 are unwritten, and the design
 assessment they carry is what each number is supposed to come from — which is

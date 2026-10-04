@@ -307,23 +307,20 @@ invariant above holds across all 27 again.
 
 <!-- Rules: ../../../.spec/templates/feature.md § Scoring -->
 
-| Date       | Field        | From | To | Rationale                                                                                                                                                              |
-| ---------- | ------------ | ---- | -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-04 | `0008` value | —    | 4  | § 1 names one outcome — a fallback the presenter can reach with the control they already have — and the demo survives a dead venue network only if it lands whole.        |
-| 2026-10-04 | `0013` value | —    | 3  | README makes the closing act optional, while B-020 makes a fallback mandatory *once it is presented*. Conditional on the act happening, so below the parent rather than dropped. |
-| 2026-10-04 | `0008` risk  | —    | 4  | Spans recording, playback, selection and both feeds, and crosses two boundaries it is forbidden to duplicate — the provider's contract and the seam.                     |
-| 2026-10-04 | `0009` risk  | —    | 3  | B-004 makes transparency the claim: a tap that perturbs what the fleet sees fails in a way nothing downstream reports, and B-003 forbids buying correctness with a second poll. |
-| 2026-10-04 | `0010` risk  | —    | 3  | Time-base work throughout — pacing from recorded instants on an injected scheduler, the loop boundary, the torn final line — with § 11 row 3 bearing on it only as stream-or-path. |
-| 2026-10-04 | `0011` risk  | —    | 3  | Substitutes below a client it must not duplicate (B-022) while carrying the two claims most easily confused with each other: the reported time against the arrival instant (B-009, B-010). |
-| 2026-10-04 | `0012` risk  | —    | 3  | § 4 row 12 is the hazard: a strategy registered after Scrutor's `Decorate<>` resolves raw and silently, so the failure appears on stage rather than in a build.           |
-| 2026-10-04 | `0013` risk  | —    | 4  | Claims behaviour over a feed no specification defines yet (§ 5 row 2), and substitutes at a depth nothing else in this Feature uses (B-023).                             |
-| 2026-10-04 | `0012` risk  | 3    | 4  | Two registration-time hazards now stack here and neither shows at runtime: a strategy registered after Scrutor's `Decorate<>` resolves raw, so the swap silently does nothing; and a recording named but absent or shorter than the staleness threshold is a stage failure unless B-026's startup report catches it first. |
+| Date       | Item   | Field | Rationale |
+| ---------- | ------ | ----- | --------- |
+| 2026-10-04 | `0008` | value | § 1 names one outcome — a fallback the presenter can reach with the control they already have — and the demo survives a dead venue network only if it lands whole. |
+| 2026-10-04 | `0013` | value | README makes the closing act optional, while B-020 makes a fallback mandatory *once it is presented*. Conditional on the act happening, so below the parent rather than dropped. |
+| 2026-10-04 | `0008` | risk | Spans recording, playback, selection and both feeds, and crosses two boundaries it is forbidden to duplicate — the provider's contract and the seam. |
+| 2026-10-04 | `0009` | risk | B-004 makes transparency the claim: a tap that perturbs what the fleet sees fails in a way nothing downstream reports, and B-003 forbids buying correctness with a second poll. |
+| 2026-10-04 | `0010` | risk | Time-base work throughout — pacing from recorded instants on an injected scheduler, the loop boundary, the torn final line — with § 11 row 3 bearing on it only as stream-or-path. |
+| 2026-10-04 | `0011` | risk | Substitutes below a client it must not duplicate (B-022) while carrying the two claims most easily confused with each other: the reported time against the arrival instant (B-009, B-010). |
+| 2026-10-04 | `0012` | risk | § 4 row 12 is the hazard: a strategy registered after Scrutor's `Decorate<>` resolves raw and silently, so the failure appears on stage rather than in a build. |
+| 2026-10-04 | `0013` | risk | Claims behaviour over a feed no specification defines yet (§ 5 row 2), and substitutes at a depth nothing else in this Feature uses (B-023). |
+| 2026-10-04 | `0012` | risk | Two registration-time hazards now stack here and neither shows at runtime: a strategy registered after Scrutor's `Decorate<>` resolves raw, so the swap silently does nothing; and a recording named but absent or shorter than the staleness threshold is a stage failure unless B-026's startup report catches it first. |
 
-`value` is inherited: no child carries one except `0013`, so the rest resolve to
-`0008`'s 4 at read time. `risk` is never inherited and is set per item, and it
-moves when a claim lands on an item: `0012` went to 4 when B-024 – B-026 added
-the no-default rule and the startup report, while `0010` stayed at 3, having
-lost an open question and gained no work. The numbers above are the ones the
-items carry; the rationale is this
-specification's reading of why each sits where it does, and the items stay
-authoritative for the values themselves.
+`0013` is the one child carrying a `value` of its own; the rest omit it to
+inherit `0008`'s. `risk` is never inherited, and it moves when a claim lands on
+an item: `0012` rose when B-024 – B-026 added the no-default rule and the
+startup report, while `0010` held, having lost an open question and gained no
+work.
