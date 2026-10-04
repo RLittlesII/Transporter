@@ -1,4 +1,12 @@
 <Project>
+    <PropertyGroup>
+        <!-- RSA2014 and RSA2015 read XML documentation comments off the syntax tree, and csc only
+             parses them into the tree when it is asked for a documentation file. Without this,
+             DocumentationMode is None, every /// comment is plain comment trivia, and both rules
+             report missing documentation on members that are already documented. -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Rocket.Surgery.Airframe.CodeAnalysis"/>
     </ItemGroup>
