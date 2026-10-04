@@ -10,7 +10,7 @@ Line-of-business and enterprise .NET developers. Most of them work with data beh
 
 ## The app: "Fleet Tracking Dashboard"
 
-Live aircraft over a metro area, framed as a fleet dashboard so the audience maps it onto their own domains (trucks, technicians, shipments, tickets).
+Live aircraft over Houston — both international airports, the ship channel and Galveston Bay — framed as a fleet dashboard so the audience maps it onto their own domains (trucks, technicians, shipments, tickets). The box was chosen so the ships closing act can subscribe to the same geography ([decision 0001](features/aircraft-source/.spec/decisions/0001-houston-bounding-box.md)).
 
 UI features:
 
@@ -20,7 +20,7 @@ UI features:
 - Grouped view (by origin country or aircraft category)
 - Master-detail: selected aircraft in a detail pane
 - Summary counts and aggregates per group
-- "Stale" indicator or removal for aircraft that stop reporting
+- "Stale" indicator for aircraft that stop reporting — marked and kept, never removed, at a configurable five minutes
 - Optional: map view
 
 ## DynamicData operators to demonstrate
@@ -36,7 +36,7 @@ In roughly the order the audience meets them:
 | `Bind` | Pushing changes into the UI collection |
 | Aggregates (`Count`, etc.) | Summary counts per group |
 | `AutoRefresh` | Re-evaluating filters and sorts when properties change |
-| `ExpireAfter` / staleness | Aircraft that stop reporting |
+| `ExpireAfter` / staleness | Items that stop reporting. Aircraft are *marked* at five minutes rather than removed; `ExpireAfter` itself is for vessels, which go silent rather than departing |
 
 ## Data source: OpenSky Network
 
@@ -88,7 +88,7 @@ In roughly the order the audience meets them:
 
 Credit cost per `/states/all` call by bounding box area: ≤25 sq° = 1, 25–100 = 2, 100–400 = 3, >400 or global = 4.
 
-- A metro-sized box polled every 10 seconds costs about 360 credits per hour. **Register for a free account.**
+- The Houston box is about 2.9 sq°, so 1 credit per call. At the chosen 15-second interval that is 240 credits per hour — a talk spends roughly 180 of the daily 4,000, and rehearsal is unconstrained. Leaving the 1-credit tier is what costs. **Register for a free account.**
 - Remaining credits appear in the `X-Rate-Limit-Remaining` header; a `429` response includes `X-Rate-Limit-Retry-After-Seconds`.
 
 ### Gotchas
@@ -131,7 +131,7 @@ Replace the polled source with a push source and show that everything downstream
 ## Open items
 
 - [ ] Register an OpenSky account and create an API client
-- [ ] Pick the bounding box (metro area) and polling interval
+- [X] Pick the bounding box (metro area) and polling interval — Houston: IAH, HOU, the ship channel and Galveston Bay, polled every 15 seconds ([decision 0001](features/aircraft-source/.spec/decisions/0001-houston-bounding-box.md))
 - [X] Decide UI framework (WPF, Avalonia, Blazor, MAUI)
 - [ ] Record replay snapshots during rehearsal
 - [ ] Decide on the closing act (ships, Coinbase, or simulated)
@@ -146,3 +146,4 @@ Replace the polled source with a push source and show that everything downstream
 - [Akka](https://github.com/akkadotnet/akka.net)
 - [Mapperly](https://github.com/riok/mapperly)
 - [Flurl](https://flurl.dev) — the polled HTTP client ([ADR-0001](.spec/adr/0001-flurl-for-http.md))
+- [Scrutor](https://github.com/khellang/Scrutor) — registers the source-swap decorator ([ADR-0003](.spec/adr/0003-scrutor-for-decorator-registration.md))

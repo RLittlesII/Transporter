@@ -36,18 +36,25 @@ code.
   [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md).
 - **Keyed by MMSI.** The cache key for a vessel, the way `icao24` is for an
   aircraft.
-- **Subscribe with a bounding box.** Filtering happens server-side on the
-  subscription message, not client-side after the fact — so "which box am I
-  watching" is connection state rather than a call argument, and it is the
-  client's business the way the bounding box is for the polled strategy.
+- **Subscribe with a bounding box — the same one the aircraft use.** Filtering
+  happens server-side on the subscription message, not client-side after the
+  fact, so "which box am I watching" is connection state rather than a call
+  argument. Use the Houston box from the aircraft-source specification's
+  `decisions/0001`: it was chosen to contain the Houston Ship Channel and
+  Galveston Bay *as well as* IAH and HOU, precisely so the closing act is "same
+  box, same grid, different fleet" rather than also moving the audience
+  somewhere else.
 - **Named JSON fields** — easier to consume than OpenSky's positional arrays, so
   there is no hand-written rows-to-snapshot step here. A plain snapshot record
   deserializes directly, and the Mapperly mapper in `IVesselTrackerSource` takes
   it to `Vessel` ([`mapping`](../mapping/SKILL.md)). One mapping, not two.
 - **A free API key is required** (sign up with GitHub).
-- **Vessels go silent rather than being removed.** The feed does not announce
-  a departure; a ship simply stops reporting. So `ExpireAfter` and the
-  staleness rule matter here exactly as much as they do for aircraft.
+- **Vessels go silent rather than being removed.** The feed does not announce a
+  departure; a ship simply stops reporting. Aircraft are marked and kept rather
+  than expired (B-051), so this is the one place `ExpireAfter` may still earn
+  its place — a port where every ship that ever moored is still on screen is a
+  dashboard full of ghosts. Decide it here, per source, when this strategy is
+  specified.
 - Rate and fairness limits are the provider's, and lighter than OpenSky's
   credit budget — but the feed is free and unmetered-looking, which is not the
   same as unlimited. Subscribe to the box you need.

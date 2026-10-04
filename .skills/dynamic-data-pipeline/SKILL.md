@@ -99,12 +99,15 @@ rather than the wire one.
   Replay must age items the same way live does
   ([`api-mock`](../api-mock/SKILL.md)), and the provider's own reported time,
   carried on the response envelope, is what lets it.
-- Two different treatments, and the demo shows both: a *stale indicator* keeps
-  the row visible and marked; `ExpireAfter` removes it. Pick per source and
-  state which.
-- **Vessels go silent rather than disappearing**, so `ExpireAfter` matters at
-  least as much on the ships feed as on aircraft. A silent ship that never
-  expires is a dashboard slowly filling with ghosts.
+- Two treatments exist: a *stale indicator* keeps the row visible and marked;
+  `ExpireAfter` removes it. **Aircraft are marked and kept** — threshold
+  configurable, five minutes by default (B-051) — so `ExpireAfter` has no role
+  in the aircraft demo. A row vanishing mid-sentence reads as a bug; a row
+  flagged as stale reads as information.
+- **Vessels go silent rather than disappearing**, so `ExpireAfter` may still
+  earn its place on the ships feed, where a silent ship that never ages out is a
+  dashboard slowly filling with ghosts. That is the closing act's call, per
+  source, and it is why the operator stays on the README's list.
 
 ## Keep the pipeline the thing that does the work
 

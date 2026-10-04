@@ -135,10 +135,18 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
 
   @B-024
   Scenario: The bounding box and the polling interval are given to the client
-    Given a bounding box and a ten-second interval
+    Given a bounding box and a fifteen-second interval
      When the client is constructed with them
      Then the client fetches that box on that interval
       And neither value appears on the contract, on the client's stream, or on anything downstream
+
+  @B-050
+  Scenario: The interval defaults to fifteen seconds and the box has no default
+    Given configuration that sets neither the interval nor the bounding box
+     When the client is constructed
+     Then its interval is fifteen seconds
+      And construction fails for the absent bounding box rather than choosing one
+      And configuration supplying either value overrides the default
 
   @B-025
   Scenario: Offering category grouping makes the request ask for extended rows
@@ -156,6 +164,12 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
 
   # ────────────────────────────── Failure mode ──────────────────────────────
 
+  # The interval below is deliberately shorter than the retry-after it is tested
+  # against, and shorter than the fifteen-second default. With an interval of
+  # fifteen and a wait of twelve, waiting for the next tick and honouring the
+  # header are indistinguishable — the assertion would pass either way. Do not
+  # "correct" these two to the default.
+
   @B-028
   Scenario: A throttled poll waits exactly as long as the provider asked
     Given a client polling on a one-second interval
@@ -163,7 +177,7 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      Then no exception reaches the subscriber
       And nothing is written to the cache for that poll
       And the next request is not made until 12 seconds have elapsed on the injected scheduler
-      And the wait is 12 seconds and not a value the client chose for itself
+      And the wait is 12 seconds and not the one-second interval the client would otherwise use
 
   @B-028
   Scenario: A server error stays an exception rather than becoming a deferred poll
@@ -219,18 +233,29 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And one row is counted as unreadable
       And the three readable rows are unaffected
 
-  @B-043
-  Scenario: An aircraft that stops reporting goes stale on the injected clock
-    Given a vehicle whose last contact was 14:32:10
+  @B-043 @B-051
+  Scenario: An aircraft that stops reporting goes stale and stays in the collection
+    Given a staleness threshold of five minutes
+      And a vehicle whose last contact was 14:32:10
       And an injected clock reading 14:32:40
-     When the clock is advanced to 14:35:10 and no new snapshot arrives
+     When the clock is advanced to 14:37:11 and no new snapshot arrives
      Then the vehicle is stale
+      And it is still in the collection
+      And it was not removed for being stale
       And the staleness was determined without reading the machine's current time
       And the fleet tracker is what made the decision
 
+  @B-051
+  Scenario: The staleness threshold is configuration, not a constant
+    Given configuration that sets no staleness threshold
+     When the fleet tracker is constructed
+     Then the threshold is five minutes
+      And configuration supplying a different threshold overrides it
+      And a vehicle under the threshold is not stale
+
   @B-040
   Scenario: Swapping stops the outgoing source
-    Given an aircraft source polling on a ten-second interval
+    Given an aircraft source polling on a fifteen-second interval
      When the live source is swapped to vessels
      Then the aircraft source stops polling
       And it spends no further credits

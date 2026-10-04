@@ -133,12 +133,15 @@ Network"; the consequences are here.
 - **OAuth2 client credentials only.** There is no basic auth. Token URL is in
   the README. Tokens last 30 minutes: refresh on expiry *and* on a `401`,
   because a token can die early.
-- **Credits are the real budget.** Cost per `/states/all` call scales with
-  bounding-box area (≤25 sq° = 1, up to 4 for global). A metro box polled
-  every 10 seconds burns roughly 360 credits per hour against a registered
-  account's 4,000 per day. **The polling interval is therefore a budget
-  decision, not a tuning knob** — changing it changes how long the demo can
-  run.
+- **Credits bound the box, not the interval.** Cost per `/states/all` call
+  scales with bounding-box area (≤25 sq° = 1, up to 4 for global), and the
+  registered free tier is 4,000 per day. At the chosen 15-second interval a poll
+  runs 240 times an hour, so a 1-credit box costs 240 credits/hour and a talk
+  spends about 180 — rehearsal is effectively unconstrained. **Leaving the
+  1-credit tier is what costs**, since it doubles every poll. The decided box is
+  Houston (IAH, HOU, the ship channel and Galveston Bay), about 2.9 sq° and
+  comfortably inside that tier; the vessel feed subscribes to the same box. See
+  the aircraft-source specification's `decisions/0001`.
 - **Watch the headers.** `X-Rate-Limit-Remaining` says how much budget is
   left; log it at debug so a rehearsal reveals the burn rate. A `429` carries
   `X-Rate-Limit-Retry-After-Seconds` — honor that value rather than inventing

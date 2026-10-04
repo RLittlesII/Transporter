@@ -39,9 +39,10 @@ internal sealed class SwappingTrackerSource : ITrackerSource
   know it happened.
 - **There is no strategy resolver.** Nobody asks which strategy to use: the
   decorator *is* the registration, so the set of strategies is known in one
-  place and no caller has to know it at all. Whether that registration needs a
-  decoration package or a hand-written one is an open question on the
-  aircraft-source specification (§ 11).
+  place and no caller has to know it at all. It is registered with Scrutor's
+  `Decorate<>` ([ADR-0003](../../.spec/adr/0003-scrutor-for-decorator-registration.md)),
+  which wraps what is **already** registered — so a strategy registered after
+  the decorate call is resolved raw, silently. Register strategies first.
 - Live OpenSky, live AISStream, a replay and a simulated source are all swap
   targets, because all four are strategies — including replay-as-fallback
   ([`api-mock`](../api-mock/SKILL.md)). **One switch, not two**: there is no
@@ -53,22 +54,28 @@ internal sealed class SwappingTrackerSource : ITrackerSource
   [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md).
 - Each strategy brings its own client and its own cache, so a swap does not
   clear a shared collection — the outgoing cache simply stops being read. What
-  the audience sees as a result is a rehearsal question (below, and § 11 Q2).
+  the audience sees as a result is decided below.
 
 ## What the audience sees on swap — a real decision
 
 Per-strategy caches change the shape of this question. Nothing is cleared on a
-swap: the outgoing cache stops being read, and the incoming strategy's
-changeset replaces the fleet. This is a *stage effect*, so it is a rehearsal
-call, not a correctness one:
+swap: the outgoing cache stops being read, and the incoming strategy's changeset
+replaces the fleet. There is a gap of up to one poll — 15 seconds — before the
+incoming strategy has anything to emit, and something has to occupy it.
 
-| Option | What the audience sees | Cost |
+**Decided: a busy indicator, then the new fleet** — see the aircraft-source
+specification's `decisions/0002`. A busy indicator says "transition, not
+failure" at the one moment the demo is making its point, and a few seconds of
+empty grid on a projector is indistinguishable from a crash.
+
+| Option | What the audience sees | Why not |
 |---|---|---|
-| **A clean cut** (recommended) | The incoming strategy's first changeset removes the planes and adds the ships in one step. A legible swap. | The "nothing else changed" point has to be said, not just seen — the grid looks like it reloaded. |
-| Let `ExpireAfter` age the planes out | Planes and ships coexist briefly, then planes drain away. Dramatic, and it showcases expiry. | A few seconds of mixed fleet, which can read as a bug to anyone not following closely. Needs the decorator to merge rather than switch. |
+| **Busy indicator, then data** (chosen) | A brief indicator, then the ships arrive at once. | — |
+| An empty grid, no indicator | The same gap, unexplained. | Reads as a broken demo to anyone not following closely. |
+| Let the planes drain by expiry | Planes and ships coexist briefly, then planes age out. Dramatic. | Foreclosed twice: aircraft are marked and kept rather than expired (B-051), so there is nothing to drain with; and a mixed fleet reads as a bug. |
+| Pre-connect so there is no gap | No gap at all. | Two sources live at once, two sets of credits or sockets. A bigger change than the gap is a problem — and "swapping before the ships feed has authenticated" is already a failure mode below. |
 
-Pick in rehearsal and write the choice into the specification. Whichever is
-chosen, it is **never a pipeline rebuild**.
+Whichever is shown, it is **never a pipeline rebuild**.
 
 ## Disposal discipline
 

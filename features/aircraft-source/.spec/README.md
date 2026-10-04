@@ -35,14 +35,14 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
      they are permanent: never renumbered, never reused. A withdrawn claim is
      marked Withdrawn, not deleted. -->
 
-Forty-nine claims, in nine groups — one per component, plus the boundary rules:
+Fifty-one claims, in nine groups — one per component, plus the boundary rules:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
-types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029** the
-snapshot client; **B-030 – B-032** the cache; **B-033 – B-037** the tracker
-source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044** the
-fleet tracker; **B-045 – B-047** the layer boundaries.
+types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029 and
+B-050** the snapshot client; **B-030 – B-032** the cache; **B-033 – B-037** the
+tracker source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044
+and B-051** the fleet tracker; **B-045 – B-047** the layer boundaries.
 
-B-048 and B-049 are out of numeric order because they were added after the rest
+B-048 – B-051 are out of numeric order because they were added after the rest
 were written. Ids are permanent, so they keep the numbers they were given rather
 than being slotted into the sequence.
 
@@ -60,6 +60,8 @@ than being slotted into the sequence.
 | B-010 | The API contract's test double SHALL be a hand-written fake that throws naming the unset response, and SHALL NOT be produced by a mocking framework.                                                                        | api-contract (global) § testing; see § 4 row 18            | Draft  |
 | B-048 | The API contract SHALL carry no version suffix and SHALL have no marker interface above it for as long as OpenSky publishes no API version; the versioned layer SHALL be introduced only when the provider declares a version to be agnostic about. | Decided call; see § 4 row 3                                | Draft  |
 | B-049 | A contract layer SHALL exist only where the provider is request/response shaped; a push provider's strategy SHALL have none, and no contract SHALL be invented to give a socket one. The surface every strategy shares SHALL be `ITrackerSource` and nothing above it. | Decided call; see § 4 row 4                                | Draft  |
+| B-050 | The polling interval SHALL be configurable and SHALL default to 15 seconds; the bounding box SHALL be configurable with no default compiled in.                                                                                                                      | Decided call; decisions/0001                               | Draft  |
+| B-051 | A vehicle past the staleness threshold SHALL remain in the collection and SHALL be observably stale; it SHALL NOT be removed for staleness. The threshold SHALL be configurable and SHALL default to five minutes.                                                   | Decided call; dynamic-data-pipeline § "Staleness"          | Draft  |
 | B-011 | The snapshot SHALL have value equality over every member it carries, so two snapshots reporting identical values compare equal and the differ emits no change for them.                                                      | Decided call — the client diffs records                    | Draft  |
 | B-012 | The snapshot SHALL carry `icao24` as a non-optional member and SHALL be keyed on it.                                                                                                                                        | README.md index 0 ("the cache key")                        | Draft  |
 | B-013 | The snapshot SHALL carry the wire's values in the wire's units and SHALL perform no conversion, derivation or interpretation; it is the server's record with names on it.                                                     | Decided call; mapping § "Conversions are explicit"         | Draft  |
@@ -117,7 +119,7 @@ than being slotted into the sequence.
 | 5   | Integration code does not live under `Features/`. `AGENTS.md` § "Code Conventions" governs feature code and is silent on integrations.                     | Decided call; AGENTS.md                  | Rules out a contract, a client or a cache inside `src/Transponder/Features/<FeatureName>/`. Integrations get their own root, so a provider's code is not mistaken for one feature's — see `coding-conventions`.                 |
 | 6   | `category` exists only when the request sets `extended=1`.                                                                                                | README.md index 17                       | Rules out offering category grouping without the extended request, and rules out a single "unknown category" value — absent and unknown are two states (B-018, B-025).                                                        |
 | 7   | OAuth2 client credentials only; no basic auth; tokens last 30 minutes and can die early.                                                                   | README.md § "Authentication"             | Rules out a token fetched once at startup, a clock-only refresh, and any call site attaching its own credential. Forces one token cache and refresh on both expiry and `401`.                                                  |
-| 8   | Credits are the budget, and cost scales with bounding-box area: ≤25 sq° = 1, up to 4 for global. A metro box at 10 s ≈ 360 credits/hour against 4,000/day. | README.md § "Limits"                     | Rules out treating the interval as a tuning knob and rules out an unbounded poll loop. Box and interval are **one** decision, and it is a budget decision — § 11 Q1. Rehearsal spends the same budget the talk does.           |
+| 8   | Credits are the budget, and cost scales with bounding-box area: ≤25 sq° = 1, up to 4 for global. The registered free tier is 4,000 per day.                 | README.md § "Limits"                     | Rules out an unbounded poll loop, and rules out a box large enough to leave the 1-credit tier. At the chosen 15-second interval (B-050) a ≤25 sq° box costs 240 credits/hour, so a talk spends ~180 of 4,000 and rehearsal is unconstrained — credits bound the *box*, not the interval. |
 | 9   | A `429` carries `X-Rate-Limit-Retry-After-Seconds`; remaining budget is in `X-Rate-Limit-Remaining`.                                                       | README.md § "Limits"                     | Rules out an invented backoff and any call style that discards response headers — so `GetJsonAsync<T>()` on a URL is unusable. A `429` must be inspectable rather than thrown.                                                 |
 | 10  | OpenSky blocks AWS and other hyperscaler IPs.                                                                                                             | README.md § "Gotchas"                    | Rules out a CI job or test that reaches the live API, and rules out running the demo from a cloud VM. The replay strategy is the network contingency, not a nice-to-have.                                                      |
 | 11  | Public presentation of this data owes the OpenSky citation.                                                                                                | README.md § "Gotchas"                    | Rules out presenting without a credit slide. Not a code constraint and not ours to simplify; tracked as a README.md open item.                                                                                                |
@@ -126,7 +128,7 @@ than being slotted into the sequence.
 | 14  | No test may touch a network or the wall clock.                                                                                                             | api-mock; test-from-scenarios            | Rules out `Thread.Sleep`, a real delay, a retry-until-true, and a hand-rolled `HttpMessageHandler`. Every time-based element takes an injected scheduler or clock in production, not only in tests.                             |
 | 15  | Flurl's `HttpTest` intercepts through the logical asynchronous call context and does not follow a message into an actor on its own dispatcher.             | ADR-0001 § "Consequences"                | Rules out testing a poller actor with `HttpTest`. The contract's implementation stays a plain class tested directly — and the hand-written contract fake (B-010) is what lets everything above it be tested with no HTTP at all. |
 | 16  | The domain model references only the framework and LanguageExt — no DynamicData, Flurl, `HttpClient` or `System.Text.Json` types.                           | transponder-domain-model § "Never add"   | Rules out the cache, the strategies or the tracker living inside the model. It is why each is a separate component rather than a member on `TransportVehicle`.                                                                 |
-| 17  | `DynamicData` and a decoration helper are not in `Directory.Packages.props`; neither are AwesomeAssertions or NSubstitute. The Nuke build has no `Test` target. | dynamic-data-pipeline; AGENTS.md         | Rules out assuming the packages are available. The first item that builds the cache adds `DynamicData`; the first that builds the decorator resolves § 11 Q7; the first that writes a test adds the assertion and mocking packages. |
+| 17  | `DynamicData` and `Scrutor` are not in `Directory.Packages.props`; neither are AwesomeAssertions or NSubstitute. The Nuke build has no `Test` target.        | dynamic-data-pipeline; ADR-0003; AGENTS.md | Rules out assuming the packages are available. The first item that builds a cache adds `DynamicData`; the first that builds the decorator adds `Scrutor` (ADR-0003); the first that writes a test adds the assertion and mocking packages. A green build does not mean tests ran. |
 | 18  | The versioned-contract pattern bans a mocking framework for the contract's test double; `AGENTS.md:55` mandates NSubstitute.                                | api-contract (global) § scrutiny; AGENTS.md | A narrow conflict, resolved narrowly: the API contract's double is hand-written (B-010); NSubstitute remains correct for everything else. Neither document is wrong; the scope of each differs.                                 |
 | 19  | The versioned-contract pattern is silent on caching, observables and streaming, and defines no layer above the contract.                                    | api-contract (global)                    | Rules out claiming conformance for the client, the cache, the strategies, the decorator or the tracker. Only B-005 – B-010 are governed by it; everything above is this repository's own design and says so.                   |
 
@@ -142,7 +144,7 @@ than being slotted into the sequence.
 | 3   | The AISStream vessel feed, `Vessel`, and the vessel client, cache and tracker source                             | The closing act and a stretch goal. This feature claims the shape a second strategy plugs into (B-033, B-038, B-049) and nothing about the vessel feed itself. Note it has **no** contract layer: a socket does not fit one `Task<T>` per endpoint (§ 4 row 4). |
 | 4   | The replay and simulated strategies                                                                              | Separate implementations of the seam this feature defines (`api-mock`). This spec gives them a seam and an observed instant to carry (B-003); it does not build them or record rehearsal fixtures.                                       |
 | 5   | The swap control, the stage choreography, and in-flight-result cancellation on swap                              | `hot-swap-source` owns them. This feature claims the decorator's obligations (B-038 – B-040) and stops there; no selector UI, no disposal choreography.                                                                                  |
-| 6   | The removal policy and its threshold                                                                             | B-043 claims the staleness *derivation* and B-042 claims the tracker owns expiry. Whether a stale item is marked and kept or removed, and at what age, is § 11 Q3. Picking one now would decide it silently.                             |
+| 6   | `ExpireAfter` and any removal-for-staleness behavior                                                             | B-051 decides it the other way: a stale aircraft is **marked and kept**, never removed. `ExpireAfter` therefore has no role in the aircraft demo and is not built here. Vessels may still want it — they go silent rather than departing — and that belongs to the closing act. |
 | 7   | The grid, the detail pane, the search box, the dropdowns, the grouped view, the stale indicator's rendering, and the summary tiles | UI (`build-maui-ui`, `mvvm`). A view's obligations are not written into a scenario here, and no scenario names a UI mechanic.                                                                                                            |
 | 8   | The optional map view                                                                                            | README.md § "The app" lists it as optional. Nothing in § 3 needs it, and a map is the most expensive way to prove a changeset arrived.                                                                                                   |
 | 9   | A generated OpenSky client, or an OpenAPI document written by us to generate from                                 | Rejected in ADR-0001 and foreclosed by Constraint 1. Writing a specification for someone else's undocumented API to feed a generator is a project, not a step.                                                                           |
@@ -251,12 +253,16 @@ None yet.
 
 <!-- Owner: whoever is blocked. "None." is a valid body. -->
 
-| #   | Question                                                                                                                                                                                                                                                                                                                                                             | Owner         | Target date                              |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------- |
-| 1   | What is the bounding box, and what is the polling interval? One credit-budget decision, not two tuning knobs: cost scales with box area and a metro box at 10 s burns ≈ 360 credits/hour against 4,000/day, so the pair decides how long the demo runs and how much rehearsal the budget affords. Blocks a concrete value behind B-024 and the Constraint 6 figures.    | Project owner | Before the first rehearsal recording     |
-| 2   | What does the audience see on a swap, now that each client has its own cache? The outgoing cache is simply no longer read rather than being cleared, which may look different from clear-and-refill. A stage-effect call, not a correctness one, and it changes nothing about B-030 – B-032.                                                                            | Project owner | Rehearsal                                |
-| 3   | Is a stale item **marked and kept** or **expired and removed**, and at what age? B-043 claims only the derivation and B-042 claims `IFleetTracker` owns expiry, so this is now one component's behavior rather than a scattered policy. `dynamic-data-pipeline` says the demo shows both treatments and picks per source.                                               | Project owner | Before the pipeline feature is specified |
-| 4   | Does the swap decorator warrant a decoration package, or a hand-written registration? A package keeps the registration declarative; a hand-written one adds no dependency to a demo. Either way the decorator's obligations (B-038 – B-040) are unchanged.                                                                                                              | Project owner | Before the decorator is built            |
+None. Every question this specification opened has been answered and recorded:
+the bounding box and interval in [decisions/0001](decisions/0001-houston-bounding-box.md)
+and B-050, what the audience sees on a swap in
+[decisions/0002](decisions/0002-busy-indicator-on-swap.md), the staleness policy
+in B-051, the version suffix in B-048, the contract layer's applicability in
+B-049, the integration layout in § 4 row 5, and the decoration package in
+[ADR-0003](../../../.spec/adr/0003-scrutor-for-decorator-registration.md).
+
+A question arriving later is added here as a row — `#`, Question, Owner, Target
+date — rather than settled in conversation.
 
 ## 12. Sign-off
 
@@ -279,10 +285,15 @@ None yet.
      .spec/templates/decision.md. A product or scope call goes there; a
      durable technical choice goes to adr/ instead. "None yet." is valid. -->
 
-None yet. The layering this specification is written against is a cross-cutting
-technical decision, so it is recorded in the repository-wide
-[ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md) rather
-than here or in this Feature's `adr/`.
+- [0001 — Houston is the bounding box, and the interval starts at 15 seconds](decisions/0001-houston-bounding-box.md) — decided
+- [0002 — A busy indicator covers the swap, then the new fleet arrives](decisions/0002-busy-indicator-on-swap.md) — decided
+
+The layering this specification is written against is a cross-cutting technical
+decision rather than a product call, so it is recorded in the repository-wide
+[ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md), and the
+decoration package in
+[ADR-0003](../../../.spec/adr/0003-scrutor-for-decorator-registration.md) —
+neither here nor in this Feature's `adr/`.
 
 ## Tasks
 

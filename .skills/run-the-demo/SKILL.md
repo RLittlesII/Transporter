@@ -15,10 +15,12 @@ act", and the open items list.
 - **Register an OpenSky account and create an API client.** OAuth2 client
   credentials, no basic auth. Anonymous gets 400 credits a day at 10-second
   resolution; registered gets 4,000 at 5-second. Register.
-- **Pick the bounding box and the polling interval together.** They are one
-  decision: credit cost scales with box area, and a metro box at 10 seconds
-  burns roughly 360 credits an hour. A 4,000-credit day is about eleven hours
-  of polling — plenty, unless the app has been running since breakfast.
+- **The box and the interval are decided**: Houston — both airports, the ship
+  channel and Galveston Bay — polled every 15 seconds, both configurable (see
+  the aircraft-source specification's `decisions/0001`). That box is about
+  2.9 sq°, so 1 credit a call and 240 an hour: a talk costs roughly 180 of the
+  daily 4,000, and the app could run all day. **Credits bound the box, not the
+  interval** — widening past 25 sq° is what doubles the bill.
 - **Verify both credentials**: OpenSky client id and secret, and the AISStream
   API key for the closing act. An expired key discovered mid-sentence is the
   worst possible time.
@@ -28,7 +30,9 @@ act", and the open items list.
 - **Add the OpenSky citation slide.** The terms ask for it in public
   presentations: Schäfer, Strohmeier, Lenders, Martinovic, Wilhelm, "Bringing
   Up OpenSky: A Large-scale ADS-B Sensor Network for Research."
-- Pick a vessel bounding box with real traffic. An empty sea is a bad slide.
+- The vessel subscription uses the **same** Houston box — that is why the box
+  contains a port. Check there is real traffic in it at the talk's hour; an
+  empty sea is a bad slide.
 
 ## On the day
 
