@@ -1,0 +1,76 @@
+id: "0002"
+type: task
+title: Declare the OpenSky API contract and the response envelope
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 96
+
+parent: "0001"
+children: []
+
+depends_on: []
+blocks:
+  - "0004"
+spikes: []
+
+spec: features/aircraft-source/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-048
+  - B-049
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  The bottom two layers: the envelope that mirrors what OpenSky sends, and the
+  typed contract over it. One method per endpoint, `Task<T>`, `CancellationToken`
+  last, implemented exactly once by an `internal sealed` class with explicit
+  interface implementation. The envelope keeps the provider's positional
+  `states` rows untouched — reading them is 0004's job, not this item's.
+
+  Also delivers the hand-written contract fake, which is what lets every layer
+  above be tested with no HTTP at all (§ 4 row 15).
+
+  Starts with 0003 as the other root of the tree; nothing blocks it.
+
+acceptance_criteria:
+  - "B-001, B-002 — envelope mirrors the provider; `states` stays positional."
+  - "B-003 — the envelope's reported time is the observed instant downstream."
+  - "B-004 — the positional row type is invisible outside the integration code."
+  - "B-005, B-006 — contract shape: one method per endpoint, and nothing about
+    caching, changesets, boxes, intervals or credentials on it."
+  - "B-007, B-008 — one `internal sealed` concretion, explicit implementation,
+    unresolvable by its own type; dependency injection aliases the contract."
+  - "B-009 — a new provider version produces a new interface, not an edit."
+  - "B-010 — hand-written fake that throws naming the unset response; no
+    mocking framework for this double, and this double only (§ 4 row 18)."
+  - "B-048 — no version suffix and no marker interface until OpenSky publishes
+    a version (§ 4 row 3)."
+  - "B-049 — the contract layer exists only because OpenSky is request/response
+    shaped; nothing here is generalised into a surface a socket must satisfy
+    (§ 4 row 4)."
+
+decisions: []
+
+out_of_scope:
+  - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."
+  - "Token refresh, rate-limit headers, `429` handling and the startup
+    credential check — B-026 – B-029, also 0004. This item declares the method;
+    it does not own the poll loop's behaviour."
+  - "Claiming conformance to the global versioned-contract pattern for anything
+    above the contract (§ 4 row 19). Only B-005 – B-010 are governed by it."

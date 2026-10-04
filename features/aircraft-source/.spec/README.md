@@ -301,14 +301,54 @@ neither here nor in this Feature's `adr/`.
      only — never restated titles, or the two records disagree. "None yet."
      is valid while the spec is still being agreed. -->
 
-None yet.
+| Item   | Claims                                          |
+| ------ | ----------------------------------------------- |
+| `0001` | all 51 — the parent; its children hold the work  |
+| `0002` | B-001 – B-010, B-048, B-049                      |
+| `0003` | B-011 – B-014, B-030 – B-032                     |
+| `0004` | B-015 – B-029, B-045, B-050                      |
+| `0005` | B-033 – B-037, B-046                             |
+| `0006` | B-038 – B-040                                    |
+| `0007` | B-041 – B-044, B-047, B-051                      |
+
+Every claim is carried by exactly one child, and `0001` carries all of them
+because the children are slices of it rather than work beside it. The three
+layer-boundary claims are assigned to the child that makes each falsifiable —
+B-045 to `0004`, B-046 to `0005`, B-047 to `0007` — because a boundary cannot be
+asserted before both sides of it exist.
+
+Each item's `depends_on` sequences the work: `0002` and `0003` have no
+prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
+`0007` wait on `0005`.
 
 ## Scoring
 
 <!-- Owner: spec-author, recording the item's value and risk when they change.
      The authoritative values live in the .issues/ item. -->
 
-| Date         | Field | From | To  | Rationale     |
-| ------------ | ----- | ---- | --- | ------------- |
+| Date       | Field         | From | To | Rationale                                                                                                                                                 |
+| ---------- | ------------- | ---- | -- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-04 | `0001` value  | —    | 5  | § 1 names four outcomes — the contract, the caching client, the per-type projection and the decorated swap — and the business goal fails without any of them. |
+| 2026-10-04 | `0001` risk   | —    | 4  | Spans every layer from the wire to the fleet, so it crosses more than two architectural boundaries by definition.                                           |
+| 2026-10-04 | `0002` risk   | —    | 3  | New integration root, a hand-written positional converter, and no existing test coverage to land on.                                                        |
+| 2026-10-04 | `0003` risk   | —    | 2  | Two records and a store with no behaviour of its own; the only item localised to one component.                                                             |
+| 2026-10-04 | `0004` risk   | —    | 4  | Crosses the HTTP, cache and diff boundaries at once, and carries the token, `429` and startup-credential behaviour. The largest item at seventeen claims.    |
+| 2026-10-04 | `0005` risk   | —    | 3  | Declares the seam two later items depend on, and introduces Mapperly plus `Option<T>` at the domain boundary.                                               |
+| 2026-10-04 | `0006` risk   | —    | 4  | Scrutor's `Decorate<>` is registration-order sensitive and fails silently (ADR-0003), and disposal on swap is easy to get wrong invisibly.                   |
+| 2026-10-04 | `0007` risk   | —    | 3  | Introduces the injected clock every other component is defined by *not* holding, and sits one accidental step from § 5 row 1.                               |
 
-No scoring recorded — no `.issues/` item has been cut from § 3 yet.
+`value` is inherited: no child carries one, so each resolves to `0001`'s 5 at
+read time. `risk` is never inherited and is set per item above.
+
+`priority` and `rank` on each item are **derived** from those two —
+`rank = (value × 20) − (risk × 3) + (unblocks × 5)`, bucketed `high` at 60 and
+above — so they are recomputed, never hand-edited. Every item lands in `high`,
+which means the bucket orders nothing here: `rank` does. `0003` at 99 is the
+highest-ranked item with no prerequisite, so it is the queue head; `0005` ranks
+highest overall at 101 because two items wait on it, and still runs after
+`0004`.
+
+**Every `risk` above is provisional.** §§ 6-7 are unwritten, and the design
+assessment they carry is what each number is supposed to come from — which is
+why every item sits at `ready-for-architecture` rather than
+`ready-for-implementation`. Re-score as a row here when § 7 lands.

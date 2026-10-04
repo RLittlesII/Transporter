@@ -1,0 +1,66 @@
+id: "0006"
+type: task
+title: Swap the live source behind a decorator over ITrackerSource
+
+status: ready-for-architecture
+
+priority: high
+risk: 4
+rank: 88
+
+parent: "0001"
+children: []
+
+depends_on:
+  - "0005"
+blocks: []
+spikes: []
+
+spec: features/aircraft-source/.spec/README.md
+
+claims:
+  - B-038
+  - B-039
+  - B-040
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  A decorator registered as `ITrackerSource` picks which strategy is live at
+  runtime. There is no `IStrategyResolver` and no caller that asks which
+  strategy to use: every strategy registers as the same interface, and the
+  decoration performs the swap. Nothing downstream can observe from the stream
+  that a swap happened — which is the claim the closing act makes on stage, so
+  it has to be true in the source rather than in the narration.
+
+  Adds `Scrutor` to `Directory.Packages.props` — the first item that builds the
+  decorator does, per § 4 row 17 and ADR-0003. `Decorate<>` is
+  registration-order sensitive and fails silently, which is most of this item's
+  risk.
+
+  Runs after 0005, which declares the interface it decorates and provides the
+  one strategy it can wrap.
+
+acceptance_criteria:
+  - "B-038 — a decorator registered as `ITrackerSource` selects the live
+    strategy at runtime, and no strategy-resolver type exists."
+  - "B-039 — the decorator is substitutable for any strategy it wraps, and no
+    consumer can observe from its stream that a swap occurred."
+  - "B-040 — swapping stops the outgoing source, so a swapped-out poller stops
+    spending OpenSky credits and a swapped-out socket stops reading."
+
+decisions:
+  - "2026-10-04 — spec-author — Scrutor rather than keyed services, per-type
+    interfaces, or hand-written decoration. Recorded with its rejected options
+    in ADR-0003."
+
+out_of_scope:
+  - "The swap control, the stage choreography, and cancelling an in-flight
+    result on swap (§ 5 row 5). `hot-swap-source` owns them; this item claims
+    the decorator's obligations and stops there — no selector UI, no disposal
+    choreography."
+  - "A second strategy to swap to. The replay and simulated strategies are
+    § 5 row 4 and the vessel feed is § 5 row 3."
+  - "Rebuilding anything on swap. B-042 forbids it and belongs to 0007."

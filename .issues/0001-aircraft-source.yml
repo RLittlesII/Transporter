@@ -1,0 +1,122 @@
+id: "0001"
+type: feature
+title: Poll OpenSky for aircraft and project them into the fleet
+
+status: ready-for-architecture
+
+priority: high
+value: 5
+risk: 4
+rank: 88
+
+parent: null
+children:
+  - "0002"
+  - "0003"
+  - "0004"
+  - "0005"
+  - "0006"
+  - "0007"
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: features/aircraft-source/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+  - B-021
+  - B-022
+  - B-023
+  - B-024
+  - B-025
+  - B-026
+  - B-027
+  - B-028
+  - B-029
+  - B-030
+  - B-031
+  - B-032
+  - B-033
+  - B-034
+  - B-035
+  - B-036
+  - B-037
+  - B-038
+  - B-039
+  - B-040
+  - B-041
+  - B-042
+  - B-043
+  - B-044
+  - B-045
+  - B-046
+  - B-047
+  - B-048
+  - B-049
+  - B-050
+  - B-051
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  As a line-of-business .NET developer in the talk audience I want to see the
+  single point where a request/response feed becomes a reactive collection, and
+  to find one name per layer when I read the repository afterwards, so that I
+  can apply the pattern to my own REST-backed app without reverse-engineering
+  which component holds which type.
+
+  This is the parent of the whole aircraft path: a typed API contract that
+  mirrors what OpenSky publishes, a client that reads the positional rows and
+  diffs them into its cache, a per-type strategy that is the only place a domain
+  object is built, a decorator that swaps strategies at runtime, and
+  `IFleetTracker` wrapping that seam. Its six children slice it one layer at a
+  time; it holds no work of its own.
+
+acceptance_criteria:
+  - "All 51 claims in § 3 of the spec — the children carry them in slices, and
+    no claim is delivered twice. 0002 takes B-001 – B-010, B-048 and B-049;
+    0003 takes B-011 – B-014 and B-030 – B-032; 0004 takes B-015 – B-029,
+    B-045 and B-050; 0005 takes B-033 – B-037 and B-046; 0006 takes
+    B-038 – B-040; 0007 takes B-041 – B-044, B-047 and B-051."
+  - "§ 9 Traceability Matrix has no Missing row once every child is done — that
+    is the ship gate, not a green build (§ 4 row 13)."
+
+decisions:
+  - "2026-10-04 — spec-author — the layering is cut into six children, one per
+    component boundary, rather than one item per claim group. Rejected: a
+    single item for all 51 claims, which no review could judge against a diff."
+  - "2026-10-04 — spec-author — the three layer-boundary claims (B-045 – B-047)
+    are assigned to the child that makes each falsifiable rather than to a
+    seventh item of their own: B-045 to 0004, B-046 to 0005, B-047 to 0007. A
+    boundary cannot be asserted before both sides of it exist."
+
+out_of_scope:
+  - "Everything in § 5 of the spec — in particular the pipeline operators
+    themselves (row 1), the vessel feed (row 3), the replay and simulated
+    strategies (row 4), the swap control and stage choreography (row 5), and
+    all UI (row 7)."
+  - "Writing §§ 6-7 of the spec. That is the implementer's, and it is what the
+    children's ready-for-architecture status is waiting on."

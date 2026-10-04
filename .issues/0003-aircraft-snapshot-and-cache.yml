@@ -1,0 +1,70 @@
+id: "0003"
+type: task
+title: Add the aircraft snapshot record and its cache
+
+status: ready-for-architecture
+
+priority: high
+risk: 2
+rank: 99
+
+parent: "0001"
+children: []
+
+depends_on: []
+blocks:
+  - "0004"
+spikes: []
+
+spec: features/aircraft-source/.spec/README.md
+
+claims:
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-030
+  - B-031
+  - B-032
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  The snapshot — the server's record with names on it, value-equal over every
+  member so the differ emits nothing for an unchanged aircraft — and the plain
+  keyed store it lives in. The cache has no diff policy, no projection and no
+  clock: the writer owns the write, which is what lets a push client add and
+  remove directly instead of assembling a full set.
+
+  Adds `DynamicData` to `Directory.Packages.props` — the first item that builds
+  a cache does, per § 4 row 17.
+
+  The highest-ranked startable item: nothing blocks it, and 0004 waits on it.
+
+acceptance_criteria:
+  - "B-011 — value equality over every member; two identical reports compare
+    equal."
+  - "B-012 — `icao24` non-optional and the key."
+  - "B-013 — the wire's values in the wire's units, with no conversion,
+    derivation or interpretation."
+  - "B-014 — no staleness flag, display label or grouping key on the snapshot."
+  - "B-030 — the cache is a plain keyed store: no diff policy, no projection,
+    no clock."
+  - "B-031 — one cache per client, typed to that client's snapshot, with the
+    application's lifetime rather than the client's."
+  - "B-032 — the cache never holds, constructs, references or returns a
+    `TransportVehicle` or any other domain type."
+
+decisions:
+  - "2026-10-04 — spec-author — the snapshot and its cache are one item rather
+    than two. The cache's whole specification is three negative claims, and a
+    store with nothing to store cannot be reviewed against a diff."
+
+out_of_scope:
+  - "The differential write itself — B-023, which belongs to the client (0004).
+    This item builds the store; the writer owns the write."
+  - "Mapping anything into the snapshot (0004) or out of it (0005)."
+  - "The domain projection and `Option<T>` handling — B-033 – B-036, which is
+    0005."

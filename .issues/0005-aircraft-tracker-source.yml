@@ -1,0 +1,75 @@
+id: "0005"
+type: task
+title: Project cached snapshots into domain vehicles behind ITrackerSource
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 101
+
+parent: "0001"
+children: []
+
+depends_on:
+  - "0004"
+blocks:
+  - "0006"
+  - "0007"
+spikes: []
+
+spec: features/aircraft-source/.spec/README.md
+
+claims:
+  - B-033
+  - B-034
+  - B-035
+  - B-036
+  - B-037
+  - B-046
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  The item that answers the original complaint. `ITrackerSource` declares the
+  `TransportVehicle` changeset stream, and the aircraft strategy behind it owns
+  the Mapperly projection from snapshot to `Aircraft` — the first and only place
+  a domain object is built. Projection is what genuinely varies between an
+  aircraft feed and a vessel feed, which is what makes it the strategy and puts
+  the seam at the domain boundary rather than the wire one.
+
+  Declares the interface two later items plug into, so it unblocks the most and
+  ranks highest of the seven. It still runs after 0004, which produces the
+  snapshot changesets it projects.
+
+acceptance_criteria:
+  - "B-033 — `ITrackerSource` declares the `TransportVehicle` changeset stream;
+    every strategy is substitutable through it without a cast."
+  - "B-034 — the aircraft tracker source adheres to it and owns the Mapperly
+    projection to `Aircraft`. This is the first place a domain object exists."
+  - "B-035 — values stay in the units the wire reported: metres, metres per
+    second, degrees clockwise from north. No feet, no knots, no display units."
+  - "B-036 — every absent value projects to `Option<T>.None`; an absent altitude
+    is not sea level and an absent position is not 0,0; barometric and geometric
+    altitude both survive as separate optional members."
+  - "B-037 — `TransportVehicle.Key` is the snapshot's `icao24` in lowercase hex,
+    non-optional and set on construction; the per-type interface is not widened
+    with source-describing members."
+  - "B-046 — the snapshot is referenced by the client, its cache and this
+    projection, and by nothing downstream of it. The snapshot dies here, which
+    is why the claim is verifiable in this item and not before."
+
+decisions: []
+
+out_of_scope:
+  - "The vessel strategy and `Vessel` (§ 5 row 3). This item claims the shape a
+    second strategy plugs into; it builds one strategy, not two. Note the vessel
+    path gets no contract layer (B-049, § 4 row 4)."
+  - "Choosing the live strategy — B-038 – B-040, which is 0006. This item
+    registers a strategy; it does not select one."
+  - "Unit conversion and `Option<T>` formatting for display (§ 5 row 11). SI is
+    canonical in the model; conversion happens at the view."
+  - "Source-describing metadata — display name, sensible columns, an icon
+    (§ 5 row 13). B-037 forbids widening the interface for it."

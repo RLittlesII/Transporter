@@ -1,0 +1,80 @@
+id: "0007"
+type: task
+title: Wrap ITrackerSource in IFleetTracker and give it the clock
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 91
+
+parent: "0001"
+children: []
+
+depends_on:
+  - "0005"
+blocks: []
+spikes: []
+
+spec: features/aircraft-source/.spec/README.md
+
+claims:
+  - B-041
+  - B-042
+  - B-043
+  - B-044
+  - B-047
+  - B-051
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  `IFleetTracker` wraps `ITrackerSource` and is the only thing view models
+  depend on. It owns the collection pipeline and the injected clock: staleness
+  derives from a vehicle's last contact against that clock, and no component
+  below it reads one — which is what makes the contract, the client, the cache
+  and the strategies testable with no scheduler at all.
+
+  A stale aircraft is marked and kept, never removed (B-051). A row vanishing
+  mid-sentence reads as a bug; a row flagged stale reads as information.
+
+  **Ownership is claimed here; the operators are not built here** — § 5 row 1
+  draws that line, and it is the easiest line in this feature to cross by
+  accident.
+
+  Runs after 0005, which declares the interface it wraps.
+
+acceptance_criteria:
+  - "B-041 — `IFleetTracker` wraps `ITrackerSource` and is what view models
+    depend on; no view model depends on a strategy, a client, a cache or the
+    decorator."
+  - "B-042 — `IFleetTracker` owns the pipeline — filtering, sorting, grouping,
+    aggregates, property-change refresh, expiry, binding — constructed once and
+    never rebuilt because the live source changed. Ownership only: building the
+    operators is the next feature (§ 5 row 1)."
+  - "B-043 — the injected clock belongs to `IFleetTracker`; no staleness or
+    expiry decision anywhere reads `DateTime.UtcNow` inline."
+  - "B-044 — nothing adds to or removes from a bound collection imperatively;
+    every change arrives through the pipeline."
+  - "B-047 — no consumer downstream of `IFleetTracker` references an API
+    contract, a client, a cache, a snapshot, or a concrete `ITrackerSource`.
+    Falsifiable once the wrapper exists to be downstream of."
+  - "B-051 — a vehicle past the staleness threshold stays in the collection and
+    is observably stale, never removed for staleness; threshold configurable,
+    defaulting to five minutes."
+
+decisions: []
+
+out_of_scope:
+  - "The pipeline operators themselves (§ 5 row 1). B-042 claims ownership and
+    single construction; the filters, comparers, groups, aggregates and
+    bindings are the next feature."
+  - "`ExpireAfter` and any removal-for-staleness behaviour (§ 5 row 6). B-051
+    decides it the other way for aircraft; vessels may still want it, and that
+    belongs to the closing act."
+  - "The grid, detail pane, search box, dropdowns, grouped view, the stale
+    indicator's rendering, and the summary tiles (§ 5 row 7). No scenario here
+    names a UI mechanic."
+  - "The optional map view (§ 5 row 8)."
