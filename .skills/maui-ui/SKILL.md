@@ -51,9 +51,10 @@ In practice:
 - Views bind the abstract domain type plus a **source-supplied column and label
   description** ([`domain-model`](../domain-model/SKILL.md)). No concrete
   subclass in a grid cell, no cast.
-- **The detail pane is the only place a subclass appears.** It is the one
-  surface allowed to care which kind of item it is showing, and the one place a
-  downcast is legitimate.
+- **The detail pane is the only place a subclass appears**
+  ([ADR-0005](../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)
+  item 6). It is the one surface allowed to care which kind of item it is
+  showing, and the one place a downcast is legitimate.
 - A sort comparer or filter predicate is supplied by the source description too,
   so swapping sources swaps the available columns without touching markup.
 - The grid, filters, sorts, groups and bindings are built once and survive the

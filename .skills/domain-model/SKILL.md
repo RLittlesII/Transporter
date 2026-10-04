@@ -10,52 +10,31 @@ what stresses it: the same grid, filters, sorts and groups must refill from a
 different source, which only works if nothing downstream names a concrete item
 type.
 
-**The shape is recorded in
-[ADR-0005](../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)**;
-the seam it serves is
+The shape is recorded in
+[ADR-0005](../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md),
+and the seam it serves in
 [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md). This file
-is the working summary. What fields a given source reports is the
-specification's to say — `README.md` and the Feature's `.spec/README.md` carry
-the wire tables, and a skill that restated them would be a second place for them
-to drift from.
+carries the traps around them, not a second copy of either.
 
-## One abstract base
+## The shape
 
-The base is an **abstract class**, not an interface, carrying what every tracked
-item has:
+`TransportVehicle` is an abstract class, one level deep, with shared derivation
+non-abstract on the base and the per-source answers `abstract`.
+[ADR-0005](../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)
+§ Decision states the seven rules that follow from that — the members, the
+`protected` constructor, the one level, and the detail pane being the only place
+a concrete type appears. Read it rather than a summary of it; what fields a
+given source reports is the specification's, in `README.md` and the Feature's
+`.spec/README.md`.
 
-| Member | Why it exists |
-|---|---|
-| Key | The cache key. Stable for the life of the item, never null, never reused. |
-| Position | Optional — a source reports items it has no fix for. |
-| Last contact | The instant the source last heard from the item. **Staleness is derived from this**, never stored as a flag. |
-| Label | What the identity column shows: whichever identifying field is present, or the key when nothing better exists. |
-| Grouping key | What `Group` groups by. |
+The tradeoff is deliberate and worth knowing before you fight it: a thin base
+buys the swap and costs expressiveness. A column that genuinely needs
+source-specific data comes from a source-supplied column description, **never
+from a downcast** ([`maui-ui`](../maui-ui/SKILL.md) "The swap test").
 
-- **Shared derivation is non-abstract on the base** — written once, tested once.
-  Staleness against an injected clock is identical for any item that goes
-  silent.
-- **The per-source answers are `abstract`.** A new source cannot forget to
-  answer them, and the compiler says so.
-- **Key and last contact are set on construction** through a `protected`
-  constructor, so no subclass can produce a keyless item.
-- **One level of derivation**: one abstract base, one concrete type per source.
-- A derived type adds its own detail, and **the detail pane is the only place a
-  derived type appears**.
-
-The tradeoff is deliberate: a thin base buys the swap and costs expressiveness.
-A column that genuinely needs source-specific data comes from a source-supplied
-column description, never from a downcast
-([`maui-ui`](../maui-ui/SKILL.md) "The swap test").
-
-## Units
-
-- **Canonical units are canonical in the model** — the model stores what the
-  wire reported.
-- Display units and local times are a *view* concern. Convert at the view or in
-  an explicit named conversion, never silently inside a mapper
-  ([`mapping`](../mapping/SKILL.md)).
-- A converted value never replaces the canonical one on the model.
+Canonical units are canonical in the model (ADR-0005 item 7). Conversion happens
+at the view or in an explicitly named method, never silently inside a mapper
+([`mapping`](../mapping/SKILL.md)).
 
 ## Optional values
 
