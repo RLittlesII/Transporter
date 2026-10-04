@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/.agents/" />
+  <Folder Name="/.skills/">
+  </Folder>
   <Folder Name="/build/">
     <Project Path=".build/.build.csproj" />
   </Folder>
