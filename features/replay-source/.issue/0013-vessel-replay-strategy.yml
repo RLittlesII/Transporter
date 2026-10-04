@@ -54,16 +54,12 @@ summary: |
   mostly the unspecified subject, not the work.
 
 acceptance_criteria:
-  - "B-023 — vessel replay substitutes at the strategy, as an `ITrackerSource`
-    fed by a recording, and reaches the seam the same way every other source
-    does."
-  - "B-019 — same format and same selection path as an aircraft recording, one
-    line per received message; no batching into poll-shaped snapshots."
-  - "B-021 — introduces no vehicle, record or snapshot type of its own;
-    reproduces whatever the recorded provider's own Feature defines."
-  - "B-020 — a recorded vessel fallback exists before the closing act is
-    presented. Conditional on the act happening, which is why this item is
-    scored below its parent rather than dropped."
+  - "B-023 — vessel replay substitutes at the strategy, not at a contract."
+  - "B-019 — the aircraft recording's format and selection path, one line per
+    received message, with no batching into poll-shaped snapshots."
+  - "B-021 — no vehicle, record or snapshot type of its own."
+  - "B-020 — a recorded fallback exists before the closing act is presented."
+  - "§ 9 carries a row naming a test for each id above."
 
 decisions:
   - "2026-10-04 — spec-author — value 3 against the parent's 4, the only child
@@ -74,12 +70,9 @@ decisions:
     degraded (4)."
 
 out_of_scope:
-  - "The vessel feed itself — `Vessel`, the AISStream client, its cache and its
-    tracker source (§ 5 row 2; aircraft-source § 5 row 3). Defining them is the
-    vessel Feature's § 3, and writing them here would be authoring another
-    Feature's claims. This is also what blocks the item."
-  - "Making the two halves substitute at the same depth. They cannot, and
-    ADR-0002 accepts it rather than inventing a vessel contract to buy symmetry
-    on a diagram."
-  - "Performing the vessel recording (§ 5 row 3) — a rehearsal task, tracked in
-    README § \"Open items\"."
+  - "The vessel feed itself (§ 5 row 2; aircraft-source § 5 row 3). Defining it
+    is the vessel Feature's § 3, and this is also what blocks the item."
+  - "Making the two halves substitute at the same depth — they cannot, and
+    ADR-0002 accepts it."
+  - "Performing the vessel recording (§ 5 row 3) — a rehearsal task in README
+    § \"Open items\"."

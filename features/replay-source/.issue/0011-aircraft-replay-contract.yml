@@ -51,29 +51,22 @@ summary: |
   and the pacer (0010).
 
 acceptance_criteria:
-  - "B-022 — replay substitutes at the provider's own API contract, introducing
-    no snapshot client, cache, converter or projection of its own; the live
-    path's snapshot client is the one constructed over it."
-  - "B-009 — the observed instant downstream is the replayed payload's own
-    reported time: never the recorded arrival instant, never an ambient clock."
-  - "B-010 — staleness is driven by the recording's time base, so a vehicle goes
-    stale at the same point in the recording at which it did live; the clock is
-    injected."
-  - "B-013 — vehicles come through the same projection the live strategy uses;
-    there is no second converter, parser or mapper for recorded payloads."
-  - "aircraft-source B-007 holds as amended: this is the second implementation of
-    that contract and the last — one per transport, HTTP and recording, with no
-    third."
+  - "B-022 — the substitution point: the provider's own contract, with no
+    client, cache, converter or projection introduced here."
+  - "B-009, B-010 — the replayed payload's own reported time as the observed
+    instant, and staleness on the recording's time base. These two are the
+    item's hazard: they are the claims most easily confused with each other."
+  - "B-013 — the live projection, with no second converter for recorded
+    payloads."
+  - "aircraft-source B-007 holds as amended — this is the second and last
+    implementation of that contract, one per transport."
+  - "§ 9 carries a row naming a test for each id above."
 
 decisions: []
 
 out_of_scope:
-  - "Widening aircraft-source B-045. Settled: it is not widened, because this
-    item introduces no client (replay spec § 4 row 4)."
+  - "Widening aircraft-source B-045 — settled the other way (§ 4 row 4)."
   - "A replay client, cache or projection of its own — forbidden by B-022, and
-    the rejected option in ADR-0002's considered options."
-  - "Vessel replay, which cannot mirror this at all — a push provider has no
-    contract to stand in for, so it substitutes at the strategy (B-023, item
-    0013)."
-  - "Selecting replay and stopping the outgoing source — B-015 – B-018, item
-    0012."
+    the rejected option in ADR-0002."
+  - "Vessel replay (B-023) — 0013, and it cannot mirror this."
+  - "Selecting replay and stopping the outgoing source (B-015 – B-018) — 0012."

@@ -57,29 +57,18 @@ summary: |
   Needs the decorator (0006) and something to swap to (0011).
 
 acceptance_criteria:
-  - "B-015 — selected through the same mechanism as any live source; no
-    offline-mode flag, no replay-only selector, no second selection path."
-  - "B-016 — no consumer can observe from the seam that replay rather than a
-    live provider is selected."
-  - "B-017 — swapping to replay stops the outgoing live source, so a poller
-    stops spending credits and a socket stops reading."
-  - "B-018 — swapping to or from replay rebuilds nothing downstream."
-  - "B-024 — one configuration key per replay source names its recording;
-    nothing is compiled in as a default, a source with no recording named is
-    neither registered nor selectable, and configuration does not decide whether
-    replay is the live source."
-  - "B-025 — a named recording resolves against one configured recordings root,
-    `recordings/` beside the application by default and overridable, so a
-    rehearsal writes and a replay reads the same place with no absolute path
-    named anywhere."
-  - "B-026 — a recording that is absent, unreadable, or shorter than the
-    staleness threshold is reported at startup, never first discovered when
-    replay is selected."
-  - "Scrutor's `Decorate<>` wraps what is already registered, so replay must be
-    registered before the decorate call or it resolves raw and silently
-    (ADR-0003, hot-swap-source). B-024's unregistered-when-unnamed rule meets
-    the same machinery, so the two interact: both are registration-time and both
-    are invisible at runtime."
+  - "B-015, B-016 — selected like any live source, and unobservable from the
+    seam. No offline-mode flag and no second selection path."
+  - "B-017, B-018 — the outgoing source stops, and nothing downstream is
+    rebuilt."
+  - "B-024, B-025 — a recording named in configuration with no default, and
+    resolved against one configured root."
+  - "B-026 — absent, unreadable or too-short reported at startup, never first
+    discovered at the swap."
+  - "Both registration-time hazards hold together: Scrutor's `Decorate<>` wraps
+    only what is already registered, and B-024 leaves an unnamed source
+    unregistered. Each is invisible at runtime (ADR-0003, hot-swap-source)."
+  - "§ 9 carries a row naming a test for each id above."
 
 decisions:
   - "2026-10-04 — spec-author — risk raised 3 to 4 when B-024 – B-026 landed
@@ -89,17 +78,12 @@ decisions:
     a stage failure unless B-026's startup report catches it first."
 
 out_of_scope:
-  - "The swap control, the stage choreography, and what the audience sees during
-    the gap (§ 5 row 7). Decided in aircraft-source decisions/0002; this item
-    claims replay's obligations as a swap target and stops there."
-  - "An offline mode, environment flag or \"use replay\" setting (§ 5 row 8) —
-    forbidden by B-015 and recorded as an exclusion precisely because it is the
-    obvious thing to reach for."
-  - "Choosing a recording by discovery — newest file, or any scan of the
-    directory. Rejected in the Feature's `adr/0001`: ordering by the instant in
-    the filename costs no edit after a rehearsal, but a thirty-second test
-    capture taken afterwards silently becomes the stage recording, and B-005
-    then fails invisibly at the one moment it matters. B-026 is the mitigation —
-    report at startup, not at the swap."
-  - "Opening or resolving the recording file in the pacer. B-027 puts that here
-    and keeps it out of 0010."
+  - "The swap control and the stage choreography (§ 5 row 7) — decided in
+    aircraft-source decisions/0002."
+  - "An offline mode or \"use replay\" setting (§ 5 row 8) — forbidden by
+    B-015, and excluded explicitly because it is the obvious thing to reach
+    for."
+  - "Choosing a recording by discovery — rejected in the Feature's `adr/0001`;
+    B-026 is the mitigation."
+  - "Opening or resolving the recording file in the pacer — B-027 keeps that
+    out of 0010."

@@ -43,29 +43,22 @@ summary: |
   Taps the aircraft snapshot client, so it runs after 0004.
 
 acceptance_criteria:
-  - "B-001 — one line per payload, provider's payload verbatim, beside the
-    arrival instant, in ADR-0004's format."
-  - "B-002 — no reshaping, filtering, reordering or omission, including of an
-    empty or sparse payload."
-  - "B-003 — issues no request of its own; records what a live source already
-    fetched, so recording costs no additional credit and opens no additional
-    socket."
-  - "B-004 — observationally transparent: the changesets reaching the fleet are
-    identical whether recording is on or off."
-  - "B-005 — a stage recording spans at least the staleness threshold, so
-    appearance, update and staleness are all reproducible from it (aircraft
-    B-051's five minutes)."
-  - "B-006 — a rehearsal recording is never committed, and never used as a test
-    fixture unless scrubbed of real traffic first."
+  - "B-001, B-002 — the recorded line's format, and verbatim meaning verbatim."
+  - "B-003, B-004 — no request of its own, and observationally transparent.
+    Recording costs no credit and the fleet cannot tell it is on."
+  - "B-005 — a stage recording spans the staleness threshold, so appearance,
+    update and staleness are all reproducible from it."
+  - "B-006 — a rehearsal recording is never committed, and never a fixture
+    unscrubbed."
+  - "§ 9 carries a row naming a test for each id above."
 
 decisions: []
 
 out_of_scope:
-  - "Performing the recording (§ 5 row 3) — an operational rehearsal task in
-    README § \"Open items\". B-005 claims what a stage recording must contain;
-    capturing one is not code."
-  - "A scrubbing tool (§ 5 row 4). B-006 forbids unscrubbed reuse; it does not
-    commission an automated scrubber."
-  - "Compression (§ 5 row 6) and recording the domain side of the seam
-    (§ 5 row 9) — a recording is provider payloads, not changesets."
-  - "Reading a recording back. The pacer is 0010."
+  - "Performing the recording (§ 5 row 3) — a rehearsal task in README
+    § \"Open items\"."
+  - "A scrubbing tool (§ 5 row 4) — B-006 forbids unscrubbed reuse without
+    commissioning a scrubber."
+  - "Compression (§ 5 row 6), and recording the domain side of the seam
+    (§ 5 row 9)."
+  - "Reading a recording back — 0010."

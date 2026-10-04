@@ -53,17 +53,17 @@ summary: |
   the replay items.
 
 acceptance_criteria:
-  - "B-007 — recorded order at recorded inter-arrival spacing, derived from the
-    recorded instants; no fixed interval substituted."
-  - "B-008 — loops to the first payload at the end; the stream does not
-    complete or fault, and no changeset removes every vehicle at the boundary."
-  - "B-011 — no network request and no credential; runs to completion with the
-    provider unreachable and no secrets configured. This is what lets CI
-    exercise the pipeline end to end (user need 5)."
-  - "B-012 — a torn or unparseable final line is discarded and the stream
-    continues."
-  - "B-014 — a recording stays replayable after a converter fix with no
-    re-recording, which is what the payload staying raw is for."
+  - "B-007, B-008 — recorded spacing from the recorded instants, and the loop
+    boundary. No fixed interval substituted; nothing completes or faults."
+  - "B-011 — no network and no credential, which is what lets CI exercise the
+    pipeline end to end (user need 5)."
+  - "B-012 — a torn final line is discarded and the stream continues."
+  - "B-014 — replayable after a converter fix with no re-recording, which is
+    what the payload staying raw is for."
+  - "B-027 — the negative half of recording selection: this item resolves
+    nothing and opens nothing, and takes the stream it is given. Declared in
+    `claims:` and previously asserted only as an exclusion."
+  - "§ 9 carries a row naming a test for each id above."
 
 decisions:
   - "2026-10-04 — spec-author — the pacer yields raw payloads rather than parsed
@@ -72,14 +72,9 @@ decisions:
     substitution point and give aircraft and vessels two different pacers."
 
 out_of_scope:
-  - "Transport controls — seek, pause, scrub, step, speed (§ 5 row 5). Playback
-    is forward and looping, and ADR-0004 deliberately buys no index to seek
-    with."
-  - "Deciding which recording to load and from where — now answered, and not
-    here: naming, root resolution and the startup report are B-024 – B-026 on
-    item 0012. B-027 is this item's half of that answer, and it is a negative
-    claim: resolve nothing, open nothing, take the stream you are given."
-  - "Parsing a payload into an envelope or a domain object, and the observed
-    instant and staleness that follow from it (B-009, B-010, B-013) — 0011."
-  - "The real `Thread.Sleep`: § 4's no-wall-clock rule means the spacing comes
-    from an injected scheduler in production, not only in tests."
+  - "Transport controls (§ 5 row 5) — playback is forward and looping, and
+    ADR-0004 buys no index to seek with."
+  - "Naming, resolving and reporting on a recording — B-024 – B-026 on 0012.
+    B-027 is this item's negative half: resolve nothing, open nothing."
+  - "Parsing a payload, and the instant and staleness that follow (B-009,
+    B-010, B-013) — 0011."
