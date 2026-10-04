@@ -30,39 +30,35 @@ implementer works from the failing test and the claims it cites. The reviewer
 works from the diff and the claims it cites. That is what makes the chain worth
 having: no stage has to reconstruct the reasoning of the stage before.
 
-| Role | File | Owns |
-|---|---|---|
-| `spec-author` | [`spec-author.md`](spec-author.md) | § 1-5, the `.feature` file, `## Tasks`, `## Scoring` |
-| `test-writer` | [`test-writer.md`](test-writer.md) | § 8, § 9, and the xUnit tests |
-| `implementer` | [`implementer.md`](implementer.md) | § 6, § 7, and the production code |
-| `spec-reviewer` | [`spec-reviewer.md`](spec-reviewer.md) | § 12 |
+| Role | File |
+|---|---|
+| `spec-author` | [`spec-author.md`](spec-author.md) |
+| `test-writer` | [`test-writer.md`](test-writer.md) |
+| `implementer` | [`implementer.md`](implementer.md) |
+| `spec-reviewer` | [`spec-reviewer.md`](spec-reviewer.md) |
 
-Section numbers are the twelve sections of a Feature's `.spec/README.md`, whose
-blank is [`.spec/templates/feature.md`](../.spec/templates/feature.md). **The
-authoritative ownership table — including § 10, § 11 and Decisions — lives in
-[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md)**, in one
-place, so it has nowhere to drift from. A role writes only its own sections;
-filling in someone else's is a boundary violation, not a favour.
+Which sections each role owns — including § 10, § 11 and Decisions — is written
+in one place, [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md)
+§ "Section ownership", so it has nowhere to drift from. Each role file names its
+own sections. The sections themselves are a Feature's `.spec/README.md`, whose
+blank is [`.spec/templates/feature.md`](../.spec/templates/feature.md). A role
+writes only its own sections; filling in someone else's is a boundary violation,
+not a favour.
 
 ## How work is tracked
 
 **Locally.** A `<id>-<slug>.yml` item stands in for a GitHub issue and holds
-delivery state — status, priority, scoring, dependencies. The specification
-holds the content, and **comes first**: a feature item names its spec, a spec
-never names an item. A bug, spike or chore starts at an item instead. Code
-still pushes to GitHub as branches and pull requests; issues, labels and
-milestones are not part of this workflow.
+delivery state; the specification holds the content, and **comes first** — a
+feature item names its spec, a spec never names an item. A bug, spike or chore
+starts at an item instead.
 
-**An item sits beside the specification it was cut from**, in that Feature's
-`.issue/`, a sibling of its `.spec/`. One with no specification goes in the
-repository-root `.issue/`, where `.sequence` hands out ids repository-wide.
-
-`status: in-progress` on an item is the only signal it is taken. The schema,
-the status enum, and the authority split are in
-[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md), under the model
-[`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md) describes; the
-mechanics of claiming an item and publishing the work are in
-[`deliver-change`](../.skills/deliver-change/SKILL.md).
+What matters to a role is that `status: in-progress` is the only signal an item
+is taken. Where items live, the schema, the status enum and the authority split
+are in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md),
+under the model
+[`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md) describes;
+claiming an item and publishing the work are
+[`deliver-change`](../.skills/deliver-change/SKILL.md)'s.
 
 ## Two standing facts
 

@@ -30,15 +30,11 @@ When a bug fix reveals a specification gap, a lesson document in the Feature's `
 
 ## Delivery Workflow
 
-- **A Feature begins with its specification**, authored with no work item; items are cut from its § 3 claims afterwards. A bug, spike or chore begins with an item outright
-- **Delivery is tracked locally.** Every change is *delivered* through a `<id>-<slug>.yml` item, which stands in for a GitHub issue. An item lives in `features/<slug>/.issue/`, beside the specification it was cut from; one with no specification lives in the repository-root `.issue/`, where `.sequence` hands out ids repository-wide. There are no issues, labels or milestones in this workflow; the schema and status enum are in `.skills/transponder-conventions/SKILL.md`
-- `status: in-progress` is the only signal an item is taken — set it before the worktree, the branch, or the first edit, and never pick up an item that already carries it
-- A closed item stays, with `status: done` and a `closed:` date
-- Rebase onto fresh `origin/main` before committing (not just before pushing)
-- PR bodies name the item id and the `B-00n` claims delivered; there is no issue for `Closes` to close
-- Titles must be squash-ready
-- No `Co-Authored-By` trailers
-- Code still pushes to GitHub as branches and pull requests; this repository has no remote configured yet, so those conventions apply from the first push onward
+**A Feature begins with its specification**, authored with no work item; items are cut from its § 3 claims afterwards. A bug, spike or chore begins with an item outright.
+
+Everything else about delivery — the local tracker, the item schema and status enum, branch and pull-request conventions, what a closed item keeps — is written in [`transponder-conventions`](.skills/transponder-conventions/SKILL.md) § `deliver-change`, under the method [`deliver-change`](.skills/deliver-change/SKILL.md) describes.
+
+One rule belongs here, because it is what stops two people taking the same work: **`status: in-progress` is the only signal an item is taken.** Set it before the worktree, the branch, or the first edit, and never pick up an item that already carries it.
 
 ## Code Conventions
 
