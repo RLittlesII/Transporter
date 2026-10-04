@@ -107,6 +107,12 @@ Each component has one responsibility.
    provider's code belongs to the provider, not to one feature, and two
    features can want the same provider. `AGENTS.md` governs feature layout and
    was silent on integrations; it gains that line in this change.
+
+   **This layer is conditional.** One `Task<T>` per endpoint only describes a
+   request/response provider, so a push provider has no contract at all and
+   none is invented for it: a socket's subscribe frame is connection state, not
+   a call with a return value. The vessel strategy is therefore shorter than
+   this one, and that is fine — see the consequences.
 3. **The snapshot** — a named record: the server's values with names on them.
    Value equality over every member, keyed on `icao24`, converting and deriving
    nothing, and carrying no staleness flag or display label.
@@ -189,12 +195,19 @@ is **not** in this record. Those are claims, in § 3 of
   `Directory.Packages.props`: DynamicData for the caches and the pipeline, and
   whatever registers the decorator. Whether that second one warrants a package
   or a hand-written registration is an open question on the specification.
-- **Five questions are left open**, and none of them blocks the first file: the
+- **Strategies are not required to be the same shape, and that is the design
+  working rather than fraying.** The vessel strategy has no contract layer,
+  because a socket has no endpoint to declare, and no hand-written rows step,
+  because its JSON has names. Two components fewer. The temptation is to add a
+  fake contract so the two paths diagram identically; that buys symmetry on a
+  slide and a lie in the code. What makes the strategies substitutable is
+  `ITrackerSource`, at the domain boundary — the only place both feeds genuinely
+  look alike, and the reason the seam is there and not at the wire.
+- **Four questions are left open**, and none of them blocks the first file: the
   bounding box and interval, what the audience sees on a swap, whether a stale
-  item is marked or expired, whether the vessel path earns four types of its
-  own, and whether the decorator warrants a decoration package. The two that
-  *did* block it — the version suffix and the integration layout — are settled
-  above.
+  item is marked or expired, and whether the decorator warrants a decoration
+  package. The three that *did* block it — the version suffix, the integration
+  layout, and whether a push provider needs a contract — are settled above.
 - **`AGENTS.md` gains a rule rather than losing an argument.** It governs
   feature layout and said nothing about integrations, so there was no conflict
   to resolve — only a gap, now filled in the same change as the specification

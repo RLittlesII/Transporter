@@ -12,13 +12,19 @@ cache is unchanged. The README records the intent (`[X] Intend to show
 ships`), and it fits the "fleet" framing better than the alternatives
 considered.
 
-It is a **strategy**: its own contract, its own client, its own cache, and an
+It is a **strategy**: its own client, its own cache, and an
 `IVesselTrackerSource` that adheres to `ITrackerSource` like every other
 strategy ([`api-contract`](../api-contract/SKILL.md)). Nothing downstream learns
-it is here — that is the entire point. Whether four more types are justified for
-a stretch goal is an open question on the aircraft-source specification (§ 11);
-the thinner alternative skips the contract layer and breaks the symmetry the
-seam depends on.
+it is here — that is the entire point.
+
+**It has no contract layer, and none is invented for it.** A contract is one
+`Task<T>` per endpoint; subscribe-then-receive has no request to return a
+response, so there is nothing for a contract to declare. That makes this
+strategy one component shorter than the polled one, and the asymmetry costs
+nothing: what the strategies share is `ITrackerSource`, at the domain boundary,
+which is the whole reason the seam sits there rather than at the wire. A fake
+contract wrapping a socket would buy symmetry on a diagram and a lie in the
+code.
 
 ## Facts
 
@@ -28,18 +34,16 @@ seam depends on.
   never assembles a full set, and no shared differ runs over it. See
   [`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md) and
   [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md).
-- **A WebSocket does not fit the contract shape.** The versioned-contract
-  pattern is one `Task<T>` per endpoint, which a subscribe-then-receive socket
-  is not. Either the vessel contract covers only what is request/response
-  shaped, or this strategy has no contract layer and says so. Part of the § 11
-  question above, and the first thing to settle when this source is specified.
 - **Keyed by MMSI.** The cache key for a vessel, the way `icao24` is for an
   aircraft.
 - **Subscribe with a bounding box.** Filtering happens server-side on the
-  subscription message, not client-side after the fact.
-- **Named JSON fields** — easier to consume than OpenSky's positional arrays.
-  No custom converter needed; a plain DTO and a Mapperly mapper
-  ([`mapping`](../mapping/SKILL.md)) are enough.
+  subscription message, not client-side after the fact — so "which box am I
+  watching" is connection state rather than a call argument, and it is the
+  client's business the way the bounding box is for the polled strategy.
+- **Named JSON fields** — easier to consume than OpenSky's positional arrays, so
+  there is no hand-written rows-to-snapshot step here. A plain snapshot record
+  deserializes directly, and the Mapperly mapper in `IVesselTrackerSource` takes
+  it to `Vessel` ([`mapping`](../mapping/SKILL.md)). One mapping, not two.
 - **A free API key is required** (sign up with GitHub).
 - **Vessels go silent rather than being removed.** The feed does not announce
   a departure; a ship simply stops reporting. So `ExpireAfter` and the

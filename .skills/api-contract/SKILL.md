@@ -76,6 +76,16 @@ the seam where sources differ is what makes the plane-to-ship swap a new
 strategy rather than a new pipeline — see
 [`hot-swap-source`](../hot-swap-source/SKILL.md).
 
+**Not every strategy has every layer.** A contract is one `Task<T>` per
+endpoint, so it exists only where the provider is request/response shaped. The
+vessel feed is a socket — subscribe, then receive — and there is no request to
+return a response, so **it has no contract layer and none is invented for it**
+([`ais-stream`](../ais-stream/SKILL.md)). Its named JSON also means no
+hand-written rows step, so it is two components shorter than the polled
+strategy. That asymmetry costs nothing: what the strategies share is
+`ITrackerSource`, which is the only place they genuinely look alike. A fake
+contract wrapping a socket buys symmetry on a diagram and a lie in the code.
+
 - Strategies to date: live OpenSky (polled), AISStream vessels (push, the
   stretch goal), replay-from-recording, and a simulated source — see
   [`api-mock`](../api-mock/SKILL.md).

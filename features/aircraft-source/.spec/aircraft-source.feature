@@ -269,6 +269,15 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And every one of its contract methods is implemented explicitly
       And it exposes no public method for any endpoint
 
+  @B-049
+  Scenario: A push provider gets no contract layer, and none is invented for it
+    Given a provider reached by subscribing to a socket rather than by requesting
+     When its strategy is built
+     Then it has a client, a cache and a projection
+      And it has no contract layer, because there is no request to return a response
+      And no contract was invented to make it resemble the polled strategy
+      And the only surface it shares with the polled strategy is the tracker-source seam
+
   @B-048
   Scenario: The contract carries no version the provider never published
     Given OpenSky publishes no API version and there is no version in its path
