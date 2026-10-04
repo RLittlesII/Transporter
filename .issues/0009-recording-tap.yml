@@ -1,0 +1,71 @@
+id: "0009"
+type: task
+title: Record a live source's payloads verbatim without costing a request
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 71
+
+parent: "0008"
+children: []
+
+depends_on:
+  - "0004"
+blocks: []
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  The recorder is a tap, not a second source. It writes what a live source has
+  already fetched — one NDJSON line per payload, the provider's bytes verbatim
+  beside the instant they arrived (ADR-0004) — so recording a rehearsal costs no
+  extra credit and opens no extra socket, and the changesets reaching the fleet
+  are identical whether it is on or off.
+
+  Raw rather than parsed is the whole point: a recording stays replayable after a
+  converter fix (B-014, in 0010), which parsing at record time would foreclose.
+
+  Taps the aircraft snapshot client, so it runs after 0004.
+
+acceptance_criteria:
+  - "B-001 — one line per payload, provider's payload verbatim, beside the
+    arrival instant, in ADR-0004's format."
+  - "B-002 — no reshaping, filtering, reordering or omission, including of an
+    empty or sparse payload."
+  - "B-003 — issues no request of its own; records what a live source already
+    fetched, so recording costs no additional credit and opens no additional
+    socket."
+  - "B-004 — observationally transparent: the changesets reaching the fleet are
+    identical whether recording is on or off."
+  - "B-005 — a stage recording spans at least the staleness threshold, so
+    appearance, update and staleness are all reproducible from it (aircraft
+    B-051's five minutes)."
+  - "B-006 — a rehearsal recording is never committed, and never used as a test
+    fixture unless scrubbed of real traffic first."
+
+decisions: []
+
+out_of_scope:
+  - "Performing the recording (§ 5 row 3) — an operational rehearsal task in
+    README § \"Open items\". B-005 claims what a stage recording must contain;
+    capturing one is not code."
+  - "A scrubbing tool (§ 5 row 4). B-006 forbids unscrubbed reuse; it does not
+    commission an automated scrubber."
+  - "Compression (§ 5 row 6) and recording the domain side of the seam
+    (§ 5 row 9) — a recording is provider payloads, not changesets."
+  - "Reading a recording back. The pacer is 0010."

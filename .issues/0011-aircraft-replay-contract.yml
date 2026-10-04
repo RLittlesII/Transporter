@@ -1,0 +1,79 @@
+id: "0011"
+type: task
+title: Substitute aircraft replay at the API contract
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 76
+
+parent: "0008"
+children: []
+
+depends_on:
+  - "0005"
+  - "0010"
+blocks:
+  - "0012"
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+  - B-009
+  - B-010
+  - B-013
+  - B-022
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  A replay implementation of the OpenSky contract, handing back recorded
+  envelopes from the pacer. The live path's own snapshot client, cache and
+  projection are constructed over it unchanged — the same client class, not a
+  second one — and that whole chain registers as another `ITrackerSource`.
+
+  This is the item the per-transport amendment to aircraft-source B-007 and
+  B-008 exists for, and the reason it won: because a recording is the provider's
+  envelope verbatim, the recorded envelope carries the provider's own reported
+  time, so the observed instant (B-009) and staleness-on-replay (B-010) come free
+  with no second implementation to re-derive them. ADR-0002 § "Decision" item 2
+  carries the reasoning.
+
+  aircraft-source B-045 is not widened: this item introduces no client, so the
+  envelope and the positional row stay restricted to the two components that
+  claim names.
+
+  Needs the live projection (0005, and transitively the client and the contract)
+  and the pacer (0010).
+
+acceptance_criteria:
+  - "B-022 — replay substitutes at the provider's own API contract, introducing
+    no snapshot client, cache, converter or projection of its own; the live
+    path's snapshot client is the one constructed over it."
+  - "B-009 — the observed instant downstream is the replayed payload's own
+    reported time: never the recorded arrival instant, never an ambient clock."
+  - "B-010 — staleness is driven by the recording's time base, so a vehicle goes
+    stale at the same point in the recording at which it did live; the clock is
+    injected."
+  - "B-013 — vehicles come through the same projection the live strategy uses;
+    there is no second converter, parser or mapper for recorded payloads."
+  - "aircraft-source B-007 holds as amended: this is the second implementation of
+    that contract and the last — one per transport, HTTP and recording, with no
+    third."
+
+decisions: []
+
+out_of_scope:
+  - "Widening aircraft-source B-045. Settled: it is not widened, because this
+    item introduces no client (replay spec § 4 row 4)."
+  - "A replay client, cache or projection of its own — forbidden by B-022, and
+    the rejected option in ADR-0002's considered options."
+  - "Vessel replay, which cannot mirror this at all — a push provider has no
+    contract to stand in for, so it substitutes at the strategy (B-023, item
+    0013)."
+  - "Selecting replay and stopping the outgoing source — B-015 – B-018, item
+    0012."

@@ -6,7 +6,7 @@ status: ready-for-architecture
 
 priority: high
 risk: 4
-rank: 93
+rank: 98
 
 parent: "0001"
 children: []
@@ -16,6 +16,7 @@ depends_on:
   - "0003"
 blocks:
   - "0005"
+  - "0009"
 spikes: []
 
 spec: features/aircraft-source/.spec/README.md
@@ -57,6 +58,8 @@ summary: |
 
   Needs the contract (0002) to call and the cache (0003) to write to, so it
   runs after both — they touch the same seam and must not run side by side.
+  The recording tap (0009) taps this client, which is why this item unblocks
+  two.
 
 acceptance_criteria:
   - "B-015 — contract and cache by constructor; constructs neither."

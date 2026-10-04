@@ -1,0 +1,70 @@
+id: "0012"
+type: task
+title: Select replay through the one switch every source uses
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 71
+
+parent: "0008"
+children: []
+
+depends_on:
+  - "0006"
+  - "0011"
+blocks: []
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  Replay registers as an `ITrackerSource` and is selected by the same decorator
+  that selects any live source. There is no offline-mode flag, no replay-only
+  selector and no second selection path — which is the point of the whole
+  Feature for the audience, and the thing most likely to be added under pressure
+  on stage.
+
+  Swapping to replay stops the outgoing source, so a swapped-out poller stops
+  spending credits, and nothing downstream is rebuilt: not the tracker, its
+  collection, its filters, its sorts, its groups or its bindings.
+
+  Needs the decorator (0006) and something to swap to (0011).
+
+acceptance_criteria:
+  - "B-015 — selected through the same mechanism as any live source; no
+    offline-mode flag, no replay-only selector, no second selection path."
+  - "B-016 — no consumer can observe from the seam that replay rather than a
+    live provider is selected."
+  - "B-017 — swapping to replay stops the outgoing live source, so a poller
+    stops spending credits and a socket stops reading."
+  - "B-018 — swapping to or from replay rebuilds nothing downstream."
+  - "Scrutor's `Decorate<>` wraps what is already registered, so replay must be
+    registered before the decorate call or it resolves raw and silently
+    (ADR-0003, hot-swap-source)."
+
+decisions: []
+
+out_of_scope:
+  - "The swap control, the stage choreography, and what the audience sees during
+    the gap (§ 5 row 7). Decided in aircraft-source decisions/0002; this item
+    claims replay's obligations as a swap target and stops there."
+  - "An offline mode, environment flag or \"use replay\" setting (§ 5 row 8) —
+    forbidden by B-015 and recorded as an exclusion precisely because it is the
+    obvious thing to reach for."
+  - "**Which recording a run loads and where it lives — § 11 row 3, still
+    open.** The question is the implementer's and is configuration rather than
+    format; ADR-0004 deliberately says nothing about it. This item must not
+    invent an answer, and should not start before the question is settled, since
+    selection is where that configuration would surface."

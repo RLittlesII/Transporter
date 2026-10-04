@@ -6,7 +6,7 @@ status: ready-for-architecture
 
 priority: high
 risk: 3
-rank: 101
+rank: 106
 
 parent: "0001"
 children: []
@@ -16,6 +16,7 @@ depends_on:
 blocks:
   - "0006"
   - "0007"
+  - "0011"
 spikes: []
 
 spec: features/aircraft-source/.spec/README.md
@@ -40,9 +41,10 @@ summary: |
   aircraft feed and a vessel feed, which is what makes it the strategy and puts
   the seam at the domain boundary rather than the wire one.
 
-  Declares the interface two later items plug into, so it unblocks the most and
-  ranks highest of the seven. It still runs after 0004, which produces the
-  snapshot changesets it projects.
+  Declares the interface three later items plug into — two in this Feature and
+  aircraft replay in the replay Feature — so it unblocks the most and ranks
+  highest of either set. It still runs after 0004, which produces the snapshot
+  changesets it projects.
 
 acceptance_criteria:
   - "B-033 — `ITrackerSource` declares the `TransportVehicle` changeset stream;

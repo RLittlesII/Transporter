@@ -6,14 +6,15 @@ status: ready-for-architecture
 
 priority: high
 risk: 4
-rank: 88
+rank: 93
 
 parent: "0001"
 children: []
 
 depends_on:
   - "0005"
-blocks: []
+blocks:
+  - "0012"
 spikes: []
 
 spec: features/aircraft-source/.spec/README.md
@@ -41,7 +42,8 @@ summary: |
   risk.
 
   Runs after 0005, which declares the interface it decorates and provides the
-  one strategy it can wrap.
+  one strategy it can wrap. Replay selection (0012) waits on this item, since
+  replay is selected by this decorator and by nothing else.
 
 acceptance_criteria:
   - "B-038 — a decorator registered as `ITrackerSource` selects the live

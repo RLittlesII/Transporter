@@ -1,0 +1,80 @@
+id: "0010"
+type: task
+title: Feed a recording back at its recorded cadence, looping, with no network
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 81
+
+parent: "0008"
+children: []
+
+depends_on: []
+blocks:
+  - "0011"
+  - "0013"
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+  - B-007
+  - B-008
+  - B-011
+  - B-012
+  - B-014
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  Reads an NDJSON recording and yields each payload in recorded order at the
+  recorded inter-arrival spacing, looping at the end without completing,
+  faulting, or emitting a changeset that empties the fleet at the loop boundary.
+  A torn final line is discarded and the stream carries on, because a recording
+  truncated mid-write is the normal result of stopping a rehearsal.
+
+  It hands back the payload still raw, which is what keeps a recording replayable
+  after a converter fix (B-014). Parsing belongs to whatever substitutes over it
+  — 0011 for aircraft, 0013 for vessels.
+
+  Nothing blocks it: it needs no provider, no credential and no network, and it
+  is testable against a synthetic fixture with an injected scheduler. It is also
+  what both substitution points are built on, which is why it ranks highest of
+  the replay items.
+
+acceptance_criteria:
+  - "B-007 — recorded order at recorded inter-arrival spacing, derived from the
+    recorded instants; no fixed interval substituted."
+  - "B-008 — loops to the first payload at the end; the stream does not
+    complete or fault, and no changeset removes every vehicle at the boundary."
+  - "B-011 — no network request and no credential; runs to completion with the
+    provider unreachable and no secrets configured. This is what lets CI
+    exercise the pipeline end to end (user need 5)."
+  - "B-012 — a torn or unparseable final line is discarded and the stream
+    continues."
+  - "B-014 — a recording stays replayable after a converter fix with no
+    re-recording, which is what the payload staying raw is for."
+
+decisions:
+  - "2026-10-04 — spec-author — the pacer yields raw payloads rather than parsed
+    envelopes, so B-014 holds and so a push recording (0013) can use the same
+    component. Rejected: parsing here, which would put a converter below the
+    substitution point and give aircraft and vessels two different pacers."
+
+out_of_scope:
+  - "Transport controls — seek, pause, scrub, step, speed (§ 5 row 5). Playback
+    is forward and looping, and ADR-0004 deliberately buys no index to seek
+    with."
+  - "Deciding which recording to load and from where — § 11 row 3, open and the
+    implementer's. This item takes a recording it is given. Row 3 does bear on
+    it indirectly: whether it receives an opened stream or a path to resolve is
+    that question's to settle, and § 7 answers it before this item leaves
+    ready-for-architecture."
+  - "Parsing a payload into an envelope or a domain object, and the observed
+    instant and staleness that follow from it (B-009, B-010, B-013) — 0011."
+  - "The real `Thread.Sleep`: § 4's no-wall-clock rule means the spacing comes
+    from an injected scheduler in production, not only in tests."

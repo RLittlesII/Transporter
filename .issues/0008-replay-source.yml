@@ -1,0 +1,97 @@
+id: "0008"
+type: feature
+title: Replay recorded provider payloads through the live seam
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 4
+rank: 68
+
+parent: null
+children:
+  - "0009"
+  - "0010"
+  - "0011"
+  - "0012"
+  - "0013"
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+  - B-021
+  - B-022
+  - B-023
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  As the presenter I want to finish the talk when the venue network dies
+  mid-sentence, and as a developer in the audience I want to watch a recording
+  drive the same grid the live feed drove, so that "the pipeline does not care
+  where the data comes from" is demonstrated rather than asserted.
+
+  Parent of the replay path: a recorder that taps a live source and writes the
+  provider's payloads verbatim, a pacer that feeds them back at their recorded
+  spacing, and two substitution points — the contract for aircraft, the strategy
+  for vessels. Five children; it holds no work of its own.
+
+  Claim ids here resolve against features/replay-source/.spec/README.md, not
+  against aircraft-source. Both specs number from B-001 and the ids are
+  different claims, per spec-and-traceability § "Claim IDs are `B-00n`".
+
+acceptance_criteria:
+  - "All 23 claims in § 3 of the replay spec, carried once each: 0009 takes
+    B-001 – B-006; 0010 takes B-007, B-008, B-011, B-012 and B-014; 0011 takes
+    B-009, B-010, B-013 and B-022; 0012 takes B-015 – B-018; 0013 takes
+    B-019 – B-021 and B-023."
+  - "§ 9 has no Missing row once every child is done."
+
+decisions:
+  - "2026-10-04 — spec-author — cut into five children on component boundaries
+    rather than on the spec's five claim groups. The groups split recording from
+    playback from selection, but B-009, B-010 and B-013 belong with the
+    substitution point that makes them true rather than with playback, and the
+    two substitution points are different components."
+  - "2026-10-04 — spec-author — the value of 4 rather than 5: the headline demo
+    runs without replay on a good network, which makes this resilience rather
+    than the goal itself. README § \"Demo resilience\" and user needs 1, 2 and 5
+    are what justify 4 — a stated goal materially degraded without it."
+
+out_of_scope:
+  - "Everything in § 5 of the replay spec — the simulated source (row 1), the
+    vessel feed itself (row 2), performing the recording (row 3), a scrubbing
+    tool (row 4), transport controls (row 5), compression (row 6), the swap
+    control and stage choreography (row 7), and all UI (row 11)."
+  - "Which recording a run loads and where the directory sits — § 11 row 3, open
+    and owned by the implementer. 0012 records it rather than inventing an
+    answer."
+  - "Writing §§ 6-7 of the replay spec, which is what every child's
+    ready-for-architecture status waits on."

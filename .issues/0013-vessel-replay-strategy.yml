@@ -1,0 +1,85 @@
+id: "0013"
+type: task
+title: Substitute vessel replay at the strategy
+
+status: blocked
+
+priority: med
+value: 3
+risk: 4
+rank: 48
+
+parent: "0008"
+children: []
+
+depends_on:
+  - "0010"
+blocks: []
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+  - B-019
+  - B-020
+  - B-021
+  - B-023
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  Vessel replay cannot mirror the aircraft half: a push provider has no contract
+  to stand in for, so it substitutes at the strategy — an `ITrackerSource` fed by
+  a recording — and reaches the seam the same way every other source does. The
+  asymmetry is accepted and recorded in ADR-0002 § "Consequences"; what makes
+  something a swap target is the seam it lands on, not the depth it substitutes
+  at.
+
+  One line per received message, in the same format and through the same
+  selection path as an aircraft recording. Messages are never batched into
+  poll-shaped snapshots to make a push feed resemble a polled one.
+
+  **`status: blocked`, and the blocker has no item to name.** Its prerequisite is
+  an unwritten specification, not an unfiled task: replay spec § 5 row 2 defers
+  the vessel feed, and aircraft-source § 5 row 3 leaves `Vessel`, the AISStream
+  client, its cache and its tracker source unspecified. B-021 says replay
+  introduces no type of its own and reproduces whatever the recorded provider's
+  Feature defines — so there is nothing yet for it to reproduce. The claims can
+  be designed; they cannot be built. `depends_on` names only 0010, because an
+  unwritten Feature has no id.
+
+  Unblocks when the vessel Feature has a specification. Re-score then: risk 4 is
+  mostly the unspecified subject, not the work.
+
+acceptance_criteria:
+  - "B-023 — vessel replay substitutes at the strategy, as an `ITrackerSource`
+    fed by a recording, and reaches the seam the same way every other source
+    does."
+  - "B-019 — same format and same selection path as an aircraft recording, one
+    line per received message; no batching into poll-shaped snapshots."
+  - "B-021 — introduces no vehicle, record or snapshot type of its own;
+    reproduces whatever the recorded provider's own Feature defines."
+  - "B-020 — a recorded vessel fallback exists before the closing act is
+    presented. Conditional on the act happening, which is why this item is
+    scored below its parent rather than dropped."
+
+decisions:
+  - "2026-10-04 — spec-author — value 3 against the parent's 4, the only child
+    scored below it. README presents the closing act as optional, while
+    run-the-demo § \"Never add\" forbids presenting it without a fallback and
+    B-020 claims that. The claim is conditional on the act happening, so the
+    honest reading is a named user need met (3) rather than a stated goal
+    degraded (4)."
+
+out_of_scope:
+  - "The vessel feed itself — `Vessel`, the AISStream client, its cache and its
+    tracker source (§ 5 row 2; aircraft-source § 5 row 3). Defining them is the
+    vessel Feature's § 3, and writing them here would be authoring another
+    Feature's claims. This is also what blocks the item."
+  - "Making the two halves substitute at the same depth. They cannot, and
+    ADR-0002 accepts it rather than inventing a vessel contract to buy symmetry
+    on a diagram."
+  - "Performing the vessel recording (§ 5 row 3) — a rehearsal task, tracked in
+    README § \"Open items\"."

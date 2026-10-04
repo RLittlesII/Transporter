@@ -346,8 +346,16 @@ read time. `risk` is never inherited and is set per item above.
 above — so they are recomputed, never hand-edited. Every item lands in `high`,
 which means the bucket orders nothing here: `rank` does. `0003` at 99 is the
 highest-ranked item with no prerequisite, so it is the queue head; `0005` ranks
-highest overall at 101 because two items wait on it, and still runs after
+highest overall at 106 because three items wait on it, and still runs after
 `0004`.
+
+Three of those ranks moved when the replay Feature's items were cut, because
+`unblocks` counts dependents from **any** Feature: replay's recording tap waits
+on `0004` (93 → 98), its aircraft substitution on `0005` (101 → 106), and its
+selection on `0006` (88 → 93). No `value` or `risk` changed, so the table above
+has no row for it — `rank` is derived, and the moves are the formula working on
+a dependency that did not exist when the items were cut. `0003` is still the
+queue head.
 
 **Every `risk` above is provisional.** §§ 6-7 are unwritten, and the design
 assessment they carry is what each number is supposed to come from — which is
