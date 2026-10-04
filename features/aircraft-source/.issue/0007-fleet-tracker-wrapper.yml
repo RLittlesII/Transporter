@@ -2,11 +2,11 @@ id: "0007"
 type: task
 title: Wrap ITrackerSource in IFleetTracker and give it the clock
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
-risk: 4
-rank: 88
+risk: 3
+rank: 91
 
 parent: "0001"
 children: []
@@ -57,7 +57,13 @@ acceptance_criteria:
   - "B-051 — stale is marked and kept, never removed."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-04 — the person — the observed instant reaches this item's clock
+    through one object written by the integration and read here, recorded in
+    ADR-0007. Rejected: a second member on `ITrackerSource`, which widens the
+    seam B-037 protects, and the instant on each projected vehicle, which goes
+    stale on the vehicles that stopped reporting. Releases this item from
+    `ready-for-architecture`; `risk` 4 → 3 in § Scoring."
 
 out_of_scope:
   - "Building the pipeline operators (§ 5 row 1) — B-042 claims ownership only."

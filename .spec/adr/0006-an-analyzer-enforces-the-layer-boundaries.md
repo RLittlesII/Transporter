@@ -90,9 +90,9 @@ build error, not a test failure.
    description. A diagnostic that cannot say which claim it serves is a lint
    rule, not an enforcement of this specification.
 5. **It proves itself by test, like anything else.** The analyzer's own tests
-   are what § 9 names for the claims it carries, and
-   [`source-generators`](../../.skills/source-generators/SKILL.md) holds how
-   those are written.
+   are what § 9 names for the claims it carries, written the way every other
+   test here is
+   ([`test-from-scenarios`](../../.skills/test-from-scenarios/SKILL.md)).
 6. **Only the claims that are about structure.** A claim about a computed value
    — a padded callsign, an absent category, a deferred poll — is an xUnit test
    and nothing changes for it. The analyzer is not a second place to assert

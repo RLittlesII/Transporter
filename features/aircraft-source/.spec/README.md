@@ -285,7 +285,7 @@ Three things follow from the table:
 - **The envelope's reported time is not a snapshot member.** It would differ on
   every poll, so the differ would emit a change for every aircraft every
   interval and the headline mechanism would produce nothing but churn. Where it
-  goes instead is the open decision below.
+  goes instead is ADR-0007's, below.
 - **Element count is read first.** B-022 lists three ways a row can be
   unreadable and two of them are answerable before any member is parsed, so the
   count is the first thing the reader looks at and the row is excluded there
@@ -342,7 +342,7 @@ graph LR
 
 One poll. This earns its place because it is where the split between what the
 transport sees and what the client decides becomes visible — the distinction
-§ 11's open question turns on.
+§ 11 question 2 turns on.
 
 ```mermaid
 sequenceDiagram
@@ -534,7 +534,8 @@ Layout follows `transponder-conventions` § "Project structure":
 
 ```
 src/Transponder/Model/                           TransportVehicle, Aircraft, GeoPosition, PositionSource
-src/Transponder/Tracking/                        ITrackerSource, IFleetTracker, FleetTracker, SwappingTrackerSource
+src/Transponder/Tracking/                        ITrackerSource, IFleetTracker, FleetTracker, SwappingTrackerSource,
+                                                 IObservedClock, IObservedClockWriter, ObservedClock
 src/Transponder/Tracking/Sources/                IAircraftTrackerSource, AircraftTrackerSource, AircraftSnapshotMapper
 src/Transponder/Integrations/OpenSky/Contracts/  IOpenSkyApi, OpenSkyStatesResponse, OpenSkyStateRow, OpenSkyThrottled
 src/Transponder/Integrations/OpenSky/Http/       OpenSkyHttpApi, OpenSkyStateRowConverter, IOpenSkyTokenSource, OpenSkyTokenSource
@@ -547,25 +548,16 @@ by `string`, registered with the application's lifetime, **is** B-030's plain
 store, and the absence of a wrapper is what makes "no diff policy of its own"
 true by construction rather than by assertion.
 
-**Decision required**
+**The observed instant, decided**
 
-B-003 makes the envelope's reported time the observed instant for everything
-downstream and bans any consumer from reading an ambient clock to supply one.
-B-043 puts the clock in `IFleetTracker`. Nothing says how the first reaches the
-second, and the obvious answer is ruled out one table above: carried on the
-snapshot, it would differ on every poll and the differ would emit churn.
-
-> | Option | Summary | Tradeoff |
-> | ------ | ------- | -------- |
-> | A. | The clock `IFleetTracker` is injected with reads the last observed instant the live chain reported; the integration advances it as each envelope arrives. | Nothing widens: `ITrackerSource` keeps one member (B-033, B-037), no snapshot carries a per-poll value, and replay needs no second mechanism — which is § 4 row 20's whole purpose. Cost: the clock becomes stateful and source-coupled, and two live sources feeding one clock is undefined. |
-> | B. | `ITrackerSource` gains a second member carrying the observed instant beside the changeset. | Explicit and per-source, so two sources cannot fight over one clock. Cost: it widens the one seam the whole design rests on, and B-037 sits immediately beside it. |
-> | C. | Each projected `TransportVehicle` carries the instant it was observed at. | No seam change and no clock. Cost: B-011 means a vehicle whose snapshot did not change is never re-emitted, so the value would go stale on precisely the aircraft staleness is about. Listed because it is the first thing anyone proposes, and rejected on inspection. |
->
-> **Recommendation:** A, scoped to one live source, with the two-source case
-> left to the closing act.
-> **Awaiting:** the person. It binds
-> [`features/replay-source`](../../replay-source/.spec/README.md) and the
-> pipeline Feature, not only this one.
+[ADR-0007](../../../.spec/adr/0007-the-live-source-advances-the-observed-clock.md)
+answers how the envelope's reported time reaches the clock B-043 puts in
+`IFleetTracker`, and carries the options it was chosen over. What this Feature
+owes it is one call: **`AircraftSnapshotClient` reports each envelope's instant
+to `IObservedClockWriter` as the set is applied**, in the same method that
+writes the cache, so the value never touches the snapshot, the cache or the
+seam. The clock itself is registered alongside the chain and injected into
+`FleetTracker` as `IObservedClock`.
 
 ## 8. Testing Strategy
 
@@ -725,18 +717,24 @@ the repository while naming a record that never received it.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-Three. The first two were opened by § 7 and the third by § 8; writing a section
-is what surfaces them, which is why a stub opens none.
+Two open, of three asked. The first two were opened by § 7 and the third by
+§ 8; writing a section is what surfaces them, which is why a stub opens none.
+Question 1 has been answered and moved to the closing paragraph. Its number is
+not reused and the two below keep theirs, so a reference written while it was
+open still points at the question it meant.
 
 | #   | Question | Owner | Target date |
 | --- | -------- | ----- | ----------- |
-| 1   | How does the envelope's reported time reach the clock `IFleetTracker` owns? B-003 makes it the observed instant for everything downstream and bans a consumer from reading an ambient clock; B-043 puts the clock in the tracker; nothing connects them, and § 7 rules out the obvious answer of carrying it on the snapshot. § 7 "Decision required" states three options and recommends the first. Blocks `0007`, and binds [`features/replay-source`](../../replay-source/.spec/README.md). | `implementer` → the person | Before `0007` starts |
 | 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. Blocks `0004`. | `spec-author` | Before `0004` starts |
 | 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eleven claims — B-004, B-006, B-007, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those eleven rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
 
-Everything else this specification opened has been answered and recorded: the
-bounding box and interval in [decisions/0001](decisions/0001-houston-bounding-box.md)
-and B-050, what the audience sees on a swap in
+Everything else this specification opened has been answered and recorded. How
+the envelope's reported time reaches the clock `IFleetTracker` owns is
+[ADR-0007](../../../.spec/adr/0007-the-live-source-advances-the-observed-clock.md),
+which releases `0007` and binds
+[`features/replay-source`](../../replay-source/.spec/README.md) the same way.
+Then: the bounding box and interval in
+[decisions/0001](decisions/0001-houston-bounding-box.md) and B-050, what the audience sees on a swap in
 [decisions/0002](decisions/0002-busy-indicator-on-swap.md), the staleness policy
 in B-051, the version suffix in B-048, the contract layer's applicability in
 B-049, the integration layout in § 4 row 5, and the decoration package in
@@ -815,6 +813,7 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 | 2026-10-04 | `0005` | risk | 3 → 2. B-036 moves from test-enforced to compile-enforced: one `Option<GeoPosition>` makes a half-position unrepresentable, the two altitudes are separate members, and `RequiredMappingStrategy.Both` makes a forgotten field a build error. What is left is `ToKey`'s lowercasing, which no type system catches. |
 | 2026-10-04 | `0006` | risk | 4, unchanged. § 7 adds nothing it was waiting for — ADR-0003 already carried both hazards. The row exists because the blanket provisional sentence it previously sat under is gone, and an unrestated number would read as an oversight. |
 | 2026-10-04 | `0007` | risk | 3 → 4. § 7 raises it: open question 1 lands on this item, and B-043's clock cannot be specified until the observed instant has a route to it. The two hazards recorded above stand. |
+| 2026-10-04 | `0007` | risk | 4 → 3, reversing the row above. ADR-0007 gives the observed instant its route, so B-043's clock is a type this item is injected with rather than a design it has to invent. The clock is also the mechanism that makes the two original hazards testable: a swap-then-swap assertion and a staleness assertion both advance one object. What keeps it at 3 rather than 2 is that `IObservedClock` reading `MinValue` before any source reports is a quiet default, and a test that forgets to observe an instant passes for the wrong reason. |
 
 Why `0001` carries a `value` and no child does: a child omits it to inherit the
 parent's, and `risk` is never inherited. The derivation of `priority` and `rank`
@@ -831,9 +830,14 @@ found hazards that were not visible from the claims alone.
 **§§ 8-9 have since landed too**, which is what moved the items. § 9 said
 implementation waits on its rows existing, not on them reading `Verified` — a
 `Missing` row blocks ship, which is a different gate. So `0002`, `0003`, `0005`
-and `0006` are `ready-for-implementation`; `0004` and `0007` stay at
+and `0006` are `ready-for-implementation`; `0004` and `0007` stayed at
 `ready-for-architecture` behind § 11 questions 2 and 1; `0001` moves when its
 children do.
+
+**ADR-0007 has since answered question 1**, so `0007` is
+`ready-for-implementation` too and `0004` is the only child still held by a
+question. That answer is the one re-score below: nothing else about the design
+moved with it.
 
 Nothing is re-scored for §§ 8-9. The risks above were set against § 7's design
 and §§ 8-9 changed none of it, and re-scoring against a mechanism that does not
