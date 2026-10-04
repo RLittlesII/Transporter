@@ -141,7 +141,7 @@ Replace the polled source with a push source and show that everything downstream
 - [ ] Add OpenSky citation slide
 - [ ] Decide the vessel WebSocket client: `ClientWebSocket` or `AISStream.NET` (§ "Closing act" names both)
 - [ ] Decide, per command, whether a view model reaches its actor with `Tell` or `Ask` (`mvvm` § "Two kinds of input, two routes")
-- [ ] Decide whether the build gets a `Test` target (`nuke-build` § "Targets")
+- [X] Decide whether the build gets a `Test` target — yes; `Default` depends on it, so a green build is a green test run ([item 0017](.issue/0017-test-target.yml))
 
 ## Technology Decisions
 

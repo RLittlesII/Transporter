@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Nuke.Common;
 using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.IO;
@@ -31,6 +32,15 @@ class Build : NukeBuild
     private AbsolutePath TestDirectory => RootDirectory / "test";
     private AbsolutePath ArtifactsDirectory => RootDirectory / ".artifacts";
 
+    /// What this host can build. The MAUI heads in src/Gui target net10.0-ios and
+    /// net10.0-maccatalyst, and no Linux SDK can build either, so a Linux run restores,
+    /// formats and compiles the library and its tests instead of the whole solution.
+    /// Every other host builds everything.
+    private IEnumerable<AbsolutePath> BuildScope =>
+        EnvironmentInfo.IsLinux
+            ? [SourceDirectory / "Transponder" / "Transponder.csproj", TestDirectory / "UnitTests" / "UnitTests.csproj"]
+            : [Solution.Path];
+
     private Target Clean => definition => definition
         .Before(Restore)
         .OnlyWhenStatic(() => IsLocalBuild)
@@ -47,7 +57,7 @@ class Build : NukeBuild
     private Target Format => target => target
         .DependsOn(Restore)
         .ProceedAfterFailure()
-        .Executes(() => DotNetFormat());
+        .Executes(() => BuildScope.ForEach(project => DotNetFormat(settings => settings.SetProject(project))));
 
     Target Restore => definition => definition
         .DependsOn(Clean)
@@ -57,27 +67,34 @@ class Build : NukeBuild
     Target NugetRestore => definition => definition
         .DependsOn(Clean)
         .DependsOn(WorkflowRestore)
-        .Executes(() =>
-        {
-            DotNetRestore();
-        });
+        .Executes(() => BuildScope.ForEach(project => DotNetRestore(settings => settings.SetProjectFile(project))));
 
+    /// Installs the workloads the MAUI heads need. It runs on a server and not on a developer's
+    /// machine: a runner builds with the SDK Nuke downloads into .nuke/temp, which the job owns,
+    /// so no elevation is involved, while a local run would target the developer's own installed
+    /// SDK, where the same command wants sudo and where the workloads are already present.
+    /// Skipped on Linux, which builds nothing that needs one.
     Target WorkflowRestore => definition => definition
         .DependsOn(Clean)
-        .Executes(() =>
-        {
-            // DotNetTasks.DotNetWorkloadRestore();
-        });
+        .OnlyWhenStatic(() => IsServerBuild && !EnvironmentInfo.IsLinux)
+        .Executes(() => DotNetWorkloadRestore());
 
     Target Compile => definition => definition
         .DependsOn(Restore)
         .DependsOn(Format)
+        .Executes(() => BuildScope.ForEach(project => DotNetBuild(settings => settings.SetProjectFile(project))));
+
+    private Target Test => definition => definition
+        .DependsOn(Compile)
         .Executes(() =>
-        {
-            DotNetBuild();
-        });
+            TestDirectory.GlobFiles("**/*.csproj")
+                .ForEach(project => DotNetTest(settings => settings
+                    .SetProjectFile(project)
+                    .EnableNoBuild()
+                    .EnableNoRestore())));
 
     Target Default => definition => definition
         .DependsOn(Format)
-        .DependsOn(Compile);
+        .DependsOn(Compile)
+        .DependsOn(Test);
 }

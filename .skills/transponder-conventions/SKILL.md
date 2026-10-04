@@ -60,6 +60,16 @@ it. The traps:
   (the interface callers name), `Http/` (the implementation) and `Container/`
   (its registration). Nothing under `Features/` holds a contract, a wire type or
   a cache.
+- **The three folders are for the provider's own surface, not for everything
+  above it.** `Contracts/` holds the interface and the types its methods name,
+  `Http/` the implementation and its converters, `Container/` the registration
+  and nothing else. A snapshot record, the client that fills a cache from it,
+  and the options and credentials the provider needs sit directly under
+  `src/Transponder/Integrations/<Provider>/` — they belong to the provider but
+  are not its wire surface. The domain model and the per-type strategies are
+  not the provider's at all: they go under `src/Transponder/Model/` and
+  `src/Transponder/Tracking/`, because they survive the provider being
+  replaced.
 - Container wiring extends the existing builder blocks in `src/Gui/Container/`,
   which use C# `extension(MauiAppBuilder)` members, rather than piling
   registrations into [`MauiProgram`](../../src/Gui/MauiProgram.cs).
@@ -110,10 +120,8 @@ All versions live in
 
 **Work is tracked locally.** A `<id>-<slug>.yml` item stands in for a GitHub
 issue, and there are **no issues, labels or milestones** in this workflow. Code
-still pushes to GitHub, so branches, pull requests and CI stay — though no
-remote is configured yet, so those conventions apply from the first push
-onward. The schema and the status enum are below under
-`spec-and-traceability`.
+still pushes to GitHub, so branches, pull requests and CI stay. The schema and
+the status enum are below under `spec-and-traceability`.
 
 **An item sits beside the specification it was cut from**:
 `features/<slug>/.issue/`, a sibling of that Feature's `.spec/`. An item that
@@ -172,11 +180,28 @@ enforced by review: say which claim ids survive, in the pull request body.
 - **`GivenX_WhenY_ThenZ` method names**, with
   `// Given` / `// When` / `// Then` comments separating the phases inside.
 - **AwesomeAssertions** for assertions, **NSubstitute** for test doubles,
-  `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything HTTP
-  ([`flurl-http-client`](../flurl-http-client/SKILL.md) has the interception
-  trap).
+  **`Rocket.Surgery.Extensions.Testing.AutoFixtures`** for building the system
+  under test, `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything
+  HTTP ([`flurl-http-client`](../flurl-http-client/SKILL.md) has the
+  interception trap).
+- **A system under test is built by a generated fixture, never by a
+  constructor call in the test.** Declare
+  `[AutoFixture(typeof(T))] internal partial class TFixture;` beside the tests
+  that use it, and take the subject through the implicit conversion:
+  `T sut = new TFixture().WithX(x);`. A constructor change then edits one
+  fixture rather than every test that names the type. The fixture is a builder
+  and holds nothing — no `Sut` property, no seeding methods, no test data; a
+  constructor on it exists only to give a concrete dependency a default the
+  generator would otherwise leave `null`. The package's own documentation is
+  the authority on the generated surface.
 - `coverlet.collector` is referenced, so coverage is collectible; no threshold
   is enforced.
+- **A test reaches an `internal` type through `InternalsVisibleTo`, not by
+  widening the type.** An integration keeps its contract, its wire types and
+  its implementation `internal` so nothing outside can name them; the project
+  that holds them grants `InternalsVisibleTo("Transponder.UnitTests")` once, in
+  its `.csproj`. Making a type `public` so a test can see it is the visibility
+  claim being lost to the convenience of testing it.
 - **Scenarios here are documentation.** A Feature's `.feature` file is the
   readable specification and the xUnit tests execute; there is no Gherkin
   runner, no bindings and no step definitions, so no `@ignore` tag and nothing
@@ -247,6 +272,15 @@ field by field — `type`, `status`, `risk` and `title` are never omitted, and
 `done`. `priority`, `rank` and `blocks` are derived, and
 [`item.yml`](../../.spec/templates/item.yml) carries the derivation beside the
 fields it applies to.
+
+### Declarations in § 7
+
+§ 7 Technical Design writes a type's declaration out only while its file does
+not exist. Once the file exists the declaration becomes a row in § 7's type
+table — `| Type | File | Claims it makes visible |`, the file as a relative
+link so the link check catches a move — and the folder the type sat in drops
+out of § 7's layout block. The prose around it stays: the naming argument and
+the claim it answers are the specification's own and live nowhere else.
 
 ### Claim ids are `B-00n`
 

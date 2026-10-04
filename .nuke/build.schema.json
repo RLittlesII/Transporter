@@ -30,6 +30,7 @@
         "Format",
         "NugetRestore",
         "Restore",
+        "Test",
         "WorkflowRestore"
       ]
     },

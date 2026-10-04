@@ -146,7 +146,7 @@ Each component has one responsibility.
    tell the difference and has no opinion either way.
 6. **The tracker source strategy** — `ITrackerSource` declares the
    `TransportVehicle` changeset stream, so every strategy is substitutable
-   through it without a cast. `IAirplaneTrackerSource` and
+   through it without a cast. `IAircraftTrackerSource` and
    `IVesselTrackerSource` adhere to it, and each owns its own Mapperly
    projection from its snapshot to its domain subclass. **This is the first
    place a domain object exists, and the only place one is built.** Projection
@@ -170,7 +170,7 @@ Behavioral detail — index-by-index reading, callsign trimming, squawk as a
 string, absent versus unknown category, token refresh, retry-after handling —
 is **not** in this record. Those are claims, in § 3 of
 [`features/aircraft-source/.spec/README.md`](../../features/aircraft-source/.spec/README.md)
-(B-001 – B-051).
+(B-001 – B-052).
 
 ## Consequences
 

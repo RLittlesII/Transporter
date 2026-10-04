@@ -30,14 +30,18 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
-Fifty-one claims, in nine groups — one per component, plus the boundary rules:
+Fifty-two claims, in nine groups — one per component, plus the boundary rules:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
 types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029 and
 B-050** the snapshot client; **B-030 – B-032** the cache; **B-033 – B-037** the
-tracker source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044
-and B-051** the fleet tracker; **B-045 – B-047** the layer boundaries.
+tracker source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044,
+B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries.
 
-B-048 – B-051 are out of numeric order because they were added after the rest
+B-052 sits in the last group because the fleet tracker is what the container
+has to hand back, not because composition belongs to that component: it is the
+one claim about the chain rather than about a layer of it.
+
+B-048 – B-052 are out of numeric order because they were added after the rest
 were written. Ids are permanent, so they keep the numbers they were given rather
 than being slotted into the sequence.
 
@@ -57,6 +61,7 @@ than being slotted into the sequence.
 | B-049 | A contract layer SHALL exist only where the provider is request/response shaped; a push provider's strategy SHALL have none, and no contract SHALL be invented to give a socket one. The surface every strategy shares SHALL be `ITrackerSource` and nothing above it. | Decided call; see § 4 row 4                                |
 | B-050 | The polling interval SHALL be configurable and SHALL default to 15 seconds; the bounding box SHALL be configurable with no default compiled in.                                                                                                                      | Decided call; decisions/0001                               |
 | B-051 | A vehicle past the staleness threshold SHALL remain in the collection and SHALL be observably stale; it SHALL NOT be removed for staleness. The threshold SHALL be configurable and SHALL default to five minutes.                                                   | Decided call; dynamic-data-pipeline § "Staleness and expiry"          |
+| B-052 | The container the application constructs SHALL resolve `IFleetTracker` with every dependency satisfied and every decorator applied, so a chain that compiles and a chain that runs are the same thing.                                                              | Decided call; ADR-0003 § Consequences                                  |
 | B-011 | The snapshot SHALL have value equality over every member it carries, so two snapshots reporting identical values compare equal and the differ emits no change for them.                                                      | Decided call — the client diffs records                    |
 | B-012 | The snapshot SHALL carry `icao24` as a non-optional member and SHALL be keyed on it.                                                                                                                                        | README.md index 0 ("the cache key")                        |
 | B-013 | The snapshot SHALL carry the wire's values in the wire's units and SHALL perform no conversion, derivation or interpretation; it is the server's record with names on it.                                                     | Decided call; mapping § "Conversions are explicit, never implicit"         |
@@ -144,91 +149,595 @@ than being slotted into the sequence.
 | 14  | Persisting snapshots, snapshot history, or a track per aircraft                                                  | Each cache holds current state. A history store is a second collection, which dynamic-data-pipeline § "Never add" rules out, and nothing in § 3 or README.md asks for a trail.                                                            |
 | 15  | Registering the OpenSky account, creating the API client, and provisioning the credentials                       | Operational tasks tracked in README.md § "Open items". B-029 claims the application's *behavior* when a credential is absent; obtaining one is not code.                                                                                  |
 | 16  | The poller's hosting — actor shape, supervision, registration, and whether a view model uses `Tell` or `Ask`      | `akka-actor` and `mvvm`. This spec claims the client's observable behavior (B-015 – B-029), not where it runs. `Tell`-vs-`Ask` is a repository-wide undecided, open at README.md § "Open items".                                                  |
-| 17  | A `Test` target in the Nuke build                                                                                | A repository-wide undecided, open at README.md § "Open items". Deciding it inside a feature specification would settle a build convention by side effect.                                                     |
+| 17  | A `Test` target in the Nuke build                                                                                | A repository-wide call, and `0017` made it outside this Feature. Deciding it inside a feature specification would have settled a build convention by side effect.                                                     |
 
 ## 6. Concern Separation
 
 <!-- Rules: ../../../.spec/templates/feature.md § 6 -->
 
-Unwritten. `implementer` owes it, and it is the classification that keeps a
-business judgment from being settled as a technical one. The claims most likely
-to need it are the ones § 4 rows 18 and 20 resolve as narrow departures from the
-global contract pattern: each is a technical shape chosen for a business reason
-that § 1 names, and the two readings should not collapse into one paragraph.
+One row per concern, not per claim. Fifty-two rows would be § 3 with a column
+bolted on, and a second copy of a claim drifts from the first; instead each row
+names in its Notes the claim ids it answers for, so coverage is checked by
+reading the ids down the column rather than by counting rows. The rows follow
+§ 3's nine groups.
+
+How the three classifications are applied here: **Business** where the shape
+could have gone either way technically and a product judgment picked it;
+**Technical** where no business party expressed a preference and a constraint or
+a skill decided it; **Both** where a technical shape was chosen for a business
+reason § 1 or § 2 names. The last is the column that earns the table — § 4 rows
+18 and 20 are each a departure from the global contract pattern made for a
+reason the business goal states, and reading either as purely technical loses
+why it was allowed.
+
+| Item | Classification | Notes |
+| ---- | -------------- | ----- |
+| One name per layer — envelope, snapshot, domain vehicle | Both | § 2 need 2: a signature must tell the reader which layer they are in, and today "snapshot" means three things. Three distinct types is the technical answer to a comprehension problem, not to a correctness one. B-001, B-011, B-034. |
+| The provider's positional shape is a transport detail | Technical | § 4 row 2 and `domain-model` § "Never add". Nobody outside the code has a stake in where the array dies. B-002, B-004. |
+| The observed instant comes from the provider, never a clock | Both | § 2 need 5: on stage the fallback must age aircraft the way the live feed does, or the recording is visibly not live. ADR-0004 rules out the arrival time as the answer. B-003. **Unresolved — see § 7 "Decision required" and § 11.** |
+| A typed contract that can be versioned and faked without HTTP | Both | § 2 need 4: the audience's own APIs are versioned and will change under them. § 4 row 15 makes the contract the only seam a test can use at all, since `HttpTest` cannot follow a message into an actor. B-005, B-006, B-009. |
+| The contract carries no version the provider never published | Technical | § 4 row 3 is the whole argument, and it is a reading of someone else's rule against this provider rather than a judgment anyone outside the code has a stake in. B-048. |
+| A contract layer only where the provider is request/response shaped | Technical | § 4 row 4. The temptation it resists — making the two strategies look alike — is a presentation concern, and it is the last row of this table rather than this one. B-049. |
+| The contract's double is hand-written, not generated | Both | § 4 row 18. Technically a narrow conflict between two documents whose scopes differ. The business reason it resolves toward the hand-written fake: § 2 need 2 makes the repository the takeaway, and a double that returns `default` teaches the reader that a passing test means something it does not. B-010. |
+| One contract implementation per transport | Both | § 4 row 20. The business reason is § 2 need 5 — replay exists so a talk survives a venue network, and for no technical reason at all. The technical consequence is that substitution happens at the deepest layer that exists, which keeps B-045 from widening and keeps one positional-row reader in the repository. B-007, B-008. Registration is also the only place the layers meet, so whether the assembled chain resolves at all is decided there and nowhere else — B-052. |
+| The snapshot is the server's record, not an interpretation of it | Technical | `mapping` § "Conversions are explicit"; `domain-model` § "Never add". B-012, B-013, B-014. |
+| A full snapshot becoming a changeset has an address in the source | Both | § 1: this is the step the audience needs and every DynamicData sample skips, so the feature exists to give it a name. The technical answer — the writer owns the write, `dynamic-data-pipeline` — would be the same even if nobody were watching. B-015, B-023. |
+| The cache stores and does nothing else | Technical | Three negative claims and no product stake. `dynamic-data-pipeline`. B-030, B-031, B-032. |
+| Absent is not zero, and absent is not present-zero | Both | Technically `Option<T>` at the wire boundary. Why it matters more here than in most code: a wrong answer renders as plausible data — an aircraft at sea level, or one in the Gulf of Guinea — in front of a room, so the failure is invisible exactly when it is most expensive. B-017, B-018, B-036. |
+| Grouping by category is what makes the request extended | Both | § 2 need 1 and README.md § "The app" ask for the grouped view; § 4 row 6 says `extended=1` is how the field arrives and that its absence is not a zero. B-025. |
+| The wire's encodings are undone at the read, and visibly | Technical | Each field comes from its own positional index, and callsign padding and squawk's leading zeros are the provider's encoding; `mapping` § "Conversions are explicit" requires the undoing to be a named step rather than a side effect. B-016, B-019, B-020. |
+| Canonical units are canonical in the model | Technical | ADR-0005 item 7. The model stores what the wire reported — metres, metres per second, degrees from north — and conversion to anything a reader prefers is a view concern (§ 5 row 11). B-035. |
+| `sensors` is excluded on the record, not by disuse | Technical | `mapping` § "Unmapped members are errors", and § 5 row 12 records it so a later reader does not restore it believing it was overlooked. B-021. |
+| One unreadable row costs one row | Both | Technically a per-row result and a count. The business reason: the grid keeps its other aircraft on stage, which is the difference between a blemish and a dead demo. B-022. |
+| The box, the interval, and the credit budget | Both | § 2 need 5 — one day's credits, and a rehearsal must not spend the talk's. § 4 row 8 is the technical half: credits bound the *box*, not the interval, which is the opposite of the intuition. B-024, B-050. |
+| Houston specifically | Business | `decisions/0001`: chosen for the variety the grouped view needs, and so the vessel closing act shares one geography. Any box works technically. |
+| Token lifecycle, the credit header, and the throttle | Technical | § 4 rows 7 and 9 are the provider's terms, not ours to simplify. B-026, B-028. **See § 11 — these claims name a component that cannot hold a credential.** |
+| A credential never reaches a log, a fixture or a screenshot | Both | Technically § 4 row 12. The business reason is that this runs in front of a room and is recorded, so "it is only a debug log" does not apply. B-027. |
+| A missing credential stops the application at startup | Business | Chosen so the presenter learns before the stage rather than during it (§ 2 need 5). Failing lazily on the first poll compiles equally well and is the natural implementation. B-029, first half. |
+| A failed poll does not end the stream | Both | Technically an `IObservable` that errors is finished for good. Why it is claimed at all: the grid must not go dead mid-sentence on a venue network. B-029, second half. |
+| The swap is unobservable from the stream | Both | § 2 need 6: if the pipeline can tell which source is live, the claim the talk is making is false while it is being made. The decorator is the technical shape that buys it. B-038, B-039. |
+| A swapped-out source stops spending | Both | Credits, and a leak reads as a library bug on a projector. `hot-swap-source` § "Disposal discipline" is the technical half. B-040. |
+| What a viewer sees during the swap gap | Business | `decisions/0002`. `hot-swap-source` leaves it to the specification deliberately; no technical reading picks between an empty view and a busy indicator. |
+| Stale is marked and kept, never removed | Business | The row most at risk of being settled technically: `ExpireAfter` sits in the README's own operator table as the obvious reach, and reaching for it answers a product question with an operator. A row vanishing reads as a bug; a flagged row reads as information. B-051. |
+| One clock, and the tracker owns it | Technical | § 4 row 14 and `dynamic-data-pipeline` § "Staleness and expiry". B-043. |
+| The pipeline is built once and survives the swap | Both | § 2 need 6, and the closing act's whole proof. `hot-swap-source` § "What must not be rebuilt" is the technical half. B-041, B-042, B-044. |
+| One obvious place to add a source | Both | § 2 need 3. One seam carries every strategy, and it stays one member wide — a per-type interface that described its source would make the seam a place to look things up rather than a place to substitute. The three boundary claims are what make the promise true rather than aspirational, and each is falsifiable only from the far side, which is why they are assigned to the items that build the far side. B-033, B-037, B-045, B-046, B-047. |
+| Integration code is the provider's, not one feature's | Technical | § 4 row 5. `AGENTS.md` governed feature layout and was silent on integrations; it gained the line. |
+| Seven boxes is more than a slide wants | Business | ADR-0002 § Consequences names the cost this layering carries on stage. How much of it the talk draws is a presentation call, and this Feature does not make it — which is why the row is here and the answer is not. |
 
 ## 7. Technical Design
 
 <!-- Rules: ../../../.spec/templates/feature.md § 7 -->
 
-Unwritten. `implementer` owes it. The layering it would otherwise have had to
-settle is already decided repository-wide in
+The layering this section would otherwise have had to settle is decided
+repository-wide in
 [ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md), the
 decoration package in
 [ADR-0003](../../../.spec/adr/0003-scrutor-for-decorator-registration.md), and
 the tracked item's base in
 [ADR-0005](../../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md) —
-none of them here, because each binds more than this Feature.
+none of them here, because each binds more than this Feature. What follows is
+this Feature's own shape, and it cites those records rather than restating them.
 
-What is left for this section is this Feature's own shape: the snapshot's
-members and the positional indices they read from, the domain model's fields,
-the Mermaid diagram of the constructed chain, and the interface declarations
-B-005 – B-010 constrain. No open decisions — § 11 records that every question
-this specification opened has been answered.
+**Domain model**
 
-Until it lands, every `risk` in `## Scoring` is provisional and every item sits
-at `ready-for-architecture`.
+`Aircraft` is the one concrete subclass of `TransportVehicle`. The base's
+members and the rules behind them are ADR-0005's; the four it contributes are
+marked *(base)* below so the ownership line is visible without leaving the
+table.
+
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| `Key` | `string` | *(base)* The snapshot's `icao24` lowercased, by a named `ToKey` in the mapper rather than inside a generated member mapping (B-037, `mapping` § "Conversions are explicit"). Plain `string`: a cache key is where `Option` stops (`language-ext-usage`). |
+| `LastContact` | `DateTimeOffset` | *(base)* Index 4's Unix seconds, converted by a named method. |
+| `Position` | `Option<GeoPosition>` | *(base — ADR-0005 defines it and why it is one optional rather than two)* What this Feature adds: it is fed from indices 5 and 6, combined by the mapper's `ToPosition`. |
+| `IsStale(asOf, threshold)` | `bool` | *(base)* Derived, never stored. Takes the instant rather than holding a clock, because B-043 puts the clock in `IFleetTracker`. |
+| `Label` | `string` | *(base, abstract — overridden here)* `Callsign` when present, else `Key`. Derived, which is why B-014 keeps it off the snapshot. |
+| `Callsign` | `Option<string>` | Index 1, padding removed; all-padding is `None`, never `""` (B-019). |
+| `OriginCountry` | `string` | Index 2. The index table declares no nullability, so it is non-optional and a null makes the row unreadable under B-022. |
+| `TimePosition` | `Option<DateTimeOffset>` | Index 3, converted by the same named method as `LastContact`. |
+| `BarometricAltitude` | `Option<double>` | Index 7, metres. |
+| `GeometricAltitude` | `Option<double>` | Index 13, metres. Separate from the barometric one — B-036 requires both survive. |
+| `OnGround` | `bool` | Index 8. |
+| `Velocity` | `Option<double>` | Index 9, metres per second (B-035). |
+| `TrueTrack` | `Option<double>` | Index 10, degrees clockwise from north (B-035). |
+| `VerticalRate` | `Option<double>` | Index 11, metres per second. |
+| `Squawk` | `Option<string>` | Index 14, a string so `"0021"` stays four characters (B-020). |
+| `Spi` | `bool` | Index 15. |
+| `PositionSource` | `Option<PositionSource>` | Index 16, a four-value enum named from the README's index table. `None` means a code this build does not name, which is a different absence from an unreported field — B-018's warning applied to an enum. No `Unknown` member: that would be a value the source never sent. |
+| `Category` | `Option<int>` | Index 17, left as the wire's integer. § 4 row 1 makes the README index table the contract, and it publishes no value list, so naming the codes would invent a contract OpenSky did not. Display naming is a view concern, the same treatment § 5 row 11 gives units. |
+
+The grouping member ADR-0005 item 2 names is deliberately not implemented here.
+ADR-0005 § "The members" says why it has no single answer for this source; § 5
+rows 1 and 7 are what make leaving it unanswered affordable, since both the
+grouped view and `Group` belong to the next Feature.
+
+**The snapshot, and the index each member reads from**
+
+`AircraftSnapshot` is an `internal sealed record` keyed on `Icao24`, read from
+README.md § "Response shape" index by index (B-016). The table runs in index
+order **including the excluded index**, because B-021 requires the exclusion to
+be visible rather than inferred from a gap.
+
+| Index | Wire field | Member | Type | Note |
+| ----- | ---------- | ------ | ---- | ---- |
+| 0 | `icao24` | `Icao24` | `string` | The key (B-012). Absent ⇒ the row is excluded and counted (B-022). |
+| 1 | `callsign` | `Callsign` | `Option<string>` | Padding trimmed; all-padding ⇒ `None`, not `""` and not whitespace (B-019). |
+| 2 | `origin_country` | `OriginCountry` | `string` | Non-optional. |
+| 3 | `time_position` | `TimePosition` | `Option<long>` | Unix seconds, **unconverted** — B-013. The conversion is the mapper's. |
+| 4 | `last_contact` | `LastContact` | `long` | Unix seconds, unconverted, non-optional. |
+| 5 | `longitude` | `Longitude` | `Option<double>` | Its own member here; combined into `Position` only at the domain. |
+| 6 | `latitude` | `Latitude` | `Option<double>` | As above. |
+| 7 | `baro_altitude` | `BarometricAltitude` | `Option<double>` | Metres. |
+| 8 | `on_ground` | `OnGround` | `bool` | Non-optional. |
+| 9 | `velocity` | `Velocity` | `Option<double>` | m/s. `null` ⇒ `None`, never `0` (B-017). |
+| 10 | `true_track` | `TrueTrack` | `Option<double>` | Degrees. Same hazard. |
+| 11 | `vertical_rate` | `VerticalRate` | `Option<double>` | m/s. Same hazard. |
+| **12** | **`sensors`** | **— none —** | — | **Read past deliberately (B-021.)** The reader names index 12 and skips it in a statement a human can see. It is also the only index whose value is a collection, which is part of why value equality holds below. |
+| 13 | `geo_altitude` | `GeometricAltitude` | `Option<double>` | Metres. |
+| 14 | `squawk` | `Squawk` | `Option<string>` | Read with `GetString()`, never `GetInt32()`: `"0021"` is four characters (B-020). |
+| 15 | `spi` | `Spi` | `bool` | Non-optional. |
+| 16 | `position_source` | `PositionSource` | `int` | The wire integer, uninterpreted (B-013). Named at the domain. |
+| 17 | `category` | `Category` | `Option<int>` | **The hazard a converter collapses (B-018).** `Option<int>` is what makes the claim's two cases two values rather than two spellings of one. Presence is decided by element count and element count alone — never by whether `extended=1` was requested, because the two can disagree. |
+
+Three things follow from the table:
+
+- **Value equality (B-011) is structural, not configured.** Every member is a
+  scalar, a `string`, or an `Option<T>` of one; `record` supplies the rest. No
+  member is a collection, and the only collection-valued wire field is index 12,
+  which B-021 removed. That is the whole reason the hazard `## Scoring` recorded
+  against `0003` does not arise.
+- **The envelope's reported time is not a snapshot member.** It would differ on
+  every poll, so the differ would emit a change for every aircraft every
+  interval and the headline mechanism would produce nothing but churn. Where it
+  goes instead is ADR-0007's, below.
+- **Element count is read first.** B-022 lists three ways a row can be
+  unreadable and two of them are answerable before any member is parsed, so the
+  count is the first thing the reader looks at and the row is excluded there
+  rather than part-way through being built.
+
+**Diagrams**
+
+The constructed chain. Dashed nodes are outside this Feature (§ 5 rows 1, 4, 7);
+the recording transport is drawn because B-007's "per transport" is only legible
+once the second one is visible.
+
+```mermaid
+graph LR
+  sky(["OpenSky /states/all"])
+
+  subgraph contracts["Integrations/OpenSky/Contracts"]
+    api["IOpenSkyApi"]
+    env["OpenSkyStatesResponse<br/>OpenSkyStateRow<br/>OpenSkyThrottledException"]
+  end
+
+  subgraph http["Integrations/OpenSky/Http"]
+    httpApi["OpenSkyHttpApi<br/>internal sealed, explicit impl"]
+  end
+
+  subgraph provider["Integrations/OpenSky"]
+    client["AircraftSnapshotClient"]
+    cache[("SourceCache of AircraftSnapshot")]
+  end
+
+  subgraph tracking["Tracking"]
+    strategy["AircraftTrackerSource"]
+    mapper["AircraftSnapshotMapper"]
+    decorator["SwappingTrackerSource"]
+    tracker["FleetTracker"]
+  end
+
+  replay["recording transport<br/>features/replay-source"]:::out
+  vms["view models, next Feature"]:::out
+
+  sky -->|JSON| httpApi
+  httpApi -.->|implements| api
+  env --- api
+  replay -.->|implements, second transport| api
+  api -->|OpenSkyStatesResponse| client
+  client -->|"EditDiff over the whole set"| cache
+  cache -->|"changeset of AircraftSnapshot"| strategy
+  mapper --- strategy
+  strategy -->|"changeset of TransportVehicle"| decorator
+  decorator --> tracker
+  tracker --> vms
+
+  classDef out stroke-dasharray: 4 3
+```
+
+One poll. This earns its place because it is where the split between what the
+transport sees and what the client decides becomes visible — the distinction
+§ 11 question 2 turns on.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant S as poll schedule
+  participant C as AircraftSnapshotClient
+  participant H as OpenSkyHttpApi
+  participant P as OpenSky
+  participant K as SourceCache
+
+  S->>C: tick, default 15s (B-050)
+  C->>H: GetStates(lamin, lomin, lamax, lomax, extended, ct)
+  H->>P: GET /states/all
+
+  alt 200
+    P-->>H: time and positional states rows
+    H->>H: log X-Rate-Limit-Remaining at debug, never the token (B-027)
+    H-->>C: OpenSkyStatesResponse
+    C->>C: read rows by index, skipping 12 (B-016, B-021)
+    C->>C: exclude and count unreadable rows (B-022)
+    C->>K: EditDiff over the whole set (B-023)
+  else 401
+    P-->>H: 401
+    H->>H: refresh the token, retry this request once (B-026)
+  else 429
+    P-->>H: 429 and X-Rate-Limit-Retry-After-Seconds
+    H-->>C: throws OpenSkyThrottledException
+    C->>S: defer the next poll by exactly that many seconds (B-028)
+  else 5xx, timeout, unreadable body
+    P-->>H: failure
+    H-->>C: throws
+    C->>C: observed; the stream stays open (B-029)
+  end
+```
+
+A class diagram is `Not applicable` — the declarations below are the
+authoritative form, with accessibility, explicit implementation and generic
+arguments a diagram would have to approximate. Drawing them as well would be a
+second copy of the same thing to keep in step.
+
+A state diagram is `Not applicable` — no component here holds more than one
+state. The only state in the chain is the decorator's selected strategy, and the
+control that changes it is § 5 row 5.
+
+An entity-relationship diagram is `Not applicable` — nothing is persisted. § 5
+row 14 excludes a snapshot store, and the recording format belongs to ADR-0004
+and the replay Feature.
+
+**Interface changes**
+
+This section chose every name here; none of them existed when it was written.
+The ones that have since been built are no longer written out — a declaration
+belongs in a specification only until its file exists, and after that the row
+points at the file, because two statements of one signature is one of them
+going stale
+([lesson 0004](../../../.spec/lessons/0004-a-specification-that-pastes-code-keeps-a-second-copy.md)).
+The diagrams above keep their type names: a diagram states a relationship
+rather than a declaration, and a stale name in one is something grep finds.
+
+| Type | File | Claims it makes visible |
+| --- | --- | --- |
+| `IOpenSkyApi` | [`Contracts/IOpenSkyApi.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/IOpenSkyApi.cs) | B-005, B-006, B-024, B-048 |
+| `OpenSkyStatesResponse` | [`Contracts/OpenSkyStatesResponse.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/OpenSkyStatesResponse.cs) | B-001, B-002 |
+| `OpenSkyStateRow` | [`Contracts/OpenSkyStateRow.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/OpenSkyStateRow.cs) | B-002, B-004, B-016, B-022 |
+| `OpenSkyThrottledException` | [`Contracts/OpenSkyThrottledException.cs`](../../../src/Transponder/Integrations/OpenSky/Contracts/OpenSkyThrottledException.cs) | B-028, transport half; ADR-0008 |
+| `OpenSkyStateRowConverter` | [`Http/OpenSkyStateRowConverter.cs`](../../../src/Transponder/Integrations/OpenSky/Http/OpenSkyStateRowConverter.cs) | B-002 |
+| `OpenSkyHttpApi` | [`Http/OpenSkyHttpApi.cs`](../../../src/Transponder/Integrations/OpenSky/Http/OpenSkyHttpApi.cs) | B-007 |
+| `OpenSkyRegistration` | [`Container/OpenSkyRegistration.cs`](../../../src/Transponder/Integrations/OpenSky/Container/OpenSkyRegistration.cs) | B-008 |
+
+`IOpenSkyApi` carries no suffix, which is B-048 visible in the identifier. Not
+`IOpenSkyApiContract`: "contract" is the pattern's word for the role, not part
+of the thing's name. Not `IOpenSkyStatesApi`: B-005 is one method *per endpoint*
+on one interface, and a name narrowed to one endpoint would make `/flights` look
+like it needs a second interface, which B-009 reserves for a version change.
+`GetStates` takes no `Async` suffix and puts `CancellationToken` last.
+
+**Four loose coordinates rather than a bounding box.** B-006 and B-024 both
+forbid a bounding box on the contract. These are OpenSky's own query-string
+keys, so the signature matches the provider's documentation line for line while
+the configured box stays on `OpenSkyOptions`. A request record holding the four
+would be a bounding box under another name.
+
+**The payload, and nothing beside it.**
+[ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md)
+settles what a contract returns when a call produces no payload, and carries
+the options it was chosen over — an earlier draft of this section answered
+`Either<OpenSkyThrottled, OpenSkyStatesResponse>` and that record is why it no
+longer does. What this Feature owes it is one line of transport behaviour: the
+`429` is read off the Flurl response *before* it is thrown, so the seconds
+OpenSky asked for travel on the exception rather than being lost with the
+headers. B-001 is why the envelope could never have carried the throttle
+itself.
+
+Two members on the envelope, named as OpenSky names them (B-001), and no member
+of it is a named per-aircraft type (B-002) — which is why there is no
+`AircraftState` here. `OpenSkyStateRow` exposes **a count and an indexer and
+nothing else**: it names no aircraft field, so it is not the named per-aircraft
+type B-002 forbids, while still being something B-004 and B-045 can point at and
+something the converter can attach to. `Count` is what B-016's element count and
+B-022's 17–18 test read. It is a `class` rather than a `record` because a
+`record` over a list advertises value equality it cannot honour — the type that
+needs equality is the snapshot, in the index table further up. `OpenSkyThrottledException`
+carries exactly the header's seconds and no invented backoff, and it sits in
+`Contracts/` rather than in `Http/` for the reason ADR-0008 gives under its
+third decision item.
+
+`internal sealed`, explicit interface implementation, no `public` endpoint
+method: all three of B-007's clauses are readable in the file. **It is not
+finished.** `0002` built it taking the Flurl client cache and nothing else;
+the token source and the logger it is designed to take arrive with B-026 and
+B-027, which are `0004`'s and which § 11 question 2 has not yet placed on a
+component. The name
+says **the transport**, which is the axis B-007 counts along, so the replay
+sibling gets a name that pairs with it. Not `OpenSkyApiClient` — "client" is
+already the layer above, and that exact collision is the one-word-three-things
+problem ADR-0002 opens with.
+
+`0005` has not built the per-type seam yet, so this one is still written out
+rather than pointed at:
+
+```csharp
+internal interface IAircraftTrackerSource : ITrackerSource;
+```
+
+Empty, and the emptiness is the claim: B-037's ban on widening the seam with
+source-describing members is only visible if the interface exists and declares
+nothing. `ITrackerSource` itself is unchanged — ADR-0002 item 6 declares it and
+`api-contract` § "The two declarations" writes it out, so this Feature adds
+nothing to it.
+
+Options and credentials are **two types, not one**, because B-027 bans a
+credential reaching a log line and a single options object invites being logged
+whole. The polling interval defaults to fifteen seconds and the bounding box has
+no default compiled in (B-050); `ValidateOnStart` on the credentials is what
+makes B-029's startup failure name the absent one.
+
+The projection is a Mapperly mapper with `RequiredMappingStrategy.Both`, so a
+forgotten member is a build error rather than a silent default, and with
+`ToKey`, `ToInstant` and `ToPosition` as named methods a test can call directly.
+Indices 5 and 6 are marked ignored at the source because `ToPosition` consumes
+them, rather than being dropped silently. There is no unit conversion anywhere
+in it (B-035).
+
+Everything under `Integrations/OpenSky/` is `internal`, the contract included: a
+`public` interface cannot return an `internal` envelope, and `internal` is as
+close as the compiler gets to B-004 inside one assembly. The only `public`
+surface is the registration extension in `Container/`, which is what lets
+`src/Gui` wire the chain without naming an implementation (B-008). The cost,
+stated rather than discovered later: `Transponder.csproj` gains
+`InternalsVisibleTo("Transponder.UnitTests")`, and `transponder-conventions`
+§ `test-from-scenarios` now carries that as the convention.
+
+Where the rest of it goes, following `transponder-conventions`
+§ "Project structure":
+
+```
+src/Transponder/Model/                           TransportVehicle, Aircraft, GeoPosition, PositionSource
+src/Transponder/Tracking/                        ITrackerSource, IFleetTracker, FleetTracker, SwappingTrackerSource,
+                                                 IObservedClock, IObservedClockWriter, ObservedClock
+src/Transponder/Tracking/Sources/                IAircraftTrackerSource, AircraftTrackerSource, AircraftSnapshotMapper
+src/Transponder/Integrations/OpenSky/Http/       IOpenSkyTokenSource, OpenSkyTokenSource
+src/Transponder/Integrations/OpenSky/            AircraftSnapshot, AircraftSnapshotClient, OpenSkyOptions, OpenSkyCredentials, BoundingBox
+```
+
+The block holds only what is still unbuilt, and shrinks as the table above
+grows; `Contracts/` and `Container/` have left it entirely.
+
+The cache gets no type of its own. A `SourceCache` of `AircraftSnapshot` keyed
+by `string`, registered with the application's lifetime, **is** B-030's plain
+store, and the absence of a wrapper is what makes "no diff policy of its own"
+true by construction rather than by assertion.
+
+**The observed instant, decided**
+
+[ADR-0007](../../../.spec/adr/0007-the-live-source-advances-the-observed-clock.md)
+answers how the envelope's reported time reaches the clock B-043 puts in
+`IFleetTracker`, and carries the options it was chosen over. What this Feature
+owes it is one call: **`AircraftSnapshotClient` reports each envelope's instant
+to `IObservedClockWriter` as the set is applied**, in the same method that
+writes the cache, so the value never touches the snapshot, the cache or the
+seam. The clock itself is registered alongside the chain and injected into
+`FleetTracker` as `IObservedClock`.
 
 ## 8. Testing Strategy
 
 <!-- Rules: ../../../.spec/templates/feature.md § 8 -->
 
-Unwritten. `test-writer` owes both the testability assessment and the scenario
-grouping. The constraints it has to satisfy are already stated: no test touches
-a network or the wall clock (§ 4 row 14), `HttpTest` cannot follow a message
-into an actor (§ 4 row 15), and the contract's double is hand-written rather
-than mocked (B-010, § 4 row 18).
+**Testability assessment**
 
-The scenarios themselves exist, in
-[`aircraft-source.feature`](aircraft-source.feature) beside this file, each
-tagged with the `@B-00n` it proves. Scenarios are documentation; the xUnit
-tests execute, and none has been written yet.
+| Dimension | Verdict | Finding | Recommendation |
+| --------- | ------- | ------- | -------------- |
+| DI seams | Pass | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and the hand-written fake (B-010) is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. | — |
+| Behavior isolation | Pass | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043). | — |
+| Coverage potential | **Qualified** | Thirty-five claims are about a computed value and are ordinary tests. Fifteen are about structure — what may *name* what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it *can* reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the fifteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Four of them briefly had tests over a declaration or a container and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
+| Fixtures | Pass | Every value is synthetic and committed beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array and the 17-versus-18 element cases are two files rather than two code paths. | — |
+| Determinism | Pass | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it. | — |
+
+**Two mechanisms, and which proves what**
+
+A claim about a value the code computes is an xUnit test. A claim about which
+types may reference which is an analyzer diagnostic. The split is not a
+preference — § 9's Test column names one or the other for every claim, and
+ADR-0006 § Context is why the second exists at all. Nothing is asserted twice:
+a diagnostic is not re-tested in xUnit, and a computed value is not checked by
+an analyzer.
+
+**A test over `typeof(...)` is not one of the two.** It executes, so it looks
+like the first, and it asserts a declaration, so it is doing the second's job
+badly — with no diagnostic at the offending line and a failure message that
+names a missing member rather than a broken rule. § 9 names no such test.
+
+**B-009 and B-049 take neither**, for the reason ADR-0006 § Decision gives:
+each constrains code this repository does not contain, so there is nothing to
+load and nothing to analyze. § 9 marks them Review. They are the honest form of
+"a row naming no test", not an oversight — and the only two rows whose Status
+will not move when the tests and the analyzer arrive.
+
+**Scenarios**
+
+Full Gherkin lives in [`aircraft-source.feature`](aircraft-source.feature)
+beside this file — fifty scenarios, each tagged with the `@B-00n` it
+proves. Scenarios are documentation; the xUnit tests and the analyzer's
+diagnostics are what execute.
+
+- Happy path → B-001 – B-003, B-005, B-008, B-011, B-012, B-015, B-016,
+  B-019, B-020, B-023 – B-025, B-027, B-030 – B-035, B-038, B-039, B-041,
+  B-042, B-050, B-052
+- Failure mode → B-010, B-022, B-026 – B-029, B-040, B-043, B-051
+- Validation failure → B-004, B-006, B-007, B-009, B-013, B-014, B-017,
+  B-021, B-036, B-037, B-044 – B-049
+- Data-driven → B-018 – B-020, B-022, B-035
+
+Ten claims carry two scenarios each, because each states two things a single
+scenario would have had to prove at once — B-026's expiry and its `401`,
+B-028's deferral and its every-other-status clause, B-051's marking and its
+threshold. § 9 still gives each claim exactly one row; the row's tag anchors
+both scenarios.
+
+**What the tests need before any of them can be written**
+
+`transponder-conventions` mandates AwesomeAssertions, NSubstitute and
+`Rocket.Surgery.Extensions.Testing.AutoFixtures`. `0002` was the first item to
+write a test, so it added all three centrally to
+[`Directory.Packages.props`](../../../Directory.Packages.props) along with the
+two pieces of plumbing nothing in the repository had: the test project's
+reference to `src/Transponder`, and that project's
+`InternalsVisibleTo("Transponder.UnitTests")`. A system under test is built by
+its generated fixture rather than by a constructor call in the test, which is
+what keeps a later constructor change from editing every test that names the
+type. DynamicData is still absent; `0003` adds it the same way under § 4
+row 17.
 
 ## 9. Traceability Matrix
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-Unwritten, and **this is the gate**. `test-writer` owes one row per § 3 claim,
-anchored to the scenario's `@B-00n` tag and naming the xUnit test that proves
-it. Until those rows exist no claim is covered, so the matrix stands `Missing`
-in its entirety and implementation does not start — which is why every item
-sits at `ready-for-architecture` rather than `ready-for-implementation`.
+**This is the gate, and fifty-one of the fifty-two rows read `Missing`.** One is
+`Verified`: `0002` built the contract, its envelope, the positional row's
+converter, the HTTP transport and the hand-written fake, and the test this
+section names against B-001 passes in a run. Every other row names what will
+prove its claim and records that it does not. A row's Status becomes `Verified`
+when **every** mechanism it names passes in a run, which is why a row naming a
+test that passes and an analyzer that does not exist still reads `Missing` —
+B-010 and B-037 are both that shape.
 
-A scenario existing is not coverage. This section is the only place a claim's
-build state is written, and a row here naming no test is what blocks ship.
+The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
+retitled scenario does not silently orphan a row. Ten claims carry two
+scenarios; the tag anchors both.
+
+Three kinds of entry appear in Test. An **xUnit test** proves a computed value.
+An **analyzer diagnostic** proves a claim about what may name what — the
+mechanism is [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md),
+the analyzer does not exist, and its tests are what these rows name. **Review**
+appears twice, for the two claims that constrain code the repository does not
+contain; § 8 says why, and those two rows are the honest form of "a row naming
+no test", not an omission.
+
+| Claim ID | Scenario | Test | Status |
+| -------- | -------- | ---- | ------ |
+| B-001 | `@B-001` | `OpenSkyStatesResponseTests.GivenAReportedTimeAndThreeRows_WhenTheResponseIsRead_ThenBothArriveNamedAsTheProviderNamesThem` | Verified |
+| B-002 | `@B-002` | analyzer — `BoundaryAnalyzerTests.GivenAnEnvelopeMemberThatNamesAPerAircraftType_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-003 | `@B-003` | `AircraftSnapshotClientTests.GivenAResponseReportingAnInstant_WhenTheSetIsApplied_ThenThatInstantIsTheObservedOne` | Missing |
+| B-004 | `@B-004` | analyzer — `BoundaryAnalyzerTests.GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach` | Missing |
+| B-005 | `@B-005` | analyzer — `BoundaryAnalyzerTests.GivenAContractMethodThatIsNotOnePerEndpointOrDoesNotTakeCancellationLast_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-006 | `@B-006` | analyzer — `BoundaryAnalyzerTests.GivenAContractNamingAnObservableCacheBoxIntervalOrCredential_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-007 | `@B-007` | analyzer — `BoundaryAnalyzerTests.GivenASecondImplementationForOneTransportOrAPublicEndpointMethod_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-008 | `@B-008` | analyzer — `BoundaryAnalyzerTests.GivenAnImplementationTypeRegisteredOrResolvedOrASecondAliasForTheContract_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-009 | `@B-009` | **Review** — the precondition cannot be arranged: OpenSky has published no version. An obligation on the change that adds a versioned interface. | Missing |
+| B-010 | `@B-010` | `OpenSkyApiFakeTests.GivenAFakeWithNoResponseConfigured_WhenTheEndpointIsCalled_ThenItThrowsNamingTheUnsetResponse`; the mocking-framework half is analyzer — `BoundaryAnalyzerTests.GivenTheContractsDoubleProducedByAMockingFramework_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-011 | `@B-011` | `AircraftSnapshotTests.GivenTwoSnapshotsReportingIdenticalValues_WhenCompared_ThenTheyAreEqual` | Missing |
+| B-012 | `@B-012` | `AircraftSnapshotTests.GivenASnapshot_WhenItsKeyIsRead_ThenItIsTheNonOptionalIcao24` | Missing |
+| B-013 | `@B-013` | `AircraftSnapshotTests.GivenAWireRow_WhenTheSnapshotIsBuilt_ThenEveryValueIsTheWiresAndNoneIsConverted` | Missing |
+| B-014 | `@B-014` | `AircraftSnapshotTests.GivenTheSnapshot_WhenItsMembersAreInspected_ThenNoneIsStalenessLabelOrGroupingKey` | Missing |
+| B-015 | `@B-015` | `AircraftSnapshotClientTests.GivenTheClient_WhenItIsConstructed_ThenItTakesContractAndCacheAndConstructsNeither` | Missing |
+| B-016 | `@B-016` | `AircraftSnapshotClientTests.GivenAnEighteenElementRow_WhenItIsRead_ThenEveryMemberComesFromItsOwnIndex` | Missing |
+| B-017 | `@B-017` | `AircraftSnapshotClientTests.GivenANullElement_WhenTheRowIsRead_ThenTheValueIsAbsentRatherThanADefault` | Missing |
+| B-018 | `@B-018` | `AircraftSnapshotClientTests.GivenASeventeenElementRowAndAnEighteenElementRowEndingInZero_WhenBothAreRead_ThenTheirCategoriesDiffer` | Missing |
+| B-019 | `@B-019` | `AircraftSnapshotClientTests.GivenAPaddedCallsign_WhenTheRowIsRead_ThenPaddingIsRemovedAndPaddingAloneIsAbsent` | Missing |
+| B-020 | `@B-020` | `AircraftSnapshotClientTests.GivenASquawkOfZeroZeroTwoOne_WhenTheRowIsRead_ThenItIsFourCharactersAndNotTwentyOne` | Missing |
+| B-021 | `@B-021` | `AircraftSnapshotClientTests.GivenARowWithSensors_WhenItIsRead_ThenIndexTwelveReachesNoSnapshotOrVehicleMember` | Missing |
+| B-022 | `@B-022` | `AircraftSnapshotClientTests.GivenOneUnreadableRowAmongSeveral_WhenTheSetIsRead_ThenItIsExcludedAndCountedAndTheRestSurvive` | Missing |
+| B-023 | `@B-023` | `AircraftSnapshotClientTests.GivenAFetchedSet_WhenItIsApplied_ThenTheCacheTakesOneDifferentialUpdateOverTheWholeSet` | Missing |
+| B-024 | `@B-024` | `AircraftSnapshotClientTests.GivenABoxAndAnInterval_WhenTheClientIsBuilt_ThenBothArriveAsInputAndNeitherIsOnTheContract` | Missing |
+| B-025 | `@B-025` | `AircraftSnapshotClientTests.GivenCategoryGroupingIsOffered_WhenThePollIsSent_ThenTheRequestAsksForExtendedRows` | Missing |
+| B-026 | `@B-026` | `OpenSkyHttpApiTests.GivenAnExpiredTokenAndGivenAnUnauthorizedResponse_WhenAPollIsSent_ThenTheTokenRefreshesAndTheRequestRetriesOnce` | Missing |
+| B-027 | `@B-027` | `OpenSkyHttpApiTests.GivenAPollAndATokenRefresh_WhenBothAreLogged_ThenRemainingCreditIsRecordedAtDebugAndNoSecretAppears` | Missing |
+| B-028 | `@B-028` | `OpenSkyHttpApiTests.GivenAThrottledResponseAndGivenAServerError_WhenEachIsHandled_ThenTheFirstDefersByTheHeaderAndTheSecondStaysAnException` | Missing |
+| B-029 | `@B-029` | `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` and `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors` | Missing |
+| B-030 | `@B-030` | `AircraftSnapshotCacheTests.GivenTheCache_WhenItIsInspected_ThenItHasNoDiffPolicyNoProjectionAndNoClock` | Missing |
+| B-031 | `@B-031` | `AircraftSnapshotCacheTests.GivenTwoClients_WhenEachIsDisposed_ThenEachHasItsOwnCacheAndTheCacheOutlivesIt` | Missing |
+| B-032 | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-033 | `@B-033` | `AircraftTrackerSourceTests.GivenTheSeam_WhenItIsInspected_ThenItDeclaresTheTransportVehicleChangesetAndNothingElse` | Missing |
+| B-034 | `@B-034` | `AircraftTrackerSourceTests.GivenASnapshotChangeset_WhenItIsProjected_ThenTheStrategyIsWhereAnAircraftFirstExists` | Missing |
+| B-035 | `@B-035` | `AircraftSnapshotMapperTests.GivenMetresMetresPerSecondAndDegrees_WhenProjected_ThenEachReachesTheVehicleUnconverted` | Missing |
+| B-036 | `@B-036` | `AircraftSnapshotMapperTests.GivenAnAbsentAltitudeAndAnAbsentPosition_WhenProjected_ThenNeitherBecomesZeroAndBothAltitudesSurvive` | Missing |
+| B-037 | `@B-037` | `AircraftSnapshotMapperTests.GivenAnUppercaseIcao24_WhenProjected_ThenTheKeyIsLowercase`; the seam-widening half is analyzer — `BoundaryAnalyzerTests.GivenAPerTypeSeamWithASourceDescribingMember_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-038 | `@B-038` | `SwappingTrackerSourceTests.GivenTwoStrategies_WhenTheLiveOneIsSelected_ThenTheDecoratorChoosesAndNoResolverTypeExists` | Missing |
+| B-039 | `@B-039` | `SwappingTrackerSourceTests.GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt` | Missing |
+| B-040 | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped` | Missing |
+| B-041 | `@B-041` | analyzer — `BoundaryAnalyzerTests.GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-042 | `@B-042` | `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction` | Missing |
+| B-043 | `@B-043` | `FleetTrackerTests.GivenAnInjectedClockAdvancedPastTheThreshold_WhenStalenessIsRead_ThenItDerivesFromLastContactAndNoAmbientClockIsRead` | Missing |
+| B-044 | `@B-044` | analyzer — `BoundaryAnalyzerTests.GivenCodeAddingToOrRemovingFromABoundCollection_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-045 | `@B-045` | analyzer — `BoundaryAnalyzerTests.GivenATypeOtherThanTheContractImplementationOrClientNamingTheEnvelopeOrRow_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-046 | `@B-046` | analyzer — `BoundaryAnalyzerTests.GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-047 | `@B-047` | analyzer — `BoundaryAnalyzerTests.GivenAConsumerOfTheFleetTrackerNamingAnythingUpstream_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-048 | `@B-048` | analyzer — `BoundaryAnalyzerTests.GivenAContractCarryingAVersionSuffixOrAMarkerAboveIt_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-049 | `@B-049` | **Review** — no push provider exists, so there is nothing to analyze and no type to load. An obligation on the Feature that adds the second provider. | Missing |
+| B-050 | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault` | Missing |
+| B-051 | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale` | Missing |
+| B-052 | `@B-052` | `TransponderContainerTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator` | Missing |
+
+Fifty-two rows, fifty-two claims, each appearing once. A scenario existing is
+not coverage; this section is the only place a claim's build state is written,
+and fifty-one of its rows still say the claim is not proven. Fifteen of those
+wait on a mechanism rather than on an item: until the analyzer ADR-0006
+decides on exists, no claim about structure can leave `Missing`, so no item
+can reach `done`.
 
 ## 10. Lessons / Spec Deltas
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
-No Feature-scoped lesson yet. One repository-wide lesson bears on this
-document: [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
-which is why §§ 6-9 above say in words that they are unwritten rather than
-carrying a template row, and why § 3 no longer keeps a build state § 9 owns.
+No Feature-scoped lesson yet. Five repository-wide lessons bear on this
+document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
+is why § 3 keeps no build state that § 9 owns, and why a § 9 row reads
+`Missing` until something proves it rather than inheriting the template's
+example `Verified`: a gate reporting a pass that nothing verified is the one
+failure nothing downstream can detect. It is also why §§ 6-9 said in words that they
+were unwritten, for as long as they were.
+[Lesson 0003](../../../.spec/lessons/0003-a-dedupe-is-a-move-and-a-move-has-a-destination.md)
+came out of writing § 7, which needed a member list a dedupe had removed from
+the repository while naming a record that never received it.
+[Lesson 0004](../../../.spec/lessons/0004-a-specification-that-pastes-code-keeps-a-second-copy.md)
+has § 7 as its subject: it is why the declarations of the types `0002` built
+are a table of files rather than pasted C#, and why the ones it has not built
+are still written out.
+[Lesson 0005](../../../.spec/lessons/0005-a-ruling-is-not-a-rule.md) is why
+§ 7 cites ADR-0008 for the contract's return shape rather than arguing it, and
+why the shape it argued first is named there rather than quietly replaced.
+[Lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)
+is why three of § 9's rows name the analyzer rather than an xUnit test, and
+why a row naming two mechanisms reads `Missing` until both of them pass.
 
 ## 11. Open Questions
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-None. Every question this specification opened has been answered and recorded:
-the bounding box and interval in [decisions/0001](decisions/0001-houston-bounding-box.md)
-and B-050, what the audience sees on a swap in
+Two open, of three asked. The first two were opened by § 7 and the third by
+§ 8; writing a section is what surfaces them, which is why a stub opens none.
+Question 1 has been answered and moved to the closing paragraph. Its number is
+not reused and the two below keep theirs, so a reference written while it was
+open still points at the question it meant.
+
+| #   | Question | Owner | Target date |
+| --- | -------- | ----- | ----------- |
+| 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. B-028's ban needs a *where* in the same pass: the claim forbids an exception outright, its scenario forbids one only at the subscriber, and [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) makes the contract throw — so the transport as built satisfies the scenario and contradicts the sentence. Blocks `0004`. | `spec-author` | Before `0004` starts |
+| 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for fifteen claims — B-002, B-004 – B-008, B-010, B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those fifteen rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
+
+Everything else this specification opened has been answered and recorded. How
+the envelope's reported time reaches the clock `IFleetTracker` owns is
+[ADR-0007](../../../.spec/adr/0007-the-live-source-advances-the-observed-clock.md),
+which releases `0007` and binds
+[`features/replay-source`](../../replay-source/.spec/README.md) the same way.
+Then: the bounding box and interval in
+[decisions/0001](decisions/0001-houston-bounding-box.md) and B-050, what the audience sees on a swap in
 [decisions/0002](decisions/0002-busy-indicator-on-swap.md), the staleness policy
 in B-051, the version suffix in B-048, the contract layer's applicability in
 B-049, the integration layout in § 4 row 5, and the decoration package in
 [ADR-0003](../../../.spec/adr/0003-scrutor-for-decorator-registration.md).
-
-A question arriving later is added here as a row — `#`, Question, Owner, Target
-date — rather than settled in conversation.
 
 ## 12. Sign-off
 
@@ -264,13 +773,13 @@ neither here nor in this Feature's `adr/`.
 
 | Item                                                     | Claims                                          |
 | -------------------------------------------------------- | ----------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)             | all 51 — the parent; its children hold the work |
+| [`0001`](../.issue/0001-aircraft-source.yml)             | all 52 — the parent; its children hold the work |
 | [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001 – B-010, B-048, B-049                     |
 | [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml) | B-011 – B-014, B-030 – B-032                    |
 | [`0004`](../.issue/0004-aircraft-snapshot-client.yml)    | B-015 – B-029, B-045, B-050                     |
 | [`0005`](../.issue/0005-aircraft-tracker-source.yml)     | B-033 – B-037, B-046                            |
 | [`0006`](../.issue/0006-source-swap-decorator.yml)       | B-038 – B-040                                   |
-| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-041 – B-044, B-047, B-051                     |
+| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-041 – B-044, B-047, B-051, B-052              |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. The three
@@ -296,6 +805,15 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 | 2026-10-04 | `0005` | risk | Mapperly will do the wrong thing here without complaining: an absent altitude mapped to `0` is an aircraft at sea level, and an absent position mapped to `0,0` is one in the Gulf of Guinea (B-036). Both render as plausible data. Also aim at B-037 — an uppercase hex key splits one aircraft into two cache entries. |
 | 2026-10-04 | `0006` | risk | Both hazards are invisible at runtime. Scrutor's `Decorate<>` wraps only what is **already** registered, so a strategy registered after the call resolves raw and the swap silently does nothing (ADR-0003). And an outgoing source that is not stopped keeps spending OpenSky credits with nothing on screen to show it (B-040). |
 | 2026-10-04 | `0007` | risk | One inline `DateTime.UtcNow` in a staleness check (B-043) makes the behaviour untestable *and* wrong under replay, where time comes from the recording. Then B-042: a pipeline rebuilt on swap leaks, and a leak in a demo reads as a memory bug on a projector. Aim at a swap followed by a second swap. |
+| 2026-10-04 | `0001` | risk | 4 → 3 against § 7. The boundary claims are no longer only test-enforced: the whole integration is `internal`, so most of "satisfied by absence" is now a compile error rather than a missing assertion. What remains is the reference-counting the @B-004 @B-045 scenario describes, which no compiler answers. |
+| 2026-10-04 | `0002` | risk | 3 → 4. § 7 **adds** hazards rather than retiring them. The contract returns `Either`, which is a shape the pattern's reviewers will not have seen on a governed interface. The positional row needs a hand-written `JsonConverter`, and a sloppy one defaults silently — the same failure as the fake that returns `default`. `InternalsVisibleTo` is plumbing no project here has yet. The two hazards recorded above stand unchanged, and the thrown-`429` hazard moves here from `0004`, since the status code is seen in this item's transport. |
+| 2026-10-04 | `0003` | risk | 2 → 1. The hazard recorded above is now structurally impossible rather than merely tested for: § 7 gives the snapshot only scalars, strings and `Option<T>` of one, and the single collection-valued wire field is index 12, which B-021 removed. A mutable or collection member cannot be added without contradicting the table. The residual is that someone adds one anyway. |
+| 2026-10-04 | `0004` | risk | 4 → 3. The same four hazards in kind, but each is now a named member at a named index whose type encodes the distinction: `Option<int>` for B-018, `Option<T>` throughout for B-017, `string` for B-020. The fifth moves to `0002`. Against that, open question 2 means this item's claim list may still change. |
+| 2026-10-04 | `0005` | risk | 3 → 2. B-036 moves from test-enforced to compile-enforced: one `Option<GeoPosition>` makes a half-position unrepresentable, the two altitudes are separate members, and `RequiredMappingStrategy.Both` makes a forgotten field a build error. What is left is `ToKey`'s lowercasing, which no type system catches. |
+| 2026-10-04 | `0006` | risk | 4, unchanged. § 7 adds nothing it was waiting for — ADR-0003 already carried both hazards. The row exists because the blanket provisional sentence it previously sat under is gone, and an unrestated number would read as an oversight. |
+| 2026-10-04 | `0007` | risk | 3 → 4. § 7 raises it: open question 1 lands on this item, and B-043's clock cannot be specified until the observed instant has a route to it. The two hazards recorded above stand. |
+| 2026-10-04 | `0007` | risk | 4 → 3, reversing the row above. ADR-0007 gives the observed instant its route, so B-043's clock is a type this item is injected with rather than a design it has to invent. The clock is also the mechanism that makes the two original hazards testable: a swap-then-swap assertion and a staleness assertion both advance one object. What keeps it at 3 rather than 2 is that `IObservedClock` reading `MinValue` before any source reports is a quiet default, and a test that forgets to observe an instant passes for the wrong reason. |
+| 2026-10-04 | `0002` | risk | 4 → 3. [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) retires the larger of the two hazards the 3 → 4 row recorded: the contract no longer returns a shape a reviewer of the governed pattern has to be taught before reading, and the thrown-`429` is now the design rather than the defect that moved here. What replaces them is smaller and both sit in the transport — an exception raised without first reading `X-Rate-Limit-Retry-After-Seconds` loses the only value the caller needs, and the next item's `catch` has to be narrow enough not to swallow a defect along with the throttle. The `JsonConverter` and `InternalsVisibleTo` hazards are retired by having landed and passed. |
 
 Why `0001` carries a `value` and no child does: a child omits it to inherit the
 parent's, and `risk` is never inherited. The derivation of `priority` and `rank`
@@ -303,7 +821,28 @@ from the two, and the fact that a dependency cut in another Feature moves a rank
 here with no row in this table, are the item schema's —
 [`item.yml`](../../../.spec/templates/item.yml).
 
-**Every `risk` above is provisional.** §§ 6-7 are unwritten, and the design
-assessment they carry is what each number is supposed to come from — which is
-why every item sits at `ready-for-architecture` rather than
-`ready-for-implementation`. Re-score as a row here when § 7 lands.
+**§ 7 has landed, and the numbers above are no longer provisional.** Each item
+carries a second row re-scoring it against the design rather than against a
+guess at the design. Four moved down, because § 7 turned a hazard a test had to
+catch into one the compiler catches; two moved up, because writing the design
+found hazards that were not visible from the claims alone.
+
+**§§ 8-9 have since landed too**, which is what moved the items. § 9 said
+implementation waits on its rows existing, not on them reading `Verified` — a
+`Missing` row blocks ship, which is a different gate. So `0002`, `0003`, `0005`
+and `0006` are `ready-for-implementation`; `0004` and `0007` stayed at
+`ready-for-architecture` behind § 11 questions 2 and 1; `0001` moves when its
+children do.
+
+**ADR-0007 has since answered question 1**, so `0007` is
+`ready-for-implementation` too and `0004` is the only child still held by a
+question.
+
+**ADR-0008 has since replaced the contract's return shape.** Those two answers
+are the two re-scores below; nothing else about the design moved with either.
+
+Nothing is re-scored for §§ 8-9. The risks above were set against § 7's design
+and §§ 8-9 changed none of it, and re-scoring against a mechanism that does not
+exist yet would be churn rather than assessment. The analyzer's effect on
+`0001`'s boundary-claim hazard is ADR-0006 § Consequences' to state; it becomes
+a row here the day the analyzer does.

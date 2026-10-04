@@ -2,11 +2,11 @@ id: "0003"
 type: task
 title: Add the aircraft snapshot record and its cache
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
-risk: 2
-rank: 99
+risk: 1
+rank: 102
 
 parent: "0001"
 children: []

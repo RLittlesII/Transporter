@@ -5,8 +5,8 @@ title: Poll OpenSky, read the positional rows, and diff them into the cache
 status: ready-for-architecture
 
 priority: high
-risk: 4
-rank: 98
+risk: 3
+rank: 101
 
 parent: "0001"
 children: []

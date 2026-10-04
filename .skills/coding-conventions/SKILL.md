@@ -95,6 +95,12 @@ repository under the section names of the method skill it extends.
 - **A fact belongs to one file.** A skill repeating a specification, a decision
   record or a provider's documentation is a second place for it to drift from,
   and a reader who finds both has no way to tell which is current.
+- **Removing a copy is half a move.** Before deleting content because another
+  document owns it, open that document and find the content in it. A commit
+  message naming the owner is not a transfer, and a cite is not a copy. What
+  survives a dedupe is whatever the keeper actually says — and a document whose
+  rules name no particulars reads exactly like one with no particulars to name,
+  so nothing downstream reports the loss.
 - **The current state of the repository is not a rule.** "There is no test
   target yet", "that package is not referenced yet", "this shape is
   provisional" are all true until the next change lands, and silently false

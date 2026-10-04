@@ -1,0 +1,68 @@
+id: "0017"
+type: task
+title: Run the tests in the build, so a green build means a green test run
+
+status: in-review
+
+priority: high
+value: 4
+risk: 2
+rank: 74
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  Nuke's `Default` target is Clean, Restore, Format, Compile. It runs no
+  tests, and CI invokes nothing but `./build.cmd`, so until today that cost
+  nothing: `test/UnitTests` held no `.cs` file.
+
+  Item 0002 changed that. Seven tests now exist, five § 9 rows of
+  features/aircraft-source read `Verified` because they pass, and the build
+  that is supposed to be the gate would report success with every one of them
+  failing. That is the shape lesson 0002 is about — a gate reporting a pass
+  that nothing verified — and it gets worse with every test the remaining
+  items add.
+
+  README.md § "Open items" has carried the question of whether the build gets
+  a `Test` target since before any test existed. It is no longer a question.
+
+acceptance_criteria:
+  - "`Default` reaches a `Test` target, so `./build.sh` with no argument runs the tests."
+  - "The target discovers test projects under `test/` rather than naming one, so a second test project is covered the day it is added."
+  - "A failing test fails the build, demonstrated by making one fail."
+  - "The CI workflow is unchanged, because the `[GitHubActions]` attribute is unchanged — CI already invokes `./build.cmd`, which is what gains the tests."
+  - "README.md § \"Open items\" records the decision."
+
+decisions:
+  - "2026-10-04 — the person — the build gets a `Test` target, answering the
+    open item README.md § \"Open items\" has carried."
+  - "2026-10-04 — implementer — `Test` globs `test/**/*.csproj` rather than
+    naming `test/UnitTests`. Rejected: naming the one project, which is a
+    second place to edit when the next test project lands and which fails
+    silently by covering nothing."
+  - "2026-10-04 — implementer — `Test` depends on `Compile` and runs with
+    `--no-build --no-restore`, so it asserts against the artefacts `Compile`
+    produced rather than building a second time in a configuration nothing
+    else used."
+
+out_of_scope:
+  - "A coverage threshold. `coverlet.collector` is referenced so coverage is
+    collectible; no gate is added and `transponder-conventions` already says
+    none is enforced."
+  - "Regenerating .github/workflows/ci.yml. The `[GitHubActions]` attribute is
+    untouched, and regeneration would rewrite the pinned action versions for
+    no change (`nuke-build` § \"Regenerating the workflow\")."
+  - "Any change to the CI path filter."

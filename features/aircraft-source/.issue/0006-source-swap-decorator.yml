@@ -2,7 +2,7 @@ id: "0006"
 type: task
 title: Swap the live source behind a decorator over ITrackerSource
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 risk: 4

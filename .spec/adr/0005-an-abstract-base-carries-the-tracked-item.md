@@ -75,6 +75,42 @@ Two facts force it:
    wire reported; display units are a view concern, converted in an explicitly
    named method, and a converted value never replaces the canonical one.
 
+### The members
+
+The seven rules above decide the shape; these are the members they produce.
+They are named here because the rules alone do not say what a derived type
+inherits, and a Feature specification is the wrong place for a repository-wide
+base class's surface to be written down for the first time.
+
+| Member | Type | Kind | Why it is here |
+| --- | --- | --- | --- |
+| `Key` | `string` | concrete, set through the `protected` constructor | The cache key. Stable for the life of the item, never null, never reused (item 3). Plain `string`, never `Option<string>` — a key that might be absent is not a key. |
+| `LastContact` | `DateTimeOffset` | concrete, set through the `protected` constructor | The instant the source last heard from the item. Staleness derives from it and is never stored beside it (item 1). |
+| `Position` | `Option<GeoPosition>` | concrete | Every source reports a position for some of its items and no position for others, so this is shared rather than hoisted (item 5). `Option` because an absent fix and a fix at `0,0` are different facts — the Gulf of Guinea is a real place. |
+| `IsStale(DateTimeOffset asOf, TimeSpan threshold)` | `bool` | concrete | Item 1's shared derivation, written and tested once. |
+| `Label` | `string` | **abstract** | Item 2. What the identity column shows; each source answers it or does not compile. |
+
+`GeoPosition` is a `readonly record struct` of latitude and longitude in
+degrees. One optional position rather than two optional coordinates: no source
+reports half a fix, and combining them makes "no position, not `0,0`" a thing
+the compiler enforces rather than a thing a test has to catch.
+
+**`IsStale` takes the instant rather than a clock.** Item 1 says the derivation
+runs "against an injected clock", and the clock is injected — into the fleet
+tracker, which owns it. The base takes the answer as a parameter instead,
+because a model type that holds a service is the first step toward a model that
+references the container, and `domain-model` § "Never add" closes that door.
+The caller that owns the clock passes the instant; the base does the arithmetic.
+
+**The grouping key of item 2 is deliberately not in this table.** Item 2 names
+two abstract per-source answers, the label and "the key a view groups by", and
+the second one does not survive contact with a real source: aircraft have two
+grouping dimensions a view would plausibly use — origin country and category —
+and one abstract member cannot answer both. A single member would force one of
+them to be the grouping key for all time, which is a view's decision being
+settled in the model. It is left unwritten until a view needs it, and item 2
+should be read as naming one abstract member and a question, not two members.
+
 ## Consequences
 
 - **The swap becomes a registration change.** Nothing downstream names a

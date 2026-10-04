@@ -1,0 +1,83 @@
+id: "0018"
+type: task
+title: Build on Linux CI by keeping the Apple-only MAUI heads out of its scope
+
+status: in-review
+
+priority: high
+value: 4
+risk: 3
+rank: 71
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  Pull request #1 is the first this repository has ever opened, and CI failed
+  on it in twenty-three seconds, in `NugetRestore`, before a line of the change
+  was compiled:
+
+    error NETSDK1147: To build this project, the following workloads must be
+    installed: maui-tizen wasm-tools [src/Gui/Gui.csproj::TargetFramework=net10.0-ios]
+
+  `Gui.csproj` targets `net10.0-ios;net10.0-maccatalyst` and the job runs on
+  `ubuntu-latest`. Neither target can be built by any Linux SDK — the iOS and
+  MacCatalyst workload packs do not exist for `linux-x64` — so no amount of
+  workload restoring fixes it. `WorkflowRestore` has carried a commented-out
+  `DotNetWorkloadRestore()` since the repository was created, which is a
+  separate gap and not the cause.
+
+  This predates the branch it was found on: both the target frameworks and the
+  empty target are on `main`, and that branch touches neither `src/Gui` nor the
+  workflow. It was invisible until something opened a pull request.
+
+  So the Linux build scope is the library and its tests, and the solution is
+  the scope everywhere else. CI proves what Linux can prove.
+
+acceptance_criteria:
+  - "`./build.sh` on a Linux runner reaches `Test` and passes."
+  - "`./build.sh` on macOS still builds the whole solution, `src/Gui` included,
+    and is unchanged in what it covers."
+  - "`Gui.csproj` names its Apple-only targets under a host condition, so a
+    Linux evaluation of it demands no workload it cannot have."
+  - "`WorkflowRestore` stops being an empty target, and does not run on a
+    developer's own machine where it would want elevation against an SDK the
+    build does not own."
+  - "The check on pull request #1 reports green, and reports it because it ran
+    rather than because a path filter skipped it."
+
+decisions:
+  - "2026-10-04 — the person — condition the `src/Gui` target frameworks by
+    host OS so CI builds on Ubuntu. Rejected: a macOS runner, which bills at
+    ten times the Linux rate for a build whose only executable check is a unit
+    test suite that has no Apple dependency."
+  - "2026-10-04 — implementer — on Linux the scope is the two projects rather
+    than the solution, because conditioning the target frameworks alone cannot
+    fix it: there is no MAUI target a Linux SDK can build. `net10.0-android`
+    would be one, but `src/Gui/Platforms` holds iOS and MacCatalyst heads only
+    and no Android head exists to build."
+  - "2026-10-04 — implementer — `WorkflowRestore` runs on a server and not
+    locally. On a runner Nuke builds with the SDK it downloads into
+    `.nuke/temp`, which the job owns, so the restore needs no elevation; on a
+    developer's machine it would target their installed SDK, where it would
+    need `sudo` and where the workloads are already present."
+
+out_of_scope:
+  - "Building `src/Gui` anywhere in CI. Nothing on a Linux runner can, and
+    adding a macOS job is the rejected alternative above."
+  - "An Android head for `src/Gui`. It would give Linux a buildable MAUI
+    target, and it is a feature rather than a build fix."
+  - "Regenerating `.github/workflows/ci.yml`. The `[GitHubActions]` attribute
+    is untouched, so the workflow is unchanged."
