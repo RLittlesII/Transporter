@@ -180,9 +180,20 @@ enforced by review: say which claim ids survive, in the pull request body.
 - **`GivenX_WhenY_ThenZ` method names**, with
   `// Given` / `// When` / `// Then` comments separating the phases inside.
 - **AwesomeAssertions** for assertions, **NSubstitute** for test doubles,
-  `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything HTTP
-  ([`flurl-http-client`](../flurl-http-client/SKILL.md) has the interception
-  trap).
+  **`Rocket.Surgery.Extensions.Testing.AutoFixtures`** for building the system
+  under test, `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything
+  HTTP ([`flurl-http-client`](../flurl-http-client/SKILL.md) has the
+  interception trap).
+- **A system under test is built by a generated fixture, never by a
+  constructor call in the test.** Declare
+  `[AutoFixture(typeof(T))] internal partial class TFixture;` beside the tests
+  that use it, and take the subject through the implicit conversion:
+  `T sut = new TFixture().WithX(x);`. A constructor change then edits one
+  fixture rather than every test that names the type. The fixture is a builder
+  and holds nothing — no `Sut` property, no seeding methods, no test data; a
+  constructor on it exists only to give a concrete dependency a default the
+  generator would otherwise leave `null`. The package's own documentation is
+  the authority on the generated surface.
 - `coverlet.collector` is referenced, so coverage is collectible; no threshold
   is enforced.
 - **A test reaches an `internal` type through `InternalsVisibleTo`, not by

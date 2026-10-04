@@ -108,6 +108,23 @@ decisions:
     wording folds into § 11 question 2, which is already queued for
     `spec-author` over the same claim, rather than opening a question of its
     own. This item is therefore not blocked; B-028's § 9 row stays `Missing`."
+  - "2026-10-04 — the person — review of pull request #1 rejected the three
+    reflection tests. B-002, B-005 and B-010's mocking-framework clause move
+    to the analyzer under ADR-0006, which had already said a claim about
+    structure is a diagnostic rather than a test. `Verified` drops from five
+    rows to two. Rejected: keeping the behavioural half of each claim green,
+    which § 9 cannot express because a row carries one status; and marking
+    them Review, which ADR-0006 reserves for claims constraining code the
+    repository does not contain. Recorded as lesson 0006."
+  - "2026-10-04 — the person — the system under test is built by a generated
+    `Rocket.Surgery.Extensions.Testing.AutoFixtures` fixture rather than by a
+    constructor call, so `OpenSkyHttpApi` and `OpenSkyApiFake` each get one.
+    `OpenSkyApiFake` takes its response by constructor to give the generator a
+    `With` method, and the generator's `default` for that parameter is what
+    leaves the unset case throwing. B-010 is unchanged: the fake stays
+    hand-written. Rejected: a substitute in its place, which returns `default`
+    on an unset call — the hazard § Scoring recorded against this item — and
+    which B-010 forbids outright."
 
 out_of_scope:
   - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."

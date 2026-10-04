@@ -33,6 +33,14 @@ claiming coverage for anything.
 
 - A test that needs a fact the scenario does not state means the scenario is
   incomplete — amend it rather than encoding the fact in test code.
+- **A test that reads a declaration is not a test.** Asserting over a type
+  object, a member list, a parameter order or an assembly checks the shape of
+  the code rather than anything it does. It breaks on a rename that changed no
+  behaviour, it passes on a body that does the wrong thing, and when it fails
+  it names a missing member instead of a broken rule — so a reader has to
+  reconstruct what the rule was. Where a claim really is about structure, the
+  mechanism is a compiler diagnostic; where the project has none yet, the
+  coverage row says so rather than naming a test that asserts the shape.
 - **A test that asserts nothing proves nothing.** Never point at another suite
   ("covered by the integration tests"). Prove it here, or remove the sentence.
 - The name states the claim. A reader should not need the body to know what
