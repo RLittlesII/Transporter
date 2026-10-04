@@ -2,7 +2,7 @@ id: "0017"
 type: task
 title: Run the tests in the build, so a green build means a green test run
 
-status: in-progress
+status: in-review
 
 priority: high
 value: 4
