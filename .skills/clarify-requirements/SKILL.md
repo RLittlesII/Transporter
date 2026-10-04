@@ -8,9 +8,9 @@ description: Resolve genuinely material requirement ambiguity in a specification
 ## First, look
 
 Read [`README.md`](../../README.md) — the specification today — plus the
-relevant source, tests, and issue. Most questions are already answered there;
-the README carries the data source's limits, the resilience plan, and the open
-items list.
+relevant source, tests, and the `.issues/` item. Most questions are already
+answered there; the README carries the data source's limits, the resilience
+plan, and the open items list.
 
 ## Decide or ask
 
@@ -35,13 +35,13 @@ items list.
 
 In the same change:
 
-- the answer becomes a scenario, a README edit, or an out-of-scope line, so the
-  next run starts from the answer rather than re-asking;
+- the answer becomes a claim, a scenario, a README edit, or an out-of-scope
+  line, so the next run starts from the answer rather than re-asking;
 - a design change updates the affected specification —
   [`spec-and-traceability`](../spec-and-traceability/SKILL.md) says where that
-  lives — and the issue's acceptance criteria (see
-  [`deliver-change`](../deliver-change/SKILL.md) "Keep the issue true while you
-  work").
+  lives and which role owns the section — and the `.issues/` item's acceptance
+  criteria (see [`deliver-change`](../deliver-change/SKILL.md) "Keep the item
+  true while you work").
 
 Open questions this demo already owes answers to are listed in
 [`spec-and-traceability`](../spec-and-traceability/SKILL.md). Check there

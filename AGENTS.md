@@ -6,7 +6,7 @@ This document establishes development practices for the Transponder repository, 
 
 **Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` (see the `specification` skill and `.skills/spec-and-traceability`). When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
 
-**Specification-Driven Chain**: Development follows an artifact progression from issue → scenario → supporting detail → step definitions → implementation. All four stages must be traceable and none can be skipped without documented exemption.
+**Specification-Driven Chain**: Development follows an artifact progression from work item (`.issues/<id>.yml`) → claim (§ 3 of the Feature's `.spec/README.md`) → scenario (its `.feature` file) → xUnit test → implementation. Every stage must be traceable through § 9 Traceability Matrix, and none can be skipped without documented exemption. Scenarios are documentation — there is no Gherkin runner in this repository; the tests in `test/UnitTests` are what execute.
 
 **Four Mandatory Rules**:
 1. Author or amend scenarios before implementing changes
@@ -22,13 +22,13 @@ Claims are numbered rows in § 3 Acceptance Criteria of a Feature's `.spec/READM
 
 ## Roles and Workflow
 
-Four roles own the specification chain, declared under `.agents/`:
-- **spec-author** (`.agents/spec-writer.md`): writes scenarios and states out-of-scope boundaries
-- **test-writer** (`.agents/test-writer.md`): converts claims into failing step definitions
-- **implementer** (`.agents/implementer.md`): makes tests pass against cited claims only
-- **spec-reviewer** (`.agents/spec-reviewer.md`): judges diffs against claims and ADRs
+Four roles own the specification chain, declared under `.agents/` (see `.agents/README.md`). Each owns named sections of a Feature's `.spec/README.md` and writes no others:
+- **spec-author** (`.agents/spec-author.md`): §§ 1-5, the `.feature` file, `## Tasks`, `## Scoring`
+- **test-writer** (`.agents/test-writer.md`): §§ 8-9, and the failing xUnit tests
+- **implementer** (`.agents/implementer.md`): §§ 6-7, and the production code
+- **spec-reviewer** (`.agents/spec-reviewer.md`): § 12, judging diffs against cited claims
 
-Each role trusts only the artifact from the preceding role.
+Each role trusts only the artifact from the preceding role. The authoritative ownership table — including §§ 10-11, Decisions, and each role's counterpart in the installed agent council — lives in `.skills/spec-and-traceability/SKILL.md`. These files are documented contracts, not loadable agents: the directory is `.agents/`, not `.claude/agents/`.
 
 ## Lessons and Bug Fixes
 
@@ -36,12 +36,14 @@ When a bug fix reveals a specification gap, a lesson document in the Feature's `
 
 ## Delivery Workflow
 
-- Every change begins with an issue
+- **Work is tracked locally.** Every change begins with a `.issues/<id>-<slug>.yml` item, which stands in for a GitHub issue. There are no issues, labels or milestones in this workflow; the schema and status enum are in `.skills/spec-and-traceability/SKILL.md`
+- `status: in-progress` is the only signal an item is taken — set it before the worktree, the branch, or the first edit, and never pick up an item that already carries it
+- A closed item stays, with `status: done` and a `closed:` date
 - Rebase onto fresh `origin/main` before committing (not just before pushing)
-- Use `Closes #<number>` on its own line in PR bodies
+- PR bodies name the item id and the `B-00n` claims delivered; there is no issue for `Closes` to close
 - Titles must be squash-ready
 - No `Co-Authored-By` trailers
-- This repository has no remote configured yet; the above conventions apply from the first push onward
+- Code still pushes to GitHub as branches and pull requests; this repository has no remote configured yet, so those conventions apply from the first push onward
 
 ## Code Conventions
 
@@ -61,7 +63,7 @@ Every tracked markdown file opens with YAML frontmatter (`title`, `description`,
 
 ## Knowledge Graph Integration
 
-The `graphify` tool maintains a codebase knowledge graph. Queries, path analysis, and concept explanations surface relevant architecture before full browsing. The specification reaches the graph through `docs/traceability.md` (which carries all claim IDs) rather than directly from `.feature` files, since graphify ingests markdown, not Gherkin.
+The `graphify` tool maintains a codebase knowledge graph. Queries, path analysis, and concept explanations surface relevant architecture before full browsing. The specification reaches the graph through each Feature's `.spec/README.md` — which carries the claims in § 3 and their coverage in § 9 — rather than from `.feature` files, since graphify ingests markdown, not Gherkin.
 
 ## Skills Reference
 

@@ -10,6 +10,14 @@ Project companion for the `test-writer` role
 claim into a test that fails for the right reason; this file says what the
 test looks like in this repo.
 
+**Scenarios are documentation; the tests execute.** A Feature's `.feature`
+file is the readable specification, and each xUnit test cites the `@B-00n`
+claim it proves. **There is no Gherkin runner here** — no Reqnroll, no
+bindings, no step definitions — and none is planned for a demo. So "a scenario
+exists" never means a claim is covered: the § 9 Traceability Matrix row does,
+and it points at a test
+([`spec-and-traceability`](../spec-and-traceability/SKILL.md)).
+
 ## Where and what
 
 - **xUnit**, in [`test/UnitTests`](../../test/UnitTests) — root namespace
