@@ -56,6 +56,20 @@ Two mappings, two owners — ADR-0002 states it after item 8: rows to snapshot i
 hand-written in the client, snapshot to domain is the mapper in the strategy
 ([`mapping`](../mapping/SKILL.md)).
 
+## The boundary throws
+
+**`TResponse` is the payload.** Never a wrapper around a failure, and never a
+union with one in it
+([ADR-0008](../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md)).
+
+- An **actionable failure gets its own exception type**, declared with the
+  interface and holding whatever the handler needs. Nothing upstream unpacks a
+  transport library's exception to find it.
+- Anything else propagates untyped.
+- **The Failure/Result track begins above the contract**, at the first
+  component inside the application. One place turns a thrown call into a value
+  ([`language-ext-usage`](../language-ext-usage/SKILL.md)).
+
 ## The traps
 
 **Not every strategy has every layer.** A contract is one `Task<T>` per
@@ -104,6 +118,7 @@ it returned.
 - A domain type held, constructed or returned by a cache, or a domain object
   built anywhere but a strategy's projection.
 - A strategy resolver that callers ask which strategy to use.
+- A failure wrapper as a contract's return type. The boundary throws.
 - A generated client, or a wire-shaped payload read outside the client.
 - A retry that ignores the provider's retry-after header, or a poll loop with no
   interval ceiling.

@@ -21,9 +21,15 @@ consuming a feed that reports partial records.
   coordinate pair is not the origin. Mapping a null to a default is data loss
   that looks like data.
 - **Operations that can fail → `Either`**, where the failure is expected and the
-  caller must handle it: a refused token refresh, a throttle response, one
-  malformed record in a batch. One bad record should not take down the whole
-  fetch.
+  caller must handle it: one malformed record in a batch, a projection that
+  cannot be built, a poll the application has already decided to treat as a
+  miss. One bad record should not take down the whole fetch.
+- **Not at an I/O boundary.** A provider contract returns its payload and
+  throws; the track starts on the application side of that call. A wrapper on
+  the contract's own return type adds a second failure channel beside the
+  exceptions the transport throws anyway
+  ([`api-contract`](../api-contract/SKILL.md),
+  [ADR-0008](../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md)).
 - Unexpected failures stay exceptions. `Either` is for outcomes, not for
   replacing the exception system.
 
