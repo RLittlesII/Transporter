@@ -12,7 +12,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     AutoGenerate = false,
     OnPullRequestBranches = ["main"],
     OnPullRequestIncludePaths = ["**/*"],
-    OnPullRequestExcludePaths = ["**/*.md", ".skills/**", ".agents/**", ".issues/**", "LICENSE"])]
+    OnPullRequestExcludePaths = ["**/*.md", ".skills/**", ".agents/**", ".issue/**", "features/**/.issue/**", "LICENSE"])]
 class Build : NukeBuild
 {
     /// Support plugins are available for:

@@ -48,7 +48,7 @@ touching nothing but documentation does not build:
 
 ```csharp
 OnPullRequestIncludePaths = ["**/*"],
-OnPullRequestExcludePaths = ["**/*.md", ".skills/**", ".agents/**", ".issues/**", "LICENSE"]
+OnPullRequestExcludePaths = ["**/*.md", ".skills/**", ".agents/**", ".issue/**", "features/**/.issue/**", "LICENSE"]
 ```
 
 **The include is not redundant.** An exclude list alone generates a `paths:`

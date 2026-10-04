@@ -25,7 +25,8 @@ on:
       - '!**/*.md'
       - '!.skills/**'
       - '!.agents/**'
-      - '!.issues/**'
+      - '!.issue/**'
+      - '!features/**/.issue/**'
       - '!LICENSE'
 
 jobs:
