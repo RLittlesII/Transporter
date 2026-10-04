@@ -59,8 +59,10 @@ is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
 - One finding per problem: the claim id or record it fails, and the artifact
   that changes to fix it (a claim, an out-of-scope row, a test, a lesson).
 - Specification or test deltas only, never preferences.
-- Then § 12: 🟡 Draft, 🟢 Approved, or 🔴 Blocked with the reason. Overall goes
-  🟢 only when every owner row is 🟢 and § 9 has no `Missing` row.
+- Then § 12's owner rows: 🟡 Draft, 🟢 Approved, or 🔴 Blocked with the reason.
+  When every row is 🟢 and § 9 has no `Missing` row, flip the frontmatter's
+  `spec_status` to `approved` — that field is the overall verdict, and § 12
+  carries no Overall row to mirror it.
 - **A clean review is a result; say so plainly.**
 
 ## Refuse

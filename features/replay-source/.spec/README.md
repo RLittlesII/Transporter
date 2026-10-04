@@ -233,12 +233,15 @@ rather than at the swap.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections                                                                  | Owner          | Status   |
-| ------------------------------------------------------------------------- | -------------- | -------- |
-| Business Goal, User Needs, Acceptance Criteria, Constraints, Out of Scope  | spec-author    | 🟡 Draft |
-| Concern Separation, Technical Design                                      | implementer    | 🟡 Draft |
-| Testing Strategy, Traceability Matrix                                     | test-writer    | 🟡 Draft |
-| Overall                                                                   | spec-reviewer  | 🟡 Draft |
+| Sections   | Owner          | Status   |
+| ---------- | -------------- | -------- |
+| §§ 1-5     | spec-author    | 🟡 Draft |
+| §§ 6-7     | implementer    | 🟡 Draft |
+| §§ 8-9     | test-writer    | 🟡 Draft |
+
+Overall is the frontmatter's `spec_status`, not a row here. `spec-reviewer`
+flips it to `approved` when every row above is 🟢 and § 9 has no `Missing`
+row.
 
 ## Decisions
 

@@ -199,16 +199,22 @@ spec_status: draft
 ## 12. Sign-off
 
 <!-- Owner: spec-reviewer. 🟡 Draft | 🟢 Approved | 🔴 Blocked — state the
-     reason on a Blocked row. Overall goes 🟢 only when every row is 🟢 and
-     § 9 has no Missing row. Overall 🟢 is what flips spec_status to
-     approved. -->
+     reason on a Blocked row. One row per owner, named by section number:
+     the mapping from number to owner is written in
+     .skills/transponder-conventions/SKILL.md, not restated here.
 
-| Sections                                                                  | Owner          | Status   |
-| ------------------------------------------------------------------------- | -------------- | -------- |
-| Business Goal, User Needs, Acceptance Criteria, Constraints, Out of Scope  | spec-author    | 🟡 Draft |
-| Concern Separation, Technical Design                                      | implementer    | 🟡 Draft |
-| Testing Strategy, Traceability Matrix                                     | test-writer    | 🟡 Draft |
-| Overall                                                                   | spec-reviewer  | 🟡 Draft |
+     There is NO Overall row. The frontmatter's `spec_status` is the single
+     store for document maturity. -->
+
+| Sections   | Owner          | Status   |
+| ---------- | -------------- | -------- |
+| §§ 1-5     | spec-author    | 🟡 Draft |
+| §§ 6-7     | implementer    | 🟡 Draft |
+| §§ 8-9     | test-writer    | 🟡 Draft |
+
+Overall is the frontmatter's `spec_status`, not a row here. `spec-reviewer`
+flips it to `approved` when every row above is 🟢 and § 9 has no `Missing`
+row.
 
 ## Decisions
 
