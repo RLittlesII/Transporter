@@ -1,102 +1,117 @@
 ---
 name: coding-conventions
-description: Transponder's C# naming, layout, and project conventions as enforced by .editorconfig and AGENTS.md — including the no-Async-suffix rule, private field prefix, feature folder layout, and central package versions. Use before writing or reviewing any C#.
+description: Conventions for any code, test, documentation or diagram change in a specification-driven repository — orient first, stop on a gap, keep the design direct, put a rule where it runs, and keep a skill to the rule. Use for any change.
 ---
 
 # Coding conventions
 
-The enforceable rules live in [`.editorconfig`](../../.editorconfig); the
-project-level ones in [`AGENTS.md`](../../AGENTS.md). This file is the short
-version with the traps called out. Where this file and `.editorconfig`
-disagree, `.editorconfig` wins — it is the one the compiler reads.
+**Project rules.** A project may extend this skill with a companion skill that
+names this one; its agent instructions (`AGENTS.md`) list it. Read both. The
+companion holds the project's language, framework, paths and naming specifics,
+and wins where they differ.
 
-## Naming
+## Before implementing
 
-- **Types** (class, struct, interface, enum) — PascalCase.
-- **Non-field members** (property, event, method) — PascalCase, at every
-  accessibility.
-- **Interfaces** — `I`-prefixed: `ITrackerSource`. An abstract base class is
-  not an interface and takes no prefix: `TransportVehicle`, never
-  `ITransportVehicle`.
-- **Private fields** — `_camelCase`. The underscore prefix is a naming rule
-  with warning severity, not a preference.
-- **Methods do not carry an `Async` suffix** (`AGENTS.md`). The return type
-  says whether it is asynchronous. This one catches everyone arriving from
-  another .NET codebase: it is `Refresh()`, not `RefreshAsync()`.
+- **Orient**, even when the task looks small or familiar — drift comes from
+  skipping this, not from the change itself:
+    - the project's code graph or index, when it has one;
+    - the specification, the affected pages, and the area's **out of scope**
+      section;
+    - every architecture decision record that bears on the change;
+    - the project's lessons.
+- When they conflict, source and tests are current state; decision records and
+  work items are history.
+- **Stop on a gap.** If the reading leaves a decision unsettled, or two sources
+  in tension, ask before proceeding — even under a "spike" or "just get it
+  working" framing. Name the gap, the options, and your recommendation. Never
+  resolve it by assumption or by picking the easiest option to build.
+- **Specify first.** Say what is out of scope for the area you touched, not only
+  what you built.
 
-## Layout
+## Design
 
-- `csharp_preferred_modifier_order` is explicit and ends with `async`:
-  `public, internal, protected, private, static, extern, abstract, virtual,
-  new, sealed, override, readonly, unsafe, volatile, async`.
-- Braces on their own line (`csharp_new_line_before_open_brace = all`), and
-  before `else`, `catch`, `finally`.
-- `System` using directives sort first.
-- Private fields sit at the **bottom** of the type in existing code — see
-  [`ClickActor`](../../src/Transponder/Features/Demo/Actors/ClickActor.cs) and
-  [`AkkaHostBuilder`](../../src/Gui/Container/AkkaHostBuilder.cs). Follow it
-  for consistency; it is a style choice, not a rule the build checks.
-- `CA2007` (await without `ConfigureAwait`) is excluded for async-void
-  methods — see `AGENTS.md` before adding a suppression of your own.
+- Keep the implementation direct. Use plain code until a real external boundary
+  or a second implementation makes an abstraction useful.
+- Add an interface only at a real external boundary, or when two implementations
+  already need a shared contract.
+- When a seam is justified, use SOLID and named Gang-of-Four patterns as the
+  vocabulary. The seam earns the pattern; naming a pattern never earns the seam.
+- Speculative extensibility is a cost paid now for a requirement that may never
+  arrive. A member nothing overrides and a layer nothing varies are both it.
 
-## Project structure
+## Naming and layout
 
-- Feature code lives under
-  `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}`. The existing
-  `Features/Demo` pair is the template.
-- **Integration code does not live under `Features/`.** A provider's API
-  contract, its implementation and the client and cache above it belong to that
-  provider, not to one feature, and two features can want the same provider.
-  They go under `src/Transponder/Integrations/<Provider>/`, split
-  `Contracts/` (the interface callers name), `Http/` (the one `internal sealed`
-  implementation) and `Container/` (its registration). Nothing in `Features/`
-  may hold a contract, a wire type or a cache.
-- `src/Transponder` is the model, the feature logic and the integrations;
-  `src/Gui` is the MAUI host, pages and container wiring; `test/UnitTests` is
-  the test project (root namespace `Transponder.UnitTests`).
-- Container wiring extends the existing builder blocks —
-  [`AkkaHostBuilder`](../../src/Gui/Container/AkkaHostBuilder.cs) and
-  [`UserInterfaceBuilder`](../../src/Gui/Container/UserInterfaceBuilder.cs),
-  which use C# `extension(MauiAppBuilder)` members — rather than piling
-  registrations into [`MauiProgram`](../../src/Gui/MauiProgram.cs).
+- **The configuration the build reads is the authority.** Formatter and
+  analyzer settings outrank any prose about naming or layout, including a
+  skill's: they are what the compiler enforces. The companion names the file.
+- A naming rule carrying warning severity is a rule, not a preference.
+- A suppression carries a reason beside it saying why the rule does not apply
+  here. One without is indistinguishable from an accident.
 
-## Packages
+## Dependencies
 
-- **Versions are central.** All versions live in
-  [`Directory.Packages.props`](../../Directory.Packages.props) with
-  `ManagePackageVersionsCentrally` and transitive pinning on. A `.csproj`
-  carries `<PackageReference Include="..." />` with **no `Version`
-  attribute** — pinning one there is the drift this setup exists to prevent.
-- Adding a package means a `PackageVersion` entry in the props file and a
-  reference in the project that needs it, in the same change.
+- **A dependency's version is declared in one place for the whole repository.**
+  An individual project file naming its own version is the drift that central
+  declaration exists to prevent.
+- Adding a dependency means the version declaration and the reference that
+  needs it, in the same change.
 
-## Generated files are not editable
+## Generated files and guards
 
-- [`format.json`](../../format.json) and the Nuke-generated
-  `.github/workflows/ci.yml` are generated (`AGENTS.md`). Change the
-  generator, never the output.
-- Mapperly's generated mappers are generated too — see
-  [`mapping`](../mapping/SKILL.md).
-- `obj/` and `bin/` are build output and never appear in a diff.
+- Never hand-edit a generated file. If the output is wrong, the input or the
+  generator is wrong.
+- **Put a rule where it runs, not only where it is checked.** A convention
+  enforced by a continuous-integration flag holds only there; a local run, an
+  editor run, or another agent's session escapes it. Enforce it in code, a hook,
+  or the tool that owns the artifact; continuous integration is the backstop.
+- **A committed generated file merges the way its sources do.**
+    - Every line derives from one source item; no whole-tree totals or counts.
+    - Independent items are sorted by a stable key and separated by unchanged
+      lines, so a merge of two correct copies is correct.
+    - A count belongs in the generator's output or a job summary.
 
-## Tests
+## Documentation and diagrams
 
-xUnit in `test/UnitTests`, `GivenX_WhenY_ThenZ` naming, synthetic data. The
-detail is in [`test-from-scenarios`](../test-from-scenarios/SKILL.md).
+- Every tracked markdown file declares frontmatter saying what it is; the
+  companion names the keys and the permitted types.
+- Draw every diagram in the one notation the project chose, inline in the
+  markdown that needs it.
+- Test and example data is synthetic. Never real user content.
 
-## Diagrams and docs
+## Skills
 
-- Diagrams are Mermaid (`AGENTS.md`), inline in the markdown that needs them.
-- Every tracked markdown file opens with YAML frontmatter (`title`,
-  `description`, `type`). **Skills and agents are the exception**: they
-  declare `name` and `description` only, and their type comes from the path.
+A skill is one of three things, and never a mixture: a **method** skill, which
+is portable to another repository; a **technology** skill, about a library or
+tool; or the **project companion**, which holds what is specific to this
+repository under the section names of the method skill it extends.
+
+> A skill holds the rule, the trap, and the `Never add` list. Facts live where
+> they are authoritative — the specification, a decision record, or the
+> library's own documentation — and the skill links them. Four things never go
+> in a skill: a fact restated from somewhere else in the repository, the
+> current state of the repository, a project path or command in a skill that is
+> not the project companion, and the reason the product wants the rule.
+
+- **A fact belongs to one file.** A skill repeating a specification, a decision
+  record or a provider's documentation is a second place for it to drift from,
+  and a reader who finds both has no way to tell which is current.
+- **The current state of the repository is not a rule.** "There is no test
+  target yet", "that package is not referenced yet", "this shape is
+  provisional" are all true until the next change lands, and silently false
+  afterwards. State the rule; let the reader read the repository.
+- Cross-link to the skill that owns a neighbouring rule rather than restating
+  it. A rule restated twice is a rule that will be corrected once.
+
+## Before finishing
+
+- Run the narrowest relevant checks.
+- Inspect the diff for unrelated changes.
+- Update the specification whenever the target design changes.
 
 ## Never add
 
-- An `Async` method suffix.
-- A `Version` attribute on a `PackageReference`.
 - A hand edit to a generated file.
-- A blocking call on async code — no `.Result`, no `.Wait()`, no
-  `GetAwaiter().GetResult()`.
-- A suppression without a reason next to it saying why the rule does not
-  apply here.
+- A dependency version pinned in a single project file.
+- A suppression with no reason beside it.
+- A blocking wait on an asynchronous call.
+- A fact in a skill that is authoritative somewhere else.

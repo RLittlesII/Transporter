@@ -7,6 +7,10 @@ type: lesson
 <!-- Copy to features/<feature-slug>/.spec/lessons/{{NNNN}}-{{lesson-slug}}.md
      and add a row to § 10 of that Feature's README.md.
 
+     A lesson that binds every Feature goes in the ROOT .spec/lessons/ instead,
+     numbered repo-wide from 0001 — the same blast-radius split .spec/adr/ uses.
+     It has no § 10 row to add, because it belongs to no one Feature.
+
      A bug fix that reveals a specification gap ships its lesson IN THE SAME
      PULL REQUEST as the fix (AGENTS.md). A fix that reveals nothing writes
      none. Specifications never stay silent about fixed bugs — silence
