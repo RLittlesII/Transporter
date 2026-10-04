@@ -194,9 +194,9 @@ The choices that are material here, and worth one question:
   ([`hot-swap-source`](../hot-swap-source/SKILL.md)).
 
 Everything else — the shape of a class, the name of a folder — is yours to
-choose: little of this design is adopted yet. Open questions already known are
-listed in [`README.md`](../../README.md) § "Open items"; check there before
-asking.
+choose; [`.agents/README.md`](../../.agents/README.md) says why. Open questions
+already known are listed in [`README.md`](../../README.md) § "Open items"; check
+there before asking.
 
 ---
 

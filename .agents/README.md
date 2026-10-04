@@ -66,12 +66,10 @@ mechanics of claiming an item and publishing the work are in
 
 ## Two standing facts
 
-- **Scenarios are documentation.** There is no Gherkin runner in this
-  repository — no Reqnroll, no step definitions. The `.feature` file is the
-  readable specification; the xUnit tests in
-  [`test/UnitTests`](../test/UnitTests) are what execute.
-- **Nothing in `src/` is an adopted architecture yet.** It is a demo, and the
-  sample code came from package documentation. The skills say which of their
-  guidance is a fact about the outside world and which is a provisional
-  pattern; roles should respect that distinction rather than defending a shape
-  nobody chose.
+- **Scenarios are documentation**, and the xUnit tests are what execute —
+  [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md) has
+  the rule.
+- **`src/` is a demo, not an adopted architecture.** The sample code came from
+  package documentation. The skills say which of their guidance is a fact about
+  the outside world and which is a provisional pattern; roles should respect
+  that distinction rather than defending a shape nobody chose.

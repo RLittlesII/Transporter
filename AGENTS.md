@@ -4,7 +4,7 @@ This document establishes development practices for the Transponder repository, 
 
 ## Core Principles
 
-**Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` (see the `specification` skill, `.skills/spec-and-traceability` for the model and `.skills/transponder-conventions` for this repository's layout). When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
+**Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` — [`spec-and-traceability`](.skills/spec-and-traceability/SKILL.md) holds the model, [`transponder-conventions`](.skills/transponder-conventions/SKILL.md) this repository's layout, and [`.spec/templates/feature.md`](.spec/templates/feature.md) the blank. When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
 
 **Specification-Driven Chain**: Development follows an artifact progression from specification (§§ 1-5 of the Feature's `.spec/README.md`) → claim (§ 3) → scenario (its `.feature` file) → work item (`<id>.yml`, beside that Feature's specification) → xUnit test → implementation. **The specification comes first and stands alone** — it needs no work item to exist, because it is the agreement that items are later cut from. The item sits where *delivery* begins, not where the thinking begins; a bug, spike or chore starts there instead, and may produce a spec delta afterwards. Every stage must be traceable through § 9 Traceability Matrix, and none can be skipped without documented exemption. Scenarios are documentation — there is no Gherkin runner in this repository; the tests in `test/UnitTests` are what execute.
 
@@ -22,13 +22,7 @@ Claims are numbered rows in § 3 Acceptance Criteria of a Feature's `.spec/READM
 
 ## Roles and Workflow
 
-Four roles own the specification chain, declared under `.agents/` (see `.agents/README.md`). Each owns named sections of a Feature's `.spec/README.md` and writes no others:
-- **spec-author** (`.agents/spec-author.md`): §§ 1-5, the `.feature` file, `## Tasks`, `## Scoring`
-- **test-writer** (`.agents/test-writer.md`): §§ 8-9, and the failing xUnit tests
-- **implementer** (`.agents/implementer.md`): §§ 6-7, and the production code
-- **spec-reviewer** (`.agents/spec-reviewer.md`): § 12, judging diffs against cited claims
-
-Each role trusts only the artifact from the preceding role. The authoritative ownership table — including §§ 10-11 and Decisions — lives in `.skills/transponder-conventions/SKILL.md`. These files are documented contracts for whoever takes the role, a person or an agent; this repository ships no loadable agents, since the directory is `.agents/`, not `.claude/agents/`.
+Four roles own the specification chain — `spec-author`, `test-writer`, `implementer`, `spec-reviewer` — each declared under [`.agents/`](.agents/README.md), each owning named sections of a Feature's `.spec/README.md` and writing no others. Which role owns which section is written in exactly one place: [`transponder-conventions`](.skills/transponder-conventions/SKILL.md) § "Section ownership". Each role trusts only the artifact from the preceding role. These files are documented contracts for whoever takes the role, a person or an agent; this repository ships no loadable agents, since the directory is `.agents/`, not `.claude/agents/`.
 
 ## Lessons and Bug Fixes
 
@@ -48,20 +42,36 @@ When a bug fix reveals a specification gap, a lesson document in the Feature's `
 
 ## Code Conventions
 
-- Types and non-field members use PascalCase; interfaces are `I`-prefixed; private fields use `_camelCase` (see `.editorconfig`)
-- Explicit modifier order, `async` last; `CA2007` async-void methods are excluded
-- Methods do not carry an `Async` suffix; return types indicate asynchronicity
-- Feature code lives under `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}` — follow this layout for new features
-- Integration code does **not** live under `Features/`. A provider's API contract, its implementation, and the client and cache above it go under `src/Transponder/Integrations/<Provider>/{Contracts,Http,Container}` — they belong to the provider, not to one feature, and two features can want the same provider
-- Use xUnit (`test/UnitTests`) with `GivenX_WhenY_ThenZ` test names, AwesomeAssertions for assertions, and NSubstitute for test doubles. AwesomeAssertions is not yet in `Directory.Packages.props`; the first issue that writes a test adds it
-- Use Mermaid for diagrams, synthetic data in tests
-- Never hand-edit generated files (`format.json`, the Nuke-generated `.github/workflows/ci.yml`). The `[GitHubActions]` attribute currently sets `AutoGenerate = false`, so the workflow is regenerated deliberately (`nuke --generate-configuration GitHubActions_ci --host GitHubActions`), never by a build
-- Build via Nuke (`.build/Build.cs`): `Clean → Restore → Format → Compile`, invoked through `build.cmd`/`build.sh`/`build.ps1`. **There is no `Test` target yet** — a green build does not mean the tests ran
-- Package versions are centrally managed in `Directory.Packages.props`; never pin a version in a `.csproj`
+Each class of rule has one home. Read the owner, not a copy of it:
+
+| What | Where it is written |
+| --- | --- |
+| Naming, modifier order, braces, analyzer suppressions | [`.editorconfig`](.editorconfig) — the compiler reads it |
+| Project layout, where integrations go, testing conventions, build and test commands | [`transponder-conventions`](.skills/transponder-conventions/SKILL.md) |
+| Package versions | [`Directory.Packages.props`](Directory.Packages.props) |
+| Build targets, CI, regenerating the workflow | [`nuke-build`](.skills/nuke-build/SKILL.md) |
+
+Four traps are worth carrying here, because each costs real damage when missed
+and none of them changes:
+
+- **No `Async` suffix on a method** — the return type says whether it is
+  asynchronous. PascalCase for types and non-field members, `I`-prefixed
+  interfaces, `_camelCase` private fields. `.editorconfig` is the authority.
+- **Integration code does not live under `Features/`.** A provider's contract,
+  its implementation, and the client and cache above it belong to the provider,
+  not to one feature.
+- **Never hand-edit a generated file** — `format.json` and the Nuke-generated
+  `.github/workflows/ci.yml`. The workflow is regenerated deliberately, never by
+  a build.
+- **Never pin a package version in a `.csproj`.** Versions are central.
+
+Which packages are referenced and which build targets exist is repository
+state, not a rule: read `Directory.Packages.props` and `.build/Build.cs`. A
+green build proves only that the targets it declares ran.
 
 ## Documentation Structure
 
-Every tracked markdown file opens with YAML frontmatter (`title`, `description`, `type`). Types are `adr`, `spec`, `decision`, `guide`, `readme`, `lesson`, `instructions`, or `template`. Skills and agents declare `name` and `description` only; their type is path-derived. The blanks in `.spec/templates/` carry the type of the file they produce, so a copied template needs no frontmatter edit beyond its title and description. Runtime prompts are exempt from frontmatter requirements.
+Every tracked markdown file opens with YAML frontmatter (`title`, `description`, `type`); skills and agent files declare `name` and `description` only. The type enum and the rest of the rule are in [`transponder-conventions`](.skills/transponder-conventions/SKILL.md) § "Documentation and diagrams". The blanks in `.spec/templates/` carry the type of the file they produce, so a copy needs no frontmatter edit beyond its title and description. Runtime prompts are exempt.
 
 ## Knowledge Graph Integration
 
