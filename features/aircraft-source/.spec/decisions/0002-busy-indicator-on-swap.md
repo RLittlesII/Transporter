@@ -52,7 +52,7 @@ rehearse.
 
 - § 5 row 7 — the indicator's *rendering* stays out of scope here; this records
   the behavior it must express, not the control.
-- `hot-swap-source` § "What the audience sees on swap" — the table now records
+- `hot-swap-source` § "There is a gap, and something must occupy it" — the table now records
   this as the chosen option.
 - B-051 — the rejected drain option depended on expiry, which that claim
   forecloses.

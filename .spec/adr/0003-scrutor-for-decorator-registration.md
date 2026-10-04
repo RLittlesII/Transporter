@@ -63,7 +63,7 @@ makes true.
 
 `Scrutor` is added to `Directory.Packages.props` as a `PackageVersion` with the
 reference in the project that needs it, in the same change, per
-`coding-conventions` § "Packages". It is not yet there; the first item that
+`coding-conventions` § "Dependencies". It is not yet there; the first item that
 builds the decorator adds it.
 
 ## Consequences

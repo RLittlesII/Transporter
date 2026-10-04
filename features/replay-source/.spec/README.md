@@ -38,8 +38,8 @@ renumbered into the groups they belong to — ids here are permanent; and
 **B-024 – B-027** which recording a run loads, answered in
 [adr/0001](adr/0001-recording-selected-by-configuration.md).
 
-Claim ids are per-Feature, per spec-and-traceability § "Claim IDs are
-`B-00n`". `B-001` here and `B-001` in
+Claim ids are per-Feature, per spec-and-traceability § "Claims and
+traceability". `B-001` here and `B-001` in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) are different
 claims: an `.issue/` item names its spec, and its `claims:` ids resolve
 against that spec.
@@ -55,7 +55,7 @@ against that spec.
 | B-007 | Replay SHALL emit payloads in recorded order at the recorded inter-arrival spacing, derived from the recorded instants, and SHALL NOT substitute a fixed interval.                                                                           | api-mock § "Replay"                                            |
 | B-008 | On reaching the end of a recording, replay SHALL continue from its first payload; the stream SHALL NOT complete, fault, or emit a changeset that removes every vehicle at the loop boundary.                                                 | api-mock § "Replay"                                            |
 | B-009 | The observed instant downstream SHALL be the replayed payload's own reported time — never the recorded arrival instant, and never an ambient clock.                                                                                          | aircraft-source B-003; ADR-0004 § "Decision"                   |
-| B-010 | Staleness under replay SHALL be driven by the recording's time base, so a vehicle becomes observably stale at the same point in the recording at which it did live; the staleness clock SHALL be injected, not ambient.                      | api-mock § "Replay"; dynamic-data-pipeline § "Staleness"       |
+| B-010 | Staleness under replay SHALL be driven by the recording's time base, so a vehicle becomes observably stale at the same point in the recording at which it did live; the staleness clock SHALL be injected, not ambient.                      | api-mock § "Replay"; dynamic-data-pipeline § "Staleness and expiry"       |
 | B-011 | Replay SHALL make no network request and SHALL require no credential; it SHALL run to completion with the provider unreachable and no secrets configured.                                                                                   | api-mock § "Strategies on the same seam"; § 4 row 2            |
 | B-012 | A torn or unparseable final line SHALL be discarded and the stream SHALL continue; a recording truncated mid-write SHALL NOT fault replay.                                                                                                  | ADR-0004 § "Decision"                                          |
 | B-013 | Replay SHALL produce domain vehicles through the same projection the live strategy uses; there SHALL NOT be a second converter, parser or mapper for recorded payloads.                                                                      | mapping § "One mapper per boundary"; api-mock § "Recording"     |
