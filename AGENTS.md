@@ -4,7 +4,7 @@ This document establishes development practices for the Transponder repository, 
 
 ## Core Principles
 
-**Design Authority**: The canonical specification resides in `features/README.md`. When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
+**Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` (see the `specification` skill and `.skills/spec-and-traceability`). When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
 
 **Specification-Driven Chain**: Development follows an artifact progression from issue → scenario → supporting detail → step definitions → implementation. All four stages must be traceable and none can be skipped without documented exemption.
 
@@ -14,11 +14,11 @@ This document establishes development practices for the Transponder repository, 
 3. Pull requests document what changed upstream through their body text
 4. Specifications explicitly state boundaries — what not to build — as clearly as what to build
 
-**Exemption Requirements**: Refactoring that preserves behavior may skip new scenarios only by citing specific preserved claim IDs (format: `REQ-<AREA>-<NNN>`). The exemption cannot be claimed merely because scenario-writing feels slow; the contributor must demonstrate which existing claims remain valid.
+**Exemption Requirements**: Refactoring that preserves behavior may skip new scenarios only by citing specific preserved claim IDs. The exemption cannot be claimed merely because scenario-writing feels slow; the contributor must demonstrate which existing claims remain valid. Nothing automates this check — review enforces it.
 
 ## Traceability and Identifiers
 
-Every scenario carries a stable tag (`@REQ-<AREA>-<NNN>`) that never changes or gets reused. `<AREA>` names the feature area under `src/Transponder/Features/<AREA>` (e.g. `Demo`), so a claim ID traces directly to the code it describes. Canonical documentation uses `CON-<PAGE>-<NNN>` identifiers. A generated traceability matrix (`docs/traceability.md`) tracks all claim coverage and fails the build if IDs are missing, malformed, or dangling.
+Claims are numbered rows in § 3 Acceptance Criteria of a Feature's `.spec/README.md`, using `B-00n` identifiers that never change or get reused. Each scenario in the companion `.feature` file carries the matching `@B-00n` tag, and § 9 Traceability Matrix is the gate: every claim appears there exactly once, and a `Missing` row blocks ship. This matches the global `specification` skill, which owns the template and the tooling. There is no separate generated `docs/traceability.md` and no build-time ID check in this repository.
 
 ## Roles and Workflow
 
@@ -32,7 +32,7 @@ Each role trusts only the artifact from the preceding role.
 
 ## Lessons and Bug Fixes
 
-When a bug fix reveals a specification gap, a lesson document (`docs/lessons/`) records symptom, root cause, spec delta, and the relevant claim ID in the same pull request. Process-related lessons also update the corresponding skill. Specifications never stay silent about fixed bugs — silence perpetuates the same issue later.
+When a bug fix reveals a specification gap, a lesson document in the Feature's `.spec/lessons/` records symptom, root cause, spec delta, and the relevant claim ID in the same pull request. Process-related lessons also update the corresponding skill. Specifications never stay silent about fixed bugs — silence perpetuates the same issue later.
 
 ## Delivery Workflow
 
@@ -49,10 +49,10 @@ When a bug fix reveals a specification gap, a lesson document (`docs/lessons/`) 
 - Explicit modifier order, `async` last; `CA2007` async-void methods are excluded
 - Methods do not carry an `Async` suffix; return types indicate asynchronicity
 - Feature code lives under `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}` — follow this layout for new features
-- Use xUnit (`test/UnitTests`), Shouldly for assertions, `GivenX_WhenY_ThenZ` test names
+- Use xUnit (`test/UnitTests`) with `GivenX_WhenY_ThenZ` test names, AwesomeAssertions for assertions, and NSubstitute for test doubles. AwesomeAssertions is not yet in `Directory.Packages.props`; the first issue that writes a test adds it
 - Use Mermaid for diagrams, synthetic data in tests
-- Never hand-edit generated files (`format.json`, the Nuke-generated `.github/workflows/ci.yml`)
-- Build via Nuke (`.build/Build.cs`): `Clean → Restore → Format → Compile`, invoked through `build.cmd`/`build.sh`/`build.ps1`
+- Never hand-edit generated files (`format.json`, the Nuke-generated `.github/workflows/ci.yml`). The `[GitHubActions]` attribute currently sets `AutoGenerate = false`, so the workflow is regenerated deliberately (`nuke --generate-configuration GitHubActions_ci --host GitHubActions`), never by a build
+- Build via Nuke (`.build/Build.cs`): `Clean → Restore → Format → Compile`, invoked through `build.cmd`/`build.sh`/`build.ps1`. **There is no `Test` target yet** — a green build does not mean the tests ran
 - Package versions are centrally managed in `Directory.Packages.props`; never pin a version in a `.csproj`
 
 ## Documentation Structure
@@ -65,4 +65,27 @@ The `graphify` tool maintains a codebase knowledge graph. Queries, path analysis
 
 ## Skills Reference
 
-Focused guidance documents address specific domains relevant to this codebase: `dynamic-data`, `application-architecture` (Clean Architecture/CQRS/BLoC-style MVVM), `domain-driven-design`, `xunit`, `dotnet-build`, `nuke`, and `logging`. Consult the project skill extending each role agent before acting in that role.
+**Project skills live in `.skills/`** and win over a global skill of the same name where they differ:
+
+| Skill | Covers |
+| --- | --- |
+| `transponder-domain-model` | `TransportVehicle` and its subclasses, units, optional values |
+| `api-contract` | the snapshot seam, the OpenSky client, credits, credentials |
+| `ais-stream` | the AISStream vessel feed (stretch goal) |
+| `api-mock` | record, replay, and simulated sources |
+| `dynamic-data-pipeline` | `EditDiff` through `Bind`, staleness and expiry |
+| `hot-swap-source` | swapping the live source mid-demo |
+| `akka-actor` | actor shape, registration, supervision |
+| `mapping` | Mapperly at the wire boundary |
+| `language-ext-usage` | `Option`/`Either`, and where they stop |
+| `build-maui-ui` | C# markup, binding surface, the swap test |
+| `mvvm` | thin view models: user input in, actor message out, projection back |
+| `coding-conventions` | naming, layout, central packages |
+| `test-from-scenarios` | xUnit, injected schedulers, synthetic fixtures |
+| `spec-and-traceability` | where a specification lives, `B-00n` claims |
+| `deliver-change` | issue → worktree → PR → checks |
+| `clarify-requirements` | when to ask versus decide |
+| `nuke-build` | targets, CI, generated files |
+| `run-the-demo` | stage-day runbook |
+
+Relevant global skills: `dynamic-data`, `specification`, `riok-mapperly`, `language-ext`, `nuke`, `xunit`, `dotnet-build`, `domain-driven-design`, `logging`. Consult the project skill extending each role agent before acting in that role.
