@@ -136,6 +136,12 @@ script as easily as by a person.
 gate fails.
 
 - `priority`, `rank` and `blocks` are **derived** — recompute, never hand-edit.
+- **A `risk` rationale names the hazard, not the shape of the work.** The number
+  is read later to decide how hard to test something, so "crosses two
+  boundaries" or "no existing coverage" gives a test writer nothing to aim at.
+  Name the specific wrong answer and the claim it breaks — an absent altitude
+  mapped to zero is an aircraft at sea level — and the rationale becomes an
+  instruction instead of a restatement of the score.
 - **A closed item stays.** `status: done` and a `closed:` date; the file is
   permanent history, like the spec itself.
 - Ids come from `.issues/.sequence`, are claimed **after** rebasing like any
