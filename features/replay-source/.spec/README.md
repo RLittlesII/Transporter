@@ -303,11 +303,11 @@ this specification rather than a call made and reversed inside it.
 
 | Item   | Claims                                                    |
 | ------ | --------------------------------------------------------- |
-| `0008` | all 23 — the parent; its children hold the work            |
+| `0008` | all 27 — the parent; its children hold the work            |
 | `0009` | B-001 – B-006                                             |
-| `0010` | B-007, B-008, B-011, B-012, B-014                         |
+| `0010` | B-007, B-008, B-011, B-012, B-014, B-027                   |
 | `0011` | B-009, B-010, B-013, B-022                                |
-| `0012` | B-015 – B-018                                             |
+| `0012` | B-015 – B-018, B-024 – B-026                              |
 | `0013` | B-019 – B-021, B-023                                      |
 
 Every claim is carried by exactly one child, and `0008` carries all of them
@@ -329,12 +329,11 @@ to run above it, and selection needs the decorator. Those dependencies are
 recorded in the items, where `depends_on` is authoritative, and are deliberately
 not restated here as ids.
 
-§ 11 row 3 is answered, which added B-024 – B-027 after these items were cut.
-**No item carries them yet**, so the one-claim-one-item invariant above holds
-only for B-001 – B-023 until that is fixed. Where they belong follows from the
-answer: B-024, B-025 and B-026 to `0012`, where a run's recording surfaces and
-where startup reporting sits, and B-027 to `0010`, whose stream-or-path question
-the answer settles. Adding them is an edit to the items, not to this table.
+B-024 – B-027 arrived after these items were cut, when § 11 row 3 was answered,
+and the items were amended to carry them: naming, root resolution and the
+startup report to `0012`, where a run's recording surfaces, and the stream the
+pacer is handed to `0010`, whose own open question the answer closed. The
+invariant above holds across all 27 again.
 
 ## Scoring
 
@@ -351,9 +350,13 @@ the answer settles. Adding them is an edit to the items, not to this table.
 | 2026-10-04 | `0011` risk  | —    | 3  | Substitutes below a client it must not duplicate (B-022) while carrying the two claims most easily confused with each other: the reported time against the arrival instant (B-009, B-010). |
 | 2026-10-04 | `0012` risk  | —    | 3  | § 4 row 12 is the hazard: a strategy registered after Scrutor's `Decorate<>` resolves raw and silently, so the failure appears on stage rather than in a build.           |
 | 2026-10-04 | `0013` risk  | —    | 4  | Claims behaviour over a feed no specification defines yet (§ 5 row 2), and substitutes at a depth nothing else in this Feature uses (B-023).                             |
+| 2026-10-04 | `0012` risk  | 3    | 4  | Two registration-time hazards now stack here and neither shows at runtime: a strategy registered after Scrutor's `Decorate<>` resolves raw, so the swap silently does nothing; and a recording named but absent or shorter than the staleness threshold is a stage failure unless B-026's startup report catches it first. |
 
 `value` is inherited: no child carries one except `0013`, so the rest resolve to
-`0008`'s 4 at read time. `risk` is never inherited and is set per item. The
-numbers above are the ones the items carry; the rationale is this
+`0008`'s 4 at read time. `risk` is never inherited and is set per item, and it
+moves when a claim lands on an item: `0012` went to 4 when B-024 – B-026 added
+the no-default rule and the startup report, while `0010` stayed at 3, having
+lost an open question and gained no work. The numbers above are the ones the
+items carry; the rationale is this
 specification's reading of why each sits where it does, and the items stay
 authoritative for the values themselves.
