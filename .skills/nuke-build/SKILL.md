@@ -44,12 +44,9 @@ requests to `main`: checkout, cache, then `./build.cmd`.
 ### A documentation-only change skips it
 
 The `[GitHubActions]` attribute carries a path filter, so a pull request
-touching nothing but documentation does not build:
-
-```csharp
-OnPullRequestIncludePaths = ["**/*"],
-OnPullRequestExcludePaths = ["**/*.md", ".skills/**", ".agents/**", ".issue/**", "features/**/.issue/**", "LICENSE"]
-```
+touching nothing but documentation does not build. The attribute's
+`OnPullRequestIncludePaths` and `OnPullRequestExcludePaths` on
+[`.build/Build.cs`](../../.build/Build.cs) are the filter — read them there.
 
 **The include is not redundant.** An exclude list alone generates a `paths:`
 list of nothing but `!` patterns, and GitHub triggers on *no* event when every
