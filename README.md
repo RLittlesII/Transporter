@@ -109,6 +109,7 @@ Credit cost per `/states/all` call by bounding box area: ≤25 sq° = 1, 25–10
 - Implementations: live OpenSky, and **replay from recorded snapshots** — a recorded fixture is a set of the provider's own records, so replay re-derives nothing. Recordings are an NDJSON append log, one line per snapshot, per [ADR-0004](.spec/adr/0004-ndjson-recording-format.md).
 - Record several minutes of snapshots during rehearsal. Be able to switch to replay on stage if the venue network fails.
 - This also makes a teaching point: the pipeline doesn't care where the data comes from.
+- The operational half — what to do before the talk, on the day, and when something breaks — is the [stage-day runbook](docs/runbook.md).
 
 ## Closing act (optional): swap in a push source
 
@@ -138,6 +139,9 @@ Replace the polled source with a push source and show that everything downstream
 - [ ] If using ships: get an AISStream API key
   - [X] Intend to show ships
 - [ ] Add OpenSky citation slide
+- [ ] Decide the vessel WebSocket client: `ClientWebSocket` or `AISStream.NET` (§ "Closing act" names both)
+- [ ] Decide, per command, whether a view model reaches its actor with `Tell` or `Ask` (`mvvm` § "Two kinds of input, two routes")
+- [ ] Decide whether the build gets a `Test` target (`nuke-build` § "Targets")
 
 ## Technology Decisions
 

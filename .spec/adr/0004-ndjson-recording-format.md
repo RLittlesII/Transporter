@@ -12,9 +12,9 @@ type: adr
 
 Replay is not a testing afterthought. `README.md` § "Demo resilience" commits
 to "replay from recorded snapshots", and
-[`run-the-demo`](../../.skills/run-the-demo/SKILL.md) makes it a control one
+[the stage-day runbook](../../docs/runbook.md) makes it a control one
 switch away during the talk — the thing that goes on stage when the venue
-network dies. [`api-mock`](../../.skills/api-mock/SKILL.md) says what to
+network dies. [`features/replay-source`](../../features/replay-source/.spec/README.md) says what to
 record: **raw** snapshots as received, with the instant they arrived, long
 enough that items go stale on playback.
 
@@ -86,7 +86,7 @@ recordings/aircraft-2026-10-04T14-22-01Z.ndjson
 `recordings/` is git-ignored. A rehearsal recording is operational data, not a
 fixture, and it is scrubbed before any of it is reused as one. Synthetic test
 fixtures are unaffected by this record: they stay plain JSON committed beside
-the tests that use them, per `api-mock` § "Tests".
+the tests that use them, per `test-from-scenarios` § "Fixtures are synthetic".
 
 ## Consequences
 
