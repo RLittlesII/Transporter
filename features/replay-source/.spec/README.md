@@ -316,8 +316,15 @@ without knowing which recording a run loads and where it lives.
 | ---------- | ------------ | ---- | -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-10-04 | `0008` value | —    | 4  | § 1 names one outcome — a fallback the presenter can reach with the control they already have — and the demo survives a dead venue network only if it lands whole.        |
 | 2026-10-04 | `0013` value | —    | 3  | README makes the closing act optional, while B-020 makes a fallback mandatory *once it is presented*. Conditional on the act happening, so below the parent rather than dropped. |
+| 2026-10-04 | `0008` risk  | —    | 4  | Spans recording, playback, selection and both feeds, and crosses two boundaries it is forbidden to duplicate — the provider's contract and the seam.                     |
+| 2026-10-04 | `0009` risk  | —    | 3  | B-004 makes transparency the claim: a tap that perturbs what the fleet sees fails in a way nothing downstream reports, and B-003 forbids buying correctness with a second poll. |
+| 2026-10-04 | `0010` risk  | —    | 3  | Time-base work throughout — pacing from recorded instants on an injected scheduler, the loop boundary, the torn final line — and § 11 row 3 is unanswered beneath it.    |
+| 2026-10-04 | `0011` risk  | —    | 3  | Substitutes below a client it must not duplicate (B-022) while carrying the two claims most easily confused with each other: the reported time against the arrival instant (B-009, B-010). |
+| 2026-10-04 | `0012` risk  | —    | 3  | § 4 row 12 is the hazard: a strategy registered after Scrutor's `Decorate<>` resolves raw and silently, so the failure appears on stage rather than in a build.           |
+| 2026-10-04 | `0013` risk  | —    | 4  | Claims behaviour over a feed no specification defines yet (§ 5 row 2), and substitutes at a depth nothing else in this Feature uses (B-023).                             |
 
 `value` is inherited: no child carries one except `0013`, so the rest resolve to
-`0008`'s 4 at read time. `risk` is never inherited and is set per item; those
-rows are added here as each item records one, and the authoritative numbers stay
-in the `.issues/` items rather than in this table.
+`0008`'s 4 at read time. `risk` is never inherited and is set per item. The
+numbers above are the ones the items carry; the rationale is this
+specification's reading of why each sits where it does, and the items stay
+authoritative for the values themselves.
