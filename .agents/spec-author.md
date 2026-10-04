@@ -47,8 +47,8 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
    and **scoped to this Feature**, so a new spec starts again at `B-001` and two
    specs may share an id without either giving way
    ([`transponder-conventions`](../.skills/transponder-conventions/SKILL.md)).
-   A withdrawn claim is marked `Withdrawn`, not deleted; § 9 and the `.feature`
-   file are anchored to it.
+   A withdrawn claim is marked `Withdrawn` on the claim itself, not deleted;
+   § 9 and the `.feature` file are anchored to it.
 2. **Scenarios** in the Feature's `.feature` file: declarative
    `Given` / `When` / `Then` naming the trigger and asserting something
    observable, each tagged with the `@B-00n` claim it proves. No class names,
@@ -93,4 +93,4 @@ a duplicate, malformed or dangling id is caught by reading or not at all.
 - Real user content. Every example is synthetic: invented callsigns, MMSIs and
   positions.
 - A `@ignore` tag or any other marker implying the scenarios execute. An
-  unbuilt claim shows in the § 3 `Status` column and as a § 9 `Missing` row.
+  unbuilt claim shows as a § 9 row naming no test, and nowhere else.

@@ -33,8 +33,8 @@ is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
    (name it) or overreach.
 3. **Scope creep** beyond the item, a riding refactor included.
 4. **A scenario contradicting an accepted ADR**, either direction.
-5. **§ 9 integrity** — a claim with no row, a row with no claim, a `Missing`
-   row shipping anyway, or a § 3 `Status` saying built when no test cites it.
+5. **§ 9 integrity** — a claim with no row, a row with no claim, a row naming
+   a test that does not cite the claim, or a `Missing` row shipping anyway.
 6. **Credential handling** — a token, client secret or API key logged,
    committed, or in a fixture; a test or build step reaching a live provider.
 7. **A missing lesson**, when the diff fixes a bug a claim should have caught.

@@ -66,12 +66,15 @@ spec_status: draft
      they are permanent: never renumbered, never reused. A withdrawn claim is
      marked Withdrawn, not deleted. -->
 
-| ID    | Claim     | Source     | Status |
-| ----- | --------- | ---------- | ------ |
-| B-001 | {{claim}} | {{source}} | Draft  |
+| ID    | Claim     | Source     |
+| ----- | --------- | ---------- |
+| B-001 | {{claim}} | {{source}} |
 
-<!-- Status: Draft | Built | Withdrawn. "Built" means a test cites it and § 9
-     says Verified. -->
+<!-- A claim's build state is NOT written here. § 9 is the only store for it:
+     a row naming a test is coverage, a row naming none is Missing. A
+     WITHDRAWN claim is the exception — § 9 has no row for a claim that was
+     never going to be built — so it is marked on the claim itself, which
+     opens `**Withdrawn** —`. -->
 
 ## 4. Constraints
 

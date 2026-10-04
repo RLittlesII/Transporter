@@ -252,8 +252,11 @@ pair: an item carries `claims:` alongside the `spec:` those claims live in.
 Within one specification an id is never renumbered and never reused. Claims need
 no sequence file, which is what lets two Features be specified at once.
 
-An unbuilt claim is marked in the two places that already exist: the § 3
-`Status` column and a § 9 row reading `Missing`.
+An unbuilt claim is marked once, in § 9 — a row naming no test. § 3 carries no
+build state, because it would be a second store for what § 9 already decides.
+A **withdrawn** claim is the exception: § 9 has no row for a claim that was
+never going to be built, so it is marked on the § 3 claim itself, which opens
+`**Withdrawn** —`.
 
 ### Four-digit ids collide — always write the scheme
 

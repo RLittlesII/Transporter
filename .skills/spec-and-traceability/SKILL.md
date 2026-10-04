@@ -80,8 +80,11 @@ order.
 - Where scenarios are documentation rather than executable, **a scenario alone
   never satisfies a claim** — the matrix row does, and it points at a test
   ([`test-from-scenarios`](../test-from-scenarios/SKILL.md)). An unbuilt claim
-  is then marked in the two places that already exist: its status column and its
-  matrix row. Nothing else, and nothing implying the scenarios execute.
+  is marked once, in its matrix row — the row that names no test. The claim
+  itself carries no build state, or there are two stores for one answer. A
+  *withdrawn* claim is the exception, marked on the claim, because the matrix
+  has no row for a claim that was never going to be built. Nothing else, and
+  nothing implying the scenarios execute.
 
 ## Numbers from independent sequences collide
 
