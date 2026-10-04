@@ -276,17 +276,48 @@ this specification rather than a call made and reversed inside it.
      only — never restated titles, or the two records disagree. "None yet."
      is valid while the spec is still being agreed. -->
 
-None yet. No item is cut while § 11 row 1 is open: the substitution point
-decides how many components this Feature has, so items cut now would be
-re-cut.
+| Item   | Claims                                                    |
+| ------ | --------------------------------------------------------- |
+| `0008` | all 23 — the parent; its children hold the work            |
+| `0009` | B-001 – B-006                                             |
+| `0010` | B-007, B-008, B-011, B-012, B-014                         |
+| `0011` | B-009, B-010, B-013, B-022                                |
+| `0012` | B-015 – B-018                                             |
+| `0013` | B-019 – B-021, B-023                                      |
+
+Every claim is carried by exactly one child, and `0008` carries all of them
+because the children are slices of it rather than work beside it. The cut
+follows the component boundaries § 3 is grouped by, with one departure:
+playback splits from the substitution point, so `0010` holds the claims about
+reading a recording and pacing it — true wherever replay stands in — while
+`0011` holds the ones B-022 fixes to the contract.
+
+`0013` is the exception, and the reason is in this specification rather than in
+its item. Its claims can be designed but not built: § 5 row 2 defers the vessel
+feed, and aircraft-source § 5 row 3 leaves `Vessel`, its client, its cache and
+its tracker source unspecified, so what `0013` waits on is an unwritten
+specification rather than an unfiled item.
+
+Three of these items also have prerequisites in the aircraft Feature — the
+recorder taps a live client, the contract substitution needs a live projection
+to run above it, and selection needs the decorator. Those dependencies are
+recorded in the items, where `depends_on` is authoritative, and are deliberately
+not restated here as ids.
+
+§ 11 row 3 is still open and lands on `0010` and `0011`: neither can be designed
+without knowing which recording a run loads and where it lives.
 
 ## Scoring
 
 <!-- Owner: spec-author, recording the item's value and risk when they change.
      The authoritative values live in the .issues/ item. -->
 
-| Date         | Field | From | To  | Rationale     |
-| ------------ | ----- | ---- | --- | ------------- |
+| Date       | Field        | From | To | Rationale                                                                                                                                                              |
+| ---------- | ------------ | ---- | -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-04 | `0008` value | —    | 4  | § 1 names one outcome — a fallback the presenter can reach with the control they already have — and the demo survives a dead venue network only if it lands whole.        |
+| 2026-10-04 | `0013` value | —    | 3  | README makes the closing act optional, while B-020 makes a fallback mandatory *once it is presented*. Conditional on the act happening, so below the parent rather than dropped. |
 
-No scoring recorded — no `.issues/` item has been cut from § 3 yet, and
-`value` and `risk` live in the item rather than here.
+`value` is inherited: no child carries one except `0013`, so the rest resolve to
+`0008`'s 4 at read time. `risk` is never inherited and is set per item; those
+rows are added here as each item records one, and the authoritative numbers stay
+in the `.issues/` items rather than in this table.
