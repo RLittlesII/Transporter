@@ -69,6 +69,29 @@ decisions:
     and a second place B-003 had to be honoured. Recorded in ADR-0002 and as
     § 4 row 20; B-007 and B-008 amended. This item still builds only the HTTP
     implementation."
+  - "2026-10-04 — implementer — the HTTP transport inspects a `429` and returns
+    `Left(OpenSkyThrottled)` rather than throwing, even though B-028 is
+    `0004`'s claim. § 7's poll diagram puts the inspection in the transport and
+    § Scoring moved the thrown-`429` hazard onto this item, so the alternative
+    was shipping the recorded hazard. The deferral half — what the client does
+    with the `Left` — is still `0004`'s and still waits on § 11 question 2, so
+    B-028's § 9 row stays `Missing`."
+  - "2026-10-04 — implementer — `OpenSkyHttpApi` takes only `IFlurlClientCache`.
+    § 7 declares it with a token source and a logger beside that; both serve
+    B-026 and B-027, which this item's `out_of_scope` routes to `0004` and
+    which § 11 question 2 has not yet placed on a component. Rejected:
+    declaring `IOpenSkyTokenSource` now with nothing behind it, which is a seam
+    with no second implementation and no caller."
+  - "2026-10-04 — implementer — the positional row's converter is attached with
+    `[JsonConverter]` on `OpenSkyStateRow` rather than registered in the named
+    client's `JsonSerializerOptions`. The wiring stays with the type that needs
+    it, and a committed fixture deserializes without standing up the HTTP
+    stack. Rejected: the serializer-options route `flurl-http-client` shows,
+    which leaves the envelope unreadable outside a configured client."
+  - "2026-10-04 — implementer — `AddOpenSky` extends `IServiceCollection`, not
+    `MauiAppBuilder`, so B-008 is provable in a unit test with no MAUI host.
+    The `src/Gui` builder block calls it when the chain is assembled, which is
+    `0004` and later."
 
 out_of_scope:
   - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."

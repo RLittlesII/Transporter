@@ -611,22 +611,24 @@ both scenarios.
 
 **What the tests need before any of them can be written**
 
-`transponder-conventions` mandates AwesomeAssertions and NSubstitute, and
-neither is in [`Directory.Packages.props`](../../../Directory.Packages.props)
-yet — nor is DynamicData, which `0003` adds under § 4 row 17. The first item to
-write a test adds the two test packages centrally, the same way. Nothing here
-is blocked on a decision; it is a step, recorded so it is not discovered as a
-surprise.
+`transponder-conventions` mandates AwesomeAssertions and NSubstitute. `0002`
+was the first item to write a test, so it added both centrally to
+[`Directory.Packages.props`](../../../Directory.Packages.props) along with the
+two pieces of plumbing nothing in the repository had: the test project's
+reference to `src/Transponder`, and that project's
+`InternalsVisibleTo("Transponder.UnitTests")`. DynamicData is still absent;
+`0003` adds it the same way under § 4 row 17.
 
 ## 9. Traceability Matrix
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and it reports `Missing` on all fifty-one.** No test in
-this repository executes yet — `test/UnitTests` contains no `.cs` file — so
-every row below names what will prove its claim and records that it does not.
-A row's Status becomes `Verified` when the named test passes in a run, and not
-before.
+**This is the gate, and forty-six of the fifty-one rows read `Missing`.** Five
+are `Verified`: `0002` built the contract, its envelope, the positional row's
+converter, the HTTP transport and the hand-written fake, and the tests this
+section names against B-001, B-002, B-005, B-008 and B-010 pass in a run. Every
+other row names what will prove its claim and records that it does not. A row's
+Status becomes `Verified` when the named test passes in a run, and not before.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Ten claims carry two
@@ -642,16 +644,16 @@ no test", not an omission.
 
 | Claim ID | Scenario | Test | Status |
 | -------- | -------- | ---- | ------ |
-| B-001 | `@B-001` | `OpenSkyStatesResponseTests.GivenAReportedTimeAndThreeRows_WhenTheResponseIsRead_ThenBothArriveNamedAsTheProviderNamesThem` | Missing |
-| B-002 | `@B-002` | `OpenSkyStatesResponseTests.GivenTheEnvelope_WhenItsMembersAreInspected_ThenStatesIsPositionalAndNoMemberIsAPerAircraftType` | Missing |
+| B-001 | `@B-001` | `OpenSkyStatesResponseTests.GivenAReportedTimeAndThreeRows_WhenTheResponseIsRead_ThenBothArriveNamedAsTheProviderNamesThem` | Verified |
+| B-002 | `@B-002` | `OpenSkyStatesResponseTests.GivenTheEnvelope_WhenItsMembersAreInspected_ThenStatesIsPositionalAndNoMemberIsAPerAircraftType` | Verified |
 | B-003 | `@B-003` | `AircraftSnapshotClientTests.GivenAResponseReportingAnInstant_WhenTheSetIsApplied_ThenThatInstantIsTheObservedOne` | Missing |
 | B-004 | `@B-004` | analyzer — `BoundaryAnalyzerTests.GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach` | Missing |
-| B-005 | `@B-005` | `OpenSkyApiContractTests.GivenTheContract_WhenItsMethodsAreInspected_ThenOnePerEndpointReturnsTaskAndTakesCancellationLast` | Missing |
+| B-005 | `@B-005` | `OpenSkyApiContractTests.GivenTheContract_WhenItsMethodsAreInspected_ThenOnePerEndpointReturnsTaskAndTakesCancellationLast` | Verified |
 | B-006 | `@B-006` | analyzer — `BoundaryAnalyzerTests.GivenAContractNamingAnObservableCacheBoxIntervalOrCredential_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-007 | `@B-007` | analyzer — `BoundaryAnalyzerTests.GivenASecondImplementationForOneTransportOrAPublicEndpointMethod_WhenAnalyzed_ThenItIsReported` | Missing |
-| B-008 | `@B-008` | `OpenSkyRegistrationTests.GivenTheConstructedChain_WhenTheContractIsResolved_ThenItsOwnImplementationArrivesAndNoImplementationTypeResolves` | Missing |
+| B-008 | `@B-008` | `OpenSkyRegistrationTests.GivenTheConstructedChain_WhenTheContractIsResolved_ThenItsOwnImplementationArrivesAndNoImplementationTypeResolves` | Verified |
 | B-009 | `@B-009` | **Review** — the precondition cannot be arranged: OpenSky has published no version. An obligation on the change that adds a versioned interface. | Missing |
-| B-010 | `@B-010` | `OpenSkyApiFakeTests.GivenAFakeWithNoResponseConfigured_WhenTheEndpointIsCalled_ThenItThrowsNamingTheUnsetResponse` | Missing |
+| B-010 | `@B-010` | `OpenSkyApiFakeTests.GivenAFakeWithNoResponseConfigured_WhenTheEndpointIsCalled_ThenItThrowsNamingTheUnsetResponse` | Verified |
 | B-011 | `@B-011` | `AircraftSnapshotTests.GivenTwoSnapshotsReportingIdenticalValues_WhenCompared_ThenTheyAreEqual` | Missing |
 | B-012 | `@B-012` | `AircraftSnapshotTests.GivenASnapshot_WhenItsKeyIsRead_ThenItIsTheNonOptionalIcao24` | Missing |
 | B-013 | `@B-013` | `AircraftSnapshotTests.GivenAWireRow_WhenTheSnapshotIsBuilt_ThenEveryValueIsTheWiresAndNoneIsConverted` | Missing |
@@ -696,7 +698,9 @@ no test", not an omission.
 
 Fifty-one rows, fifty-one claims, each appearing once. A scenario existing is
 not coverage; this section is the only place a claim's build state is written,
-and nothing here is `Verified`.
+and forty-six of its rows still say the claim is not proven. Eleven of those
+wait on a mechanism rather than on an item: until the analyzer ADR-0006 decides
+on exists, no boundary claim can leave `Missing`, so no item can reach `done`.
 
 ## 10. Lessons / Spec Deltas
 
