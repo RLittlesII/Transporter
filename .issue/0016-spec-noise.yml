@@ -1,0 +1,71 @@
+id: "0016"
+type: task
+title: Link the rules instead of restating them across the specifications
+
+status: in-progress
+
+priority: medium
+value: 3
+risk: 3
+rank: 51
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  Lesson 0001 established that a skill holds the rule and links the fact. It
+  scoped that to skills restating facts, so it left untouched the larger case:
+  a rule, or metadata about a rule, restated outside the document that owns it.
+
+  Both feature specifications carry the authoring guidance of
+  .spec/templates/feature.md as copied comment blocks, and unfilled
+  {{placeholder}} rows in §§ 6-9. AGENTS.md restates ten code-convention
+  bullets and the delivery workflow the companion skill owns. Five fields
+  documented as derived are stored a second time by hand. Three skills
+  paraphrase the ADR each of them already links.
+
+  The copies have already gone wrong rather than merely gone stale: two
+  different commands for regenerating the workflow, two cites to
+  spec-and-traceability sections that do not exist, a § 9 traceability matrix
+  reporting Verified for a claim no test covers, and two root items whose
+  stored rank disagrees with the formula that derives it.
+
+  Give every rule and every derived field exactly one home, and leave a link
+  everywhere else.
+
+  No type `chore` exists in .spec/templates/item.yml's enum
+  (epic | feature | task | test | bug | spike), so this is filed as a task,
+  following 0014.
+
+acceptance_criteria:
+  - "No filled specification carries a multi-line authoring comment; each section carries a one-line pointer at .spec/templates/feature.md naming no owner."
+  - "No {{placeholder}} remains in a filled specification, and § 9 states that test-writer owns the matrix and that it gates implementation."
+  - "spec_status is the only store for document maturity, and § 9 the only store for claim coverage."
+  - "The rank formula, its bucket thresholds and its bucket vocabulary live in .spec/templates/item.yml, and every stored rank recomputes to its stored value."
+  - "An item cites claim ids; where it carries a handle it is a few words, never a reworded claim sentence."
+  - "Every fact in the plan's one-home table has exactly one authoritative statement, and every relative link and section cite resolves."
+
+decisions:
+  - "2026-10-04 — rlittlesii: a one-line pointer per section rather than stripping the template comments outright. A pointer that also named the section's owner was rejected: it would be an eighth copy of the section-to-owner mapping."
+  - "2026-10-04 — rlittlesii: § 9 reports that test-writer owns it and is unwritten, and that is the gate before implementation starts. Rejected transcribing one Missing row per claim ahead of any test existing."
+  - "2026-10-04 — rlittlesii: an item prefers a reference to the source of truth, and may duplicate claim text only where the duplication is what makes the item workable."
+  - "2026-10-04 — rlittlesii: AGENTS.md becomes an index with the hard traps inline, rather than a pure index. A trap that costs real damage when missed stays as text."
+  - "2026-10-04 — claude: bucket thresholds set at high 60 and above, medium 40 to 59, low below 40. Only the high threshold was previously written down; these are the boundaries the fifteen existing items already satisfy."
+
+out_of_scope:
+  - "Any change to source, tests, the build or CI. This is documentation only."
+  - "Renaming .skills/api-contract to end its collision with the global skill of the same name. Worth doing, but it touches every citation in the repository."
+  - "The dangling api-mock, run-the-demo and ais-stream cites in § 3 Source cells, deliberately left standing by lesson 0001 as provenance."
+  - "The type enum's missing chore value, already recorded on item 0014."
