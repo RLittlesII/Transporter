@@ -1,30 +1,23 @@
 ---
 name: hot-swap-source
-description: Swap the live data source mid-demo — planes to ships — without rebuilding the cache, filters, sorts, groups or bindings. Use when building the source selector, the swap control, or anything that disposes a source.
+description: Swap the live data source in the running application without rebuilding the cache, filters, sorts, groups or bindings. Use when building the source selector, the swap control, or anything that disposes a source.
 ---
 
 # Hot-swapping the live source
 
-The closing act ([`README.md`](../../README.md) § "Closing act"): replace the
-polled aircraft feed with a push vessel feed and show that everything
-downstream of the cache is unchanged. The ambition here is sharper than a
-restart — **swap the stream in the running app, on stage**, and let the
-audience watch the same grid, the same filters, the same sorts and groups
-refill with ships.
-
-If that works, the talk's claim is proved in front of people instead of
-asserted. So this is the design constraint every other skill bends around,
-not a feature to bolt on at the end.
+Replace one live feed with another **in the running application**, and
+everything downstream of the seam is unchanged. That is a design constraint
+every other skill bends around, not a feature to bolt on at the end: if a swap
+would require editing a view, a filter or a binding, the design has regressed.
 
 ## The mechanism
 
-**A decorator, registered as the seam.** Every strategy adheres to
-`ITrackerSource` ([`api-contract`](../api-contract/SKILL.md)); so does the thing
-that picks between them. A consumer resolves `ITrackerSource`, gets the
-decorator, and never learns there was a choice to make.
+**A decorator, registered as the seam.** Every strategy adheres to the tracker
+seam ([`api-contract`](../api-contract/SKILL.md)); so does the thing that picks
+between them. A consumer resolves the seam, gets the decorator, and never learns
+there was a choice to make.
 
 ```csharp
-// Provisional: this shape is a first reading of the Rx/DynamicData docs.
 internal sealed class SwappingTrackerSource : ITrackerSource
 {
     private readonly BehaviorSubject<ITrackerSource> _selected;
@@ -35,105 +28,86 @@ internal sealed class SwappingTrackerSource : ITrackerSource
 ```
 
 - `Switch` unsubscribes from the outgoing strategy's inner sequence and
-  subscribes to the incoming one. `IFleetTracker` and everything it owns never
-  know it happened.
+  subscribes to the incoming one. The tracker and everything it owns never know
+  it happened.
 - **There is no strategy resolver.** Nobody asks which strategy to use: the
   decorator *is* the registration, so the set of strategies is known in one
-  place and no caller has to know it at all. It is registered with Scrutor's
-  `Decorate<>` ([ADR-0003](../../.spec/adr/0003-scrutor-for-decorator-registration.md)),
+  place and no caller has to know it at all.
+- It is registered with Scrutor's `Decorate<>`
+  ([ADR-0003](../../.spec/adr/0003-scrutor-for-decorator-registration.md)),
   which wraps what is **already** registered — so a strategy registered after
-  the decorate call is resolved raw, silently. Register strategies first.
-- Live OpenSky, live AISStream, a replay and a simulated source are all swap
-  targets, because all four reach the seam as an `ITrackerSource`
-  ([`api-mock`](../api-mock/SKILL.md)). **One switch, not two**: there is no
-  separate offline mode and no second seam to bridge. They do not all get there
-  the same way, and they do not have to: aircraft replay is the *aircraft*
-  strategy constructed over a replay implementation of the contract, not a
-  strategy of its own, while vessel replay substitutes at the strategy because
-  a push provider has no contract to stand in for
-  ([ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md),
-  [`replay-source`](../../features/replay-source/.spec/README.md)). What makes
-  something a swap target is the seam it lands on, not its depth.
-- The seam carries **domain vehicles**, not snapshots. That is the point: both
-  feeds produce provider records, and what differs is the projection, so the
-  place they genuinely look alike is after it. See
-  [`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md) and
-  [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md).
-- Each strategy brings its own client and its own cache, so a swap does not
-  clear a shared collection — the outgoing cache simply stops being read. What
-  the audience sees as a result is decided below.
+  the decorate call is resolved raw, silently. **Register strategies first.**
+- **Every source is a swap target, live or recorded**, because all of them reach
+  the seam. **One switch, not two**: there is no separate offline mode and no
+  second seam to bridge. They do not all reach the seam at the same depth, and
+  they do not have to
+  ([ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md)).
+- The seam carries **domain items**, not snapshots. That is the point: both
+  kinds of feed produce provider records, and what differs is the projection, so
+  the place they genuinely look alike is after it.
+- Each strategy brings its own client and its own cache, so a swap clears no
+  shared collection — the outgoing cache simply stops being read.
 
-## What the audience sees on swap — a real decision
+## There is a gap, and something must occupy it
 
-Per-strategy caches change the shape of this question. Nothing is cleared on a
-swap: the outgoing cache stops being read, and the incoming strategy's changeset
-replaces the fleet. There is a gap of up to one poll — 15 seconds — before the
-incoming strategy has anything to emit, and something has to occupy it.
+Nothing is cleared on a swap: the outgoing cache stops being read, and the
+incoming strategy's changeset replaces the collection. Between the two there is
+a gap of up to one poll interval before the incoming strategy has anything to
+emit.
 
-**Decided: a busy indicator, then the new fleet** — see the aircraft-source
-specification's `decisions/0002`. A busy indicator says "transition, not
-failure" at the one moment the demo is making its point, and a few seconds of
-empty grid on a projector is indistinguishable from a crash.
-
-| Option | What the audience sees | Why not |
-|---|---|---|
-| **Busy indicator, then data** (chosen) | A brief indicator, then the ships arrive at once. | — |
-| An empty grid, no indicator | The same gap, unexplained. | Reads as a broken demo to anyone not following closely. |
-| Let the planes drain by expiry | Planes and ships coexist briefly, then planes age out. Dramatic. | Foreclosed twice: aircraft are marked and kept rather than expired (B-051), so there is nothing to drain with; and a mixed fleet reads as a bug. |
-| Pre-connect so there is no gap | No gap at all. | Two sources live at once, two sets of credits or sockets. A bigger change than the gap is a problem — and "swapping before the ships feed has authenticated" is already a failure mode below. |
-
-Whichever is shown, it is **never a pipeline rebuild**.
+**What a viewer sees during that gap is a decision, recorded per source in the
+specification, not improvised in the code.** An unexplained empty view reads as
+a crash; a mixed collection reads as a bug; pre-connecting both sources costs
+two live connections and two budgets. Whichever is chosen, it is **never a
+pipeline rebuild**.
 
 ## Disposal discipline
 
-The swap is where leaks happen, and a leak on a projector looks like a bug in
-DynamicData rather than in the demo.
+A swap is where leaks happen, and a leak looks like a bug in the reactive
+library rather than in the code that misused it.
 
 - **Stop the outgoing strategy's client.** A `Switch` drops the subscription,
-  but a poller that owns its own schedule keeps polling — and keeps spending
-  OpenSky credits — unless it is stopped. See
-  [`akka-actor`](../akka-actor/SKILL.md).
-- Close the outgoing WebSocket, cancel its read loop, and do not let its
-  reconnect logic race the new strategy by writing to its own cache behind the
-  swap.
-- Swapping back and forth repeatedly must be flat in memory and in credit
-  burn. Rehearse the swap more than once in a row.
+  but a poller that owns its own schedule keeps polling — and keeps spending the
+  provider's budget — unless it is stopped
+  ([`akka-actor`](../akka-actor/SKILL.md)).
+- Close the outgoing socket, cancel its read loop, and do not let its reconnect
+  logic race the new strategy by writing to its own cache behind the swap.
+- **Swapping back and forth repeatedly must be flat** in memory and in whatever
+  the provider meters. Exercise the swap more than once in a row.
 
 ## What must not be rebuilt
 
 The whole proof is that these survive untouched — and all of them live inside
-`IFleetTracker`, which is why a swap cannot reach them:
+the tracker, which is why a swap cannot reach them:
 
 - the tracker itself and its collection,
-- `Filter` predicates and the search box wiring,
+- `Filter` predicates and the search wiring,
 - `Sort` comparers and the user's chosen column,
 - `Group` and the per-group aggregates,
 - the `Bind` target and every view binding.
 
-Each strategy's own cache is *not* on this list. It belongs to one strategy and
-goes quiet with it; the continuity is downstream of the seam, not upstream.
+A strategy's own cache is *not* on this list. It belongs to one strategy and
+goes quiet with it; the continuity is downstream of the seam, not upstream. The
+UI's version of this rule is the swap test in
+[`maui-ui`](../maui-ui/SKILL.md).
 
-If a swap requires re-creating any of them, the design has regressed and the
-stretch goal is broken on paper. The UI's version of this rule is the swap
-test in [`build-maui-ui`](../build-maui-ui/SKILL.md).
+## Failure modes to exercise
 
-## Failure modes to rehearse
-
-- **Swapping while a poll is in flight.** The in-flight response arrives after
-  the switch. It lands in the outgoing strategy's own cache, which nothing is
+- **Swapping while a request is in flight.** The late response arrives after the
+  switch. It lands in the outgoing strategy's own cache, which nothing is
   reading — so it is harmless by construction rather than by vigilance. Cancel
-  it anyway: a response that arrives is a credit already spent, and a client
-  still running is a client still polling.
-- Swapping before the ships feed has authenticated: the grid empties and
-  stays empty. Pre-connect, or swap only once the new source has emitted.
-- A venue network that dies *during* the closing act. That is what the
-  recorded vessel replay is for.
-- Swapping twice quickly, because someone will.
+  it anyway: a response that arrives is budget already spent, and a client still
+  running is a client still polling.
+- **Swapping before the incoming source has authenticated or emitted**: the view
+  empties and stays empty. Swap only once the new source has emitted, or
+  pre-connect.
+- **The network dying mid-swap** — which is what a recorded source exists for.
+- **Swapping twice quickly**, because someone will.
 
 ## Never add
 
 - A restart, reload or page rebuild to change sources.
-- A second selection path for offline or replay mode.
+- A second selection path for an offline or recorded mode.
 - A strategy resolver that callers ask which strategy is live.
 - A `Switch` without stopping the outgoing strategy's client.
 - A pipeline rebuilt on swap.
