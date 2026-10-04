@@ -46,12 +46,10 @@ summary: |
   replay is selected by this decorator and by nothing else.
 
 acceptance_criteria:
-  - "B-038 — a decorator registered as `ITrackerSource` selects the live
-    strategy at runtime, and no strategy-resolver type exists."
-  - "B-039 — the decorator is substitutable for any strategy it wraps, and no
-    consumer can observe from its stream that a swap occurred."
-  - "B-040 — swapping stops the outgoing source, so a swapped-out poller stops
-    spending OpenSky credits and a swapped-out socket stops reading."
+  - "B-038 — the decorator registered as the seam, and no resolver type."
+  - "B-039 — a swap unobservable from the stream."
+  - "B-040 — the outgoing source is stopped, so it stops spending credits."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
   - "2026-10-04 — spec-author — Scrutor rather than keyed services, per-type

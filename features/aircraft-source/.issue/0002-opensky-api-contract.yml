@@ -49,23 +49,17 @@ summary: |
   Starts with 0003 as the other root of the tree; nothing blocks it.
 
 acceptance_criteria:
-  - "B-001, B-002 — envelope mirrors the provider; `states` stays positional."
-  - "B-003 — the envelope's reported time is the observed instant downstream."
-  - "B-004 — the positional row type is invisible outside the integration code."
-  - "B-005, B-006 — contract shape: one method per endpoint, and nothing about
-    caching, changesets, boxes, intervals or credentials on it."
-  - "B-007, B-008 — one `internal sealed` concretion per transport, explicit
-    implementation, unresolvable by its own type; dependency injection aliases
-    the contract per constructed chain. This item builds the HTTP one; the
-    recording one belongs to the replay Feature (§ 4 row 20)."
-  - "B-009 — a new provider version produces a new interface, not an edit."
-  - "B-010 — hand-written fake that throws naming the unset response; no
-    mocking framework for this double, and this double only (§ 4 row 18)."
-  - "B-048 — no version suffix and no marker interface until OpenSky publishes
-    a version (§ 4 row 3)."
-  - "B-049 — the contract layer exists only because OpenSky is request/response
-    shaped; nothing here is generalised into a surface a socket must satisfy
-    (§ 4 row 4)."
+  - "B-001, B-002 — the envelope and its positional `states`."
+  - "B-003 — the reported time as the observed instant."
+  - "B-004 — the positional row type's visibility."
+  - "B-005, B-006 — the contract's shape and what it may not name."
+  - "B-007, B-008 — one concretion per transport, and the aliasing. This item
+    builds the HTTP one; the recording one is the replay Feature's (§ 4 row 20)."
+  - "B-009 — a new provider version is a new interface."
+  - "B-010 — the hand-written fake, for this double only (§ 4 row 18)."
+  - "B-048 — no version suffix yet (§ 4 row 3)."
+  - "B-049 — the contract layer is conditional (§ 4 row 4)."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
   - "2026-10-04 — user — the contract takes one implementation per transport, so

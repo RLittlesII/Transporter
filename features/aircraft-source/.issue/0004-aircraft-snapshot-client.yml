@@ -62,52 +62,28 @@ summary: |
   two.
 
 acceptance_criteria:
-  - "B-015 — contract and cache by constructor; constructs neither."
-  - "B-016 — every field read by its own positional index per README.md
-    § \"Response shape\"."
-  - "B-017 — a `null` element is carried as absent, never defaulted to `0`,
-    `false` or an empty string."
-  - "B-018 — a 17-element row yields an absent category; an 18-element row with
-    index 17 of `0` yields a category present with value 0. The two are
-    distinguishable."
-  - "B-019 — 8-character callsign padding removed; padding-only is absent."
-  - "B-020 — squawk is a string and keeps its leading zeros."
-  - "B-021 — `sensors` (index 12) is read past deliberately and reaches no
-    type."
-  - "B-022 — an unreadable row is excluded and counted without aborting the
-    rest."
-  - "B-023 — every fetched set is written to the cache as a differential update
-    over the whole set, and the snapshot changeset stream is exposed. This is
-    the claim the demo's core idea rests on."
-  - "B-024 — box and interval arrive by constructor or options, never on the
-    contract or the stream."
-  - "B-025 — `extended=1` when category grouping is offered; without it the
-    category is absent rather than defaulted."
-  - "B-026 — token refreshed on expiry and on `401`, with the request retried
-    once after a successful refresh."
-  - "B-027 — `X-Rate-Limit-Remaining` logged at debug, and no token,
-    `client_id` or `client_secret` value in any log line, exception message,
-    fixture or diagnostic."
-  - "B-028 — `429` handled as data and deferred by exactly
-    `X-Rate-Limit-Retry-After-Seconds`; every other non-2xx stays an exception."
-  - "B-029 — a missing credential fails at startup naming which one; a failed
-    poll never completes or error-terminates the stream."
-  - "B-045 — the envelope and the positional row are referenced only by the
-    contract's implementation and by this client. Falsifiable here for the
-    first time, because this is the second and last referent."
-  - "B-050 — interval configurable, defaulting to 15 seconds; box configurable
-    with no default compiled in (decisions/0001)."
+  - "B-015 — contract and cache by constructor."
+  - "B-016 — positional reading, per README.md § \"Response shape\"."
+  - "B-017, B-018 — absent versus defaulted, and absent versus present-zero.
+    These two are the item's hazard: each wrong answer is plausible data."
+  - "B-019, B-020, B-021 — callsign padding, squawk as a string, `sensors`."
+  - "B-022 — one unreadable row does not abort the batch."
+  - "B-023 — the whole-set differential update and the changeset stream. This
+    is the claim the demo's core idea rests on."
+  - "B-024 — box and interval as constructor or options input."
+  - "B-025 — `extended=1` and the absent category."
+  - "B-026, B-028 — token refresh and retry, and `429` as data."
+  - "B-027, B-029 — what may never reach a log, and startup on an absent
+    credential."
+  - "B-045 — the envelope's referents. Falsifiable here for the first time,
+    because this is the second and last one."
+  - "B-050 — the configurable interval and box (decisions/0001)."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions: []
 
 out_of_scope:
-  - "The domain projection — no `TransportVehicle` is built here. B-034 puts the
-    first domain object in 0005."
-  - "The poller's hosting: actor shape, supervision, registration, and
-    `Tell`-versus-`Ask` (§ 5 row 16). This item claims the client's observable
-    behaviour, not where it runs — and § 4 row 15 is why the contract's
-    implementation stays a plain class."
-  - "Replay and recorded fixtures (§ 5 row 4). This item gives them an observed
-    instant to carry (B-003) and nothing more."
-  - "Registering the OpenSky account and provisioning credentials (§ 5 row 15).
-    B-029 claims the behaviour when one is absent; obtaining one is not code."
+  - "The domain projection — B-034 puts the first domain object in 0005."
+  - "The poller's hosting (§ 5 row 16)."
+  - "Replay and recorded fixtures (§ 5 row 4) — the replay Feature's."
+  - "Registering the account and provisioning credentials (§ 5 row 15)."

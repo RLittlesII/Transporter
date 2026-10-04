@@ -47,31 +47,19 @@ summary: |
   changesets it projects.
 
 acceptance_criteria:
-  - "B-033 — `ITrackerSource` declares the `TransportVehicle` changeset stream;
-    every strategy is substitutable through it without a cast."
-  - "B-034 — the aircraft tracker source adheres to it and owns the Mapperly
-    projection to `Aircraft`. This is the first place a domain object exists."
-  - "B-035 — values stay in the units the wire reported: metres, metres per
-    second, degrees clockwise from north. No feet, no knots, no display units."
-  - "B-036 — every absent value projects to `Option<T>.None`; an absent altitude
-    is not sea level and an absent position is not 0,0; barometric and geometric
-    altitude both survive as separate optional members."
-  - "B-037 — `TransportVehicle.Key` is the snapshot's `icao24` in lowercase hex,
-    non-optional and set on construction; the per-type interface is not widened
-    with source-describing members."
-  - "B-046 — the snapshot is referenced by the client, its cache and this
-    projection, and by nothing downstream of it. The snapshot dies here, which
-    is why the claim is verifiable in this item and not before."
+  - "B-033 — the seam's declaration."
+  - "B-034 — the projection this item owns. The first place a domain object
+    exists."
+  - "B-035, B-036 — canonical units, and absent values that are not zeroes.
+    The item's hazard: a mapper will answer wrongly without complaining."
+  - "B-037 — the key's form, and not widening the per-type interface."
+  - "B-046 — the snapshot's referents. The snapshot dies at this projection,
+    which is why the claim is verifiable here and not before."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions: []
 
 out_of_scope:
-  - "The vessel strategy and `Vessel` (§ 5 row 3). This item claims the shape a
-    second strategy plugs into; it builds one strategy, not two. Note the vessel
-    path gets no contract layer (B-049, § 4 row 4)."
-  - "Choosing the live strategy — B-038 – B-040, which is 0006. This item
-    registers a strategy; it does not select one."
-  - "Unit conversion and `Option<T>` formatting for display (§ 5 row 11). SI is
-    canonical in the model; conversion happens at the view."
-  - "Source-describing metadata — display name, sensible columns, an icon
-    (§ 5 row 13). B-037 forbids widening the interface for it."
+  - "Unit conversion and display formatting (§ 5 row 11)."
+  - "Source-describing metadata (§ 5 row 13)."
+  - "The vessel strategy (§ 5 row 3)."

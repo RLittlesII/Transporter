@@ -97,10 +97,8 @@ summary: |
 
 acceptance_criteria:
   - "All 51 claims in § 3 of the spec — the children carry them in slices, and
-    no claim is delivered twice. 0002 takes B-001 – B-010, B-048 and B-049;
-    0003 takes B-011 – B-014 and B-030 – B-032; 0004 takes B-015 – B-029,
-    B-045 and B-050; 0005 takes B-033 – B-037 and B-046; 0006 takes
-    B-038 – B-040; 0007 takes B-041 – B-044, B-047 and B-051."
+    no claim is delivered twice. Which child takes which claims is each
+    child's own `claims:` list, indexed in the specification's `## Tasks`."
   - "§ 9 Traceability Matrix has no Missing row once every child is done — that
     is the ship gate, not a green build (§ 4 row 13)."
 
