@@ -1,13 +1,15 @@
 ---
 name: nuke-build
-description: Build Transponder through Nuke (.build/Build.cs) — Clean, Restore, Format, Compile, Default — and regenerate the CI workflow rather than hand-editing it. Use when changing the build, adding a target, or touching CI.
+description: Build through Nuke and regenerate the CI workflow rather than hand-editing it — target wiring, the path-filter trap, and what a skipped job means. Use when changing the build, adding a target, or touching CI.
 ---
 
 # Building with Nuke
 
-This file is about [`.build/Build.cs`](../../.build/Build.cs) as it actually
-stands. For Nuke's own API — targets, parameters, tooling, the CI attributes —
-see [nuke.build](https://nuke.build).
+For Nuke's own API — targets, parameters, tooling, the CI attributes — see
+[nuke.build](https://nuke.build). This file covers **how this repository's build
+is wired and the traps in it**. The build itself is
+[`.build/Build.cs`](../../.build/Build.cs); read it for the current target list
+rather than trusting a list written down elsewhere.
 
 ## Run it
 
@@ -17,49 +19,42 @@ see [nuke.build](https://nuke.build).
 ./build.ps1           # PowerShell
 ```
 
-No argument runs `Default`. `Default` depends on `Format` and `Compile`.
+No argument runs `Default`. Configuration is `Debug` locally and `Release` on a
+server, overridable with `--configuration`.
 
-## The targets
+## Targets
 
-| Target | What it does |
-|---|---|
-| `Clean` | `DotNetClean`, deletes every `bin`/`obj` under `src` and `test`, recreates `.artifacts`. **Local builds only** (`OnlyWhenStatic(IsLocalBuild)`), and runs before `Restore`. |
-| `WorkflowRestore` | Currently a no-op — the `DotNetWorkloadRestore` call is commented out. A MAUI workload restore belongs here when CI needs it. |
-| `NugetRestore` | `DotNetRestore`. |
-| `Restore` | Aggregate: depends on `Clean`, `NugetRestore`, `WorkflowRestore`. |
-| `Format` | `DotNetFormat`, after `Restore`, and **`ProceedAfterFailure`** — a formatting failure does not stop the build. |
-| `Compile` | `DotNetBuild`, after `Restore` and `Format`. |
-| `Default` | `Format` + `Compile`. |
-
-Configuration is `Debug` locally and `Release` on a server, overridable with
-`--configuration`. The solution is `Transponder.slnx`.
-
-**There is no `Test` target.** Nothing runs
-[`test/UnitTests`](../../test/UnitTests) today, locally or in CI. Adding one —
-`DotNetTest` after `Compile`, folded into `Default` — belongs to the first
-issue that writes a test worth protecting. Do not assume the build is checking
-tests, because it is not.
+- **Every target that gates a change belongs in `Default`.** A target nothing
+  depends on is a target nothing runs, and a check nothing runs is not a check.
+- **Read `Default`'s dependency graph before claiming the build covered
+  something.** A green build proves only what `Default` reached: if it does not
+  run the tests, it is not a test run, however green it is.
+- **A target that proceeds after failure has to be read, not trusted.** Its exit
+  code says nothing about its output — a formatter wired that way reports
+  success while leaving the file unformatted.
+- A target never reaches a network provider, and never needs a credential to
+  pass. A build that can fail because someone else's service is down is not a
+  build.
 
 ## CI
 
 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs on pull
-requests to `main`: checkout, cache `.nuke/temp` and `~/.nuget/packages`, then
-`./build.cmd`.
+requests to `main`: checkout, cache, then `./build.cmd`.
 
-### Markdown-only changes skip it
+### A documentation-only change skips it
 
-The attribute carries a path filter, so a pull request that touches nothing but
-documentation does not build:
+The `[GitHubActions]` attribute carries a path filter, so a pull request
+touching nothing but documentation does not build:
 
 ```csharp
 OnPullRequestIncludePaths = ["**/*"],
 OnPullRequestExcludePaths = ["**/*.md", ".skills/**", ".agents/**", ".issues/**", "LICENSE"]
 ```
 
-**The include is not redundant.** `OnPullRequestExcludePaths` alone generates a
-`paths:` list of nothing but `!` patterns, and GitHub triggers on *no* event
-when every pattern is negative — the whole workflow would stop running. The
-`**/*` include is what makes the exclusions subtractive:
+**The include is not redundant.** An exclude list alone generates a `paths:`
+list of nothing but `!` patterns, and GitHub triggers on *no* event when every
+pattern is negative — the whole workflow would stop running. The `**/*` include
+is what makes the exclusions subtractive:
 
 ```yaml
     paths:
@@ -68,26 +63,24 @@ when every pattern is negative — the whole workflow would stop running. The
       - …
 ```
 
-Two consequences to keep in mind:
+Three consequences:
 
 - **GitHub reports a skipped job as passing.** That is the intent here, and it
-  is the same trap as a mis-scoped filter: before adding a path to the
-  exclusion list, ask whether a code change could ever match it. If it could,
-  the filter will hide a broken build behind a green tick. The list is
-  deliberately narrow — markdown and the three documentation directories, not
-  a blanket wildcard.
-- **A mixed pull request still builds.** `paths` skips only when *every*
-  changed file matches an exclusion, so markdown plus one `.cs` file runs
-  normally.
+  is the same trap as a mis-scoped filter: before adding a path to the exclusion
+  list, ask whether a code change could ever match it. If it could, the filter
+  will hide a broken build behind a green tick. Keep the list narrow and
+  explicit rather than a blanket wildcard.
+- **A mixed pull request still builds.** `paths` skips only when *every* changed
+  file matches an exclusion, so documentation plus one source file runs normally.
+- **A documentation change gets no CI build at all**, so the local run is the
+  only run it will ever get. Run it anyway.
 
-Since CI does not run on a documentation change, **the local `./build.sh` is
-the only build that change gets.** Run it anyway.
+### Regenerating the workflow
 
-It was generated by the `[GitHubActions]` attribute on `Build`, and its header
-says so — but **the attribute currently carries `AutoGenerate = false`**, so a
-build will not refresh it. That makes the file stale-by-design rather than
-generated-on-demand, and it is a trap: changing the attribute without
-regenerating leaves CI running the old workflow.
+The workflow is generated by the attribute on `Build`, and its header says so.
+**Check the attribute's `AutoGenerate` setting before assuming a build refreshes
+it**: where it is off, the file is stale-by-design, and changing the attribute
+without regenerating leaves CI running the old workflow.
 
 To regenerate deliberately:
 
@@ -95,33 +88,17 @@ To regenerate deliberately:
 ./build.sh --generate-configuration GitHubActions_ci --host GitHubActions
 ```
 
-Change the attribute, regenerate, commit `Build.cs` and `ci.yml` **together**.
-**Never hand-edit the workflow** (`AGENTS.md`) — the next regeneration silently
-discards the edit, and an attribute change with no regeneration leaves CI on
-the old file. Both halves of that are one commit.
+Change the attribute, regenerate, and commit `Build.cs` and `ci.yml`
+**together** — both halves are one commit. **Never hand-edit the workflow**: the
+next regeneration silently discards the edit.
 
 Regeneration also rewrites the pinned action versions to whatever this Nuke
-version emits (`actions/checkout`, `actions/cache`). If a newer major is
-wanted, it comes from a Nuke upgrade, not from editing the YAML.
-
-## Other generated files
-
-- [`format.json`](../../format.json) is generated. Change what produces it.
-- `obj/` and `bin/` never appear in a diff.
-- Mapperly output is generated — see [`mapping`](../mapping/SKILL.md).
-
-## Packages
-
-Versions are central, in
-[`Directory.Packages.props`](../../Directory.Packages.props), with transitive
-pinning on. A `.csproj` reference carries no `Version` — see
-[`coding-conventions`](../coding-conventions/SKILL.md). `global.json` pins the
-SDK; `dotnet-tools.json` holds the local tool manifest.
+version emits. If a newer major is wanted, it comes from a Nuke upgrade, not
+from editing the YAML.
 
 ## Never add
 
-- A hand edit to `ci.yml` or `format.json`.
-- A `Version` attribute on a `PackageReference`.
-- A target that reaches a network provider, or that needs a credential to
-  pass.
+- A hand edit to `ci.yml` or to any other generated build artifact.
+- A target that reaches a network provider, or that needs a credential to pass.
 - A new target left out of `Default` and therefore never run.
+- A path to the CI exclusion list that a source change could also match.
