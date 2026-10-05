@@ -3,21 +3,15 @@
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
 
     <PropertyGroup>
-        <!-- The AutoFixtures generator writes AutoFixtureBase.g.cs into obj/ on every build with
-             <typeparam> tags that name no type parameter (CS1711) and nullable annotations with no
-             #nullable directive (CS8669). Both only surface because GenerateDocumentationFile and
-             Nullable are on, there is no source here to correct, and an .editorconfig severity does
-             not reach a source generator's output - so they are silenced on the project instead. -->
+        <!-- The AutoFixtures generator emits typeparam tags naming no type parameter (CS1711) and
+             nullable annotations with no #nullable directive (CS8669). No source here to fix, and an
+             .editorconfig severity does not reach a generator's output. -->
         <NoWarn>$(NoWarn);CS1711;CS8669</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- The analyzer is referenced for every project in the root Directory.Build.props, with
-             ReferenceOutputAssembly="false" so no analyzer assembly reaches an application. The
-             tests are the one place that needs the assembly too, because they name BoundaryAnalyzer
-             in order to test it (boundary-analyzer B-015). An Update by $(TransponderAnalyzerProject)
-             changes that one piece of metadata on the existing item; a second ProjectReference
-             would be a second declaration of the same reference. -->
+        <!-- The one project that needs the assembly as well as the analyzer: its tests name
+             BoundaryAnalyzer (B-015). An Update, not a second ProjectReference. -->
         <ProjectReference Update="$(TransponderAnalyzerProject)" ReferenceOutputAssembly="true"/>
     </ItemGroup>
 
