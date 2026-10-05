@@ -31,13 +31,4 @@
         <Using Include="Xunit"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <!-- An analyzer reference, not an assembly reference: csc loads it and the application
-             never sees it (B-014). ReferenceOutputAssembly="false" is what keeps
-             Transponder.Analyzers.dll out of this project's output. -->
-        <ProjectReference Include="../../src/Transponder.Analyzers/Transponder.Analyzers.csproj"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false"/>
-    </ItemGroup>
-
 </Project>

@@ -10,4 +10,21 @@
     <ItemGroup>
         <PackageReference Include="Rocket.Surgery.Airframe.CodeAnalysis"/>
     </ItemGroup>
+
+    <ItemGroup Condition="'$(MSBuildProjectName)' != 'Transponder.Analyzers'">
+        <!-- This repository's own analyzer, referenced the same way and in the same place as the
+             Airframe set above: every project the file governs gets it, including one added later.
+             An analyzer reference, not an assembly reference — csc loads it and the application
+             never sees it (boundary-analyzer B-014), which is what ReferenceOutputAssembly="false"
+             keeps true. The test project flips that back with an Update, because its tests name
+             BoundaryAnalyzer in order to test it.
+
+             The path is anchored at this file rather than relative, because MSBuild resolves a
+             ProjectReference against the project that imports it and the importers sit at three
+             different depths. The condition keeps the analyzer out of its own reference list; a
+             project cannot be its own analyzer. -->
+        <ProjectReference Include="$(MSBuildThisFileDirectory)src/Transponder.Analyzers/Transponder.Analyzers.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
+    </ItemGroup>
 </Project>
