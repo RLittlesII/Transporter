@@ -108,7 +108,7 @@ public class BoundaryAnalyzerDescriptorTests
     }
 
     [Fact]
-    public void GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheEighteenAndNothingMore()
+    public void GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheSeventeenAndNothingMore()
     {
         // Given
         var sut = new BoundaryAnalyzer();

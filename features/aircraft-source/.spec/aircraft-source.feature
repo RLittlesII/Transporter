@@ -262,13 +262,9 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And it spends no further credits
       And its in-flight result does not reach any cache after the swap
 
-  @B-010
-  Scenario: The contract's fake refuses to invent a response
-    Given a hand-written fake of the contract with no response configured
-     When a caller invokes its endpoint
-     Then it throws
-      And the message names the response that was not set
-      And the fake was not produced by a mocking framework
+  # B-010 is Withdrawn (README.md § 3, § 4 row 18, § 11 row 4), so its scenario
+  # is gone rather than kept as documentation of a rule this repository does not
+  # follow. The contract's double is NSubstitute's, like every other double here.
 
   # ─────────────────────────── Validation failure ───────────────────────────
 

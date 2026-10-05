@@ -533,16 +533,6 @@ internal static class BoundaryTestData
         """;
 
     // lang=csharp
-    internal const string MockingFrameworkStandIn = """
-        namespace NSubstitute;
-
-        public static class Substitute
-        {
-            public static T For<T>() => default!;
-        }
-        """;
-
-    // lang=csharp
     internal const string TheOneAliasPerChain = """
         using Microsoft.Extensions.DependencyInjection;
         using Transponder.Integrations.OpenSky.Contracts;
@@ -695,6 +685,34 @@ internal static class BoundaryTestData
         """;
 
     // lang=csharp
+    internal const string ClientHoldingItsCache = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky;
+
+        internal sealed class AircraftSnapshotClient
+        {
+            public AircraftSnapshotClient(SourceCache<AircraftSnapshot, string> cache) => _cache = cache;
+
+            private readonly SourceCache<AircraftSnapshot, string> _cache;
+        }
+        """;
+
+    // lang=csharp
+    internal const string ClientRegistered = """
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class ClientRegistration
+        {
+            public static IServiceCollection AddClient(this IServiceCollection services) =>
+                services.AddSingleton<AircraftSnapshotClient>();
+        }
+        """;
+
+    // lang=csharp
     internal const string TheOneCachePerClient = """
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
@@ -705,34 +723,6 @@ internal static class BoundaryTestData
         {
             public static IServiceCollection AddCache(this IServiceCollection services) =>
                 services.AddSingleton<SourceCache<AircraftSnapshot, string>>();
-        }
-        """;
-
-    // lang=csharp
-    internal const string DoubleFromAMockingFramework = """
-        using NSubstitute;
-        using Transponder.Integrations.OpenSky.Contracts;
-
-        namespace Transponder.UnitTests.Integrations.OpenSky;
-
-        internal class OpenSkyHttpApiTests
-        {
-            public IOpenSkyApi Double() => Substitute.For<IOpenSkyApi>();
-        }
-        """;
-
-    // lang=csharp
-    internal const string HandWrittenFake = """
-        using System.Threading;
-        using System.Threading.Tasks;
-        using Transponder.Integrations.OpenSky.Contracts;
-
-        namespace Transponder.UnitTests.Integrations.OpenSky;
-
-        internal sealed class OpenSkyApiFake : IOpenSkyApi
-        {
-            Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(CancellationToken cancellationToken) =>
-                throw new System.InvalidOperationException("No response was set.");
         }
         """;
 }

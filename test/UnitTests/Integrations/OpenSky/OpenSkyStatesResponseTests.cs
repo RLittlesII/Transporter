@@ -1,24 +1,22 @@
-using System.Text.Json;
 using AwesomeAssertions;
-using Transponder.Integrations.OpenSky.Contracts;
 
 namespace Transponder.UnitTests.Integrations.OpenSky;
 
 public class OpenSkyStatesResponseTests
 {
+    /// <summary>
+    /// B-001 and B-002. The envelope carries the reported time and the rows under the provider's own
+    /// names, and a row is still the provider's positional shape — a count and an indexer — rather
+    /// than a named per-aircraft type.
+    /// </summary>
     [Fact]
     public void GivenAReportedTimeAndThreeRows_WhenTheResponseIsRead_ThenBothArriveNamedAsTheProviderNamesThem()
     {
-        // Given
-        var payload = File.ReadAllText(Path.Combine("Integrations", "OpenSky", "Fixtures", "states-three-rows.json"));
-
-        // When
-        var response = JsonSerializer.Deserialize<OpenSkyStatesResponse>(payload);
+        // Given, When
+        var response = OpenSkyPayloads.ThreeRows.Response;
 
         // Then
-        response.Should().NotBeNull();
-        DateTimeOffset.FromUnixTimeSeconds(response!.Time)
-            .Should().Be(new DateTimeOffset(2026, 10, 4, 14, 32, 10, TimeSpan.Zero));
+        DateTimeOffset.FromUnixTimeSeconds(response.Time).Should().Be(OpenSkyPayloads.ReportedInstant);
         response.States.Should().HaveCount(3);
         response.States[0][0].GetString().Should().Be("a1b2c3");
         response.States[0].Count.Should().Be(18);

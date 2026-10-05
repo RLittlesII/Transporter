@@ -114,12 +114,9 @@ Feature: Boundary analyzer — the layer claims reported as compiler diagnostics
     Then the diagnostic is reported at the registration call
       And not on the implementation type's declaration, which is unchanged and legal
 
-  @B-012
-  Scenario: A double produced by a mocking framework is reported at the call that produces it
-    Given a test that obtains the API contract's double from a mocking framework
-    When the compilation is analyzed
-    Then the diagnostic is reported at that call
-      And a test using the hand-written fake is not reported
+  # B-012 is Withdrawn with the claim it enforced — aircraft-source B-010. Its
+  # scenario is gone rather than kept as documentation of a retired rule; TRN0018
+  # stays in the release record so nothing reuses the id (B-007).
 
   @B-013
   Scenario: No diagnostic asserts a computed value

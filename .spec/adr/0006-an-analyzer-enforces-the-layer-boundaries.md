@@ -32,23 +32,33 @@ registration may look like:
 - B-008 — what the container may resolve.
 - B-014, B-030, B-031 — what the snapshot may declare, whether the cache is
   wrapped in a type of its own, and what lifetime it is registered with.
-- B-010's second clause — what may produce the contract's double.
 - B-044 — a collection a view binds is not mutated imperatively. The only
   one of these reported on a call rather than on a name, and the only one
   whose violation is an expression rather than a declaration.
 
 [`aircraft-source.feature`](../../features/aircraft-source/.spec/aircraft-source.feature)
 phrases these as "when every reference to them is identified" and "no domain
-type, cache, strategy, tracker or view can name either". Eighteen of the
-fifty-two claims are of this kind — a third of the specification, and the third
+type, cache, strategy, tracker or view can name either". Seventeen of the
+fifty-one claims are of this kind — a third of the specification, and the third
 that holds the rest apart — which is why the mechanism that proves
 them is a decision rather than a detail.
 
-Seven of those eighteen arrived late. B-002, B-005, B-008, B-010's second
-clause, B-014, B-030 and B-031 were given xUnit tests when § 9 was written,
+Six of those seventeen arrived late. B-002, B-005, B-008, B-014, B-030 and
+B-031 were given xUnit tests when § 9 was written,
 read this record as covering only the ids it had listed, and were moved here
 after review rejected the first of them as brittle
 ([lesson 0006](../lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)).
+
+**Amended 2026-10-05: eighteen assigned rules, now seventeen.** The list above
+carried an eighteenth item — B-010's second clause, what may produce the
+contract's double — and `TRN0018` enforced it. `aircraft-source` B-010 is
+Withdrawn, so the clause records no agreement and the rule is retired; the id
+is not reused
+([lesson 0002](../../features/aircraft-source/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md)).
+Edited rather than superseded, because this record is `proposed` and because
+nothing it decides turns on the count — the same treatment
+`boundary-analyzer` § 11 row 2 gave the seventeen-versus-eighteen correction
+that added B-044. The claims above are otherwise unchanged.
 
 The constraint that forces the choice: **a reference lives in a method body,
 and reflection cannot see method bodies.** `System.Reflection` reaches

@@ -1,0 +1,73 @@
+id: "0029"
+type: chore
+title: Promote IJson to production when a JSON boundary there needs it
+
+status: ready
+
+priority: low
+value: 2
+risk: 1
+rank: 37
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  `IJson` lives in `test/UnitTests` today, carrying one default method that
+  reads a payload and says what an unreadable one does. Review of pull request
+  #18 observed that it could be production code "if we needed to ... to test
+  json boundaries and such", and that DI registration would then likely need a
+  marker class.
+
+  Nothing in production needs it yet. Flurl owns serialization at the one
+  boundary that exists (`flurl-http-client` § JSON, and the converter attached
+  to `OpenSkyStateRow` is honoured by the default options), so promoting it now
+  would add public surface with no caller — which is the speculative generality
+  `coding-conventions` § "Keep the design direct" rules out.
+
+  The trigger to do it is a second JSON boundary that is this repository's
+  rather than a library's. The known candidate is the replay Feature: ADR-0004
+  records the provider's envelope verbatim, so the recorder writes JSON and the
+  reader reads it, and both want one place that says which options and what a
+  malformed recording does.
+
+acceptance_criteria:
+  - "A production JSON boundary exists that is not Flurl's — a recorder, a
+    reader, or a second provider whose payload this repository serializes
+    itself. Until then this item stays `ready` and nothing is built."
+  - "`IJson` moves to the layer that boundary sits in, keeping its default
+    implementation, and the test-side `OpenSkyPayload` consumes the production
+    one rather than a copy."
+  - "Registration resolves the marker problem the review named: an interface
+    whose members are all default implementations has no implementation to
+    register, so a concrete marker type implements it and is registered as
+    `IJson`. Whether the marker also carries the options — one per boundary, or
+    one for the repository — is the decision this item records."
+  - "The rule in `transponder-conventions` § testing that parsing is `IJson`'s
+    and not each test class's is amended to name the production location."
+
+decisions:
+  - "2026-10-05 — the person, in review of pull request #18 — raised as a
+    possibility rather than a requirement: \"We could make this production code
+    if we needed to.\" Filed rather than built, because `0004` has no
+    production consumer for it and an unused abstraction in `src/` is harder to
+    delete later than this item is to pick up. The marker-class problem is
+    recorded in the criteria above so it is not rediscovered."
+
+out_of_scope:
+  - "Serialization at the provider boundary — Flurl owns it (ADR-0001), and
+    `OpenSkyStateRowConverter` is attached to the type it reads."
+  - "Choosing the replay recording's format — ADR-0004 and the replay Feature's
+    own specification own that."

@@ -176,6 +176,39 @@ not hold that, so the prose has to, or it leaves with the paste.
   has no row for a claim that was never going to be built. Nothing else, and
   nothing implying the scenarios execute.
 
+## An imported rule is a decision, not a constraint
+
+A rule that arrives from outside the repository — a pattern, a skill, a house
+style, a reviewer's standard — is **a choice this repository made**, and it is
+recorded the way choices are: a decision record or an architecture decision
+record, with what it costs here and who accepted that cost.
+
+A constraint row is the wrong store for it. A constraint is something the
+project does not control — a provider's wire format, a credit budget, a library
+that cannot do a thing — and its row carries a source and an impact because
+there is nothing to argue. Put an imported rule there and it reads as settled
+while recording no reasoning, so nothing can answer "why" later.
+
+**It does not stay a single row.** A rule with no recorded reason accumulates
+one: every document that cites it has to say something about it, so a
+justification gets written in a scoring rationale, a test name, a diagnostic
+message. Each is written to explain a rule already in place, and together they
+read exactly like a decision someone reached — which is what makes the absence
+hard to notice, and what makes the rule expensive to withdraw once a claim, a
+test and an analyzer rule all point at it.
+
+Two signals, both cheap to check:
+
+- **A claim whose source names only an external document.** Nothing in this
+  repository is cited, so nothing in it decided.
+- **A claim whose only test is a test of a test double, a fixture or a
+  declaration.** A rule that costs a test with no product behaviour under it is
+  a rule to put to the person before it spreads.
+
+The question to ask is not whether the rule is good. It is whether anyone here
+chose it, and what it costs
+([lesson 0002](../../features/aircraft-source/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md)).
+
 ## Numbers from independent sequences collide
 
 Several schemes number from the start independently, and a per-scope scheme
@@ -248,3 +281,5 @@ number and rewrite every reference; renaming is cheap.
   unwritten gate reports that it is unwritten.
 - A cite to a file, a record or a section that does not exist.
 - A hand-kept index of files that a tool could generate. It falls behind.
+- **A rule imported from outside the repository, stored as a constraint.** It is
+  a decision and it names what it costs here.

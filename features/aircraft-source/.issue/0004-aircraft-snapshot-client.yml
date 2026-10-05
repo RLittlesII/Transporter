@@ -2,7 +2,7 @@ id: "0004"
 type: task
 title: Poll OpenSky, read the positional rows, and diff them into the cache
 
-status: ready-for-implementation
+status: done
 
 priority: high
 risk: 3
@@ -43,7 +43,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-05"
-closed: null
+closed: "2026-10-05"
 
 summary: |
   The headline mechanism and the largest item: `AircraftSnapshotClient` takes
@@ -117,7 +117,77 @@ decisions:
     ADR-0007 is the mechanism, and § 6 row 3 no longer reads `Unresolved`
     against it — it had kept that word, and a cite to a § 7 heading that no
     longer exists, since before the ADR was written."
+  - "2026-10-05 — the person — **§ 11 row 4 is answered: B-010 is withdrawn
+    outright, both halves.** The person asked why the hand-written fake was
+    decided in the first place and the answer is that nobody decided it on its
+    merits. Commit 31dda56 records the whole of it — the versioned-contract
+    pattern bans a mocking framework for the contract's double, `AGENTS.md`
+    mandates NSubstitute, and the conflict was resolved by obeying the pattern
+    inside the contract layer. There is no ADR and no decision record. The
+    hazard § Scoring and TRN0018's message both cite — a double returning
+    `default` passes every test above it — was written around a rule that was
+    already there, so it is this repository's rationalisation of an inherited
+    obligation rather than the reason it was adopted. The cost had already
+    landed and this item would have grown it: `OpenSkyApiFakeTests` is a test
+    suite whose subject is a test double, and the arrangements this item needs
+    (throw-then-succeed, timeout-then-succeed, two sets across two intervals,
+    `extended=1` asserted on the request) meant a response queue and a
+    recorded-calls list inside the fake — more untested behaviour under
+    fifteen claims. NSubstitute stands in at the contract seam from here, and
+    the throw-on-unset half goes with the ban: an unarranged `GetStates`
+    fails loudly without a named message, which is enough. This item carries
+    every consequence, the analyzer's included."
+  - "2026-10-05 — the person — time is taken as
+    `Rocket.Surgery.Airframe.ISchedulerProvider`, not as a bare `IScheduler`.
+    The first draft registered `AddSingleton<IScheduler>(TaskPoolScheduler.Default)`,
+    which makes every call site inherit one thread choice it never states. The
+    provider declares `UserInterfaceThread` and `BackgroundThread`, so a poll
+    says it is background work where it is written. `Rocket.Surgery.Airframe.Core`
+    ships the interface and no implementation — the person's own prior
+    repositories hand-write the provider and substitute it in tests — so
+    `Transponder.Scheduling.SchedulerProvider` is this repository's, and
+    `AddOpenSky` registers it only when the host has not registered its own.
+    One consequence for tests: a substituted provider hands the same
+    `TestScheduler` to both members, so §§ 4 row 14's one-object rule still
+    holds."
+  - "2026-10-05 — the person — the logger B-027 names is
+    `Microsoft.Extensions.Logging`'s `ILogger<T>` at the call site, with
+    Serilog behind it through an adapter at the composition root — the shape
+    the person's own prior work uses (`Finder.Logging`'s
+    `SerilogLoggerFactory : ILoggerFactory` and its `AddSerilog` registration
+    extension). B-027's test asserts against `ILogger<OpenSkyHttpApi>`, so the
+    sink choice is the composition root's and no test depends on it."
 
+
+delivered: |
+  Seventeen claims to `Verified`: B-003, B-015 - B-029 and B-050. `AircraftSnapshotClient`
+  reads every field of a row by index, applies each fetched set to its cache as one
+  `EditDiff` over the whole set, and reports the envelope's instant to
+  `IObservedClockWriter` in that same method. The transport gained the token source
+  (refresh on expiry *and* on `401`, retried once) and the logger that records the
+  remaining credit at debug and no credential anywhere. `OpenSkyOptions`,
+  `OpenSkyCredentials` and `BoundingBox` carry the box and the interval, validated on
+  start so an absent credential stops the host rather than the first poll.
+
+  B-010 is Withdrawn with the person's answer to § 11 row 4, which also retired the
+  analyzer's `TRN0018` and the hand-written contract fake; `lessons/0002` holds the
+  reasoning. Two defects were found by the tests that were written for other claims:
+  a `catch` filter that excluded every `OperationCanceledException` also excluded the
+  timeout B-029 is named for, and `TRN0016`'s wrapper clause reported the client for
+  holding the cache B-015 requires it to take.
+  - "2026-10-05 — the person, in review of pull request #18 — fifteen comments,
+    twelve of them a test convention this repository held nowhere. Addressed in
+    full and recorded as `lessons/0003`, with the rules themselves added to
+    `transponder-conventions` § testing so the next item reads them before
+    writing rather than after. Two were design rather than style and changed
+    production code: `SchedulerProvider` now takes both schedulers by
+    constructor, so a test builds the real type through a fixture instead of
+    substituting `ISchedulerProvider`; and `AddOpenSky` now takes
+    `IConfiguration` and binds both options types itself, so the startup test
+    exercises the application's own composition rather than a second graph
+    assembled beside it. `OpenSkyOptions.BaseUrl` arrives with that, defaulted,
+    because the URL is the provider's. No claim moved and no § 9 row changed —
+    every test § 9 names still exists under that name."
 
 out_of_scope:
   - "The domain projection — B-034 puts the first domain object in 0005."

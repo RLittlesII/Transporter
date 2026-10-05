@@ -136,13 +136,6 @@ internal static class Diagnostics
         "one cache per client, at the application's lifetime",
         "the cache is registered {0}");
 
-    /// <summary>The contract's double produced by a mocking framework.</summary>
-    internal static readonly DiagnosticDescriptor ContractDoubleFromAMockingFramework = Rule(
-        "TRN0018",
-        "aircraft-source B-010",
-        "the contract's double is hand-written, not produced by a mocking framework",
-        "'{0}' produces the contract's double; a double that returns default on an unset call passes every test above it");
-
     /// <summary>Every descriptor the analyzer supports, in id order.</summary>
     internal static ImmutableArray<DiagnosticDescriptor> All { get; } = ImmutableArray.Create(
         WireTypeOutsideIntegration,
@@ -161,8 +154,7 @@ internal static class Diagnostics
         ContractCarriesAVersion,
         ImplementationTypeIsReachable,
         CacheIsMoreThanAKeyedStore,
-        CacheLifetimeIsNotTheApplications,
-        ContractDoubleFromAMockingFramework);
+        CacheLifetimeIsNotTheApplications);
 
     private static DiagnosticDescriptor Rule(string id, string claim, string summary, string message) =>
         new(

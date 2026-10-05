@@ -64,28 +64,28 @@ foreign claim below is written with its specification —
 `aircraft-source B-045`, never a bare `B-045`. A bare id in this document is
 this document's own.
 
-| ID    | Claim                                                                                                                                                                                                                                                                           | Source                                                                                 |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| B-001 | Each claim the analyzer enforces SHALL have exactly one diagnostic id, and each diagnostic id SHALL enforce exactly one claim.                                                                                                                                                  | ADR-0006 § Decision                                                                    |
-| B-002 | Every diagnostic SHALL carry the `TRN` prefix, SHALL be numbered from the analyzer's own sequence starting at `TRN0001`, and SHALL NOT encode the number of the claim it enforces.                                                                                              | [adr/0001](adr/0001-trn-ids-on-their-own-sequence.md); ADR-0006 § Decision 4           |
-| B-003 | A diagnostic's title and message SHALL name the specification and the claim id it enforces, so a build message says which agreement broke without the reader holding this document.                                                                                             | ADR-0006 § Decision 4                                                                  |
-| B-004 | A diagnostic SHALL be reported at the syntax node that violates the claim — the reference, the declaration, or the registration — and SHALL NOT be reported with no location, nor with an empty symbol name in its message.                                                     | ADR-0006 § Decision 2; `RocketSurgeonsGuild/Airframe#403`                              |
-| B-005 | No diagnostic SHALL be reported against generated code; the analyzer SHALL declare `GeneratedCodeAnalysisFlags.None`.                                                                                                                                                           | `RocketSurgeonsGuild/Airframe#403`; `.editorconfig` cannot reach a generator           |
-| B-006 | Every diagnostic SHALL default to `error`, and the only way to weaken one SHALL be a severity entry in [`.editorconfig`](../../../.editorconfig).                                                                                                                               | ADR-0006 § Consequences                                                                |
-| B-007 | A diagnostic id SHALL NOT be renumbered, and a retired one SHALL NOT be reused.                                                                                                                                                                                                 | [adr/0001](adr/0001-trn-ids-on-their-own-sequence.md) § Decision 3                     |
-| B-008 | The analyzer SHALL carry exactly the eighteen `aircraft-source` claims ADR-0006 assigns it — `aircraft-source` B-002, B-004 – B-008, B-010, B-014, B-030 – B-032, B-037, B-041, B-044 – B-048 — and SHALL carry no rule that no claim asks for.                                 | ADR-0006 § Decision drivers; `aircraft-source` § 11 row 3                              |
-| B-009 | A claim about what may reference what SHALL be evaluated over the semantic model including method bodies — a local, a `new`, a cast, a generic argument supplied at a call site, a type named only inside a method — and SHALL NOT be reported satisfied from signatures alone. | ADR-0006 § Context — the constraint that forces the choice                             |
-| B-010 | A claim about a declaration's shape SHALL be evaluated on that declaration, and reported on it.                                                                                                                                                                                 | ADR-0006 § Context — "what a declaration may look like"                                |
-| B-011 | A claim about registration SHALL be evaluated at the registration call site rather than on the registered type, so a lifetime or an alias is read where it is chosen.                                                                                                           | `aircraft-source` B-008, B-031 — both are about the call, not the type                 |
-| B-012 | The mocking-framework half of `aircraft-source` B-010 SHALL be reported at the call that produces the double.                                                                                                                                                                   | `aircraft-source` § 9 row B-010                                                        |
-| B-013 | No diagnostic SHALL assert a computed value; a claim about behaviour SHALL remain an xUnit test, and the analyzer SHALL NOT become a second place to assert one.                                                                                                                | ADR-0006 § Decision 6                                                                  |
-| B-014 | The analyzer SHALL be its own project, referenced by the projects it analyzes as an analyzer and not as an assembly, so no analyzer code reaches the shipped application.                                                                                                       | ADR-0006 § Consequences — nothing new in the app's graph                               |
-| B-015 | The analyzer SHALL take no dependency the application takes, and no application project SHALL name a type from it; the test project names it only in order to test it.                                                                                                          | `transponder-conventions` references/coding.md § Dependencies; ADR-0006 § Consequences |
-| B-016 | Each enforced claim SHALL be proven by the test `aircraft-source` § 9 already names for it, under that name; those names SHALL NOT be changed to suit the implementation.                                                                                                       | `aircraft-source` § 9; `spec-and-traceability` § "A cite names something that exists"  |
-| B-017 | A violation SHALL fail the ordinary build — `./build.sh` and the pull-request workflow it drives — rather than a separate lint step a contributor can skip.                                                                                                                     | ADR-0006 § Consequences — "a build error for everyone"                                 |
-| B-018 | A rule SHALL NOT exist before the claim it enforces: a new diagnostic requires a § 3 row in the specification it serves, written by that specification's `spec-author`.                                                                                                         | ADR-0006 § Decision 4; `spec-and-traceability` § "Section ownership"                   |
-| B-019 | § 7's mapping table SHALL be the only store for which diagnostic enforces which claim, and SHALL NOT restate a foreign claim's text, nor the test name `aircraft-source` § 9 owns.                                                                                              | `spec-and-traceability` § "One answer, one section"                                    |
-| B-020 | Every diagnostic SHALL ship a code fix, or § 7 SHALL record why its violation has no mechanical fix. A fix SHALL change only what the claim requires, and SHALL NOT guess at a design decision.                                                                                 | The person, 2026-10-04; `RocketSurgeonsGuild/Airframe#402`                             |
+| ID    | Claim                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Source                                                                                 |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| B-001 | Each claim the analyzer enforces SHALL have exactly one diagnostic id, and each diagnostic id SHALL enforce exactly one claim.                                                                                                                                                                                                                                                                                                                                                              | ADR-0006 § Decision                                                                    |
+| B-002 | Every diagnostic SHALL carry the `TRN` prefix, SHALL be numbered from the analyzer's own sequence starting at `TRN0001`, and SHALL NOT encode the number of the claim it enforces.                                                                                                                                                                                                                                                                                                          | [adr/0001](adr/0001-trn-ids-on-their-own-sequence.md); ADR-0006 § Decision 4           |
+| B-003 | A diagnostic's title and message SHALL name the specification and the claim id it enforces, so a build message says which agreement broke without the reader holding this document.                                                                                                                                                                                                                                                                                                         | ADR-0006 § Decision 4                                                                  |
+| B-004 | A diagnostic SHALL be reported at the syntax node that violates the claim — the reference, the declaration, or the registration — and SHALL NOT be reported with no location, nor with an empty symbol name in its message.                                                                                                                                                                                                                                                                 | ADR-0006 § Decision 2; `RocketSurgeonsGuild/Airframe#403`                              |
+| B-005 | No diagnostic SHALL be reported against generated code; the analyzer SHALL declare `GeneratedCodeAnalysisFlags.None`.                                                                                                                                                                                                                                                                                                                                                                       | `RocketSurgeonsGuild/Airframe#403`; `.editorconfig` cannot reach a generator           |
+| B-006 | Every diagnostic SHALL default to `error`, and the only way to weaken one SHALL be a severity entry in [`.editorconfig`](../../../.editorconfig).                                                                                                                                                                                                                                                                                                                                           | ADR-0006 § Consequences                                                                |
+| B-007 | A diagnostic id SHALL NOT be renumbered, and a retired one SHALL NOT be reused.                                                                                                                                                                                                                                                                                                                                                                                                             | [adr/0001](adr/0001-trn-ids-on-their-own-sequence.md) § Decision 3                     |
+| B-008 | The analyzer SHALL carry exactly the seventeen `aircraft-source` claims ADR-0006 assigns it — `aircraft-source` B-002, B-004 – B-008, B-014, B-030 – B-032, B-037, B-041, B-044 – B-048 — and SHALL carry no rule that no claim asks for.                                                                                                                                                                                                                                                   | ADR-0006 § Decision drivers; `aircraft-source` § 11 row 3                              |
+| B-009 | A claim about what may reference what SHALL be evaluated over the semantic model including method bodies — a local, a `new`, a cast, a generic argument supplied at a call site, a type named only inside a method — and SHALL NOT be reported satisfied from signatures alone.                                                                                                                                                                                                             | ADR-0006 § Context — the constraint that forces the choice                             |
+| B-010 | A claim about a declaration's shape SHALL be evaluated on that declaration, and reported on it.                                                                                                                                                                                                                                                                                                                                                                                             | ADR-0006 § Context — "what a declaration may look like"                                |
+| B-011 | A claim about registration SHALL be evaluated at the registration call site rather than on the registered type, so a lifetime or an alias is read where it is chosen.                                                                                                                                                                                                                                                                                                                       | `aircraft-source` B-008, B-031 — both are about the call, not the type                 |
+| B-012 | **Withdrawn** — the mocking-framework half of `aircraft-source` B-010 was to be reported at the call that produces the double. Withdrawn 2026-10-05 with the claim it enforced: `aircraft-source` B-010 is Withdrawn, so there is no agreement left for a rule to carry. `TRN0018` is retired, its id reserved in `AnalyzerReleases.Unshipped.md`. See `aircraft-source` § 11 row 4 and [its lesson 0002](../../aircraft-source/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md). | `aircraft-source` § 9 row B-010                                                        |
+| B-013 | No diagnostic SHALL assert a computed value; a claim about behaviour SHALL remain an xUnit test, and the analyzer SHALL NOT become a second place to assert one.                                                                                                                                                                                                                                                                                                                            | ADR-0006 § Decision 6                                                                  |
+| B-014 | The analyzer SHALL be its own project, referenced by the projects it analyzes as an analyzer and not as an assembly, so no analyzer code reaches the shipped application.                                                                                                                                                                                                                                                                                                                   | ADR-0006 § Consequences — nothing new in the app's graph                               |
+| B-015 | The analyzer SHALL take no dependency the application takes, and no application project SHALL name a type from it; the test project names it only in order to test it.                                                                                                                                                                                                                                                                                                                      | `transponder-conventions` references/coding.md § Dependencies; ADR-0006 § Consequences |
+| B-016 | Each enforced claim SHALL be proven by the test `aircraft-source` § 9 already names for it, under that name; those names SHALL NOT be changed to suit the implementation.                                                                                                                                                                                                                                                                                                                   | `aircraft-source` § 9; `spec-and-traceability` § "A cite names something that exists"  |
+| B-017 | A violation SHALL fail the ordinary build — `./build.sh` and the pull-request workflow it drives — rather than a separate lint step a contributor can skip.                                                                                                                                                                                                                                                                                                                                 | ADR-0006 § Consequences — "a build error for everyone"                                 |
+| B-018 | A rule SHALL NOT exist before the claim it enforces: a new diagnostic requires a § 3 row in the specification it serves, written by that specification's `spec-author`.                                                                                                                                                                                                                                                                                                                     | ADR-0006 § Decision 4; `spec-and-traceability` § "Section ownership"                   |
+| B-019 | § 7's mapping table SHALL be the only store for which diagnostic enforces which claim, and SHALL NOT restate a foreign claim's text, nor the test name `aircraft-source` § 9 owns.                                                                                                                                                                                                                                                                                                          | `spec-and-traceability` § "One answer, one section"                                    |
+| B-020 | Every diagnostic SHALL ship a code fix, or § 7 SHALL record why its violation has no mechanical fix. A fix SHALL change only what the claim requires, and SHALL NOT guess at a design decision.                                                                                                                                                                                                                                                                                             | The person, 2026-10-04; `RocketSurgeonsGuild/Airframe#402`                             |
 
 ## 4. Constraints
 
@@ -160,12 +160,11 @@ that proves it in that specification's § 9, so neither is copied here.
 | `TRN0015`  | `aircraft-source` B-008 | Registration and resolution call sites naming an implementation type                                     |
 | `TRN0016`  | `aircraft-source` B-030 | The cache's declaration and the type it is registered as                                                 |
 | `TRN0017`  | `aircraft-source` B-031 | The cache's registration: lifetime, and one per client                                                   |
-| `TRN0018`  | `aircraft-source` B-010 | Calls producing the contract's double (the mocking-framework half only)                                  |
 
 **What a fix can do, and where it cannot**
 
 B-020 asks for a code fix per diagnostic or a reason there is none. Three rules
-admit one; fifteen do not, and the pattern is the same one Airframe records for
+admit one; fourteen do not, and the pattern is the same one Airframe records for
 its own `RSA2008`, `RSA2009` and `RSA2012` — a fix exists where the compliant
 form is _determined_, and nowhere else.
 
@@ -178,7 +177,6 @@ form is _determined_, and nowhere else.
 | `TRN0008`, `TRN0012`, `TRN0013` | No  | The compliant form is a member that is not there. Deleting a member is destructive and the author may instead want it moved, so the fix is a conversation.                                                                                            |
 | `TRN0010`, `TRN0014`            | No  | Both are satisfied by renaming or re-siting a type. Either changes a public surface, and `TRN0014`'s compliant form depends on whether the provider has published a version.                                                                          |
 | `TRN0015`, `TRN0016`            | No  | A registration that reaches an implementation type is fixed by introducing or using an alias that may not exist yet.                                                                                                                                  |
-| `TRN0018`                       | No  | Replacing a mocking framework's double with a hand-written fake is writing a new type, not editing an expression.                                                                                                                                     |
 
 A fix ships with the rule it fixes, in the item that builds it and in
 `src/Transponder.CodeFixes`, and its own test applies one action per pass and
@@ -190,8 +188,9 @@ catch.
 each is satisfied or violated by a reference that may appear only inside a
 method body, which is ADR-0006 § Context's whole argument and this
 specification's B-009. `TRN0008` – `TRN0014` read declarations (B-010).
-`TRN0015` – `TRN0018` read call sites — registrations, resolutions, and the
-call that builds a double (B-011, B-012).
+`TRN0015` – `TRN0017` read call sites — registrations and resolutions (B-011).
+`TRN0018` read the call that built the contract's double and is retired with
+B-012; the id stays in the release record so nothing reuses it (B-007).
 
 **Layout**
 
@@ -230,7 +229,7 @@ flowchart LR
     TRN --> SEM[Semantic model\nincluding method bodies]
     SEM --> REF[TRN0001-TRN0007\nreference rules]
     SEM --> DECL[TRN0008-TRN0014\ndeclaration rules]
-    SEM --> REG[TRN0015-TRN0018\ncall-site rules]
+    SEM --> REG[TRN0015-TRN0017\ncall-site rules]
     REF --> DIAG[Diagnostic at the violating node]
     DECL --> DIAG
     REG --> DIAG
@@ -259,8 +258,8 @@ that creates each file, per
 § "A declaration belongs to the file that compiles".
 
 ```csharp
-// One analyzer, eighteen descriptors. One analyzer class per rule would give
-// eighteen copies of the layer identification below, which is the part most
+// One analyzer, seventeen descriptors. One analyzer class per rule would give
+// seventeen copies of the layer identification below, which is the part most
 // likely to change once § 11 row 1 is answered.
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
@@ -277,7 +276,7 @@ registering operation actions over bodies rather than symbol actions over
 signatures. A descriptor carries the `TRN` id (B-002), the enforced claim in
 its title and message format (B-003), and `error` as its default severity
 (B-006); `Diagnostics.cs` holds them so the conventions B-001 – B-007 are
-checkable in one place by one test class rather than eighteen.
+checkable in one place by one test class rather than seventeen.
 
 **Decision required**
 
@@ -321,9 +320,9 @@ the xUnit tests execute
 
 A rule's own correctness is proven by the test
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 names for the
-claim it enforces, under that name (B-016). Those eighteen tests are not
+claim it enforces, under that name (B-016). Those seventeen tests are not
 restated here and not re-specified: that matrix owns them, and this
-specification's scenarios cover the analyzer's conventions, not the eighteen
+specification's scenarios cover the analyzer's conventions, not the seventeen
 rules' subject matter.
 
 The tests compile source text in-process and assert both the diagnostic id and
@@ -344,11 +343,10 @@ describes.
 | B-005    | `@B-005` | `BoundaryAnalyzerTests.GivenAViolationInGeneratedSource_WhenAnalyzed_ThenNothingIsReported`                                                                                                                              | Verified |
 | B-006    | `@B-006` | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheDefaultSeveritiesAreRead_ThenEveryOneIsError`                                                                                                       | Verified |
 | B-007    | `@B-007` | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreCompared_ThenNoneIsDuplicatedAndNoRetiredIdIsReused`                                                                                          | Verified |
-| B-008    | `@B-008` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheEighteenAndNothingMore`                                                                                        | Verified |
+| B-008    | `@B-008` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheSeventeenAndNothingMore`                                                                                       | Verified |
 | B-009    | `@B-009` | `BoundaryAnalyzerTests.GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported`                                                                                                                | Verified |
 | B-010    | `@B-010` | `BoundaryAnalyzerTests.GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration`                                                                                                                | Verified |
 | B-011    | `@B-011` | `BoundaryAnalyzerTests.GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall`                                                                                                                   | Verified |
-| B-012    | `@B-012` | `BoundaryAnalyzerTests.GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall`                                                                                                        | Verified |
 | B-013    | `@B-013` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenEachClaimIsClassified_ThenNoneIsAClaimAboutAComputedValue`                                                                                                     | Verified |
 | B-014    | `@B-014` | **Review**, done on `0020` — `OutputItemType="Analyzer"` with `ReferenceOutputAssembly="false"`, and no copy of `Transponder.Analyzers.dll` under `src/Transponder/bin`, `src/Gui/bin` or `test/UnitTests/bin`.          | Verified |
 | B-015    | `@B-015` | **Review**, done on `0020` and `0021` — `Microsoft.CodeAnalysis.CSharp` is referenced by the analyzer project and by the tests that drive it, by no application project, and no application file names an analyzer type. | Verified |
@@ -358,30 +356,34 @@ describes.
 | B-019    | `@B-019` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenARowIsRead_ThenItNamesASpecificationAndClaimAndRestatesNeitherTextNorTest`                                                                                     | Verified |
 | B-020    | `@B-020` | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoCodeFix_WhenTheMappingTableIsRead_ThenItRecordsWhyNoneIsPossible`                                                                                                 | Verified |
 
-**Twenty rows `Verified`, none `Missing`: the gate is closed.** What is proven is
+**Nineteen rows `Verified`, none `Missing`: the gate is closed.** What is proven is
 the analyzer's surface — the ids, the messages, the severities, the release
 record, the mapping against this document's own § 7 table, the exclusion of
 generated code, and a diagnostic that lands on the node and names the symbol —
 and the three rule families, each reporting on what its claims are about: a
 reference named anywhere including a method body (B-009), a declaration's shape
-on that declaration (B-010), a registration and a double at the call that
-writes them (B-011, B-012). B-020 holds every diagnostic to a fix or a recorded
+on that declaration (B-010), and a registration at the call that
+writes it (B-011). B-020 holds every diagnostic to a fix or a recorded
 reason, and three fixes ship. B-016 was the last to close, and only `0024` could
-close it: it is a cite check over the eighteen test names `aircraft-source` § 9
-fixes, and it cannot pass until the eighteenth exists.
+close it: it is a cite check over the test names `aircraft-source` § 9 fixes,
+and it could not pass until the last of them existed. B-012 is Withdrawn and has
+no row — `aircraft-source` B-010 went with it, which is also why that matrix now
+holds seventeen of this analyzer's claims rather than eighteen.
 
 **A closed gate here is not a closed gate there.** This specification's own
 § 9 says the analyzer does what it claims; `aircraft-source` § 9 still reports
-thirty-two rows unproven, because the behaviour its items compute is not this
-Feature's to build. What did leave that matrix is every claim ADR-0006 assigned
+fourteen rows unproven — thirty-two until its `0004` landed — because the
+behaviour its items compute is not this Feature's to build. What did leave that matrix is every claim ADR-0006 assigned
 to a diagnostic.
 
-The eighteen rows in
+The seventeen rows in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 are a separate
-gate, and **sixteen of them have now left `Missing`**: B-004 from `0021`; B-032
+gate — eighteen until B-010 was withdrawn — and **fifteen of them have now left
+`Missing`**: B-004 from `0021`; B-032
 and B-044 – B-047 from `0022`; B-002, B-005 – B-007, B-014 and B-048 from
-`0023`; B-008, B-010, B-030 and B-031 from `0024`. Each left by the test that
-matrix named for it (B-016), under that name.
+`0023`; B-008, B-030 and B-031 from `0024`. Each left by the test that
+matrix named for it (B-016), under that name. B-010 left that matrix too, by
+being withdrawn rather than by being proven.
 
 **Two did not, and both for the same reason**: the claim has a half the analyzer
 cannot reach. B-037 wants the key lowercased on construction, which is `0005`'s
@@ -401,7 +403,31 @@ form — a row is not a reason to write a test — rather than a gap left silent
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
-No Feature-scoped lesson yet. Three repository-wide lessons bear on this
+**Delta, 2026-10-05 — B-012 is withdrawn and `TRN0018` is retired.** Trigger:
+`aircraft-source` B-010 was withdrawn by the person, and B-012 enforced nothing
+else. A rule outlives neither its claim nor the agreement the claim recorded, so
+the descriptor, its analysis, its three tests and its test data are deleted, and
+its mapping, code-fix and § 9 rows go with them. The id is **not** reused and
+stays in `AnalyzerReleases.Unshipped.md` (B-007). B-008's set drops from eighteen
+to seventeen, which also drops `aircraft-source`'s mechanism-derived count. The
+reasoning behind the withdrawal is that Feature's, not this one's:
+[its lesson 0002](../../aircraft-source/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md).
+Nothing about the analyzer's own conventions moved — this Feature's B-001 – B-007
+hold identically over seventeen descriptors — so § 12 keeps its rows.
+
+**Delta, 2026-10-05 — `TRN0016`'s wrapper clause exempts the snapshot client.**
+Trigger: `0004` registered `AircraftSnapshotClient` and the build failed with
+`TRN0016`, reporting that the registration "gives the cache a type of its own".
+The rule read a registered type holding a cache field as a wrapper, and the
+client holds one because `aircraft-source` B-015 **requires** it to take the
+cache by constructor — so as written the two claims could not both be satisfied.
+The rule was narrowed rather than suppressed: what B-030 forbids is a type that
+_is_ the cache, and the writer above a cache never is. No claim changed and no
+§ 9 row moved; the test for `TRN0016` gains a third case, a registered client
+holding its cache, reported as nothing. Found by the first item to register a
+client, which is the first moment the false positive could exist.
+
+No Feature-scoped lesson of its own. Three repository-wide lessons bear on this
 document:
 [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
 which is why § 3 carries no build state and § 9 is the only store for one;
@@ -423,9 +449,9 @@ are about to write has exactly that failure mode available to it.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-| #   | Question                                                                                                                                                                                                                                                                                           | Owner         | Target date                           |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------- |
-| 3   | Does this analyzer also carry [`replay-source`](../../replay-source/.spec/README.md) claims? That specification's § 9 is unwritten, so none is assigned yet, and B-008 fixes the set at eighteen. If any arrive, this is a § 3 amendment and a new `TRN` id, not an extension of an existing rule. | `spec-author` | Before `replay-source` § 9 is written |
+| #   | Question                                                                                                                                                                                                                                                                                            | Owner         | Target date                           |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------- |
+| 3   | Does this analyzer also carry [`replay-source`](../../replay-source/.spec/README.md) claims? That specification's § 9 is unwritten, so none is assigned yet, and B-008 fixes the set at seventeen. If any arrive, this is a § 3 amendment and a new `TRN` id, not an extension of an existing rule. | `spec-author` | Before `replay-source` § 9 is written |
 
 **Row 1 — answered: a rule identifies a layer by namespace.** Recorded as
 [adr/0002](adr/0002-layers-are-identified-by-namespace.md) rather than deleted,
@@ -436,9 +462,12 @@ unblocked `0022`.
 
 **Row 4 — answered: it landed on 2026-10-05, before the talk rather than
 against it.** The question was when this Feature would be scheduled, and the
-answer is that it is finished: `0020` – `0024` built all eighteen rules, § 9
-above reads twenty `Verified` and none `Missing`, and sixteen of the eighteen
-`aircraft-source` rows left `Missing` with them. That retires the "when" half of
+answer is that it is finished: `0020` – `0024` built all eighteen rules
+ADR-0006 then assigned, § 9 above read twenty `Verified` and none `Missing`,
+and sixteen of the eighteen `aircraft-source` rows left `Missing` with them.
+Both counts dropped by one later that day, when `aircraft-source` B-010 was
+withdrawn and `TRN0018` retired with it — the answer to this question is
+unchanged, since nothing about it turned on how many rules there were. That retires the "when" half of
 that specification's § 11 row 3, which this document had only answered the "by
 whom" half of. Its number is not reused and row 3 keeps its own.
 
@@ -447,7 +476,8 @@ whom" half of. Its number is not reused and row 3 keeps its own.
 § Context now lists it.** The record said eighteen and enumerated seventeen;
 the missing id was the one claim here reported on a call rather than on a
 name, which is why it fell out of a list written by what each rule examines.
-Nothing else moved: B-008 already fixed the set at eighteen, § 7's table
+Nothing else moved: B-008 already fixed the set at eighteen — seventeen since
+B-012's withdrawal — § 7's table
 already carried `TRN0007` for it, and `0022` already built and proved the
 rule. The ADR is `proposed`, so correcting it is an edit rather than a
 supersession. Its number is not reused and rows 3 and 4 keep theirs.
@@ -488,10 +518,13 @@ than a `decisions/` record.
 | [`0021`](../.issue/0021-diagnostic-surface.yml)              | B-001 – B-008, B-013, B-016, B-018, B-019       |
 | [`0022`](../.issue/0022-reference-rules.yml)                 | B-009                                           |
 | [`0023`](../.issue/0023-declaration-rules.yml)               | B-010                                           |
-| [`0024`](../.issue/0024-registration-and-double-rules.yml)   | B-011, B-012                                    |
+| [`0024`](../.issue/0024-registration-and-double-rules.yml)   | B-011, B-012 (Withdrawn)                        |
 
 Every claim is carried by exactly one child, and `0019` carries all of them
-because the children are slices of it. The children are cut on what a rule has
+because the children are slices of it. `0024` keeps B-012 after its withdrawal:
+this map says which item delivered a claim, and `0024` did deliver it. What is
+live is § 3, where B-012 opens `**Withdrawn**`, and § 9, which has no row
+for it. The children are cut on what a rule has
 to look at rather than on § 3's four groups: `0021` holds the conventions every
 rule obeys, and `0022` – `0024` hold the three families § 7's mapping table
 groups, because a reference rule, a declaration rule and a call-site rule are
@@ -502,7 +535,7 @@ before the project the compiler loads exists; `0021` next, because the
 descriptor conventions are what every rule is then built against; then `0022`,
 `0023` and `0024` in parallel, each held by § 11 row 1 only in `0022`'s case.
 
-The eighteen `aircraft-source` claims are **not** listed in any `claims:` here.
+The seventeen `aircraft-source` claims are **not** listed in any `claims:` here.
 They belong to that specification and its § 9 owns their coverage; an item in
 this Feature naming them would be the second store B-019 forbids.
 

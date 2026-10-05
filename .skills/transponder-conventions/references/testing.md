@@ -10,12 +10,33 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   using in the project file. For xUnit's own attributes and fixtures, see
   [xunit.net](https://xunit.net).
 - **`GivenX_WhenY_ThenZ` method names**, with
-  `// Given` / `// When` / `// Then` comments separating the phases inside.
+  `// Given` / `// When` / `// Then` comments separating the phases inside. Those
+  three markers are the only inline comments a test carries: **why** the case
+  matters, what the hazard is, and which claim it belongs to go in an XML doc
+  comment on the method, where a reader meets them before the body and a
+  renamed claim is a cite that can be followed. A paragraph of prose above
+  `// Given` is the same text in the worse place
+  ([lesson 0003](../../../features/aircraft-source/.spec/lessons/0003-a-review-is-a-convention-nobody-wrote-down.md)).
 - **AwesomeAssertions** for assertions, **NSubstitute** for test doubles,
   **`Rocket.Surgery.Extensions.Testing.AutoFixtures`** for building the system
   under test, `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything
   HTTP ([`flurl-http-client`](../../flurl-http-client/SKILL.md) has the
   interception trap).
+- **Everything a test injects comes from a fixture, not only the system under
+  test.** A collaborator the application composes — the scheduler provider, the
+  clock — is built by its own fixture and handed in whole, so a test advances the
+  real type rather than arranging a substitute's members. Substitute an interface
+  the application has no implementation of; build the one it does.
+- **A generated fixture names each builder method after its parameter's _type_**,
+  not the parameter: `IObservedClockWriter` becomes `WithWriter`,
+  `ISchedulerProvider` becomes `WithProvider`. Two parameters of one type
+  therefore collide, and that type's fixture is hand-written over
+  `AutoFixtureBase<T>` instead, saying so in its remarks.
+- **A test that stands up a host stands up the application's own composition.**
+  One registration extension takes configuration and does the whole wiring; a
+  test calls that and varies configuration. A test that assembles the same graph
+  by hand is a second composition to keep in step, and the first production
+  scenario it misses passes.
 - **A system under test is built by a generated fixture, never by a
   constructor call in the test.** Declare
   `[AutoFixture(typeof(T))] internal partial class TFixture;` beside the tests
@@ -28,6 +49,12 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   the authority on the generated surface.
 - `coverlet.collector` is referenced, so coverage is collectible; no threshold
   is enforced.
+- **Substituting an `internal` interface needs a second grant.** NSubstitute
+  builds its doubles with Castle's dynamic proxy, which cannot see an
+  `internal` type unless the assembly declaring it grants
+  `InternalsVisibleTo("DynamicProxyGenAssembly2")`. `src/Transponder` does.
+  Without it the failure is a run-time proxy error naming an inaccessible type,
+  not a compile error, so it looks like a test bug rather than a missing grant.
 - **A test reaches an `internal` type through `InternalsVisibleTo`, not by
   widening the type.** An integration keeps its contract, its wire types and
   its implementation `internal` so nothing outside can name them; the project
@@ -38,7 +65,24 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   readable specification and the xUnit tests execute; there is no Gherkin
   runner, no bindings and no step definitions, so no `@ignore` tag and nothing
   else implying the scenarios run.
-- Fixtures are synthetic: invented callsigns, MMSIs, positions and countries
-  committed as JSON beside the tests that use them.
+- Fixtures are synthetic: invented callsigns, MMSIs, positions and countries.
+- **A unit test reads no files.** Payload fixtures are `static readonly` fields
+  on a static class — a raw string literal per payload — not `.json` files
+  copied to the output directory. A test that reads from disk has a dependency
+  on the file system and on a build step that places the file, and however small
+  one read is it is paid on every run by every test. Keeping the payload in
+  source also puts the row a test is about beside the index table it is read
+  against.
+- **Parsing a payload belongs to a type, not to each test class.** `IJson`
+  carries the behaviour as a default interface implementation, and a payload type
+  implements it, so no test holds a serializer or a `Deserialize` helper of its
+  own.
+- **Varying data goes through xUnit's own data pattern** — a `TheoryData<...>`
+  subclass per set of cases, named `<Subject>Cases`, reached with `[ClassData]`
+  (or `[MemberData]` where the cases are computed). Not a pile of `[InlineData]`
+  attributes carrying escaped JSON, and **not** a static class named
+  `...TestData` that is really a helper: the name says xUnit data, so it has to
+  be xUnit data. Collaborators a test stands up are a builder or a fixture, and
+  are named for what they build.
 
 ---
