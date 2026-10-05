@@ -2,7 +2,7 @@ id: "0020"
 type: task
 title: Stand up the analyzer project the compiler loads, and the build gate
 
-status: ready
+status: in-progress
 
 priority: high
 risk: 3

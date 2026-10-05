@@ -171,6 +171,22 @@ Feature: Boundary analyzer — the layer claims reported as compiler diagnostics
     Then it is reported as unclaimed
       And the remedy is a § 3 row in the specification it would serve, written by that specification's spec-author
 
+  @B-020
+  Scenario: A diagnostic ships a fix, or says why it cannot
+    Given the mapping table in § 7 of the specification
+    When each diagnostic is read against its Fix column
+    Then every diagnostic either names a code fix or records why its violation has no mechanical fix
+      And no recorded reason is a restatement of the claim
+      And a diagnostic whose compliant form is determined by the claim has a fix
+
+  @B-020
+  Scenario: A fix changes only what the claim requires
+    Given a violation of aircraft-source B-007 whose implementation is public and not sealed
+    When the code fix for it is applied
+    Then the modifiers the claim names are added
+      And nothing else about the declaration is rewritten
+      And applying the fix a second time offers no further change
+
   @B-019
   Scenario: The mapping table names a claim and restates nothing
     Given a row of the mapping table in § 7 of the specification

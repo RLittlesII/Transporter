@@ -2,7 +2,7 @@ id: "0021"
 type: task
 title: Fix what a diagnostic is — ids, message, location, severity, and the mapping
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 risk: 2

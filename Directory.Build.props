@@ -1,9 +1,7 @@
 <Project>
     <PropertyGroup>
-        <!-- RSA2014 and RSA2015 read XML documentation comments off the syntax tree, and csc only
-             parses them into the tree when it is asked for a documentation file. Without this,
-             DocumentationMode is None, every /// comment is plain comment trivia, and both rules
-             report missing documentation on members that are already documented. -->
+        <!-- Without this, DocumentationMode is None and RSA2014/RSA2015 cannot see a /// comment
+             at all, so they report documented members as undocumented. -->
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
@@ -12,23 +10,15 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <!-- Named so the one project whose metadata differs can Update the item by the same
-             evaluated path rather than by a second copy of it. -->
+        <!-- Named so the one project whose metadata differs can Update by the same evaluated path. -->
         <TransponderAnalyzerProject>$(MSBuildThisFileDirectory)src/Transponder.Analyzers/Transponder.Analyzers.csproj</TransponderAnalyzerProject>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Transponder.Analyzers'">
-        <!-- This repository's own analyzer, referenced the same way and in the same place as the
-             Airframe set above: every project the file governs gets it, including one added later.
-             An analyzer reference, not an assembly reference — csc loads it and the application
-             never sees it (boundary-analyzer B-014), which is what ReferenceOutputAssembly="false"
-             keeps true. The test project flips that back with an Update, because its tests name
-             BoundaryAnalyzer in order to test it.
-
-             The path is anchored at this file rather than relative, because MSBuild resolves a
-             ProjectReference against the project that imports it and the importers sit at three
-             different depths. The condition keeps the analyzer out of its own reference list; a
-             project cannot be its own analyzer. -->
+        <!-- This repository's own analyzer, beside the Airframe set: every project gets it.
+             An analyzer reference, not an assembly one — csc loads it, the application never sees
+             it (B-014). The path is anchored because MSBuild resolves a ProjectReference against
+             the importing project, and the condition keeps the analyzer out of its own list. -->
         <ProjectReference Include="$(TransponderAnalyzerProject)"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"/>

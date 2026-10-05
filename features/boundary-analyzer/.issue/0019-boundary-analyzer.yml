@@ -2,7 +2,7 @@ id: "0019"
 type: feature
 title: Report the layer-boundary claims as compiler diagnostics
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 value: 5
@@ -43,6 +43,7 @@ claims:
   - B-017
   - B-018
   - B-019
+  - B-020
 
 created: "2026-10-04"
 updated: "2026-10-04"
@@ -67,7 +68,7 @@ summary: |
   B-019 forbids the second store.
 
 acceptance_criteria:
-  - "All 19 claims in § 3, carried once each. Which child takes which is each
+  - "All 20 claims in § 3, carried once each. Which child takes which is each
     child's own `claims:` list, indexed in the specification's `## Tasks`."
   - "§ 9 has no Missing row once every child is done."
   - "The eighteen rows in aircraft-source § 9 that name BoundaryAnalyzerTests
@@ -87,10 +88,13 @@ decisions:
     declaration rule and a call-site rule are three different registrations
     against the same compilation; the claim groups would have split the
     conventions away from the first rule that needs them."
+  - "2026-10-04 — the person — an analyzer does not ship without a code fix where
+    one is possible. § 5 row 2 is reversed and B-020 replaces it: a fix per
+    diagnostic, or § 7 records why the violation is a decision only the author
+    can make. Three of the eighteen qualify — TRN0009, TRN0011, TRN0017."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
   - "aircraft-source B-009 and B-049 — § 5 row 1; review obligations on the
     Feature that creates each precondition."
-  - "A code fix for any diagnostic — § 5 row 2."
   - "Any replay-source claim — § 5 row 3, and § 11 row 3 carries the question."
