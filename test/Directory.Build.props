@@ -11,4 +11,14 @@
         <NoWarn>$(NoWarn);CS1711;CS8669</NoWarn>
     </PropertyGroup>
 
+    <ItemGroup>
+        <!-- The analyzer is referenced for every project in the root Directory.Build.props, with
+             ReferenceOutputAssembly="false" so no analyzer assembly reaches an application. The
+             tests are the one place that needs the assembly too, because they name BoundaryAnalyzer
+             in order to test it (boundary-analyzer B-015). An Update by $(TransponderAnalyzerProject)
+             changes that one piece of metadata on the existing item; a second ProjectReference
+             would be a second declaration of the same reference. -->
+        <ProjectReference Update="$(TransponderAnalyzerProject)" ReferenceOutputAssembly="true"/>
+    </ItemGroup>
+
 </Project>

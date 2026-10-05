@@ -32,13 +32,4 @@
         <Using Include="Xunit"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <!-- Both an analyzer reference and an assembly reference, which is the one project where
-             that is right: csc loads it over this project's own code, and the tests name
-             BoundaryAnalyzer in order to test it (B-015). -->
-        <ProjectReference Include="../../src/Transponder.Analyzers/Transponder.Analyzers.csproj"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="true"/>
-    </ItemGroup>
-
 </Project>
