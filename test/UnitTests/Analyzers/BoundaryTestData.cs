@@ -503,4 +503,236 @@ internal static class BoundaryTestData
             Task<int> GetStates(CancellationToken cancellationToken);
         }
         """;
+
+    // lang=csharp
+    internal const string ContainerStandIn = """
+        using System;
+
+        namespace Microsoft.Extensions.DependencyInjection;
+
+        public interface IServiceCollection;
+
+        public static class ServiceCollectionExtensions
+        {
+            public static IServiceCollection AddSingleton<TService>(this IServiceCollection services) => services;
+
+            public static IServiceCollection AddSingleton<TService>(this IServiceCollection services, Func<IServiceProvider, TService> factory) => services;
+
+            public static IServiceCollection AddSingleton<TService, TImplementation>(this IServiceCollection services) => services;
+
+            public static IServiceCollection AddScoped<TService>(this IServiceCollection services) => services;
+
+            public static IServiceCollection AddScoped<TService>(this IServiceCollection services, Func<IServiceProvider, TService> factory) => services;
+
+            public static IServiceCollection AddTransient<TService>(this IServiceCollection services) => services;
+
+            public static IServiceCollection Add(this IServiceCollection services, Type service) => services;
+
+            public static T GetRequiredService<T>(this IServiceProvider provider) => default!;
+        }
+        """;
+
+    // lang=csharp
+    internal const string MockingFrameworkStandIn = """
+        namespace NSubstitute;
+
+        public static class Substitute
+        {
+            public static T For<T>() => default!;
+        }
+        """;
+
+    // lang=csharp
+    internal const string TheOneAliasPerChain = """
+        using Microsoft.Extensions.DependencyInjection;
+        using Transponder.Integrations.OpenSky.Contracts;
+        using Transponder.Integrations.OpenSky.Http;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class OpenSkyRegistration
+        {
+            public static IServiceCollection AddOpenSky(this IServiceCollection services) =>
+                services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
+        }
+        """;
+
+    // lang=csharp
+    internal const string ImplementationRegisteredResolvedAndAliasedTwice = """
+        using System;
+        using Microsoft.Extensions.DependencyInjection;
+        using Transponder.Integrations.OpenSky.Contracts;
+        using Transponder.Integrations.OpenSky.Http;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class OpenSkyRegistration
+        {
+            public static IServiceCollection AddTheImplementationItself(this IServiceCollection services) =>
+                services.AddSingleton<OpenSkyHttpApi>();
+
+            public static IServiceCollection AddBySpellingTheRuleDoesNotKnow(this IServiceCollection services) =>
+                services.Add(typeof(OpenSkyHttpApi));
+
+            public static IServiceCollection AddTwoAliases(this IServiceCollection services)
+            {
+                services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
+
+                return services.AddSingleton<IOpenSkyApi, OpenSkyBackupApi>();
+            }
+
+            public static OpenSkyHttpApi ResolveTheImplementation(IServiceProvider provider) =>
+                provider.GetRequiredService<OpenSkyHttpApi>();
+        }
+        """;
+
+    // lang=csharp
+    internal const string TwoTransports = """
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.Integrations.OpenSky.Http;
+
+        internal sealed class OpenSkyHttpApi : IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(CancellationToken cancellationToken) =>
+                Task.FromResult(new OpenSkyStatesResponse());
+        }
+
+        internal sealed class OpenSkyBackupApi : IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(CancellationToken cancellationToken) =>
+                Task.FromResult(new OpenSkyStatesResponse());
+        }
+        """;
+
+    // lang=csharp
+    internal const string CacheWrappedInATypeOfItsOwn = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal sealed class AircraftCache
+        {
+            internal SourceCache<AircraftSnapshot, string> Snapshots { get; } = new();
+        }
+
+        internal static class CacheRegistration
+        {
+            public static IServiceCollection AddCache(this IServiceCollection services) =>
+                services.AddSingleton<AircraftCache>();
+        }
+        """;
+
+    // lang=csharp
+    internal const string CacheOfADomainTypeRegistered = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+        using Transponder.Model;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class CacheRegistration
+        {
+            public static IServiceCollection AddCache(this IServiceCollection services) =>
+                services.AddSingleton<SourceCache<TransportVehicle, string>>();
+        }
+        """;
+
+    // lang=csharp
+    internal const string CacheRegisteredScopedAndTwice = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class CacheRegistration
+        {
+            public static IServiceCollection AddScopedCache(this IServiceCollection services) =>
+                services.AddScoped<SourceCache<AircraftSnapshot, string>>();
+
+            public static IServiceCollection AddItTwice(this IServiceCollection services)
+            {
+                services.AddSingleton<SourceCache<AircraftSnapshot, string>>();
+
+                return services.AddSingleton<SourceCache<AircraftSnapshot, string>>();
+            }
+        }
+        """;
+
+    // lang=csharp
+    internal const string CacheRegisteredScoped = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class CacheRegistration
+        {
+            public static IServiceCollection AddCache(this IServiceCollection services) =>
+                services.AddScoped<SourceCache<AircraftSnapshot, string>>();
+        }
+        """;
+
+    // lang=csharp
+    internal const string CacheRegisteredTwice = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class CacheRegistration
+        {
+            public static IServiceCollection AddItTwice(this IServiceCollection services)
+            {
+                services.AddSingleton<SourceCache<AircraftSnapshot, string>>();
+
+                return services.AddSingleton<SourceCache<AircraftSnapshot, string>>();
+            }
+        }
+        """;
+
+    // lang=csharp
+    internal const string TheOneCachePerClient = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class CacheRegistration
+        {
+            public static IServiceCollection AddCache(this IServiceCollection services) =>
+                services.AddSingleton<SourceCache<AircraftSnapshot, string>>();
+        }
+        """;
+
+    // lang=csharp
+    internal const string DoubleFromAMockingFramework = """
+        using NSubstitute;
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.UnitTests.Integrations.OpenSky;
+
+        internal class OpenSkyHttpApiTests
+        {
+            public IOpenSkyApi Double() => Substitute.For<IOpenSkyApi>();
+        }
+        """;
+
+    // lang=csharp
+    internal const string HandWrittenFake = """
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.UnitTests.Integrations.OpenSky;
+
+        internal sealed class OpenSkyApiFake : IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(CancellationToken cancellationToken) =>
+                throw new System.InvalidOperationException("No response was set.");
+        }
+        """;
 }

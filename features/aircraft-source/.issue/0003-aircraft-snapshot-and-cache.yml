@@ -2,7 +2,7 @@ id: "0003"
 type: task
 title: Add the aircraft snapshot record and its cache
 
-status: blocked
+status: done
 
 priority: high
 risk: 1
@@ -29,7 +29,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-05"
-closed: null
+closed: "2026-10-05"
 
 summary: |
   The snapshot — the server's record with names on it, value-equal over every
@@ -73,6 +73,9 @@ decisions:
     `0002` carries the same status for the same reason. The blocker is § 11
     row 3."
 
+  - "2026-10-05 — implementer — `done`. All seven claims are `Verified`: B-014,
+    B-030 and B-031 were the three waiting on the analyzer, and `0023` and
+    `0024` built the rules that prove them. It was `blocked` for one day."
 out_of_scope:
   - "The differential write itself — B-023, which belongs to the client (0004).
     This item builds the store; the writer owns the write."

@@ -148,6 +148,14 @@ decisions:
     B-004, B-006, B-007 and B-048, so five of the six claims that held this item
     are `Verified`. B-010's second clause waits on `TRN0018`, which is that
     Feature's `0024`. § 11 row 3 remains the blocker."
+  - "2026-10-05 — implementer — still `blocked`, and no longer on the analyzer.
+    `0024` proved B-010, so every claim ADR-0006 assigned this item is
+    `Verified` and § 11 row 3 is answered. Three rows hold it now: B-009 and
+    B-049 are review obligations on a precondition that does not exist — OpenSky
+    has published no version and there is no push provider — and B-003, whose
+    § 9 row names a test on a class `0004` creates. The first two cannot be
+    arranged; the third is the finding raised on pull request #14 and is the
+    person's to place."
   - "2026-10-04 — implementer — deleting that test left nothing exercising
     `AddOpenSky` at runtime, because B-008 constrains the registration's shape
     and not its outcome. B-052 now covers the outcome and is `0007`'s, since

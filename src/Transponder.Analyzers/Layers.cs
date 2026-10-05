@@ -117,6 +117,45 @@ internal static class Layers
     internal static bool IsCache(ISymbol symbol) =>
         symbol is INamedTypeSymbol { IsGenericType: true, Name: "SourceCache" or "ISourceCache" or "IObservableCache" };
 
+    /// <summary>Whether a symbol is a class implementing one of a provider's API contracts.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a contract implementation.</returns>
+    internal static bool IsContractImplementation(ISymbol symbol) =>
+        symbol is INamedTypeSymbol { TypeKind: TypeKind.Class } type && ContractOf(type) is not null;
+
+    /// <summary>The API contract a class implements, or <see langword="null"/> when it implements none.</summary>
+    /// <param name="type">The type to read.</param>
+    /// <returns>The contract interface.</returns>
+    internal static INamedTypeSymbol? ContractOf(INamedTypeSymbol type)
+    {
+        foreach (var candidate in type.AllInterfaces)
+        {
+            if (IsContract(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Whether a symbol belongs to a mocking framework, by the names the three in common use give their entry points.</summary>
+    /// <remarks>By name rather than by package, as <see cref="IsCache"/> is: the analyzer takes no dependency the tests take.</remarks>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a mocking framework's.</returns>
+    internal static bool IsMockingFramework(ISymbol symbol)
+    {
+        for (var containing = symbol.ContainingNamespace; containing is { IsGlobalNamespace: false }; containing = containing.ContainingNamespace)
+        {
+            if (containing.Name is "NSubstitute" or "Moq" or "FakeItEasy")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>Whether a symbol is a domain type — one that survives the provider being replaced.</summary>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol belongs to the domain model.</returns>

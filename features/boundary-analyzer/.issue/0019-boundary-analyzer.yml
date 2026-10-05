@@ -2,7 +2,7 @@ id: "0019"
 type: feature
 title: Report the layer-boundary claims as compiler diagnostics
 
-status: in-progress
+status: done
 
 priority: high
 value: 5
@@ -46,8 +46,8 @@ claims:
   - B-020
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-05"
+closed: "2026-10-05"
 
 summary: |
   As the person deciding what ships I want the eighteen structural claims
@@ -93,6 +93,9 @@ decisions:
     diagnostic, or § 7 records why the violation is a decision only the author
     can make. Three of the eighteen qualify — TRN0009, TRN0011, TRN0017."
 
+  - "2026-10-05 — implementer — `done`: every child has landed, and all twenty
+    claims read `Verified` in § 9 with none `Missing`. The Feature’s ship gate is
+    closed, which also retires `aircraft-source` § 11 row 3."
 out_of_scope:
   - "Everything in § 5 of the specification."
   - "aircraft-source B-009 and B-049 — § 5 row 1; review obligations on the

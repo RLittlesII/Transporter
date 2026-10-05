@@ -2,7 +2,7 @@ id: "0021"
 type: task
 title: Fix what a diagnostic is — ids, message, location, severity, and the mapping
 
-status: blocked
+status: done
 
 priority: high
 risk: 2
@@ -37,7 +37,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-05"
-closed: null
+closed: "2026-10-05"
 
 summary: |
   The conventions every rule after it obeys, held in one place
@@ -101,6 +101,10 @@ decisions:
     test names exist, and the last of them arrives with `0024`. Every other
     claim here is `Verified`. The same shape as `aircraft-source` `0002`."
 
+  - "2026-10-05 — implementer — unblocked and `done`. B-016 was the one claim
+    holding it, and `0024` wrote the last of the eighteen test names
+    `aircraft-source` § 9 fixes. Closed by the pull request that finished it
+    rather than by a later pass, per lesson 0010."
 out_of_scope:
   - "The rules themselves — 0022, 0023, 0024."
   - "The project and its reference shape — 0020, which this item depends on."

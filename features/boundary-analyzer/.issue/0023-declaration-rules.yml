@@ -2,7 +2,7 @@ id: "0023"
 type: task
 title: Report a declaration that is the wrong shape, on the declaration
 
-status: in-review
+status: done
 
 priority: high
 risk: 3
@@ -24,7 +24,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-05"
-closed: null
+closed: "2026-10-05"
 
 summary: |
   TRN0008 – TRN0014, the seven rules that read what is in front of them: the
@@ -93,6 +93,10 @@ decisions:
     declaration error stands. Reordering the implementation to match produced
     `error TRN0009` on the declaration, which is the proof § 9's Review rows ask
     for."
+  - "2026-10-05 — implementer — set `done` after pull request #13 had already
+    merged, which is the drift lesson 0010 is about: the rule put `done` after
+    the merge, and nothing is present then. From now a delivering pull request
+    carries the status itself."
 
 out_of_scope:
   - "Reference rules — 0022. Call-site rules — 0024."

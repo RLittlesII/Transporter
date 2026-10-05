@@ -120,10 +120,65 @@ public class BoundaryCodeFixTests
     }
 
     [Fact]
+    public async Task GivenACacheRegisteredScoped_WhenTheFixIsApplied_ThenItTakesTheApplicationsLifetime()
+    {
+        // Given, When
+        var results = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithCodeFix<CacheLifetimeFix>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Registration.cs", BoundaryTestData.CacheRegisteredScoped)
+            .GenerateAsync();
+
+        // Then. One call, one name: the type argument rides along unchanged.
+        var fixedText = await Applied(results, typeof(CacheLifetimeFix));
+        fixedText.Should().Contain("AddSingleton<SourceCache<AircraftSnapshot, string>>");
+        fixedText.Should().NotContain("AddScoped");
+    }
+
+    [Fact]
+    public async Task GivenACacheRegisteredTwice_WhenItIsAnalyzed_ThenNoFixIsOffered()
+    {
+        // Given, When
+        var results = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithCodeFix<CacheLifetimeFix>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Registration.cs", BoundaryTestData.CacheRegisteredTwice)
+            .GenerateAsync();
+
+        // Then. Which of the two registrations survives is a design decision, so the rule reports
+        // and offers nothing — the half of TRN0017 § 7 records as unfixable.
+        results.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.GetMessage()
+            .Should()
+            .Contain("more than once");
+        Actions(results, typeof(CacheLifetimeFix)).Should().BeEmpty();
+    }
+
+    [Fact]
     public void GivenTheShippedFixes_WhenTheirFixableIdsAreRead_ThenEachIsOneTheSpecificationMarksFixable()
     {
         // Given
-        var shipped = new CodeFixProvider[] { new CancellationTokenLastFix(), new ContractImplementationShapeFix() };
+        var shipped = new CodeFixProvider[]
+        {
+            new CancellationTokenLastFix(),
+            new ContractImplementationShapeFix(),
+            new CacheLifetimeFix(),
+        };
 
         // When
         var ids = shipped.SelectMany(static provider => provider.FixableDiagnosticIds.AsEnumerable()).ToArray();

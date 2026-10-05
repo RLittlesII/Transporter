@@ -2,7 +2,7 @@ id: "0024"
 type: task
 title: Report a registration or a double at the call that writes it
 
-status: ready-for-implementation
+status: done
 
 priority: high
 risk: 4
@@ -24,8 +24,8 @@ claims:
   - B-020
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-05"
+closed: "2026-10-05"
 
 summary: |
   TRN0015 – TRN0018, the four rules whose subject is a call rather than a type:
@@ -69,6 +69,10 @@ acceptance_criteria:
 
 decisions: []
 
+  - "2026-10-05 — implementer — B-011, B-012 and B-020 are `Verified`, and
+    B-016 with them: the cite check it names could not pass until the eighteenth
+    test name existed, and this item wrote the last four. The status is set here
+    rather than after the merge, per lesson 0010."
 out_of_scope:
   - "Reference rules — 0022. Declaration rules — 0023."
   - "The descriptor conventions — 0021, which this item depends on."

@@ -17,9 +17,19 @@ belongs to no Feature — a bug, a spike, a chore — goes in the repository-roo
 `depends_on` or `parent` resolves from any Feature; find one with
 `**/.issue/<id>-*.yml`.
 
-- `status: in-progress` is the mark that an item is taken; `in-review` once the
-  pull request opens; `done` with a `closed:` date when it lands. Bump
-  `updated:` on every edit.
+- `status: in-progress` is the mark that an item is taken, and `in-review` once
+  the pull request opens. Bump `updated:` on every edit.
+- **`done` and the `closed:` date are written by the pull request that delivers
+  the item, before it is opened.** Not after the merge: a squash merge ends the
+  branch, the worktree comes down, and nobody is present to flip a field — so
+  "`done` when it lands" is a step with no owner, and the item sits at
+  `in-review` forever while its work is on the trunk. Date it the day the pull
+  request opens; that is the last moment anyone is there to know. A reviewer who
+  sends the work back changes the status with the rest of the change
+  ([lesson 0010](../../../.spec/lessons/0010-a-status-nobody-is-present-to-change-does-not-change.md)).
+  **A pull request closes every item its work finishes**, not only the one it
+  was cut for: a parent whose last child lands, and a sibling held `blocked` on
+  a claim this work proves, are both `done` in the same change.
 - **An item does not move to `in-progress` while its specification's § 12 rows
   are 🟡.** Unsigned design sections mean there is nothing agreed to implement
   against, and the next reader cannot tell which parts were decided and which
