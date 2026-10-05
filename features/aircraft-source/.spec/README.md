@@ -479,6 +479,17 @@ nothing. `ITrackerSource` itself is unchanged — ADR-0002 item 6 declares it an
 `api-contract` § "The two declarations" writes it out, so this Feature adds
 nothing to it.
 
+**Time is taken as a provider, not as a scheduler.** Every time-based element
+here — the poll interval (B-050), the throttle's deferral (B-028) and the
+token's expiry (B-026) — takes `Rocket.Surgery.Airframe.ISchedulerProvider` and
+reads its `BackgroundThread`, so which thread the work runs on is stated where
+the work is written rather than inherited from whatever one `IScheduler` the
+container happened to hold. That package declares the interface and ships no
+implementation, so `Transponder.Scheduling.SchedulerProvider` is this
+repository's, and `AddOpenSky` registers it only when the host has not
+registered its own. A test substitutes the provider and gives both members one
+`TestScheduler`, which keeps § 4 row 14's one-object discipline.
+
 Options and credentials are **two types, not one**, because B-027 bans a
 credential reaching a log line and a single options object invites being logged
 whole. The polling interval defaults to fifteen seconds and the bounding box has
@@ -509,6 +520,7 @@ src/Transponder/Model/                           TransportVehicle, Aircraft, Geo
 src/Transponder/Tracking/                        ITrackerSource, IFleetTracker, FleetTracker, SwappingTrackerSource,
                                                  IObservedClock, IObservedClockWriter, ObservedClock
 src/Transponder/Tracking/Sources/                IAircraftTrackerSource, AircraftTrackerSource, AircraftSnapshotMapper
+src/Transponder/Scheduling/                      SchedulerProvider
 src/Transponder/Integrations/OpenSky/Http/       IOpenSkyTokenSource, OpenSkyTokenSource
 src/Transponder/Integrations/OpenSky/            AircraftSnapshot, AircraftSnapshotClient, OpenSkyOptions, OpenSkyCredentials, BoundingBox
 ```

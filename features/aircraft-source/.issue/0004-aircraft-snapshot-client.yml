@@ -137,6 +137,19 @@ decisions:
     the throw-on-unset half goes with the ban: an unarranged `GetStates`
     fails loudly without a named message, which is enough. This item carries
     every consequence, the analyzer's included."
+  - "2026-10-05 — the person — time is taken as
+    `Rocket.Surgery.Airframe.ISchedulerProvider`, not as a bare `IScheduler`.
+    The first draft registered `AddSingleton<IScheduler>(TaskPoolScheduler.Default)`,
+    which makes every call site inherit one thread choice it never states. The
+    provider declares `UserInterfaceThread` and `BackgroundThread`, so a poll
+    says it is background work where it is written. `Rocket.Surgery.Airframe.Core`
+    ships the interface and no implementation — the person's own prior
+    repositories hand-write the provider and substitute it in tests — so
+    `Transponder.Scheduling.SchedulerProvider` is this repository's, and
+    `AddOpenSky` registers it only when the host has not registered its own.
+    One consequence for tests: a substituted provider hands the same
+    `TestScheduler` to both members, so §§ 4 row 14's one-object rule still
+    holds."
   - "2026-10-05 — the person — the logger B-027 names is
     `Microsoft.Extensions.Logging`'s `ILogger<T>` at the call site, with
     Serilog behind it through an adapter at the composition root — the shape

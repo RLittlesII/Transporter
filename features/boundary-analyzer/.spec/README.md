@@ -415,6 +415,18 @@ reasoning behind the withdrawal is that Feature's, not this one's:
 Nothing about the analyzer's own conventions moved — this Feature's B-001 – B-007
 hold identically over seventeen descriptors — so § 12 keeps its rows.
 
+**Delta, 2026-10-05 — `TRN0016`'s wrapper clause exempts the snapshot client.**
+Trigger: `0004` registered `AircraftSnapshotClient` and the build failed with
+`TRN0016`, reporting that the registration "gives the cache a type of its own".
+The rule read a registered type holding a cache field as a wrapper, and the
+client holds one because `aircraft-source` B-015 **requires** it to take the
+cache by constructor — so as written the two claims could not both be satisfied.
+The rule was narrowed rather than suppressed: what B-030 forbids is a type that
+_is_ the cache, and the writer above a cache never is. No claim changed and no
+§ 9 row moved; the test for `TRN0016` gains a third case, a registered client
+holding its cache, reported as nothing. Found by the first item to register a
+client, which is the first moment the false positive could exist.
+
 No Feature-scoped lesson of its own. Three repository-wide lessons bear on this
 document:
 [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),

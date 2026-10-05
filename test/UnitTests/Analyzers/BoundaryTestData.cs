@@ -685,6 +685,34 @@ internal static class BoundaryTestData
         """;
 
     // lang=csharp
+    internal const string ClientHoldingItsCache = """
+        using DynamicData;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky;
+
+        internal sealed class AircraftSnapshotClient
+        {
+            public AircraftSnapshotClient(SourceCache<AircraftSnapshot, string> cache) => _cache = cache;
+
+            private readonly SourceCache<AircraftSnapshot, string> _cache;
+        }
+        """;
+
+    // lang=csharp
+    internal const string ClientRegistered = """
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Transponder.Integrations.OpenSky.Container;
+
+        internal static class ClientRegistration
+        {
+            public static IServiceCollection AddClient(this IServiceCollection services) =>
+                services.AddSingleton<AircraftSnapshotClient>();
+        }
+        """;
+
+    // lang=csharp
     internal const string TheOneCachePerClient = """
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;

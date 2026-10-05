@@ -646,6 +646,18 @@ public class BoundaryAnalyzerTests
             .AddSource("Registration.cs", BoundaryTestData.TheOneCachePerClient)
             .GenerateAsync();
 
+        var client = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Client.cs", BoundaryTestData.ClientHoldingItsCache)
+            .AddSource("Registration.cs", BoundaryTestData.ClientRegistered)
+            .GenerateAsync();
+
         // Then. A wrapper and a projection are two of B-030's three clauses; the third — a policy
         // beside the key selector — needs a cache taking more than one argument, which the
         // stand-in's constructor cannot express, and § 9 records the claim as this rule's.
@@ -670,6 +682,11 @@ public class BoundaryAnalyzerTests
             .Diagnostics
             .Should()
             .BeEmpty("a SourceCache of snapshots with no wrapper is what the claim asks for");
+        NothingFailedToCompile(client);
+        client.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("the client holds the cache because B-015 says it must, and the writer above a cache is not a wrapper of it");
     }
 
     [Fact]

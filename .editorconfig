@@ -248,3 +248,22 @@ dotnet_diagnostic.IDE0040.severity = none
 dotnet_diagnostic.IDE1006.severity = none
 
 dotnet_diagnostic.CA1716.severity = suggestion
+
+# SAxxxx — StyleCop, as Rocket.Surgery.Airframe.CodeAnalysis brings it in.
+#
+# Eight of its defaults restate or contradict rules this file already states, and the
+# pre-commit hook makes that expensive rather than cosmetic: it runs
+# `dotnet format --verify-no-changes`, which fails on anything a code fix could
+# change, so every one of these would block a commit while the fix it wanted
+# would break the convention above. They are off because this file is the
+# authority (AGENTS.md § "Code Conventions"), not because they are noisy.
+dotnet_diagnostic.SA1003.severity = none   # Cast operator followed by whitespace — csharp_space_after_cast = true says it is
+dotnet_diagnostic.SA1009.severity = none   # Closing parenthesis followed by a space — the same cast spacing, read from the other side
+dotnet_diagnostic.SA1101.severity = none   # Prefix local calls with this — no file in this repository does, and IDE0003 prefers not
+dotnet_diagnostic.SA1201.severity = none   # A field should not follow a method — every type here puts its fields last
+dotnet_diagnostic.SA1204.severity = none   # Statics before instance members — a const naming a header belongs beside the member that reads it
+dotnet_diagnostic.SA1309.severity = none   # No underscore prefix — dotnet_naming_rule.private_fields_should_be_underscore_prefixed requires one
+dotnet_diagnostic.SA1600.severity = none   # Documentation on every member — RSA2014 owns that requirement, narrower, and CS1591 above is off for the same reason
+dotnet_diagnostic.SA1623.severity = none   # Property summary wording — RSA2014 asks for a summary, not for a prescribed first clause
+dotnet_diagnostic.SA1633.severity = none   # File header — this repository ships none, and a copyright placeholder is worse than nothing
+

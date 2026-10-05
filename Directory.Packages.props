@@ -13,12 +13,17 @@
     <PackageVersion Include="DynamicData" Version="9.4.33" />
     <PackageVersion Include="LanguageExt.Core" Version="4.4.9" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageVersion Include="System.Reactive" Version="6.1.0" />
     <PackageVersion Include="Microsoft.Maui.Controls.Core" Version="10.0.110" />
     <PackageVersion Include="ReactiveMarbles.Mvvm" Version="1.0.95" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
     <PackageVersion Include="Rocket.Surgery.Airframe.CodeAnalysis" Version="0.12.2" />
+    <PackageVersion Include="Rocket.Surgery.Airframe.Core" Version="0.11.1" />
   </ItemGroup>
   <ItemGroup Label="Build">
     <PackageVersion Include="Nuke.Common" Version="10.1.0" />
@@ -26,6 +31,11 @@
   <ItemGroup Label="Maui">
     <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.110" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+  </ItemGroup>
+  <ItemGroup Label="Logging">
+    <PackageVersion Include="Serilog" Version="4.3.1" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup Label="Test">
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />

@@ -13,9 +13,14 @@
       <PackageReference Include="Flurl.Http" />
       <PackageReference Include="LanguageExt.Core" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+      <PackageReference Include="Microsoft.Extensions.Options" />
+      <PackageReference Include="System.Reactive" />
       <PackageReference Include="Microsoft.Maui.Controls.Core" />
       <PackageReference Include="ReactiveMarbles.Mvvm" />
       <PackageReference Include="Riok.Mapperly" />
+      <PackageReference Include="Rocket.Surgery.Airframe.Core" />
     </ItemGroup>
 
     <ItemGroup>

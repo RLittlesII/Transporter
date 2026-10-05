@@ -307,7 +307,10 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
         // B-030, clause by clause. A wrapper is read here rather than on its own declaration,
         // because the declaration of a class holding a cache is legal until it is the cache.
-        if (!Layers.IsCache(service) && WrappedCache(service) is not null)
+        // The snapshot client is the exception, and not a weakening: B-015 requires it to take the
+        // cache by constructor, so a client holding one is the claim beside this one being obeyed.
+        // What B-030 forbids is a type that *is* the cache, which the writer above it never is.
+        if (!Layers.IsCache(service) && !Layers.IsClient(service) && WrappedCache(service) is not null)
         {
             ReportAt(
                 context,

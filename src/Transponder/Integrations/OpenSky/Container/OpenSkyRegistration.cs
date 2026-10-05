@@ -1,8 +1,12 @@
 using DynamicData;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Rocket.Surgery.Airframe;
 using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Http;
+using Transponder.Scheduling;
+using Transponder.Tracking;
 
 namespace Transponder.Integrations.OpenSky.Container;
 
@@ -21,12 +25,64 @@ public static class OpenSkyRegistration
     /// <param name="services">The collection to register into.</param>
     /// <param name="baseUrl">The provider's base URL.</param>
     /// <returns>The same collection, so registration chains.</returns>
+    /// <remarks>
+    /// The options and the credentials are two registrations, not one, and both validate on start: an absent
+    /// credential or an absent bounding box stops the application here rather than failing the first poll on
+    /// stage (B-029, B-050). Binding them to configuration is the host's, because which configuration sources
+    /// exist is the host's question — this method only says what has to be valid before anything runs.
+    /// </remarks>
     public static IServiceCollection AddOpenSky(this IServiceCollection services, string baseUrl)
     {
-        services.AddSingleton<IFlurlClientCache>(_ => new FlurlClientCache().Add(OpenSkyHttpApi.ClientName, baseUrl));
+        services.AddSingleton<IFlurlClientCache>(_ => new FlurlClientCache()
+            .Add(OpenSkyHttpApi.ClientName, baseUrl)
+            .Add(OpenSkyTokenSource.ClientName, OpenSkyTokenSource.TokenUrl));
+
+        var validator = new OpenSkyConfigurationValidator();
+
+        services.AddSingleton<IValidateOptions<OpenSkyOptions>>(validator);
+        services.AddSingleton<IValidateOptions<OpenSkyCredentials>>(validator);
+        services.AddOptions<OpenSkyOptions>().ValidateOnStart();
+        services.AddOptions<OpenSkyCredentials>().ValidateOnStart();
+
+        services.TryAddSchedulers();
+
+        // One clock object behind two interfaces, registered once and aliased to each: the write side reaches
+        // the integration and the read side reaches the tracker, so which one a constructor names is what
+        // decides whether it can advance time (ADR-0007).
+        services.AddSingleton<ObservedClock>();
+        services.AddSingleton<IObservedClock>(static provider => provider.GetRequiredService<ObservedClock>());
+        services.AddSingleton<IObservedClockWriter>(static provider => provider.GetRequiredService<ObservedClock>());
+
+        services.AddSingleton<IOpenSkyTokenSource, OpenSkyTokenSource>();
         services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
         services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
+        services.AddSingleton<AircraftSnapshotClient>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers the scheduler provider every time-based element here takes, unless the host has already
+    /// chosen one.
+    /// </summary>
+    /// <param name="services">The collection to register into.</param>
+    /// <remarks>
+    /// The poll interval, the throttle's deferral and the token's expiry all read this one provider's
+    /// background scheduler, so a test advances time rather than waiting for it (§ 4 row 14). A provider
+    /// rather than a bare <c>IScheduler</c> keeps "which thread" a stated choice at the call site: the host
+    /// is where the user-interface thread is a real dispatcher, and it may register its own provider before
+    /// calling this — nothing here reads an ambient clock either way.
+    /// </remarks>
+    private static void TryAddSchedulers(this IServiceCollection services)
+    {
+        foreach (var registered in services)
+        {
+            if (registered.ServiceType == typeof(ISchedulerProvider))
+            {
+                return;
+            }
+        }
+
+        services.AddSingleton<ISchedulerProvider, SchedulerProvider>();
     }
 }
