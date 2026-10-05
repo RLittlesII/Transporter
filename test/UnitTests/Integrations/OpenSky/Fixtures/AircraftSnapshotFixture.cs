@@ -20,6 +20,22 @@ internal sealed class AircraftSnapshotFixture : AutoFixtureBase<AircraftSnapshot
 
     public AircraftSnapshotFixture WithVelocity(Option<double> velocity) => With(ref _velocity, velocity);
 
+    public AircraftSnapshotFixture WithOriginCountry(string originCountry) => With(ref _originCountry, originCountry);
+
+    public AircraftSnapshotFixture WithLongitude(Option<double> longitude) => With(ref _longitude, longitude);
+
+    public AircraftSnapshotFixture WithLatitude(Option<double> latitude) => With(ref _latitude, latitude);
+
+    public AircraftSnapshotFixture WithBarometricAltitude(Option<double> altitude) => With(ref _barometricAltitude, altitude);
+
+    public AircraftSnapshotFixture WithGeometricAltitude(Option<double> altitude) => With(ref _geometricAltitude, altitude);
+
+    public AircraftSnapshotFixture WithTrueTrack(Option<double> trueTrack) => With(ref _trueTrack, trueTrack);
+
+    public AircraftSnapshotFixture WithVerticalRate(Option<double> verticalRate) => With(ref _verticalRate, verticalRate);
+
+    public AircraftSnapshotFixture WithSquawk(Option<string> squawk) => With(ref _squawk, squawk);
+
     public AircraftSnapshotFixture WithPositionSource(int positionSource) => With(ref _positionSource, positionSource);
 
     public AircraftSnapshotFixture WithCategory(Option<int> category) => With(ref _category, category);
@@ -48,16 +64,16 @@ internal sealed class AircraftSnapshotFixture : AutoFixtureBase<AircraftSnapshot
             Category = _category,
         };
 
-    private readonly string _originCountry = "Testland";
-    private readonly Option<double> _longitude = -95.3698;
-    private readonly Option<double> _latitude = 29.7604;
-    private readonly Option<double> _barometricAltitude = 1234.5;
     private readonly bool _onGround = false;
-    private readonly Option<double> _trueTrack = 91.2;
-    private readonly Option<double> _verticalRate = -1.3;
-    private readonly Option<double> _geometricAltitude = 1250.0;
-    private readonly Option<string> _squawk = "0021";
     private readonly bool _spi = false;
+    private string _originCountry = "Testland";
+    private Option<double> _longitude = -95.3698;
+    private Option<double> _latitude = 29.7604;
+    private Option<double> _barometricAltitude = 1234.5;
+    private Option<double> _trueTrack = 91.2;
+    private Option<double> _verticalRate = -1.3;
+    private Option<double> _geometricAltitude = 1250.0;
+    private Option<string> _squawk = "0021";
     private string _icao24 = "a1b2c3";
     private Option<string> _callsign = "TRN0001";
     private Option<long> _timePosition = 1791124315L;
