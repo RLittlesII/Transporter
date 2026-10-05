@@ -181,6 +181,13 @@ the member tables above state it without a second rendering to keep in step.
 
 **Interface changes**
 
+> **Provisional, and flagged for an architecture review — § 11 row 4.** Every
+> declaration in this subsection is written to make the claims in § 3
+> falsifiable, and the shapes below are the first ones that do. They are not
+> agreed. Nothing in § 3 names a type or a member, so the review can change any
+> of them without touching a claim — which is the property worth preserving, and
+> the reason no item here starts against a 🟡 § 12.
+
 `IFleetTracker`'s file is created by `aircraft-source` `0007`; these are the
 members this Feature adds to it, and they are written out because the file does
 not exist yet (`transponder-conventions` § "Declarations in § 7").
@@ -353,11 +360,55 @@ None yet — nothing is built, so no bug has been closed here.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-| #   | Question                                                                                                                                                                                                                    | Owner      | Target date |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------- |
-| 1   | `AutoRefresh` has no subject in this pipeline (§ 4 row 4). Take option A, B or C from § 7's decision block? A also means amending README.md's operator table, which is a change to the project-wide specification.          | the person | 2026-10-12  |
-| 2   | Does the fleet-wide summary belong on `IFleetTracker` (B-015, as § 7 has it) or on the dashboard's view model, derived from the same stream? The claim is the pipeline's either way; the member's address is a design call. | the person | 2026-10-12  |
-| 3   | `FleetColumn.Value` returns `string`, so the pipeline never converts a unit and the view never formats one. Is a display-formatted cell the right boundary, or should a column expose the canonical value and a formatter?  | the person | 2026-10-12  |
+| #   | Question                                                                                                                                                                                                                           | Owner         | Target date |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------- |
+| 1   | `AutoRefresh` has no subject in this pipeline (§ 4 row 4). Take option A, B or C from § 7's decision block? A also means amending README.md's operator table, which is a change to the project-wide specification.                 | the person    | 2026-10-12  |
+| 2   | Does the fleet-wide summary belong on `IFleetTracker` (B-015, as § 7 has it) or on the dashboard's view model, derived from the same stream? The claim is the pipeline's either way; the member's address is a design call.        | the person    | 2026-10-12  |
+| 3   | `FleetColumn.Value` returns `string`, so the pipeline never converts a unit and the view never formats one. Is a display-formatted cell the right boundary, or should a column expose the canonical value and a formatter?         | the person    | 2026-10-12  |
+| 4   | **The shape of every interface and record in § 7 is provisional and goes back to the architect.** The agenda is below. Rows 2 and 3 are two of its items and are kept as their own rows because each has a recommendation already. | the architect | —           |
+
+**§ 11 row 4 — what the architecture review is being asked.** Raised by the
+person on 2026-10-05, on reading § 7: the declarations do the job and the shape
+is not liked. Recorded here rather than settled, because § 7's owner is the
+`implementer` and `transponder-conventions` § "Section ownership" says a design
+decision bigger than the item in hand stops and goes to the person with the
+options named. Six concerns, each with what it would cost to leave as written:
+
+1. **`IFleetTracker` carries two kinds of member.** Two
+   `ReadOnlyObservableCollection<T>` properties, which are bound UI state, and
+   two `IObservable<T>` properties, which are streams. A consumer cannot tell
+   from the interface which members are safe to read off the UI thread. A split
+   — the collections on what a view binds, the streams on what the pipeline
+   publishes — is the obvious alternative.
+2. **`IFleetQuery` is a bag of four unrelated observables.** Its four members
+   change for four different reasons, which is the interface-segregation smell,
+   and it is implemented by a view model — so the pipeline's _input_ seam is
+   shaped by its consumer rather than by the pipeline. Alternatives: four
+   parameters to a builder, four separate single-member interfaces, or one
+   `FleetQuery` value the view model republishes whole.
+3. **`StaleVehicle` makes the bound element a wrapper.** B-002 says one
+   collection of `TransportVehicle`, and § 7 then binds a collection of
+   something else, so every consumer unwraps and the detail pane downcasts
+   through two layers. Alternatives: a second keyed observable of stale keys, a
+   decorating observable property, or `IsStale` as a parameterless member whose
+   clock the tracker supplies — which ADR-0005 item 1 may or may not permit.
+4. **`IObservedClock` gains a member another Feature published.** `aircraft-source`
+   delivered that interface; widening it from here is the kind of edit
+   ADR-0007's read/write split exists to make deliberate. A separate
+   `IObservedClockTicks` on the read side may be the cleaner seam.
+5. **`FleetSourceDescription` is UI-shaped and sits under `Tracking/`.** § 7
+   argues it is presentation rather than domain, which is also an argument that
+   it does not belong in the pipeline's layer at all. If it moves, B-020's
+   subject moves with it.
+6. **`IFleetTracker : IDisposable`, resolved as a container singleton.** Who
+   disposes it, and whether B-004 is provable at all when the container owns the
+   lifetime, overlaps [item `0040`](../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml)'s
+   second question.
+
+Nothing in § 3 names a type or a member, by construction, so this review can
+replace every declaration above without touching a claim, a scenario or a § 9
+row. What it does touch is § 7 and the member tables, and `0031` is the item
+that would otherwise discover each of these one at a time.
 
 ## 12. Sign-off
 
