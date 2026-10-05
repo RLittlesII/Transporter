@@ -7,26 +7,11 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Transponder.Analyzers;
 
-/// <summary>
-/// Reports the structural and boundary claims <c>ADR-0006</c> assigns to an analyzer as compiler
-/// diagnostics, at the line that violates them.
-/// <para>
-/// One analyzer carrying every rule rather than one class per rule: eighteen classes would hold
-/// eighteen copies of the layer identification <see cref="Layers"/> owns, which is the part most
-/// likely to move. The claims themselves live in
-/// <c>features/aircraft-source/.spec/README.md</c> § 3, and which diagnostic enforces which claim
-/// is <c>features/boundary-analyzer/.spec/README.md</c> § 7.
-/// </para>
-/// <para>
-/// <b>One node, one diagnostic.</b> Several claims land on the same reference — a view model naming
-/// a cache breaks B-041 and B-047 both — so a rule is selected by <i>what was named</i> first and
-/// by <i>who named it</i> second, and every branch reports once. Two diagnostics on one line is two
-/// things to suppress for one mistake.
-/// </para>
-/// </summary>
+/// <summary>Reports the structural and boundary claims as compiler diagnostics, at the line that violates them.</summary>
 /// <remarks>
 /// One analyzer, not one per rule: eighteen classes would copy <see cref="Layers"/> eighteen times.
-/// Claims are <c>aircraft-source</c> § 3; the mapping is <c>boundary-analyzer</c> § 7.
+/// Claims are <c>aircraft-source</c> § 3; the mapping is <c>boundary-analyzer</c> § 7. One node
+/// reports once — selected by what was named, then by who named it.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
@@ -44,18 +29,8 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        // B-009. Every mention of a type arrives as an identifier — a local's type, a `new`, a
-        // cast, a generic argument at a call site, a `typeof` — so registering here is what makes
-        // a reference inside a method body visible. A symbol action over signatures is the
-        // mechanism ADR-0006 § Context rules out. B-044 is the one claim in this family that is
-        // about a call rather than a type, so it has a registration of its own.
-        //
-        // RSA1007 reports both registrations — "use the Invoke() method to call functions instead
-        // of using parentheses" — with an empty symbol name, the way RSA2011 reported with none in
-        // RocketSurgeonsGuild/Airframe#403. Nothing here is a function called with parentheses:
-        // RegisterSyntaxNodeAction takes the action and the compiler calls it later. Suppressed at
-        // the line rather than for the project, which is what B-004 asks our own diagnostics to
-        // make possible.
+        // B-044 is about a call rather than a type, so it registers separately. RSA1007 reports
+        // both registrations with an empty symbol name, as RSA2011 did in Airframe#403.
 #pragma warning disable RSA1007
         context.RegisterSyntaxNodeAction(AnalyzeTypeMention, SyntaxKind.IdentifierName, SyntaxKind.GenericName);
         context.RegisterSyntaxNodeAction(AnalyzeCollectionMutation, SyntaxKind.InvocationExpression);
@@ -110,16 +85,13 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
         if (!Layers.IsInsideIntegration(enclosing, provider))
         {
-            // B-004, the broader of the two claims about the row: outside the integration it is
-            // not visible at all.
+            // B-004: outside the integration the row is not visible at all.
             Report(context, Diagnostics.WireTypeOutsideIntegration, named.Name, provider, Containing(enclosing));
 
             return;
         }
 
-        // B-045 is the narrower one: inside the integration, only the class implementing the
-        // contract and the snapshot client may hold the envelope and the row. The contract's own
-        // namespace is allowed because the contract declares the envelope as what it returns.
+        // B-045: inside, only the transport and the client. The contract declares the envelope.
         if (Layers.IsTransport(enclosing) || Layers.IsProviderRoot(enclosing) || Layers.IsWireSurface(enclosing))
         {
             return;
@@ -130,15 +102,13 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
     private static void ReportSnapshotMention(SyntaxNodeAnalysisContext context, INamedTypeSymbol named, ISymbol enclosing)
     {
-        // The client holds it, its cache stores it, the projection reads it, and a composition root
-        // registers the cache it goes in. Everything else is past the projection it dies at.
+        // Client, cache, projection, composition root. Everything else is past the projection.
         if (Layers.IsProviderRoot(enclosing) || Layers.IsTrackingLayer(enclosing) || Layers.IsCompositionRoot(enclosing))
         {
             return;
         }
 
-        // A consumer of IFleetTracker naming a snapshot breaks B-047, which is a claim about the
-        // consumer; anything else naming it breaks B-046, which is a claim about the snapshot.
+        // A consumer breaks B-047, a claim about the consumer; anything else breaks B-046.
         Report(
             context,
             Layers.IsDownstream(enclosing)
@@ -157,7 +127,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
         if (Layers.IsViewModel(enclosing))
         {
-            // B-041. A view model depends on IFleetTracker and names none of what fills it.
+            // B-041.
             Report(context, Diagnostics.SourceInternalsNamedByAViewModel, Containing(enclosing), named.Name);
 
             return;
@@ -171,9 +141,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
     private static void ReportCacheMention(SyntaxNodeAnalysisContext context, INamedTypeSymbol named, ISymbol enclosing)
     {
-        // B-032 holds wherever the cache is typed: it stores what the provider reported, and the
-        // domain is a layer above it. Reported before the referencer is considered, because a cache
-        // of domain types is wrong even in the composition root that registers it.
+        // B-032 holds wherever the cache is typed, composition root included.
         if (named.TypeArguments.FirstOrDefault(Layers.IsDomain) is { } domain)
         {
             Report(context, Diagnostics.DomainTypeNamedByTheCache, domain.Name);
@@ -196,9 +164,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // The receiver's type, not the method's declaring type: ObservableCollection<T> inherits
-        // Add, Clear and the rest from Collection<T>, so asking where the method was declared
-        // answers Collection every time and the rule reports nothing.
+        // The receiver's type, not the declaring one: Add and Clear come from Collection<T>.
         var receiver = context.SemanticModel.GetTypeInfo(member.Expression, context.CancellationToken).Type as INamedTypeSymbol;
 
         if (!Mutators.Contains(method.Name) || !IsBoundCollection(receiver))
@@ -213,8 +179,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // B-044. Reported on the member being called rather than on the statement, so the
-        // diagnostic lands on `Add` and not on a line that also holds what was added.
+        // B-044, on the member called rather than the statement.
         context.ReportDiagnostic(
             Diagnostic.Create(
                 Diagnostics.BoundCollectionMutatedImperatively,
@@ -235,9 +200,11 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
+    /// <summary>Reports at the node, naming the symbol — B-004.</summary>
+    /// <param name="context">The analysis context.</param>
+    /// <param name="descriptor">The rule reporting.</param>
+    /// <param name="arguments">The message arguments.</param>
     private static void Report(SyntaxNodeAnalysisContext context, DiagnosticDescriptor descriptor, params object[] arguments) =>
-        // B-004. The location is always the node that named the type and the message always names a
-        // symbol: a diagnostic carrying neither is one nobody can fix at the violation.
         context.ReportDiagnostic(Diagnostic.Create(descriptor, context.Node.GetLocation(), arguments));
 
     private static string Containing(ISymbol symbol) =>
