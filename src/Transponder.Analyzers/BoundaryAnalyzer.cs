@@ -24,6 +24,10 @@ namespace Transponder.Analyzers;
 /// things to suppress for one mistake.
 /// </para>
 /// </summary>
+/// <remarks>
+/// One analyzer, not one per rule: eighteen classes would copy <see cref="Layers"/> eighteen times.
+/// Claims are <c>aircraft-source</c> § 3; the mapping is <c>boundary-analyzer</c> § 7.
+/// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 {
@@ -31,11 +35,12 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => Diagnostics.All;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Generated code is excluded (B-005). Identifiers, not symbols (B-009): that is what makes a
+    /// reference inside a method body visible, which ADR-0006 § Context argues reflection cannot.
+    /// </remarks>
     public override void Initialize(AnalysisContext context)
     {
-        // B-005. A diagnostic on a line nobody wrote cannot be acted on and cannot be suppressed
-        // where it lands, so it gets the rule switched off for the whole project instead —
-        // RocketSurgeonsGuild/Airframe#403 is that failure, observed in this repository's build.
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
@@ -59,10 +64,8 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeTypeMention(SyntaxNodeAnalysisContext context)
     {
-        // `var` resolves to the inferred type but does not name it, and reporting on it would put a
-        // second diagnostic on the same line as the `new`. B-009's claim is about a type being
-        // named — a local's declared type, a `new`, a cast, a generic argument — so an inferred
-        // local is the one mention that is not one.
+        // `var` resolves to the inferred type without naming it; reporting on it would double up
+        // on the `new`.
         if (context.Node is IdentifierNameSyntax { IsVar: true })
         {
             return;

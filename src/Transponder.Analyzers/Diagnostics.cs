@@ -3,17 +3,13 @@ using Microsoft.CodeAnalysis;
 
 namespace Transponder.Analyzers;
 
-/// <summary>
-/// The TRN descriptors, one per claim the analyzer enforces.
-/// <para>
-/// Held in one place so the conventions B-001 – B-008 are checkable by one test class over
-/// <see cref="BoundaryAnalyzer.SupportedDiagnostics"/> rather than by eighteen tests over
-/// eighteen copies. Ids run on the analyzer's own sequence and encode no claim number
-/// (<c>features/boundary-analyzer/.spec/adr/0001</c>); the claim each one enforces is read from
-/// § 7's mapping table, and is repeated in the title and message only as a message to whoever is
-/// reading the build output (B-003).
-/// </para>
-/// </summary>
+/// <summary>The TRN descriptors, one per claim the analyzer enforces.</summary>
+/// <remarks>
+/// Held in one place so the conventions B-001 – B-008 are checked once over
+/// <see cref="BoundaryAnalyzer.SupportedDiagnostics"/> rather than in eighteen copies. Ids run on
+/// the analyzer's own sequence and encode no claim number (<c>adr/0001</c>); the claim in each
+/// title is a message to whoever reads the build output (B-003), not a second index.
+/// </remarks>
 internal static class Diagnostics
 {
     /// <summary>The category every boundary diagnostic is reported under.</summary>
