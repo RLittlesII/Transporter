@@ -30,11 +30,18 @@ spec_status: draft
 
 <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
-Twenty-two claims, in six groups: **B-001 – B-004** the surfaces and how they
+Twenty-seven claims, in seven groups: **B-001 – B-004** the surfaces and how they
 are wired; **B-005 – B-008** the grid, including the stale mark; **B-009 –
 B-012** the user's input; **B-013 – B-015** the detail pane and the summary;
 **B-016 – B-019** the swap control and what a view model may not hold;
-**B-020 – B-022** the swap test and the boundaries.
+**B-020 – B-022** the swap test and the boundaries; **B-023 – B-027** the
+arrival notice's two surfaces.
+
+B-023 – B-027 were added on 2026-10-05, when the person asked for a visible sign
+that new data had arrived. `fleet-pipeline` B-025 – B-027 publish the signal;
+these five decide what is shown, where, and how often. Two surfaces, because the
+answer was both: a banner that always reflects the latest notice, and a toast
+that interrupts only for something worth interrupting for.
 
 B-008 is grouped with the grid because it is what a row shows, and delivered by
 `0038` with the pane and the summary, because the mark it displays arrives from
@@ -70,21 +77,29 @@ B-020.
 | B-020 | No view or view model SHALL name an API contract, an API type, a client, a cache, a snapshot, a strategy, a concrete `ITrackerSource` or the swap decorator; its dependencies SHALL be `IFleetTracker`, `IFleetQuery` and the actors. | `aircraft-source` B-041 and B-047; hot-swap-source                       |
 | B-021 | Swapping the live source SHALL require editing no view and no markup: the columns, comparers and groupings change because the description changed.                                                                                    | maui-ui § "The swap test"; `fleet-pipeline` B-021                        |
 | B-022 | No cast, type test or `switch` on a concrete `TransportVehicle` subclass SHALL appear outside the detail pane.                                                                                                                        | ADR-0005 item 6; domain-model § "Never add"                              |
+| B-023 | The page SHALL carry a banner showing the most recent notice — its instant, the vehicles tracked, and how many the changeset added, updated and removed — and SHALL NOT compute any of those numbers.                                 | `fleet-pipeline` B-025; decided call 2026-10-05                          |
+| B-024 | The banner SHALL change only when a notice arrives, and SHALL NOT clear, reorder, re-create or obscure any row of the grid.                                                                                                           | `fleet-pipeline` B-025; maui-ui § "The UI reads; it never drives"        |
+| B-025 | A toast SHALL appear only for a notice worth interrupting for — a quiet notice, a resumed notice, and the swap completing — and SHALL NOT appear for an ordinary update, however long the toast's own interval is set.                | Decided call 2026-10-05; `fleet-pipeline` B-027                          |
+| B-026 | The banner's interval and the toast's interval SHALL be separate inputs on the page, each editable while the application runs, each published as an observable, defaulting to one second and one minute.                              | Decided call 2026-10-05; `fleet-pipeline` B-026 and § 4 row 10           |
+| B-027 | No view model SHALL name a toast, snackbar, alert or any other platform notification type; a view model SHALL publish notices and a view SHALL be what renders one.                                                                   | mvvm § "Never add"; maui-ui § "Never add"                                |
 
 ## 4. Constraints
 
 <!-- Rules: ../../../.spec/templates/feature.md § 4 -->
 
-| #   | Constraint                                                                                                                                                                                                                                                                                                                                                                              | Source                                                     | Impact                                                                                                                                                                                                                                                         |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `fleet-pipeline` owns every operator. This Feature supplies inputs and binds outputs, and claims nothing about what the pipeline does with either.                                                                                                                                                                                                                                      | `fleet-pipeline` § 3; dynamic-data-pipeline                | A behaviour that looks like a UI bug and is a pipeline rule — a filter not re-evaluating, a row vanishing — is reported against that Feature's claims, not fixed in a view.                                                                                    |
-| 2   | Three of `fleet-pipeline`'s open questions land here, and two change this Feature's surface: where the summary is exposed (its § 11 row 2), and whether a column carries a formatted cell or a canonical value plus a formatter (its § 11 row 3).                                                                                                                                       | `fleet-pipeline` § 11                                      | B-015 and B-019 are written against the recommendations: the summary on the tracker, and the column carrying a display-formatted cell. If either is answered the other way, both claims are amended before `0036` starts. § 11 row 1 carries this.             |
-| 3   | MAUI's shipped grid is `CollectionView`; this repository has no third-party grid and does not add one.                                                                                                                                                                                                                                                                                  | `Directory.Packages.props`; maui-ui                        | "Columns" are a template the description drives rather than a grid feature, and B-006's in-place update is `CollectionView`'s behaviour given a changeset-bound collection — not something a converter can rescue.                                             |
-| 4   | The MAUI heads do not build on Linux CI, so no test here may need one.                                                                                                                                                                                                                                                                                                                  | [item 0018](../../../.issue/0018-linux-ci-build-scope.yml) | Every claim that can be proven must be provable by a view-model test. What is left — markup, a page's registration, what a view may name — is an analyzer rule or a review, never a UI test runner this repository does not have.                              |
-| 5   | View models live beside the actors they talk to, under `src/Transponder/Features/`, and the pages live in `src/Gui`.                                                                                                                                                                                                                                                                    | `transponder-conventions` § "Project structure"            | The split is why a view-model test needs no MAUI head: nothing in `src/Transponder` references a page. A view model that would need one has reached for something `maui-ui` keeps in the view.                                                                 |
-| 6   | The swap is already specified: `aircraft-source` `0006` owns the decorator and the disposal, and its decision 0002 chose the busy indicator over a frozen grid.                                                                                                                                                                                                                         | `aircraft-source` `0006`, decisions/0002                   | B-016 claims the control and the indicator only. The actor that performs the swap, and what it disposes, are that item's.                                                                                                                                      |
-| 7   | `DemoViewModel` and `MainPage.xaml` are the template's, and `MauiProgram` registers both.                                                                                                                                                                                                                                                                                               | `src/Gui/MauiProgram.cs`, `src/Gui/MainPage.xaml`          | B-002 removes all three registrations rather than leaving a second page nobody opens. The removal is this Feature's because it is the thing that replaces them.                                                                                                |
-| 8   | **Every interface `fleet-pipeline` § 7 declares is provisional and goes back to the architect** — its § 11 row 4, raised by the person on 2026-10-05. Two of the six concerns are this Feature's seams: `IFleetQuery` as a bag of four observables shaped by its consumer, which is `FleetViewModel`, and the `StaleVehicle` wrapper this Feature's grid binds and detail pane unwraps. | `fleet-pipeline` § 11 row 4                                | § 7's view-model member table names both and changes with them. No claim here names a type either, so the review moves § 7 on both sides and leaves §§ 3 and 9 alone. `0036` does not start before it, which its `ready-for-architecture` status already says. |
+| #   | Constraint                                                                                                                                                                                                                                                                                                                                                                              | Source                                                            | Impact                                                                                                                                                                                                                                                         |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `fleet-pipeline` owns every operator. This Feature supplies inputs and binds outputs, and claims nothing about what the pipeline does with either.                                                                                                                                                                                                                                      | `fleet-pipeline` § 3; dynamic-data-pipeline                       | A behaviour that looks like a UI bug and is a pipeline rule — a filter not re-evaluating, a row vanishing — is reported against that Feature's claims, not fixed in a view.                                                                                    |
+| 2   | Three of `fleet-pipeline`'s open questions land here, and two change this Feature's surface: where the summary is exposed (its § 11 row 2), and whether a column carries a formatted cell or a canonical value plus a formatter (its § 11 row 3).                                                                                                                                       | `fleet-pipeline` § 11                                             | B-015 and B-019 are written against the recommendations: the summary on the tracker, and the column carrying a display-formatted cell. If either is answered the other way, both claims are amended before `0036` starts. § 11 row 1 carries this.             |
+| 3   | MAUI's shipped grid is `CollectionView`; this repository has no third-party grid and does not add one.                                                                                                                                                                                                                                                                                  | `Directory.Packages.props`; maui-ui                               | "Columns" are a template the description drives rather than a grid feature, and B-006's in-place update is `CollectionView`'s behaviour given a changeset-bound collection — not something a converter can rescue.                                             |
+| 4   | The MAUI heads do not build on Linux CI, so no test here may need one.                                                                                                                                                                                                                                                                                                                  | [item 0018](../../../.issue/0018-linux-ci-build-scope.yml)        | Every claim that can be proven must be provable by a view-model test. What is left — markup, a page's registration, what a view may name — is an analyzer rule or a review, never a UI test runner this repository does not have.                              |
+| 5   | View models live beside the actors they talk to, under `src/Transponder/Features/`, and the pages live in `src/Gui`.                                                                                                                                                                                                                                                                    | `transponder-conventions` § "Project structure"                   | The split is why a view-model test needs no MAUI head: nothing in `src/Transponder` references a page. A view model that would need one has reached for something `maui-ui` keeps in the view.                                                                 |
+| 6   | The swap is already specified: `aircraft-source` `0006` owns the decorator and the disposal, and its decision 0002 chose the busy indicator over a frozen grid.                                                                                                                                                                                                                         | `aircraft-source` `0006`, decisions/0002                          | B-016 claims the control and the indicator only. The actor that performs the swap, and what it disposes, are that item's.                                                                                                                                      |
+| 7   | `DemoViewModel` and `MainPage.xaml` are the template's, and `MauiProgram` registers both.                                                                                                                                                                                                                                                                                               | `src/Gui/MauiProgram.cs`, `src/Gui/MainPage.xaml`                 | B-002 removes all three registrations rather than leaving a second page nobody opens. The removal is this Feature's because it is the thing that replaces them.                                                                                                |
+| 9   | A toast needs `CommunityToolkit.Maui`, not the `.Markup` package this repository has. `Toast` and `Snackbar` live in the full toolkit and need `UseMauiCommunityToolkit()` beside the existing `UseMauiCommunityToolkitMarkup()`.                                                                                                                                                       | `Directory.Packages.props`; `src/Gui/MauiProgram.cs`              | `0041` adds one central package version and one builder call — the only package this Feature adds. The banner needs nothing, which is why B-023 is deliverable even if the toolkit addition is refused.                                                        |
+| 10  | A toast is a platform alert: drawn by the operating system, outside the page's visual tree, and this repository runs no UI test runner (row 4).                                                                                                                                                                                                                                         | maui-ui; row 4                                                    | B-025's § 9 row is a **review**, not a test. A view-model test still proves which notices are offered for interruption and which are not, so that half is asserted and the rendering half is read.                                                             |
+| 11  | The two surfaces pace independently, and both intervals are edited on stage.                                                                                                                                                                                                                                                                                                            | Decided call 2026-10-05 (the person); `fleet-pipeline` § 4 row 10 | B-026 is two inputs and two observables, not one setting. `fleet-pipeline` B-026 takes the interval per subscription, so this Feature subscribes twice and paces each — no throttling is implemented here, which keeps that operator tested in one place.      |
+| 8   | **Every interface `fleet-pipeline` § 7 declares is provisional and goes back to the architect** — its § 11 row 4, raised by the person on 2026-10-05. Two of the six concerns are this Feature's seams: `IFleetQuery` as a bag of four observables shaped by its consumer, which is `FleetViewModel`, and the `StaleVehicle` wrapper this Feature's grid binds and detail pane unwraps. | `fleet-pipeline` § 11 row 4                                       | § 7's view-model member table names both and changes with them. No claim here names a type either, so the review moves § 7 on both sides and leaves §§ 3 and 9 alone. `0036` does not start before it, which its `ready-for-architecture` status already says. |
 
 ## 5. Out of Scope
 
@@ -132,25 +147,29 @@ else implements that interface, and the pipeline never names the view model.
 
 No domain type is added or changed. The types below are view state.
 
-| Field                           | Type                                            | Notes                                                                                                                                           |
-| ------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FleetViewModel.Fleet`          | `ReadOnlyObservableCollection<StaleVehicle>`    | The tracker's collection, exposed as-is. Not a copy (B-005).                                                                                    |
-| `FleetViewModel.SearchText`     | `string`                                        | `RaiseAndSetIfChanged`; published into the predicate (B-009).                                                                                   |
-| `FleetViewModel.Filters`        | `IReadOnlyList<FleetFilterChoice>`              | What the dropdowns offer, from the description's searchable columns.                                                                            |
-| `FleetViewModel.SelectedFilter` | `Option<FleetFilterChoice>`                     | Absent means no dropdown constraint, which is a value rather than a null (B-011).                                                               |
-| `FleetViewModel.Columns`        | `IReadOnlyList<FleetColumn>`                    | From the description, in its order (B-007).                                                                                                     |
-| `FleetViewModel.SortedColumn`   | `Option<(FleetColumn Column, bool Descending)>` | Which header is active and in which direction (B-012).                                                                                          |
-| `FleetViewModel.Groupings`      | `IReadOnlyList<FleetGrouping>`                  | From the description.                                                                                                                           |
-| `FleetViewModel.Selected`       | `Option<TransportVehicle>`                      | The abstract type: the grid selects a vehicle, and only the pane learns which kind (B-013).                                                     |
-| `FleetViewModel.IsSwapping`     | `bool`                                          | Drives the busy indicator (B-016).                                                                                                              |
-| `FleetViewModel.SwapCommand`    | `ICommand`                                      | Tells the actor; never `Ask`s it (B-016, B-017).                                                                                                |
-| `FleetFilterChoice.Name`        | `string`                                        | What the dropdown shows.                                                                                                                        |
-| `FleetFilterChoice.Matches`     | `Func<TransportVehicle, bool>`                  | The constraint, over the base only (B-022).                                                                                                     |
-| `FleetDetailViewModel.Vehicle`  | `Option<TransportVehicle>`                      | Absent empties the pane (B-014).                                                                                                                |
-| `FleetDetailViewModel.Rows`     | `IReadOnlyList<(string Label, string Value)>`   | The pane's own projection, where the one legitimate downcast happens (B-013) and where a canonical unit is converted by a named member (B-019). |
-| `FleetSummaryViewModel.Tracked` | `int`                                           | Projected from the tracker's summary; not recomputed (B-015).                                                                                   |
-| `FleetSummaryViewModel.Stale`   | `int`                                           | Same.                                                                                                                                           |
-| `FleetSummaryViewModel.Groups`  | `int`                                           | Same.                                                                                                                                           |
+| Field                                 | Type                                            | Notes                                                                                                                                           |
+| ------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FleetViewModel.Fleet`                | `ReadOnlyObservableCollection<StaleVehicle>`    | The tracker's collection, exposed as-is. Not a copy (B-005).                                                                                    |
+| `FleetViewModel.SearchText`           | `string`                                        | `RaiseAndSetIfChanged`; published into the predicate (B-009).                                                                                   |
+| `FleetViewModel.Filters`              | `IReadOnlyList<FleetFilterChoice>`              | What the dropdowns offer, from the description's searchable columns.                                                                            |
+| `FleetViewModel.SelectedFilter`       | `Option<FleetFilterChoice>`                     | Absent means no dropdown constraint, which is a value rather than a null (B-011).                                                               |
+| `FleetViewModel.Columns`              | `IReadOnlyList<FleetColumn>`                    | From the description, in its order (B-007).                                                                                                     |
+| `FleetViewModel.SortedColumn`         | `Option<(FleetColumn Column, bool Descending)>` | Which header is active and in which direction (B-012).                                                                                          |
+| `FleetViewModel.Groupings`            | `IReadOnlyList<FleetGrouping>`                  | From the description.                                                                                                                           |
+| `FleetViewModel.Selected`             | `Option<TransportVehicle>`                      | The abstract type: the grid selects a vehicle, and only the pane learns which kind (B-013).                                                     |
+| `FleetViewModel.IsSwapping`           | `bool`                                          | Drives the busy indicator (B-016).                                                                                                              |
+| `FleetViewModel.SwapCommand`          | `ICommand`                                      | Tells the actor; never `Ask`s it (B-016, B-017).                                                                                                |
+| `FleetFilterChoice.Name`              | `string`                                        | What the dropdown shows.                                                                                                                        |
+| `FleetFilterChoice.Matches`           | `Func<TransportVehicle, bool>`                  | The constraint, over the base only (B-022).                                                                                                     |
+| `FleetDetailViewModel.Vehicle`        | `Option<TransportVehicle>`                      | Absent empties the pane (B-014).                                                                                                                |
+| `FleetDetailViewModel.Rows`           | `IReadOnlyList<(string Label, string Value)>`   | The pane's own projection, where the one legitimate downcast happens (B-013) and where a canonical unit is converted by a named member (B-019). |
+| `FleetSummaryViewModel.Tracked`       | `int`                                           | Projected from the tracker's summary; not recomputed (B-015).                                                                                   |
+| `FleetSummaryViewModel.Stale`         | `int`                                           | Same.                                                                                                                                           |
+| `FleetSummaryViewModel.Groups`        | `int`                                           | Same.                                                                                                                                           |
+| `FleetBannerViewModel.Latest`         | `Option<FleetNotice>`                           | The most recent notice at the banner's cadence; absent until the first arrives (B-023).                                                         |
+| `FleetBannerViewModel.BannerInterval` | `TimeSpan`                                      | Edited on the page, published as an observable into `IFleetTracker.Notices` (B-026). One second by default.                                     |
+| `FleetBannerViewModel.ToastInterval`  | `TimeSpan`                                      | The second subscription's cadence, edited separately (B-026). One minute by default.                                                            |
+| `FleetBannerViewModel.Interrupting`   | `IObservable<FleetNotice>`                      | The notices worth interrupting for — quiet, resumed, and the swap completing — which the **page** turns into a toast (B-025, B-027).            |
 
 **Diagrams**
 
@@ -262,6 +281,32 @@ flowchart LR
     registry["IActorRegistry"] -.->|resolves| vm
 ```
 
+**The two notice surfaces**
+
+`fleet-pipeline` publishes the notices and this Feature decides what a person
+sees. Two surfaces, two cadences, and the split is what keeps either one
+useful:
+
+- **The banner** is in the page's own markup and always shows the latest notice
+  — `14:32:10 · 37 tracked · 1 added, 2 updated, 1 removed`. It overlays
+  nothing, so it can update every second without covering the grid it is
+  describing (B-023, B-024).
+- **The toast** interrupts, so it is reserved for a notice that earns it: the
+  feed going quiet, the feed resuming, and the swap completing. B-025 forbids
+  one for an ordinary update at any interval, because a toast every second is
+  the demo arguing against itself on a projector.
+
+Both subscribe to `IFleetTracker.Notices(IObservable<TimeSpan>)` separately,
+each with its own interval observable fed by its own input field (B-026). No
+throttling is written here: the operator lives in the pipeline, tested once
+(`fleet-pipeline` § 4 row 10).
+
+**The view model does not name the toast.** It exposes `Interrupting`, and the
+page subscribes and calls the toolkit (B-027). That keeps every notice decision
+— which kinds interrupt, at what cadence — in a plain class a test drives, and
+leaves the platform call in the one place this repository cannot test anyway
+(§ 4 row 10).
+
 **Decision required**
 
 > What is **not** settled is the startup wiring, and it is a mechanism question
@@ -322,49 +367,54 @@ executes.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-dashboard.feature`](fleet-dashboard.feature)
-beside this file — twenty-two scenarios, each tagged with the `@B-00n` it
+beside this file — twenty-seven scenarios, each tagged with the `@B-00n` it
 proves. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
-- Happy path → B-005, B-007, B-009 – B-013, B-015, B-016
-- Failure mode → B-006, B-008, B-014, B-017
-- Validation failure → B-001 – B-004, B-018 – B-022
-- Data-driven → B-010, B-011
+- Happy path → B-005, B-007, B-009 – B-013, B-015, B-016, B-023, B-026
+- Failure mode → B-006, B-008, B-014, B-017, B-024, B-025
+- Validation failure → B-001 – B-004, B-018 – B-022, B-027
+- Data-driven → B-010, B-011, B-026
 
 ## 9. Traceability Matrix
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and all twenty-two rows read `Missing`.** Nothing here is
+**This is the gate, and all twenty-seven rows read `Missing`.** Nothing here is
 built, and nothing can be until `fleet-pipeline` exposes a tracker to bind.
 Three rows name a review rather than a test, because what is on a screen is
 not something this repository executes or analyzes (§ 8); they are `Missing`
 until someone performs them and records what they looked at.
 
-| Claim ID | Scenario | Test                                                                                                                                            | Status  |
-| -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| B-001    | `@B-001` | review — the page carries all five surfaces; re-done by any change to `FleetPage`'s layout                                                      | Missing |
-| B-002    | `@B-002` | review — no `.xaml` remains under `src/Gui` but the template's shell, and `MauiProgram` registers neither removed type; re-done by any new page | Missing |
-| B-003    | `@B-003` | `FleetPageTests.GivenTheFleetPage_WhenItIsConstructed_ThenItTakesItsViewModelAndResolvesNothing`                                                | Missing |
-| B-004    | `@B-004` | `ContainerTests.GivenTheConstructedApplication_WhenThePagesAndViewModelsAreResolved_ThenEachWasRegisteredThroughTheUserInterfaceBuilder`        | Missing |
-| B-005    | `@B-005` | `FleetViewModelTests.GivenATracker_WhenTheFleetIsRead_ThenItIsTheTrackersOwnCollection`                                                         | Missing |
-| B-006    | `@B-006` | review — one vehicle's change produces one row update and no re-creation; re-done by a change to the grid's item template                       | Missing |
-| B-007    | `@B-007` | `FleetViewModelTests.GivenADescription_WhenTheColumnsAreRead_ThenTheyAreTheDescriptionsInItsOrder`                                              | Missing |
-| B-008    | `@B-008` | `FleetViewModelTests.GivenAStaleVehicle_WhenItsRowIsProjected_ThenItIsMarkedAndStillInTheFleet`                                                 | Missing |
-| B-009    | `@B-009` | `FleetViewModelTests.GivenSearchTextAndAFilter_WhenTheyChange_ThenOnePredicateIsPublishedAndNoCollectionIsEnumerated`                           | Missing |
-| B-010    | `@B-010` | `FleetSearchTests.GivenSearchText_WhenItIsMatched_ThenMatchingIsCaseInsensitiveTrimmedAndEmptyMatchesEverything`                                | Missing |
-| B-011    | `@B-011` | `FleetSearchTests.GivenASearchAndAFilter_WhenEitherIsCleared_ThenTheOtherStillApplies`                                                          | Missing |
-| B-012    | `@B-012` | `FleetViewModelTests.GivenAColumnChosenTwiceAndAGroupingChosen_WhenTheQueryIsObserved_ThenItPublishesTheComparerItsReverseAndTheGrouping`       | Missing |
-| B-013    | `@B-013` | `FleetDetailViewModelTests.GivenASelectedAircraft_WhenItsRowsAreRead_ThenTheyIncludeFieldsOnlyAnAircraftReports`                                | Missing |
-| B-014    | `@B-014` | `FleetDetailViewModelTests.GivenASelectionThatLeavesTheFleet_WhenTheSelectionIsRead_ThenItIsAbsentAndThePaneIsEmpty`                            | Missing |
-| B-015    | `@B-015` | `FleetSummaryViewModelTests.GivenTheTrackersSummary_WhenItChanges_ThenTheProjectedCountsFollowItAndNothingIsRecomputed`                         | Missing |
-| B-016    | `@B-016` | `FleetViewModelTests.GivenTheSwapCommand_WhenItIsInvoked_ThenTheActorIsToldAndTheBusyIndicatorCoversIt`                                         | Missing |
-| B-017    | `@B-017` | analyzer — a view or view model holding an `HttpClient`, timer, socket, cache write, blocking call or untimed `Ask` is reported                 | Missing |
-| B-018    | `@B-018` | analyzer — filtering, sorting, grouping, expiry or staleness arithmetic in a view or view model is reported at the expression                   | Missing |
-| B-019    | `@B-019` | `FleetDetailViewModelTests.GivenAnAltitudeInMetres_WhenItIsProjected_ThenTheConversionIsANamedMemberAndTheCanonicalValueIsUnchanged`            | Missing |
-| B-020    | `@B-020` | analyzer — `BoundaryAnalyzer`'s existing view-model rule, extended to the dashboard's types                                                     | Missing |
-| B-021    | `@B-021` | `FleetViewModelTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsGroupingsAndFiltersChangeWithNoMarkupEdit`                             | Missing |
-| B-022    | `@B-022` | analyzer — a cast, `is` or `switch` on a vehicle subclass outside the detail pane is reported at the expression                                 | Missing |
+| Claim ID | Scenario | Test                                                                                                                                                                       | Status  |
+| -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| B-001    | `@B-001` | review — the page carries all five surfaces; re-done by any change to `FleetPage`'s layout                                                                                 | Missing |
+| B-002    | `@B-002` | review — no `.xaml` remains under `src/Gui` but the template's shell, and `MauiProgram` registers neither removed type; re-done by any new page                            | Missing |
+| B-003    | `@B-003` | `FleetPageTests.GivenTheFleetPage_WhenItIsConstructed_ThenItTakesItsViewModelAndResolvesNothing`                                                                           | Missing |
+| B-004    | `@B-004` | `ContainerTests.GivenTheConstructedApplication_WhenThePagesAndViewModelsAreResolved_ThenEachWasRegisteredThroughTheUserInterfaceBuilder`                                   | Missing |
+| B-005    | `@B-005` | `FleetViewModelTests.GivenATracker_WhenTheFleetIsRead_ThenItIsTheTrackersOwnCollection`                                                                                    | Missing |
+| B-006    | `@B-006` | review — one vehicle's change produces one row update and no re-creation; re-done by a change to the grid's item template                                                  | Missing |
+| B-007    | `@B-007` | `FleetViewModelTests.GivenADescription_WhenTheColumnsAreRead_ThenTheyAreTheDescriptionsInItsOrder`                                                                         | Missing |
+| B-008    | `@B-008` | `FleetViewModelTests.GivenAStaleVehicle_WhenItsRowIsProjected_ThenItIsMarkedAndStillInTheFleet`                                                                            | Missing |
+| B-009    | `@B-009` | `FleetViewModelTests.GivenSearchTextAndAFilter_WhenTheyChange_ThenOnePredicateIsPublishedAndNoCollectionIsEnumerated`                                                      | Missing |
+| B-010    | `@B-010` | `FleetSearchTests.GivenSearchText_WhenItIsMatched_ThenMatchingIsCaseInsensitiveTrimmedAndEmptyMatchesEverything`                                                           | Missing |
+| B-011    | `@B-011` | `FleetSearchTests.GivenASearchAndAFilter_WhenEitherIsCleared_ThenTheOtherStillApplies`                                                                                     | Missing |
+| B-012    | `@B-012` | `FleetViewModelTests.GivenAColumnChosenTwiceAndAGroupingChosen_WhenTheQueryIsObserved_ThenItPublishesTheComparerItsReverseAndTheGrouping`                                  | Missing |
+| B-013    | `@B-013` | `FleetDetailViewModelTests.GivenASelectedAircraft_WhenItsRowsAreRead_ThenTheyIncludeFieldsOnlyAnAircraftReports`                                                           | Missing |
+| B-014    | `@B-014` | `FleetDetailViewModelTests.GivenASelectionThatLeavesTheFleet_WhenTheSelectionIsRead_ThenItIsAbsentAndThePaneIsEmpty`                                                       | Missing |
+| B-015    | `@B-015` | `FleetSummaryViewModelTests.GivenTheTrackersSummary_WhenItChanges_ThenTheProjectedCountsFollowItAndNothingIsRecomputed`                                                    | Missing |
+| B-016    | `@B-016` | `FleetViewModelTests.GivenTheSwapCommand_WhenItIsInvoked_ThenTheActorIsToldAndTheBusyIndicatorCoversIt`                                                                    | Missing |
+| B-017    | `@B-017` | analyzer — a view or view model holding an `HttpClient`, timer, socket, cache write, blocking call or untimed `Ask` is reported                                            | Missing |
+| B-018    | `@B-018` | analyzer — filtering, sorting, grouping, expiry or staleness arithmetic in a view or view model is reported at the expression                                              | Missing |
+| B-019    | `@B-019` | `FleetDetailViewModelTests.GivenAnAltitudeInMetres_WhenItIsProjected_ThenTheConversionIsANamedMemberAndTheCanonicalValueIsUnchanged`                                       | Missing |
+| B-020    | `@B-020` | analyzer — `BoundaryAnalyzer`'s existing view-model rule, extended to the dashboard's types                                                                                | Missing |
+| B-021    | `@B-021` | `FleetViewModelTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsGroupingsAndFiltersChangeWithNoMarkupEdit`                                                        | Missing |
+| B-022    | `@B-022` | analyzer — a cast, `is` or `switch` on a vehicle subclass outside the detail pane is reported at the expression                                                            | Missing |
+| B-023    | `@B-023` | `FleetBannerViewModelTests.GivenANotice_WhenTheBannerIsProjected_ThenItShowsTheInstantAndTheCountsAndComputesNone`                                                         | Missing |
+| B-024    | `@B-024` | `FleetBannerViewModelTests.GivenNoNoticeArrives_WhenTheBannerIsRead_ThenItIsUnchanged`, plus a review that it overlays no row                                              | Missing |
+| B-025    | `@B-025` | `FleetBannerViewModelTests.GivenAnUpdatedAQuietAndAResumedNotice_WhenTheInterruptingOnesAreObserved_ThenOnlyTheQuietAndResumedAppear`, plus a review of the rendered toast | Missing |
+| B-026    | `@B-026` | `FleetBannerViewModelTests.GivenTwoIntervalsEditedWhileRunning_WhenNoticesArrive_ThenEachSurfaceIsPacedByItsOwn`                                                           | Missing |
+| B-027    | `@B-027` | analyzer — a toast, snackbar or alert type named in a view model is reported at the reference                                                                              | Missing |
 
 ## 10. Lessons / Spec Deltas
 
@@ -416,11 +466,12 @@ whose item 6 is why the detail pane exists as a named exception.
 
 | Item                                                           | Claims                                          |
 | -------------------------------------------------------------- | ----------------------------------------------- |
-| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 22 — the parent; its children hold the work |
+| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 27 — the parent; its children hold the work |
 | [`0036`](../.issue/0036-fleet-page-and-grid.yml)               | B-001 – B-007                                   |
 | [`0037`](../.issue/0037-search-sort-and-grouping-input.yml)    | B-009 – B-012                                   |
 | [`0038`](../.issue/0038-detail-pane-and-summary.yml)           | B-008, B-013 – B-015, B-019                     |
 | [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022                    |
+| [`0041`](../.issue/0041-arrival-banner-and-toast.yml)          | B-023 – B-027                                   |
 
 Every claim is carried by exactly one child. `0036` removes the template's page
 and view model as it replaces them (B-002), which is why that claim is not an
@@ -441,7 +492,7 @@ decorator its control drives.
 | Date       | Item   | Field | Rationale                                                                                                                                                                                                                                                                                                                                           |
 | ---------- | ------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-10-05 | `0035` | value | The talk is delivered through this screen. A correct pipeline nobody can see demonstrates nothing, and § 2 need 1 is the whole audience.                                                                                                                                                                                                            |
-| 2026-10-05 | `0035` | risk  | Nine of twenty-two claims have no executing proof (§ 8), three of them only a review. That is the honest cost of a repository with no UI test runner, and the mitigation is keeping the views empty rather than adding one.                                                                                                                         |
+| 2026-10-05 | `0035` | risk  | Thirteen of twenty-seven claims have no executing proof (§ 8), three of them only a review. That is the honest cost of a repository with no UI test runner, and the mitigation is keeping the views empty rather than adding one.                                                                                                                   |
 | 2026-10-05 | `0036` | value | Everything else here attaches to the page this item builds, and three items name it in `depends_on`.                                                                                                                                                                                                                                                |
 | 2026-10-05 | `0036` | risk  | Two hazards, both of which look like success. A `CollectionView` whose item template re-creates its children refills the grid on every change and flickers only once the feed is real (B-006). And columns built once from the first description look right until a swap, which is the moment that matters (B-007).                                 |
 | 2026-10-05 | `0037` | value | The search box and the header tap are the two gestures the audience is asked to believe cost nothing.                                                                                                                                                                                                                                               |

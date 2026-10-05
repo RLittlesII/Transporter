@@ -184,3 +184,50 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When the project is built
      Then it is reported at the expression
       And the same expression inside the detail pane is not
+
+  # ──────────────────────── The arrival notice on screen ────────────────────────
+
+  @B-023
+  Scenario: The banner shows the latest notice
+    Given a dashboard bound to a fleet of thirty-seven aircraft
+     When a notice arrives reporting 14:32:10, one added, two updated and one removed
+     Then the banner shows that instant and those counts
+      And it shows thirty-seven tracked
+      And the view model computed none of the numbers
+
+  @B-024
+  Scenario: A quiet poll leaves the banner and the grid alone
+    Given a banner showing a notice from 14:32:10
+     When a changeset arrives that changed nothing, so no notice is raised
+     Then the banner is unchanged
+      And no row was cleared, reordered or re-created
+      And the banner overlays no row of the grid
+
+  @B-025
+  Scenario: Only a notice worth interrupting for becomes a toast
+    Given a dashboard whose toast interval is one second
+     When an updated notice, a quiet notice and a resumed notice arrive
+     Then a toast appears for the quiet notice and for the resumed notice
+      And no toast appears for the updated notice
+      And the swap completing also produces one
+
+  @B-026
+  Scenario Outline: The banner and the toast are paced separately, live
+    Given a banner interval of <banner> and a toast interval of <toast>
+     When notices arrive faster than both
+     Then the banner updates at most once per <banner>
+      And the toast interrupts at most once per <toast>
+      And editing either field while running changes only that surface's pacing
+
+    Examples:
+      | banner     | toast      |
+      | one second | one minute |
+      | one second | one second |
+      | ten seconds | one minute |
+
+  @B-027
+  Scenario: A view model that names a toast is reported
+    Given a view model naming a toast, a snackbar or an alert type
+     When the project is built
+     Then it is reported at the reference
+      And the same call inside a page is not

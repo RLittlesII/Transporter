@@ -15,6 +15,7 @@ children:
   - "0037"
   - "0038"
   - "0039"
+  - "0041"
 
 depends_on:
   - "0030"
@@ -46,6 +47,11 @@ claims:
   - B-020
   - B-021
   - B-022
+  - B-023
+  - B-024
+  - B-025
+  - B-026
+  - B-027
 
 created: "2026-10-05"
 updated: "2026-10-05"
@@ -83,6 +89,9 @@ acceptance_criteria:
     a view model holds no transport, no blocking call and no pipeline logic."
   - "B-020 – B-022 — the dependencies stop at the tracker, a swap edits no
     view, and only the detail pane asks which kind of vehicle it has."
+  - "B-023 – B-027 — a banner that always shows the latest notice, a toast only
+    for one worth interrupting for, two cadences edited live, and no view model
+    naming a platform alert."
   - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule or a
     performed review for each id above."
 
