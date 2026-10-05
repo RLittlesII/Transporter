@@ -6,7 +6,7 @@ namespace Transponder.Analyzers;
 /// <summary>Which layer a symbol belongs to, read from its containing namespace.</summary>
 /// <remarks>
 /// The one place that answers it, so the reference rules ask here rather than each deciding what a
-/// layer is. The namespaces are the folders <c>transponder-conventions</c> § "Project structure"
+/// layer is. The namespaces are the folders <c>transponder-conventions</c> references/coding.md § "Project structure"
 /// fixes; <c>adr/0002</c> says why the convention is read instead of a marker attribute, and
 /// carries the hazard: a misfiled file silently changes which rules apply to it.
 /// </remarks>

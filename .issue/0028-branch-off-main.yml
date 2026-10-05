@@ -1,6 +1,6 @@
 id: "0028"
 type: chore
-title: Branch off main, and retarget a dependent pull request when its base merges
+title: Branch off main, and give the conventions skills progressive disclosure
 
 status: in-review
 
@@ -30,20 +30,42 @@ summary: |
   deleted branch, and nobody re-read the bases after the lower two landed. The
   work was merged, reviewed and missing from main at the same time.
 
-  The rule is in transponder-conventions § deliver-change: branch off main where
+  The rule is in transponder-conventions references/delivery.md: branch off main where
   the work can be, stack only where the later work cannot compile or be tested
   without the earlier, one dependent level at most, and retarget a dependent
   pull request the moment its base merges. Lesson 0009 holds the incident.
+
+  Follow-up in the same pull request, from the same review: transponder-conventions
+  was 381 lines and five companions in one file, and deliver-change was the only
+  skill over the Agent Skills specification's 5,000-token guidance for a SKILL.md
+  body. Neither breached the 500-line cap, and no skill in the repository used
+  references/ at all — so the repository was not using the progressive disclosure
+  the specification is built around: metadata always, body on activation,
+  references on demand.
+
+  Both are now an index plus references. transponder-conventions keeps the rules
+  that decide whether work may start; deliver-change keeps the three-phase walk
+  through. Every section-anchored cite moved with its section.
 
 acceptance_criteria:
   - "The rule says when stacking is allowed, not merely that it is discouraged —
     a rule without a test is advice."
   - "The retargeting half is written down, because that is the half that failed
     silently."
+  - "No SKILL.md body carries detail that only one kind of change needs; each
+    reference is loaded when its subject is in play."
+  - "Every cite that named a section names the reference file holding it — a cite
+    to a section that moved is the drift lesson 0002 is about."
 
 decisions:
   - "2026-10-04 — the person — if the work can be done off main, it is. Stated as
     a rule rather than a preference."
+  - "2026-10-04 — the person — one skill plus references/ rather than four skills
+    per method skill, per agentskills.io/specification § Progressive disclosure.
+    Rejected: splitting into separate skills, which would have rewritten ~20
+    citing files and needed four descriptions written so the right one activates."
+  - "2026-10-04 — the person — deliver-change in the same pass, as the one skill
+    measured over the token guidance."
 
 out_of_scope:
   - "Landing 0022's reference rules on main. That is a merge decision, not this

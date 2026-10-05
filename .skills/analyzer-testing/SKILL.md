@@ -32,10 +32,11 @@ results.TryGetAnalyzerResult<BoundaryAnalyzer>(out var analyzed);
 analyzed.Diagnostics.Should().ContainSingle().Which.Id.Should().Be("TRN0001");
 ```
 
-[`BoundaryAnalyzerContext`](../../test/UnitTests/Analyzers/BoundaryAnalyzerContext.cs)
-wraps those four lines for the boundary rules. Use it rather than repeating
-them; a test that builds its own context is a test that can disagree about
-severity.
+Every test builds its own context, the way Airframe's `Rsa####Tests` do. Pin
+`WithDiagnosticSeverity(DiagnosticSeverity.Error)` in each: it is what B-006
+makes the default and what a build sees. Sources live in
+[`BoundaryTestData`](../../test/UnitTests/Analyzers/BoundaryTestData.cs), one
+constant per layer.
 
 | Need | API |
 |---|---|
@@ -54,7 +55,7 @@ severity.
   defaults to `error` (B-006), so that assertion fails on exactly the diagnostic
   the test came to see. Guard on the compiler's own output instead —
   `results.InputDiagnostics` filtered to `Severity == Error` and an id starting
-  `CS` — which is what `BoundaryAnalyzerContext` does.
+  `CS` — `NothingFailedToCompile` in the test class does that.
 - **The `source-generators` skill's `references/testing.md` was wrong**, and
   was corrected on 2026-10-04. It documented
   `GeneratorTestContext.Create()`, `.WithSource()`, `result.VerifyAsync()` and
@@ -64,11 +65,11 @@ severity.
 - **`AddMarkup` and `MarkedLocations` are not for diagnostic spans.** A
   `MarkedLocation` carries a completion `Trigger`; it is for refactorings and
   completion, not for "the diagnostic should land here". Assert a location by
-  reading the text the span covers — see `TextAt` in `BoundaryAnalyzerContext` —
+  reading the text the span covers — `TextAt` in the test class —
   which also reads better than a line number.
 - **`Verify` arrives whether or not it is used.** The package depends on
   `Verify.SourceGenerators`. This repository asserts with **AwesomeAssertions**
-  and commits no snapshots: `transponder-conventions` § `test-from-scenarios`
+  and commits no snapshots: `transponder-conventions` references/testing.md
   fixes the stack, and a snapshot nobody reviews is a test that passes because
   it was regenerated.
 - **Several diagnostics in one document cross-attribute.** The builder can pair
@@ -92,7 +93,7 @@ second change.
 
 ## Never add
 
-- A second harness, or a test that constructs `CSharpCompilation` itself.
+- A harness of your own, or a test that constructs `CSharpCompilation` itself.
 - A `Verified`/snapshot directory, or `Verify` in a test's `using`s.
 - A test name for a claim another specification's § 9 already named. That
   matrix fixes the name (B-016); renaming it to suit the implementation breaks

@@ -36,7 +36,8 @@ spec_status: draft
          <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
      The pointer names no owner. Section ownership is written in exactly one
-     place, .skills/transponder-conventions/SKILL.md § "Section ownership",
+     place, .skills/transponder-conventions/references/specs.md § "Section
+     ownership",
      and a copy that restated it would be one more place to keep in step.
      A role writes only its own sections; filling in someone else's is a
      boundary violation, not a favour. -->
@@ -236,7 +237,7 @@ and the implementation was supposed to wait on approval — so a Feature whose
 proves itself, could never be approved at all.
 [Lesson 0007](../lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)
 is that incident. The rule that an item does not start against 🟡 rows is
-`.skills/transponder-conventions/SKILL.md` § `deliver-change`, not here.
+`.skills/transponder-conventions/references/delivery.md`, not here.
 
 ## Decisions
 
