@@ -21,7 +21,6 @@ spec: features/aircraft-source/.spec/README.md
 claims:
   - B-001
   - B-002
-  - B-003
   - B-004
   - B-005
   - B-006
@@ -50,7 +49,6 @@ summary: |
 
 acceptance_criteria:
   - "B-001, B-002 — the envelope and its positional `states`."
-  - "B-003 — the reported time as the observed instant."
   - "B-004 — the positional row type's visibility."
   - "B-005, B-006 — the contract's shape and what it may not name."
   - "B-007, B-008 — one concretion per transport, and the aliasing. This item
@@ -156,6 +154,16 @@ decisions:
     § 9 row names a test on a class `0004` creates. The first two cannot be
     arranged; the third is the finding raised on pull request #14 and is the
     person's to place."
+  - "2026-10-05 — the person — B-003 moves to `0004`. Its § 9 row has always
+    named a test on `AircraftSnapshotClientTests` and § 7 has always put the
+    `IObservedClockWriter` call inside the method that writes the cache, so the
+    claim belonged to the item that builds the client and not to the item that
+    declares the envelope it reads. This item still declares the reported time;
+    it no longer promises that anything downstream observes it. Rejected:
+    leaving the claim here, which held the item `blocked` on a test no item
+    owned, and renumbering it, which claim ids never do. Two rows now hold this
+    item, both `Review`, and neither can be arranged by any change this Feature
+    contains. § 11 question 5 asks what terminal state they permit."
   - "2026-10-04 — implementer — deleting that test left nothing exercising
     `AddOpenSky` at runtime, because B-008 constrains the registration's shape
     and not its outcome. B-052 now covers the outcome and is `0007`'s, since
@@ -165,6 +173,8 @@ decisions:
 
 out_of_scope:
   - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."
+  - "Observing the envelope's reported instant downstream — B-003, moved to 0004
+    with the client that reports it."
   - "Token refresh, rate-limit headers, `429` handling and the startup
     credential check — B-026 – B-029, also 0004. This item declares the method;
     it does not own the poll loop's behaviour."
