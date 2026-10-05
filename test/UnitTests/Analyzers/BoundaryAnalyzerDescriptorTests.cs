@@ -93,7 +93,7 @@ public class BoundaryAnalyzerDescriptorTests
         var released = SpecificationTables
             .Read("src/Transponder.Analyzers/AnalyzerReleases.Unshipped.md")
             .Split('\n')
-            .Select(static line => Regex.Match(line, @"^(TRN\d{4})"))
+            .Select(static line => Regex.Match(line, @"^\|?\s*(TRN\d{4})\s*(?:\||$)"))
             .Where(static match => match.Success)
             .Select(static match => match.Groups[1].Value)
             .ToArray();
@@ -160,7 +160,7 @@ public class BoundaryAnalyzerDescriptorTests
         var sut = new BoundaryAnalyzer();
         // The Enforces cell is what makes a row the mapping table's: § 7 also carries a table of
         // which diagnostics can have a code fix, and its rows open with a TRN id too.
-        var rows = SpecificationTables.Rows(Specification, @"^\| `TRN\d{4}` +\| `?aircraft-source`? B-\d{3}");
+        var rows = SpecificationTables.Rows(Specification, @"^\|\s*`TRN\d{4}`\s*\|\s*`?aircraft-source`? B-\d{3}");
 
         // When
         var mapped = rows.Select(static cells => (Diagnostic: cells[0].Trim('`'), Claim: cells[1])).ToArray();
@@ -197,7 +197,7 @@ public class BoundaryAnalyzerDescriptorTests
 
     private static IEnumerable<string> MatrixRows(Func<string, bool> takeTest) =>
         SpecificationTables
-            .Rows(AircraftSpecification, @"^\| B-\d{3} \| `@B-\d{3}`")
+            .Rows(AircraftSpecification, @"^\|\s*B-\d{3}\s*\|\s*`@B-\d{3}`")
             .Where(cells => takeTest(cells[2]))
             .Select(static cells => cells[0]);
 
