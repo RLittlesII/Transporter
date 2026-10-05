@@ -3,23 +3,16 @@ using Microsoft.CodeAnalysis;
 
 namespace Transponder.Analyzers;
 
-/// <summary>
-/// Which layer a symbol belongs to, read from its containing namespace.
-/// <para>
-/// The one place in the analyzer that answers that question, so the reference rules ask here
-/// rather than each deciding what a layer is. The namespaces are the folders
-/// <c>transponder-conventions</c> § "Project structure" fixes, which <c>.editorconfig</c>
-/// requires a file's namespace to match — see <c>features/boundary-analyzer/.spec/adr/0002</c>
-/// for why that convention is read instead of a marker attribute, and for the hazard it carries:
-/// a misfiled file silently changes which rules apply to it.
-/// </para>
-/// </summary>
+/// <summary>Which layer a symbol belongs to, read from its containing namespace.</summary>
+/// <remarks>
+/// The one place that answers it, so the reference rules ask here rather than each deciding what a
+/// layer is. The namespaces are the folders <c>transponder-conventions</c> § "Project structure"
+/// fixes; <c>adr/0002</c> says why the convention is read instead of a marker attribute, and
+/// carries the hazard: a misfiled file silently changes which rules apply to it.
+/// </remarks>
 internal static class Layers
 {
-    /// <summary>
-    /// The namespace every integration sits under. A provider's own namespace is the next
-    /// segment after it.
-    /// </summary>
+    /// <summary>The namespace every integration sits under; a provider is the next segment.</summary>
     internal const string Integrations = "Transponder.Integrations";
 
     /// <summary>The namespace the domain model sits under; it survives the provider being replaced.</summary>
@@ -34,12 +27,8 @@ internal static class Layers
     /// <summary>The user interface host's root namespace.</summary>
     internal const string Host = "Gui";
 
-    /// <summary>
-    /// The namespace the test project sits under. Tests reach an integration's internals
-    /// deliberately, through <c>InternalsVisibleTo</c>, so they are not a layer a boundary rule
-    /// holds out — <c>aircraft-source</c> B-004 names a domain type, a cache, a strategy and a
-    /// view, all of which are production layers.
-    /// </summary>
+    /// <summary>The namespace the test project sits under.</summary>
+    /// <remarks>Tests name internals by design; B-004 names production layers.</remarks>
     internal const string Tests = "Transponder.UnitTests";
 
     /// <summary>The last namespace segment of every composition root.</summary>
@@ -182,10 +171,7 @@ internal static class Layers
     internal static bool IsCompositionRoot(ISymbol symbol) =>
         NamespaceOf(symbol).EndsWith("." + Registration, StringComparison.Ordinal);
 
-    /// <summary>
-    /// Whether a symbol sits inside one provider's integration, and so may name that provider's
-    /// wire types.
-    /// </summary>
+    /// <summary>Whether a symbol sits inside one provider's integration.</summary>
     /// <param name="symbol">The symbol to classify.</param>
     /// <param name="provider">The provider whose integration is being asked about.</param>
     /// <returns><see langword="true"/> when the symbol is inside that integration.</returns>
@@ -198,10 +184,8 @@ internal static class Layers
             || containing.StartsWith(integration + ".", StringComparison.Ordinal);
     }
 
-    /// <summary>
-    /// Whether a symbol belongs to the test project, which names an integration's internals by
-    /// design and is held out of the boundary rules for that reason.
-    /// </summary>
+    /// <summary>Whether a symbol belongs to the test project, which names internals by design.</summary>
+    /// <remarks>B-004 names a domain type, a cache, a strategy and a view — all production layers.</remarks>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is a test's.</returns>
     internal static bool IsTest(ISymbol symbol) => In(symbol, Tests);

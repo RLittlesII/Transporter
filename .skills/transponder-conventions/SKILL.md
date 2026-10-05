@@ -45,6 +45,11 @@ it. The traps:
   for consistency; it is a style choice, not a rule the build checks.
 - `CA2007` is excluded for async-void methods. A suppression of your own needs
   a reason written beside it, not a second blanket exclusion.
+- **Terse, and XML over inline.** A `<summary>` is one line. `<remarks>` is one
+  sentence, and only for a fact the code cannot state. An inline comment is one
+  line, says a *why*, and is never a paragraph. Reasoning belongs in the
+  specification, an ADR or a lesson — those are linkable; a comment restating one
+  drifts from it. Cite instead of explaining.
 
 ### Project structure
 
