@@ -2,4 +2,13 @@
     <!-- Importing the parent directory.build.props first is very important to maintain expected outcome of merging directory.build.props from multiple levels. -->
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
 
+    <PropertyGroup>
+        <!-- The AutoFixtures generator writes AutoFixtureBase.g.cs into obj/ on every build with
+             <typeparam> tags that name no type parameter (CS1711) and nullable annotations with no
+             #nullable directive (CS8669). Both only surface because GenerateDocumentationFile and
+             Nullable are on, there is no source here to correct, and an .editorconfig severity does
+             not reach a source generator's output - so they are silenced on the project instead. -->
+        <NoWarn>$(NoWarn);CS1711;CS8669</NoWarn>
+    </PropertyGroup>
+
 </Project>

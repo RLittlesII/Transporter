@@ -65,6 +65,11 @@ dotnet_diagnostic.CS0618.severity = suggestion
 dotnet_diagnostic.CS0672.severity = suggestion
 dotnet_diagnostic.CA2008.severity = none
 
+# RSA2014 owns the documentation requirement: a summary on public abstractions, not a comment on
+# every public member. CS1591 arrives with GenerateDocumentationFile — which RSA2014 and RSA2015
+# need in order to see /// comments at all — and would demand one on every test method.
+dotnet_diagnostic.CS1591.severity = none
+
 # Code style rules
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
