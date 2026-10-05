@@ -1,0 +1,65 @@
+id: "0026"
+type: chore
+title: Separate the approval gate from the coverage gate so a specification can be signed
+
+status: in-review
+
+priority: medium
+value: 3
+risk: 1
+rank: 57
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  § 12 of the Feature template said spec_status becomes approved "when every row
+  above is 🟢 and § 9 has no Missing row". The second half made the gate
+  unsatisfiable in the order it asked for: approval waited on coverage, coverage
+  waited on the implementation, and the implementation was supposed to wait on
+  approval. For a Feature whose § 9 names its own tests — the boundary analyzer
+  enforcing its own claims — the circle is closed and the document could never
+  have been approved before being built.
+
+  The template now asks only that the sections are written and agreed. § 9 stays
+  the ship gate, blocking an item reaching done, which is what it was always
+  separately stated to do.
+
+  Found by the person, asking how three items came to be implemented under a
+  specification nobody had signed. Both halves are recorded: lesson 0007 holds
+  the incident, and transponder-conventions holds the rule that an item does not
+  move to in-progress while its § 12 rows are 🟡.
+
+acceptance_criteria:
+  - "The approval gate and the coverage gate are two rules in two sentences, and
+    the approval one can be satisfied before any item is implemented."
+  - "The rule lives in exactly one place; the specifications that restated it
+    point at it instead."
+  - "A process lesson exists for the incident, and the skill a reader reaches
+    for carries the rule rather than the lesson index."
+
+decisions:
+  - "2026-10-04 — the person — option 2 of three: fix the gate rather than
+    freeze the stack and rebase it, or keep the precedent. Rejected: freezing
+    and rebasing, which would have reworked four pull requests against an
+    agreement that had not changed; and leaving it, which leaves the circular
+    gate in place for the next Feature."
+
+out_of_scope:
+  - "Flipping any § 12 row or any spec_status. The gate is now satisfiable;
+    satisfying it is spec-reviewer's, and that is the person."
+  - "Re-sequencing the open pull requests. Nothing about #4 – #8 changes, and
+    the specification they sit under is unchanged except where it restated this
+    rule."
