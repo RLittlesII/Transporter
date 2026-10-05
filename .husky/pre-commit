@@ -8,8 +8,39 @@
 ## check cannot silently skip the ones after it. Do not rewrite these `if !`
 ## guards into bare invocations -- `if` conditions are the only reason errexit
 ## is not already terminating this script.
+## Verify staged markdown against prettier.
+##
+## Scoped to staged files, and verify-only, for the two reasons the C# block
+## below gives: `--write "**/*.md"` reformatted all 64 markdown files in the
+## repository on every commit, whatever the commit touched, and a
+## format-then-`git add` would fold unstaged hunks of a partially staged file
+## into it. This hook never touches the index.
 prettier_status=0
-npx --yes prettier --write "**/*.md" || prettier_status=$?
+staged_md=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR -- '*.md')
+
+if [ -n "$staged_md" ]; then
+    saved_ifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $staged_md
+    set +f
+    IFS=$saved_ifs
+
+    if ! npx --yes prettier --check "$@"; then
+        prettier_status=1
+        echo
+        echo "pre-commit: these staged markdown files are not formatted:"
+        echo
+        printf '    %s\n' "$@"
+        echo
+        echo "Fix with:"
+        echo
+        echo "    npx --yes prettier --write \$(git diff --cached --name-only --diff-filter=ACMR -- '*.md')"
+        echo
+        echo "Bypass with: git commit --no-verify"
+    fi
+fi
 
 ## Verify staged C# files against the same formatting CI enforces
 ## (VerifyFormat in .build/Build.cs, run by api.continuous.integration.yml).
@@ -65,11 +96,6 @@ if [ -n "$staged_cs" ]; then
         echo
         echo "Bypass with: git commit --no-verify"
     fi
-fi
-
-if [ "$prettier_status" -ne 0 ]; then
-    echo
-    echo "pre-commit: prettier exited $prettier_status."
 fi
 
 if [ "$prettier_status" -ne 0 ] || [ "$format_status" -ne 0 ]; then
