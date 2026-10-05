@@ -47,6 +47,9 @@ claims:
   - B-022
   - B-023
   - B-024
+  - B-025
+  - B-026
+  - B-027
 
 created: "2026-10-05"
 updated: "2026-10-05"
@@ -81,6 +84,8 @@ acceptance_criteria:
     five minutes, against the observed clock."
   - "B-020 – B-022 — the source description, and the swap that edits nothing."
   - "B-023, B-024 — what nothing here may name, and what no test may reach."
+  - "B-025 – B-027 — a notice per changeset that changed something, paced by
+    whoever is watching, and silence reported once rather than inferred."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:

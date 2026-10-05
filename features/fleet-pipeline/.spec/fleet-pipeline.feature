@@ -209,3 +209,44 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When its arrangements are inspected
      Then no test constructs an HTTP type, opens a file or reads the wall clock
       And time advances because a test advanced it
+
+  # ──────────────────────────── The arrival notice ────────────────────────────
+
+  @B-025
+  Scenario: A changeset that changed something raises one notice
+    Given a bound fleet of five aircraft
+      And the observed instant is 14:32:10
+     When a changeset arrives adding one aircraft, updating two and removing one
+     Then one notice is raised
+      And it reports the instant 14:32:10
+      And it reports five tracked, one added, two updated and one removed
+
+  @B-025
+  Scenario: A poll where nothing moved raises nothing
+    Given a bound fleet of five aircraft
+     When a changeset arrives carrying no change
+     Then no notice is raised
+      And the silence means nothing moved rather than that the feed stopped
+
+  @B-026
+  Scenario Outline: Two consumers pace the same notices differently
+    Given two subscribers to the notices, one at <first> and one at <second>
+     When notices are raised faster than either interval
+     Then each subscriber receives at most one notice per its own interval
+      And each receives the most recent notice in its window
+      And changing an interval while running takes effect without rebuilding the pipeline
+
+    Examples:
+      | first       | second     |
+      | one second  | one minute |
+      | one minute  | one second |
+      | one second  | one second |
+
+  @B-027
+  Scenario: Silence is reported once, and the resumption is reported too
+    Given a bound fleet and a staleness threshold of five minutes
+      And the last changeset arrived at 14:30:00
+     When the observed instant advances to 14:36:00 with no changeset arriving
+     Then one quiet notice is raised
+      And advancing further raises no second quiet notice
+      And the next changeset that changes something raises a resumed notice
