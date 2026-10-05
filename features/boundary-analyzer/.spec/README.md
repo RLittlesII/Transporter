@@ -330,11 +330,14 @@ which cannot be `Verified` until the eighteen test names exist.
 
 The eighteen rows in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 are a separate
-gate, and seven of them are now provable: its B-004 from `0021`, and its B-032,
-B-041, B-044 – B-047 from `0022`, each by the test that matrix named for it
-(B-016). Recording them there is that specification's `test-writer`'s edit, not
-this document's: its § 9 is the only place those claims' build state is
-written, and its prose counts the `Missing` rows.
+gate, and six of them have now left `Missing`: its B-004 from `0021`, and its
+B-032 and B-044 – B-047 from `0022`, each by the test that matrix named for it
+(B-016). Its B-041 did not. The analyzer proves the half that forbids a view
+model naming a strategy, a client, a cache or the decorator; the half that says
+`IFleetTracker` wraps `ITrackerSource` and is what a view model depends on has
+no test yet, so that row now names both mechanisms and stays `Missing` — the
+shape its own § 9 prose gives B-010 and B-037. That matrix remains the only
+place those claims' build state is written.
 
 Four rows name a review obligation rather than a test, for the reason § 8's
 coverage row gives: a test over a project file or a build script asserts the
