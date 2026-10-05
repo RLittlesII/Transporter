@@ -1,0 +1,85 @@
+id: "0040"
+type: spike
+title: Settle how an actor gets its dependencies, and who owns the tracker's lifetime
+
+status: ready
+
+priority: high
+value: 4
+risk: 2
+rank: 74
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  Cross-cutting, which is why it sits at the repository root rather than beside
+  either specification: `fleet-pipeline` `0031` and `fleet-dashboard` `0036`
+  both name it in `spikes`, and the answer lands in `src/Gui`'s builder blocks
+  that neither Feature owns.
+
+  **What is already decided, and is not this spike's to revisit.** A view model
+  takes `IFleetTracker` by constructor and does not reach it through an actor;
+  no actor holds the collection the UI binds to. `aircraft-source` B-041,
+  `akka-actor` § "Who owns what" and its `Never add` list, and `mvvm` § "The
+  shape" settle that between them, and `fleet-dashboard` § 7 § "How the tracker
+  reaches a view model" writes it down with the diagram. The two routes out of a
+  view model stay the two `mvvm` names: an observable for a continuous value, a
+  `Tell` for a discrete effect.
+
+  **What is open is the startup wiring.** `AddAkkaHost` takes an
+  `Action<ActorSystem, IActorRegistry>` and hands the actor starter no
+  `IServiceProvider` (`src/Gui/Container/AkkaHostBuilder.cs`), while every actor
+  above the seam needs container-resolved collaborators — the client, the cache,
+  the clock writer, the options. `ClickActor` needs nothing, so the question has
+  never come up in this repository.
+
+  Three questions to answer, with a recommendation and a rejected option each:
+
+  1. How a source actor gets its dependencies — Akka.Hosting's
+     `DependencyResolver`, a `Props` factory closing over the provider, or
+     resolving the actor itself from the container.
+  2. Whether `IFleetTracker` is a container singleton the pages resolve, or an
+     object the composition root builds and registers. A tracker built twice is
+     two collections (`fleet-pipeline` B-002) with no error to say so.
+  3. Who starts the first poll and when, given a page may be constructed before
+     any actor has reported — which is also `fleet-dashboard` § 11 row 3's
+     empty-grid question.
+
+  The wrong guess is expensive in both directions: an actor resolving from a
+  static provider is the service locator `mvvm` forbids, one layer down.
+
+acceptance_criteria:
+  - "A written finding for each of the three questions, each naming the option
+    taken and the option rejected."
+  - "A spike produces a decision, not code: the finding lands as an ADR if the
+    choice is durable and cross-cutting, or as a `decisions/` record under the
+    Feature it binds. Any throwaway wiring used to test an option is deleted."
+  - "`fleet-dashboard` § 11 row 4 and § 7's decision block are answered, and
+    `fleet-pipeline` § 7's registration prose is amended if question 2 lands
+    the other way."
+  - "`0031` and `0036` have the spike removed from their `spikes` once the
+    finding is recorded."
+
+decisions: []
+
+out_of_scope:
+  - "Whether a view model reaches the tracker through an actor — already
+    decided against, and cited above."
+  - "Which actors exist above the seam, and what they poll — ADR-0002 and
+    `aircraft-source` own that."
+  - "Per-command `Tell` versus `Ask` (README.md § \"Open items\") — a separate
+    question with a separate answer, settled by `mvvm` § \"Two kinds of input,
+    two routes\" for the cases this dashboard has."

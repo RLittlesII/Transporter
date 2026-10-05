@@ -1,0 +1,108 @@
+id: "0035"
+type: feature
+title: Bind the fleet to one page, with columns the source describes
+
+status: ready-for-architecture
+
+priority: high
+value: 5
+risk: 3
+rank: 91
+
+parent: null
+children:
+  - "0036"
+  - "0037"
+  - "0038"
+  - "0039"
+
+depends_on:
+  - "0030"
+blocks: []
+spikes: []
+
+spec: features/fleet-dashboard/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+  - B-021
+  - B-022
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  As a line-of-business .NET developer whose data lives behind REST endpoints
+  I want one page that binds the tracker's collection and takes its columns,
+  comparers and groupings from the live source so that I can watch the pipeline
+  work, read the view model that drives it in one sitting, and copy both.
+
+  The talk is delivered through this screen. What exists today is the MAUI
+  template — a page in XAML with a click counter, bound to a view model that
+  `Ask`s an actor and reads `.Result` on a continuation, which is the first
+  thing `mvvm` § "Never add" forbids. So the surface is absent, and where it
+  exists it is a worked example of the pattern this repository argues against.
+  `0036` replaces all three as it builds the page (B-002).
+
+  The children are slices of this item rather than work beside it, which is why
+  it carries all twenty-two claims.
+
+  § 12 is 🟡 on every row and § 11 holds three open questions, two of which are
+  `fleet-pipeline`'s to answer, so this stays at `ready-for-architecture`.
+
+acceptance_criteria:
+  - "B-001 – B-004 — the surfaces, C# markup, the template removed, and one
+    registration block."
+  - "B-005 – B-008 — the grid binds the tracker's collection, rows update in
+    place, columns come from the description, a stale row is marked and stays."
+  - "B-009 – B-012 — search and filters compose into one predicate; a header
+    publishes a comparer, a second tap its reverse, and a grouping is chosen."
+  - "B-013 – B-015 — the detail pane is the one surface naming a concrete type,
+    a selection does not outlive its vehicle, and the summary is projected."
+  - "B-016 – B-019 — the swap is told to an actor behind a busy indicator, and
+    a view model holds no transport, no blocking call and no pipeline logic."
+  - "B-020 – B-022 — the dependencies stop at the tracker, a swap edits no
+    view, and only the detail pane asks which kind of vehicle it has."
+  - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule or a
+    performed review for each id above."
+
+decisions:
+  - "2026-10-05 — the person — the pipeline and the dashboard are two Features.
+    This one owns the surfaces and the view models; every operator belongs to
+    `fleet-pipeline` (§ 4 row 1). Recorded there as well, against `0030`."
+  - "2026-10-05 — the person — three of this Feature's claims are proven by a
+    recorded review rather than by a run: B-001, B-002 and B-006 are about what
+    is on a screen, and § 4 row 4 rules out a UI test runner because the MAUI
+    heads do not build on Linux CI. A review is performed by a reader and
+    records what was looked at (lesson 0011). Rejected: a UI test runner for
+    three claims, and marking them Verified from a view-model test that does not
+    reach the markup."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Every pipeline operator and staleness itself (§ 5 row 1) —
+    `fleet-pipeline`."
+  - "The swap decorator and its disposal (§ 5 row 2) — `aircraft-source`
+    `0006`."
+  - "The map view (§ 5 row 3), a settings surface (§ 5 row 4), theming (§ 5 row
+    5), layout variants (§ 5 row 6) and a UI test runner (§ 5 row 7)."
