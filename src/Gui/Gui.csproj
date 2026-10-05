@@ -24,6 +24,19 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
+        <!-- The XAML source generator emits a __Type<hash> class per ResourceDictionary with no XML
+             documentation (CS1591). The warning only surfaces because GenerateDocumentationFile is on
+             for the analyzer's sake, there is no source here to document, and an .editorconfig
+             severity does not reach a source generator's output. -->
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+        <!-- RSA2011 reports once per target framework here with an empty symbol name and no location
+             at all - not a file, not a line - so no #pragma and no .editorconfig section can reach
+             it. Every declaration in this project states its accessibility; the report comes from
+             somewhere in the MAUI head's generated code that the analyzer cannot name. Filed upstream
+             as RocketSurgeonsGuild/Airframe#403. Remove this once that is fixed. -->
+        <NoWarn>$(NoWarn);RSA2011</NoWarn>
+
         <!-- Enable XAML source generation for faster build times and improved performance.
              This generates C# code from XAML at compile time instead of runtime inflation.
              To disable, remove this line.
