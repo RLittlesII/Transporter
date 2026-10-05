@@ -9,6 +9,7 @@ using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Http;
 using Transponder.Scheduling;
 using Transponder.Tracking;
+using Transponder.Tracking.Sources;
 
 namespace Transponder.Integrations.OpenSky.Container;
 
@@ -69,6 +70,11 @@ public static class OpenSkyRegistration
         services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
         services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
         services.AddSingleton<AircraftSnapshotClient>();
+
+        // The strategy and its projection, registered behind the per-type seam so nothing resolves the
+        // class itself (B-033, B-034). The decorator that selects between strategies is 0006's.
+        services.AddSingleton<AircraftSnapshotMapper>();
+        services.AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>();
 
         return services;
     }

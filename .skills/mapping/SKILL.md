@@ -53,6 +53,15 @@ explicitly ignored, which records the decision.
 - A conversion gets a named method a human can read and a test can call, invoked
   from the view layer or from an explicitly declared user-implemented mapping.
   Never buried in a generated member mapping where nobody will find it.
+- **A named conversion is a rule about a type pair, not about the member it was
+  written for.** Mapperly applies a user-implemented mapping wherever that pair
+  occurs, so a conversion written for one member converts every member of its
+  type. Where the pair is not unique on the source, scope it out of the default
+  mappings and reference it from the one member that wants it. A key's
+  lowercasing applied to every string is a wrong value that renders as plausible
+  data, and a test naming only the key passes over it.
+- **Read the generated mapping once per mapper.** A green build proves every
+  member was mapped, not that any of them was mapped from the right place.
 - **Derived values are not mappings.** Staleness derives from last contact
   against an injected clock; a display label derives from whichever identifying
   field is present. Those are domain or view behavior with their own tests, not
