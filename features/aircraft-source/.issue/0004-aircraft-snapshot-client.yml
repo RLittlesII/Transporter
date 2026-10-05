@@ -2,7 +2,7 @@ id: "0004"
 type: task
 title: Poll OpenSky, read the positional rows, and diff them into the cache
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 risk: 3
