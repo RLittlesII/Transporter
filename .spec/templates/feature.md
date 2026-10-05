@@ -224,8 +224,19 @@ spec_status: draft
 | §§ 8-9     | test-writer    | 🟡 Draft |
 
 Overall is the frontmatter's `spec_status`, not a row here. `spec-reviewer`
-flips it to `approved` when every row above is 🟢 and § 9 has no `Missing`
-row.
+flips it to `approved` when every row above is 🟢 — when the sections are
+written and agreed. **A `Missing` row in § 9 does not hold approval back.**
+§ 9 is the ship gate and a separate one: it blocks an item reaching `done`, not
+the agreement reaching `approved`.
+
+The two were one sentence until 2026-10-04, and the pair could not both be
+satisfied. Approval waited on coverage, coverage waited on the implementation,
+and the implementation was supposed to wait on approval — so a Feature whose
+§ 9 names its own tests, an analyzer that enforces claims or a harness that
+proves itself, could never be approved at all.
+[Lesson 0007](../lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)
+is that incident. The rule that an item does not start against 🟡 rows is
+`.skills/transponder-conventions/SKILL.md` § `deliver-change`, not here.
 
 ## Decisions
 
