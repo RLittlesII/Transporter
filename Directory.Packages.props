@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.Maui.Controls.Core" Version="10.0.110" />
     <PackageVersion Include="ReactiveMarbles.Mvvm" Version="1.0.95" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageVersion Include="Rocket.Surgery.Airframe.CodeAnalysis" Version="0.12.2" />
   </ItemGroup>
   <ItemGroup Label="Build">
@@ -32,6 +32,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Rocket.Surgery.Extensions.Testing.AutoFixtures" Version="10.0.6" />
+    <PackageVersion Include="Rocket.Surgery.Extensions.Testing.SourceGenerators" Version="10.0.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
   </ItemGroup>

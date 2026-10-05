@@ -6,39 +6,27 @@ namespace Transponder.UnitTests.Analyzers;
 
 public class BoundaryAnalyzerTests
 {
-    // The repository's convention is that a system under test is built by a generated fixture
-    // rather than a constructor call. It does not apply here: the AutoFixtures generator builds a
-    // type from its constructor parameters, and an analyzer has none — nothing to arrange, nothing
-    // for a constructor change to ripple through. Declaring a fixture for it would add a file that
-    // holds nothing.
-
     [Fact]
     public async Task GivenAViolationInAMethodBody_WhenAnalyzed_ThenTheDiagnosticIsReportedAtThatNodeAndNamesTheSymbol()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var diagnostics = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireType), ("ViewModel.cs", ViewModelNamingTheRow));
+        // Given, When
+        var diagnostics = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireType), ("ViewModel.cs", ViewModelNamingTheRow));
 
         // Then
         var reported = diagnostics.Should().ContainSingle().Subject;
         reported.Id.Should().Be("TRN0001");
         reported.Location.Should().NotBe(Location.None, "a diagnostic nobody can locate is one nobody can suppress where it lands");
         reported.Location.GetLineSpan().Path.Should().Be("ViewModel.cs");
-        reported.Location.GetLineSpan().StartLinePosition.Line.Should().Be(LineOf(ViewModelNamingTheRow, "new OpenSkyStateRow()"));
+        reported.TextAt().Should().Be("OpenSkyStateRow", "the span is the identifier that named the type, not the statement around it");
         reported.GetMessage().Should().Contain("OpenSkyStateRow").And.Contain("aircraft-source B-004");
     }
 
     [Fact]
     public async Task GivenAViolationInGeneratedSource_WhenAnalyzed_ThenNothingIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var generated = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireType), ("ViewModel.g.cs", ViewModelNamingTheRow));
-        var handWritten = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireType), ("ViewModel.cs", ViewModelNamingTheRow));
+        // Given, When
+        var generated = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireType), ("ViewModel.g.cs", ViewModelNamingTheRow));
+        var handWritten = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireType), ("ViewModel.cs", ViewModelNamingTheRow));
 
         // Then
         generated.Should().BeEmpty("the fix for generated source is upstream, and the only escape from a report on it is disabling the rule");
@@ -48,11 +36,8 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var diagnostics = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireType), ("Vehicle.cs", DomainTypeNamingTheRow));
+        // Given, When
+        var diagnostics = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireType), ("Vehicle.cs", DomainTypeNamingTheRow));
 
         // Then
         diagnostics.Should().ContainSingle().Which.Id.Should().Be("TRN0001");
@@ -61,11 +46,8 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenTheIntegrationsOwnCodeNamingTheRow_WhenAnalyzed_ThenNothingIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var diagnostics = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireType), ("Http.cs", IntegrationCodeNamingTheRow));
+        // Given, When
+        var diagnostics = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireType), ("Http.cs", IntegrationCodeNamingTheRow));
 
         // Then
         diagnostics.Should().BeEmpty("the wire surface is the integration's to name; the claim holds it out of everything else");
@@ -74,28 +56,21 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var diagnostics = await AnalyzerHarness.Analyze(sut, ("Snapshot.cs", Snapshot), ("Vehicle.cs", DomainTypeNamingASnapshotInABodyOnly));
+        // Given, When
+        var diagnostics = await BoundaryAnalyzerContext.Analyze(("Snapshot.cs", Snapshot), ("Vehicle.cs", DomainTypeNamingASnapshotInABodyOnly));
 
         // Then
-        diagnostics.Should().ContainSingle().Which.Id.Should().Be("TRN0003");
-        diagnostics.Single().Location.GetLineSpan().StartLinePosition.Line
-            .Should()
-            .Be(LineOf(DomainTypeNamingASnapshotInABodyOnly, "AircraftSnapshot snapshot"), "a signature-only rule would have reported nothing here");
+        var reported = diagnostics.Should().ContainSingle().Subject;
+        reported.Id.Should().Be("TRN0003");
+        reported.TextAt().Should().Be("AircraftSnapshot", "a signature-only rule would have reported nothing here");
     }
 
     [Fact]
     public async Task GivenATypeOtherThanTheContractImplementationOrClientNamingTheEnvelopeOrRow_WhenAnalyzed_ThenItIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var reported = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireSurface), ("Registration.cs", RegistrationNamingTheRow));
-        var allowed = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireSurface), ("Http.cs", IntegrationCodeNamingTheRow));
+        // Given, When
+        var reported = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireSurface), ("Registration.cs", RegistrationNamingTheRow));
+        var allowed = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireSurface), ("Http.cs", IntegrationCodeNamingTheRow));
 
         // Then
         reported.Should().ContainSingle().Which.Id.Should().Be("TRN0002");
@@ -105,12 +80,9 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var reported = await AnalyzerHarness.Analyze(sut, ("Snapshot.cs", Snapshot), ("Vehicle.cs", DomainTypeNamingASnapshot));
-        var allowed = await AnalyzerHarness.Analyze(sut, ("Snapshot.cs", Snapshot), ("Projection.cs", ProjectionNamingASnapshot));
+        // Given, When
+        var reported = await BoundaryAnalyzerContext.Analyze(("Snapshot.cs", Snapshot), ("Vehicle.cs", DomainTypeNamingASnapshot));
+        var allowed = await BoundaryAnalyzerContext.Analyze(("Snapshot.cs", Snapshot), ("Projection.cs", ProjectionNamingASnapshot));
 
         // Then
         reported.Should().ContainSingle().Which.Id.Should().Be("TRN0003");
@@ -120,11 +92,8 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenAConsumerOfTheFleetTrackerNamingAnythingUpstream_WhenAnalyzed_ThenItIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var diagnostics = await AnalyzerHarness.Analyze(sut, ("Contracts.cs", WireSurface), ("Page.cs", HostNamingTheContract));
+        // Given, When
+        var diagnostics = await BoundaryAnalyzerContext.Analyze(("Contracts.cs", WireSurface), ("Page.cs", HostNamingTheContract));
 
         // Then
         diagnostics.Should().ContainSingle().Which.Id.Should().Be("TRN0004");
@@ -133,12 +102,9 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var reported = await AnalyzerHarness.Analyze(sut, ("Cache.cs", CacheStandIn), ("Vehicle.cs", Domain), ("Client.cs", CacheOfADomainType));
-        var allowed = await AnalyzerHarness.Analyze(sut, ("Cache.cs", CacheStandIn), ("Snapshot.cs", Snapshot), ("Client.cs", CacheOfASnapshot));
+        // Given, When
+        var reported = await BoundaryAnalyzerContext.Analyze(("Cache.cs", CacheStandIn), ("Vehicle.cs", Domain), ("Client.cs", CacheOfADomainType));
+        var allowed = await BoundaryAnalyzerContext.Analyze(("Cache.cs", CacheStandIn), ("Snapshot.cs", Snapshot), ("Client.cs", CacheOfASnapshot));
 
         // Then
         reported.Should().ContainSingle().Which.Id.Should().Be("TRN0005");
@@ -148,11 +114,8 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var diagnostics = await AnalyzerHarness.Analyze(sut, ("Source.cs", ConcreteTrackerSource), ("ViewModel.cs", ViewModelNamingAStrategy));
+        // Given, When
+        var diagnostics = await BoundaryAnalyzerContext.Analyze(("Source.cs", ConcreteTrackerSource), ("ViewModel.cs", ViewModelNamingAStrategy));
 
         // Then
         diagnostics.Should().ContainSingle().Which.Id.Should().Be("TRN0006");
@@ -161,25 +124,16 @@ public class BoundaryAnalyzerTests
     [Fact]
     public async Task GivenCodeAddingToOrRemovingFromABoundCollection_WhenAnalyzed_ThenItIsReported()
     {
-        // Given
-        var sut = new BoundaryAnalyzer();
-
-        // When
-        var diagnostics = await AnalyzerHarness.Analyze(sut, ("ViewModel.cs", ViewModelMutatingABoundCollection));
+        // Given, When
+        var diagnostics = await BoundaryAnalyzerContext.Analyze(("ViewModel.cs", ViewModelMutatingABoundCollection));
 
         // Then
         diagnostics.Should().HaveCount(2).And.OnlyContain(static diagnostic => diagnostic.Id == "TRN0007");
-        diagnostics.Select(static diagnostic => diagnostic.Location.GetLineSpan().StartLinePosition.Line)
+        diagnostics.Select(static diagnostic => diagnostic.TextAt())
             .Should()
-            .BeEquivalentTo(new[]
-            {
-                LineOf(ViewModelMutatingABoundCollection, "Rows.Add"),
-                LineOf(ViewModelMutatingABoundCollection, "Rows.Clear"),
-            });
+            .BeEquivalentTo(["Add", "Clear"], "each lands on the member being called, not on the statement around it");
     }
 
-    private static int LineOf(string source, string fragment) =>
-        source.Split('\n').ToList().FindIndex(line => line.Contains(fragment));
 
     private const string WireType = """
         namespace Transponder.Integrations.OpenSky.Contracts;

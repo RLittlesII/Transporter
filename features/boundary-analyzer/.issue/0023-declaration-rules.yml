@@ -20,6 +20,7 @@ spec: features/boundary-analyzer/.spec/README.md
 
 claims:
   - B-010
+  - B-020
 
 created: "2026-10-04"
 updated: "2026-10-04"
@@ -46,6 +47,15 @@ summary: |
   A claim with an "and" in it needs a case per clause.
 
 acceptance_criteria:
+  - "B-020 — the fixes land in src/Transponder.CodeFixes, a project of their own:
+    a CodeFixProvider needs Microsoft.CodeAnalysis.Workspaces and an analyzer must
+    not carry it into the compiler's load path (source-generators § Project
+    Structure). TRN0009 and TRN0011 ship a code fix with the rule, and § 7 records why the
+    rest of this item's rules have none. TRN0009 moves the CancellationToken to last; TRN0011 adds the internal and
+    sealed the claim names and converts a public endpoint method to an explicit
+    implementation. The other five declaration rules are satisfied by removing or
+    renaming a member, which is destructive or changes a public surface, so § 7
+    records why they have none."
   - "B-010 — a forbidden declaration shape is reported on that declaration, not
     at a call site that reads it."
   - "§ 9 carries a row naming a test for B-010."
