@@ -99,6 +99,17 @@ decisions:
     `aircraft-source` as a spec delta. The pipeline is what needs them, and the
     claim belongs with the need. The cost is recorded in § Scoring against
     `0032`: the member lands in a file `aircraft-source` owns."
+  - "2026-10-05 — the person — every interface and record declared in § 7 is
+    provisional and goes back to the architect: the declarations make § 3
+    falsifiable, and the shape is not agreed. § 11 row 4 carries the agenda —
+    two kinds of member on `IFleetTracker`, `IFleetQuery` as a four-observable
+    bag shaped by its consumer, the `StaleVehicle` wrapper against B-002's one
+    collection, widening an interface `aircraft-source` published, a UI-shaped
+    description under `Tracking/`, and who disposes a container singleton. No
+    claim, scenario or § 9 row names a type, so the review can replace every
+    declaration without touching one. `0031` stays at
+    `ready-for-architecture` for it rather than discovering the six one at a
+    time."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
