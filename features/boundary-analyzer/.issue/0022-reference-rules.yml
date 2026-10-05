@@ -2,7 +2,7 @@ id: "0022"
 type: task
 title: Report a forbidden reference wherever it is written, method bodies included
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 risk: 4

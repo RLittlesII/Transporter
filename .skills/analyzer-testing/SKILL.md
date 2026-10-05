@@ -72,6 +72,13 @@ constant per layer.
   and commits no snapshots: `transponder-conventions` references/testing.md
   fixes the stack, and a snapshot nobody reviews is a test that passes because
   it was regenerated.
+- **The default reference set is not the platform.** `System.ObjectModel` is
+  absent, and `ObservableCollection<T>` is forwarded there — so a source that
+  binds a collection fails to compile and the rule under test reports nothing.
+  `AddReferences(typeof(ObservableCollection<>))` fixes it;
+  `BoundaryAnalyzerContext` carries it for every run. A test that suddenly
+  reports nothing is a compile failure before it is an analyzer bug, which is
+  what the guard above exists to say out loud.
 - **Several diagnostics in one document cross-attribute.** The builder can pair
   a resolved fix with code actions from a different diagnostic
   (`RocketSurgeonsGuild/Airframe#359`), so a fix test asserts the diagnostic

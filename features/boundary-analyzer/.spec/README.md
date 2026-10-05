@@ -345,7 +345,7 @@ describes.
 | B-006    | `@B-006`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheDefaultSeveritiesAreRead_ThenEveryOneIsError`                 | Verified |
 | B-007    | `@B-007`  | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreCompared_ThenNoneIsDuplicatedAndNoRetiredIdIsReused`    | Verified |
 | B-008    | `@B-008`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheEighteenAndNothingMore`  | Verified |
-| B-009    | `@B-009`  | `BoundaryAnalyzerTests.GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported`                          | Missing |
+| B-009    | `@B-009`  | `BoundaryAnalyzerTests.GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported`                          | Verified |
 | B-010    | `@B-010`  | `BoundaryAnalyzerTests.GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration`                          | Missing |
 | B-011    | `@B-011`  | `BoundaryAnalyzerTests.GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall`                            | Missing |
 | B-012    | `@B-012`  | `BoundaryAnalyzerTests.GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall`                  | Missing |
@@ -358,23 +358,27 @@ describes.
 | B-019    | `@B-019`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenARowIsRead_ThenItNamesASpecificationAndClaimAndRestatesNeitherTextNorTest` | Verified |
 | B-020    | `@B-020`  | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoCodeFix_WhenTheMappingTableIsRead_ThenItRecordsWhyNoneIsPossible` | Missing |
 
-Fourteen rows `Verified`, six `Missing` — **and the six are the gate**. What is
-proven is the analyzer's surface: the ids, the messages, the severities, the
+Fifteen rows `Verified`, five `Missing` — **and the five are the gate**. What is
+proven is the analyzer's surface — the ids, the messages, the severities, the
 release record, the mapping against this document's own § 7 table, the
 exclusion of generated code, and a diagnostic that lands on the node and names
-the symbol. What is not is four of the five rule families — B-009 – B-012, on
-`0022` – `0024` — B-016, which cannot be `Verified` until the eighteen test
-names exist, and one of them does; and B-020, which arrived with § 5 row 2's
-reversal and waits on the three code fixes landing with the rules they fix.
+the symbol — and B-009: a reference named only inside a method body is
+reported, which is the claim ADR-0006 rejected reflection over. What is not is
+the other three rule families, B-010 – B-012 on `0023` and `0024`; B-016, which
+cannot be `Verified` until the eighteen test names exist; and B-020, which
+arrived with § 5 row 2's reversal and waits on the three code fixes landing with
+the rules they fix.
 
 The eighteen rows in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 are a separate
-gate and mostly still `Missing`. Exactly one is now provable — its B-004, by
-`BoundaryAnalyzerTests.GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach`,
-which `0021` wrote under the name that matrix gave it. Recording it there is
-that specification's `test-writer`'s edit, not this document's: its § 9 is the
-only place those claims' build state is written, and its prose counts the
-`Missing` rows.
+gate, and six of them have now left `Missing`: its B-004 from `0021`, and its
+B-032 and B-044 – B-047 from `0022`, each by the test that matrix named for it
+(B-016). Its B-041 did not. The analyzer proves the half that forbids a view
+model naming a strategy, a client, a cache or the decorator; the half that says
+`IFleetTracker` wraps `ITrackerSource` and is what a view model depends on has
+no test yet, so that row now names both mechanisms and stays `Missing` — the
+shape its own § 9 prose gives B-010 and B-037. That matrix remains the only
+place those claims' build state is written.
 
 Four rows name a review obligation rather than a test, for the reason § 8's
 coverage row gives: a test over a project file or a build script asserts the

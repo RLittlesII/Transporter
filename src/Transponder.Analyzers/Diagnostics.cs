@@ -5,10 +5,9 @@ namespace Transponder.Analyzers;
 
 /// <summary>The TRN descriptors, one per claim the analyzer enforces.</summary>
 /// <remarks>
-/// Held in one place so the conventions B-001 – B-008 are checked once over
-/// <see cref="BoundaryAnalyzer.SupportedDiagnostics"/> rather than in eighteen copies. Ids run on
-/// the analyzer's own sequence and encode no claim number (<c>adr/0001</c>); the claim in each
-/// title is a message to whoever reads the build output (B-003), not a second index.
+/// One place, so B-001 – B-008 are checked once over
+/// <see cref="BoundaryAnalyzer.SupportedDiagnostics"/>. Ids run on their own sequence
+/// (<c>adr/0001</c>); the claim in a title is a build message (B-003), not an index.
 /// </remarks>
 internal static class Diagnostics
 {
