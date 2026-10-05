@@ -6,13 +6,8 @@ status: ready-for-architecture
 
 priority: high
 value: 4
-<<<<<<< HEAD
-risk: 2
-rank: 79
-=======
 risk: 3
 rank: 76
->>>>>>> spec/fleet-pipeline
 
 parent: "0030"
 children: []
