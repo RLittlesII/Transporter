@@ -134,6 +134,15 @@ belongs to no Feature — a bug, a spike, a chore — goes in the repository-roo
 - `status: in-progress` is the mark that an item is taken; `in-review` once the
   pull request opens; `done` with a `closed:` date when it lands. Bump
   `updated:` on every edit.
+- **An item does not move to `in-progress` while its specification's § 12 rows
+  are 🟡.** Unsigned design sections mean there is nothing agreed to implement
+  against, and the next reader cannot tell which parts were decided and which
+  were invented on the way. The person may waive it for a **named item** — not
+  for a Feature, and not standing — and the waiver is a row in that item's
+  `decisions`. What `approved` requires is
+  [`feature.md`](../../.spec/templates/feature.md) § 12, and a `Missing` row in
+  § 9 is not part of it: that is the ship gate, and it blocks `done`
+  ([lesson 0007](../../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)).
 - A pull request body says `Delivers <id>` — the bare id, since one id has one
   item wherever it lives — or `Specifies features/<slug>` when authoring a
   specification. There is no issue for `Closes` to close.

@@ -391,9 +391,8 @@ unblocked `0022`.
 | §§ 6-7   | implementer | 🟡 Draft |
 | §§ 8-9   | test-writer | 🟡 Draft |
 
-Overall is the frontmatter's `spec_status`, not a row here. `spec-reviewer`
-flips it to `approved` when every row above is 🟢 and § 9 has no `Missing`
-row.
+What `approved` requires, and why a `Missing` row in § 9 does not hold it
+back, is [the template's § 12](../../../.spec/templates/feature.md).
 
 ## Decisions
 
