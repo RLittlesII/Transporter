@@ -22,6 +22,18 @@ internal static class Layers
     /// </summary>
     internal const string Integrations = "Transponder.Integrations";
 
+    /// <summary>The namespace the domain model sits under; it survives the provider being replaced.</summary>
+    internal const string Model = "Transponder.Model";
+
+    /// <summary>The namespace the per-type tracker sources and the swapping decorator sit under.</summary>
+    internal const string Tracking = "Transponder.Tracking";
+
+    /// <summary>The namespace a feature's own code sits under, view models included.</summary>
+    internal const string Features = "Transponder.Features";
+
+    /// <summary>The user interface host's root namespace.</summary>
+    internal const string Host = "Gui";
+
     /// <summary>
     /// The namespace the test project sits under. Tests reach an integration's internals
     /// deliberately, through <c>InternalsVisibleTo</c>, so they are not a layer a boundary rule
@@ -29,6 +41,9 @@ internal static class Layers
     /// view, all of which are production layers.
     /// </summary>
     internal const string Tests = "Transponder.UnitTests";
+
+    /// <summary>The last namespace segment of every composition root.</summary>
+    internal const string Registration = "Container";
 
     /// <summary>
     /// The provider whose integration a symbol was declared in, or <see langword="null"/> when it
@@ -52,18 +67,120 @@ internal static class Layers
     }
 
     /// <summary>
-    /// Whether a symbol is part of a provider's wire surface — the types its API contract's
-    /// methods name, which live in that provider's <c>Contracts</c> namespace.
+    /// Whether a symbol is one of a provider's wire data types — what its API contract's methods
+    /// carry, which live in that provider's <c>Contracts</c> namespace.
+    /// <para>
+    /// The contract interface itself and the exception it throws are in the same namespace and are
+    /// not wire types: a consumer names the contract (<c>aircraft-source</c> B-008) and catches the
+    /// exception (ADR-0008), so a rule that held either out of reach would report work that was
+    /// never wrong.
+    /// </para>
     /// </summary>
     /// <param name="symbol">The symbol to classify.</param>
-    /// <returns><see langword="true"/> when the symbol is a wire type.</returns>
-    internal static bool IsWireType(ISymbol symbol)
-    {
-        var provider = ProviderOf(symbol);
+    /// <returns><see langword="true"/> when the symbol is a wire data type.</returns>
+    internal static bool IsWireType(ISymbol symbol) =>
+        IsWireSurface(symbol)
+        && symbol is INamedTypeSymbol { TypeKind: not TypeKind.Interface } type
+        && !IsException(type);
 
-        return provider is not null
-            && NamespaceOf(symbol) == $"{Integrations}.{provider}.Contracts";
-    }
+    /// <summary>Whether a symbol is a provider's API contract interface.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a contract interface.</returns>
+    internal static bool IsContract(ISymbol symbol) =>
+        IsWireSurface(symbol) && symbol is INamedTypeSymbol { TypeKind: TypeKind.Interface };
+
+    /// <summary>Whether a symbol sits in a provider's <c>Contracts</c> namespace at all.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is part of the wire surface.</returns>
+    internal static bool IsWireSurface(ISymbol symbol) =>
+        ProviderOf(symbol) is { } provider && NamespaceOf(symbol) == $"{Integrations}.{provider}.Contracts";
+
+    /// <summary>Whether a symbol is a provider's transport — the class implementing its contract, and its converters.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is transport code.</returns>
+    internal static bool IsTransport(ISymbol symbol) =>
+        ProviderOf(symbol) is { } provider && NamespaceOf(symbol) == $"{Integrations}.{provider}.Http";
+
+    /// <summary>
+    /// Whether a symbol sits directly under a provider's own namespace — the snapshot, the client
+    /// that fills a cache from it, and the options and credentials the provider needs.
+    /// </summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol sits at the provider's root.</returns>
+    internal static bool IsProviderRoot(ISymbol symbol) =>
+        ProviderOf(symbol) is { } provider && NamespaceOf(symbol) == $"{Integrations}.{provider}";
+
+    /// <summary>
+    /// Whether a symbol is a snapshot — a provider-root type carrying what the provider reported,
+    /// which dies at its projection (<c>aircraft-source</c> B-046).
+    /// </summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a snapshot.</returns>
+    internal static bool IsSnapshot(ISymbol symbol) =>
+        IsProviderRoot(symbol) && symbol.Name.EndsWith("Snapshot", StringComparison.Ordinal);
+
+    /// <summary>Whether a symbol is a snapshot client — the provider-root type that fills a cache.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a client.</returns>
+    internal static bool IsClient(ISymbol symbol) =>
+        IsProviderRoot(symbol) && symbol.Name.EndsWith("Client", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Whether a symbol is a keyed reactive cache, by the names DynamicData gives them. Matched by
+    /// name rather than by package so the analyzer takes no dependency the application takes.
+    /// </summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a cache.</returns>
+    internal static bool IsCache(ISymbol symbol) =>
+        symbol is INamedTypeSymbol { IsGenericType: true } cache
+        && (cache.Name == "SourceCache" || cache.Name == "ISourceCache" || cache.Name == "IObservableCache");
+
+    /// <summary>Whether a symbol is a domain type — one that survives the provider being replaced.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol belongs to the domain model.</returns>
+    internal static bool IsDomain(ISymbol symbol) => In(symbol, Model);
+
+    /// <summary>
+    /// Whether a symbol is a concrete per-type tracker source or the swapping decorator — a class
+    /// in the tracking namespace, as opposed to the interface consumers depend on.
+    /// </summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a concrete tracking type.</returns>
+    internal static bool IsConcreteTracking(ISymbol symbol) =>
+        In(symbol, Tracking) && symbol is INamedTypeSymbol { TypeKind: not TypeKind.Interface };
+
+    /// <summary>Whether a symbol sits in the tracking layer — a projection, a source, or the decorator.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is tracking code.</returns>
+    internal static bool IsTrackingLayer(ISymbol symbol) => In(symbol, Tracking);
+
+    /// <summary>Whether a symbol is a view model.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol's namespace ends in <c>ViewModels</c> under a feature.</returns>
+    internal static bool IsViewModel(ISymbol symbol) =>
+        In(symbol, Features) && NamespaceOf(symbol).EndsWith(".ViewModels", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Whether a symbol is downstream of <c>IFleetTracker</c> — a feature's own code, or the user
+    /// interface host. A composition root is not downstream: see <see cref="IsCompositionRoot"/>.
+    /// </summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a consumer.</returns>
+    internal static bool IsDownstream(ISymbol symbol) =>
+        !IsCompositionRoot(symbol) && (In(symbol, Features) || In(symbol, Host));
+
+    /// <summary>
+    /// Whether a symbol sits in a composition root — any <c>Container</c> namespace.
+    /// <para>
+    /// Registration is where concrete types are named on purpose, so it is not a consumer any
+    /// reference rule holds out. What a composition root may name is a claim of its own —
+    /// <c>aircraft-source</c> B-008, which is <c>TRN0015</c> and not in this family.
+    /// </para>
+    /// </summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is registration code.</returns>
+    internal static bool IsCompositionRoot(ISymbol symbol) =>
+        NamespaceOf(symbol).EndsWith("." + Registration, StringComparison.Ordinal);
 
     /// <summary>
     /// Whether a symbol sits inside one provider's integration, and so may name that provider's
@@ -87,12 +204,26 @@ internal static class Layers
     /// </summary>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is a test's.</returns>
-    internal static bool IsTest(ISymbol symbol)
+    internal static bool IsTest(ISymbol symbol) => In(symbol, Tests);
+
+    private static bool In(ISymbol symbol, string layer)
     {
         var containing = NamespaceOf(symbol);
 
-        return containing == Tests
-            || containing.StartsWith(Tests + ".", StringComparison.Ordinal);
+        return containing == layer || containing.StartsWith(layer + ".", StringComparison.Ordinal);
+    }
+
+    private static bool IsException(INamedTypeSymbol type)
+    {
+        for (var current = type; current is not null; current = current.BaseType)
+        {
+            if (current.Name == nameof(Exception))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string NamespaceOf(ISymbol symbol) =>
