@@ -1,0 +1,87 @@
+id: "0033"
+type: task
+title: Filter, group, count, and raise a notice when data arrives
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 3
+rank: 71
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0032"
+  - "0034"
+blocks: []
+spikes: []
+
+spec: features/fleet-pipeline/.spec/README.md
+
+claims:
+  - B-006
+  - B-007
+  - B-008
+  - B-012
+  - B-014
+  - B-015
+  - B-025
+  - B-026
+  - B-027
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  The stages the audience watches: a predicate arriving re-filters what is
+  already bound without refetching anything, a grouping key reforms the groups
+  without rebuilding the pipeline, and the counts per group and for the fleet
+  derive from the same stream as the collection.
+
+  The predicate and the grouping key arrive as observables. Turning search text
+  and a dropdown selection into either is the dashboard's (§ 5 row 4), and the
+  easiest mistake in this item is building that here.
+
+  The arrival notice (B-025 – B-027) is here because it is the same derivation
+  as the summary: the instant and the counts the tracker already holds. The rate
+  cap is per consumer rather than per tracker, so the notices are a stream a
+  caller paces — one operator, written and tested once, two cadences on screen
+  (§ 4 row 10).
+
+  Runs after `0032`, whose description supplies the groupings this item
+  applies, and after `0034`: B-014's stale count has nothing to count until a
+  vehicle can be marked.
+
+acceptance_criteria:
+  - "B-006 — a new predicate re-evaluates existing items and re-subscribes
+    nothing."
+  - "B-007 — before any predicate arrives, every vehicle is visible. An absent
+    filter is not an empty fleet."
+  - "B-008 — no filter applied by enumerating the collection or from an event
+    handler. Analyzer rule."
+  - "B-012 — changing the grouping reforms the groups and rebuilds nothing."
+  - "B-014 — each group reports its tracked and stale counts, derived rather
+    than enumerated."
+  - "B-015 — the fleet summary derives from the same stream and changes with
+    it."
+  - "B-025 — one notice per changeset that changed something, carrying the
+    observed instant and the counts; an empty changeset raises none."
+  - "B-026 — the notices are paced by the caller, so two consumers run at two
+    cadences and either can change while running."
+  - "B-027 — a quiet notice once when no changeset arrives within the
+    threshold, and a resumed notice on the next one."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Composing search text and dropdown selections into a predicate (§ 5 row
+    4) — `fleet-dashboard`."
+  - "Where the summary is exposed — § 11 row 2 is open; this item claims the
+    derivation, not the member's address."
+  - "Staleness itself (B-016 – B-019) — `0034`. This item consumes the mark for
+    its stale count."

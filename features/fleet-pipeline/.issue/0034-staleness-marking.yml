@@ -1,0 +1,70 @@
+id: "0034"
+type: task
+title: Mark a vehicle that has gone silent against the observed clock, and keep it
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 4
+rank: 73
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0031"
+blocks:
+  - "0033"
+spikes: []
+
+spec: features/fleet-pipeline/.spec/README.md
+
+claims:
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  A vehicle silent past the threshold is marked and stays in the collection; a
+  row vanishing mid-sentence reads as a bug, a row flagged stale reads as
+  information. The threshold is configurable and defaults to five minutes.
+
+  The mark is **derived, never stored** on the vehicle — `domain-model`
+  § "Never add" forbids a stored flag, and the clock moves — so it is carried
+  beside the vehicle in what the pipeline binds (§ 7's `StaleVehicle`).
+
+  This item changes an interface another Feature delivered: `IObservedClock`
+  exposes `Current` and no observable (§ 4 row 3), so nothing can notice the
+  instant advancing, and B-018's second clause cannot be satisfied by reading
+  it. The read side gains `Instant`; `IObservedClockWriter` is untouched, so
+  ADR-0007 decision 1's separation holds.
+
+  Runs after `0031`, and before `0033`, whose per-group stale count has nothing
+  to count until a vehicle can be marked.
+
+acceptance_criteria:
+  - "B-016 — marked stale and still present, still keyed."
+  - "B-017 — configurable, defaulting to five minutes."
+  - "B-018 — measured against `IObservedClock`, re-evaluated when the observed
+    instant advances, and never from an inline `UtcNow`. Two hazards: an inline
+    read passes every test written against a controlled clock and is wrong only
+    under replay; staleness evaluated once on arrival leaves a silent fleet
+    permanently fresh, which looks like a working demo."
+  - "B-019 — nothing is removed for going silent, and no expiry stage exists."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "`ExpireAfter` and removal on silence (§ 5 row 2) — B-019 decides it the
+    other way, and the closing act's source gets the other treatment in its own
+    specification."
+  - "The per-group and fleet-wide stale counts (B-014, B-015) — `0033`."
+  - "The stale indicator's appearance (§ 5 row 1) — `fleet-dashboard`."

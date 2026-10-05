@@ -1,0 +1,70 @@
+id: "0031"
+type: task
+title: Build the pipeline once from the seam and bind the one collection
+
+status: ready-for-architecture
+
+priority: high
+value: 5
+risk: 3
+rank: 101
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0007"
+blocks:
+  - "0032"
+  - "0034"
+spikes: []
+
+spec: features/fleet-pipeline/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-023
+  - B-024
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  Assemble the pipeline in `FleetTracker`'s constructor, bind one collection of
+  tracked vehicles, and dispose every subscription with the tracker. Filtering
+  and sorting are wired here as stages taking their observable inputs from
+  `IFleetQuery`; what the comparers and grouping keys are is `0032`'s.
+
+  Both boundary claims land here because a boundary cannot be asserted before
+  one side of it exists, and this item is the first code downstream of the seam.
+
+  Runs after `aircraft-source` `0007`, which declares `IFleetTracker` and gives
+  it the clock. The members this Feature adds to that interface are § 7's.
+
+acceptance_criteria:
+  - "B-001 — built once, and a swap rebuilds nothing."
+  - "B-002 — one collection; the groups project it rather than copy it."
+  - "B-003 — no imperative add, remove, clear or reorder. Analyzer rule."
+  - "B-004 — every subscription disposed with the tracker, and a swap leaks
+    nothing. The hazard is a pipeline that works and leaks."
+  - "B-005 — the view's work is scheduled on the injected user-interface
+    scheduler, never an ambient one."
+  - "B-023 — nothing here names a contract, client, cache, snapshot or a
+    concrete `ITrackerSource`. Analyzer rule."
+  - "B-024 — no network, file or wall clock in this Feature's tests."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "What the comparers, columns and grouping keys are (B-009 – B-011, B-020 –
+    B-022) — `0032`."
+  - "Grouping, the aggregates and the predicate's own behaviour (B-006 – B-008,
+    B-012, B-014, B-015) — `0033`."
+  - "Staleness (B-016 – B-019) — `0034`."
