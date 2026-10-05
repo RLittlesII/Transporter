@@ -39,6 +39,20 @@ belongs to no Feature — a bug, a spike, a chore — goes in the repository-roo
   [`feature.md`](../../../.spec/templates/feature.md) § 12, and a `Missing` row in
   § 9 is not part of it: that is the ship gate, and it blocks `done`
   ([lesson 0007](../../../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)).
+- **Before reporting that an item cannot close, perform the reviews its rows
+  name.** A review is a mechanism beside a test and a diagnostic, for a claim
+  constraining code the repository does not contain — there is no value to
+  compute and no declaration to analyze — and it is performed by a reader, not
+  by a run. A `Missing` row naming one is a review nobody has done; a performed
+  one reads `Verified` and records in the row **what was looked at, on which
+  item, and what change re-does it**, the form `boundary-analyzer` § 9 uses. Two
+  rows held `0002` for a day as rows whose status could never move, and one of
+  them took a `git log` and a diff. Where a clause of the review names something
+  the repository does not contain, the row belongs to the item that builds that
+  thing — the same move a claim makes when its subject is another item's
+  ([lesson 0011](../../../.spec/lessons/0011-a-review-nobody-performed-is-not-a-review-nobody-can-perform.md)).
+  Adding a § 9 status is not the remedy: every table parser in the test project
+  reads that vocabulary.
 - **One item `in-progress` at a time, per Feature.** Two at once is the
   exception and says so in the item's `decisions`. An item that cannot be
   finished, demonstrated and reviewed without a sibling is not a small item; it

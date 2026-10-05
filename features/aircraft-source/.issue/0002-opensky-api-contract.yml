@@ -2,7 +2,7 @@ id: "0002"
 type: task
 title: Declare the OpenSky API contract and the response envelope
 
-status: blocked
+status: done
 
 priority: high
 risk: 3
@@ -29,11 +29,10 @@ claims:
   - B-009
   - B-010
   - B-048
-  - B-049
 
 created: "2026-10-04"
 updated: "2026-10-05"
-closed: null
+closed: "2026-10-05"
 
 summary: |
   The bottom two layers: the envelope that mirrors what OpenSky sends, and the
@@ -53,10 +52,12 @@ acceptance_criteria:
   - "B-005, B-006 — the contract's shape and what it may not name."
   - "B-007, B-008 — one concretion per transport, and the aliasing. This item
     builds the HTTP one; the recording one is the replay Feature's (§ 4 row 20)."
-  - "B-009 — a new provider version is a new interface."
+  - "B-009 — a new provider version is a new interface. Proved by a review
+    recorded in its § 9 row, because the claim constrains an interface the
+    repository does not contain: there is no value to compute and no declaration
+    to analyze. Re-done by the change that adds a version."
   - "B-010 — the hand-written fake, for this double only (§ 4 row 18)."
   - "B-048 — no version suffix yet (§ 4 row 3)."
-  - "B-049 — the contract layer is conditional (§ 4 row 4)."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
@@ -164,6 +165,22 @@ decisions:
     owned, and renumbering it, which claim ids never do. Two rows now hold this
     item, both `Review`, and neither can be arranged by any change this Feature
     contains. § 11 question 5 asks what terminal state they permit."
+  - "2026-10-05 — the person — `done`. § 11 question 5 offered a third § 9
+    status or `blocked` as this item's terminal state, and both accepted a false
+    premise: that a `Review` row cannot move. A review is a mechanism —
+    `boundary-analyzer` § 9 performs four and records in each what was looked
+    at, on which item, and what change re-does it — and these two had never been
+    attempted. B-009's was performed and is recorded in its row: one contract
+    interface for the one version OpenSky publishes, declared surface unchanged
+    since `OpenSkyHttpApi` implemented it in pull request #1, and the one later
+    edit to that file added two `using` directives and no member. B-049's could
+    not be: its third clause names an `ITrackerSource` that `0005` declares, so
+    the claim moves there, the way B-003 moved to `0004`. Every claim this item
+    still carries is `Verified`, nothing is waived, and no status value was
+    added. Rejected: a third § 9 status, which every table parser in the test
+    project reads and which would have bought one item's closure with a
+    repository-wide vocabulary change; and `blocked` forever, which is the
+    never-closing gate of lesson 0007 with no gate left to close."
   - "2026-10-04 — implementer — deleting that test left nothing exercising
     `AddOpenSky` at runtime, because B-008 constrains the registration's shape
     and not its outcome. B-052 now covers the outcome and is `0007`'s, since
@@ -175,6 +192,9 @@ out_of_scope:
   - "Reading the positional rows into a snapshot — B-016 – B-022, which is 0004."
   - "Observing the envelope's reported instant downstream — B-003, moved to 0004
     with the client that reports it."
+  - "The surface every strategy shares — B-049, moved to 0005, which declares
+    the `ITrackerSource` its third clause names. This item's contract layer is
+    the part of that claim already reviewable, and the review says it holds."
   - "Token refresh, rate-limit headers, `429` handling and the startup
     credential check — B-026 – B-029, also 0004. This item declares the method;
     it does not own the poll loop's behaviour."
