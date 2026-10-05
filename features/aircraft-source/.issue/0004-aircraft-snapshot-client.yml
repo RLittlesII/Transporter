@@ -2,7 +2,7 @@ id: "0004"
 type: task
 title: Poll OpenSky, read the positional rows, and diff them into the cache
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 risk: 3
@@ -41,7 +41,7 @@ claims:
   - B-050
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-05"
 closed: null
 
 summary: |
@@ -72,15 +72,35 @@ acceptance_criteria:
     is the claim the demo's core idea rests on."
   - "B-024 — box and interval as constructor or options input."
   - "B-025 — `extended=1` and the absent category."
-  - "B-026, B-028 — token refresh and retry, and `429` as data."
-  - "B-027, B-029 — what may never reach a log, and startup on an absent
-    credential."
+  - "B-026, B-027, B-028 — token refresh and retry, the credit header at debug,
+    and `429` as data. § 11 row 2 placed these on the HTTP transport, so this
+    item finishes `OpenSkyHttpApi` rather than putting them on the client: the
+    token source and the logger § 7 declares it taking arrive here. The
+    deferral half of B-028 is the client's, and the ban on an exception is
+    scoped to a subscriber of its stream."
+  - "B-029 — startup on an absent credential, and a failed poll that neither
+    completes nor error-terminates the stream."
   - "B-045 — the envelope's referents. Falsifiable here for the first time,
     because this is the second and last one."
   - "B-050 — the configurable interval and box (decisions/0001)."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-05 — spec-author — § 11 row 2 is answered, so this item moves from
+    `ready-for-architecture` to `ready-for-implementation`. B-026 and B-027 name
+    the HTTP transport and B-028 names both it and the client; the claim ids,
+    this item's claim list and § Tasks are unchanged, because a claim's subject
+    is which component satisfies it rather than which item builds it. Recorded
+    as lessons/0001. The residual is § 11 row 4, which says of itself that it
+    blocks nothing and targets the first test this item writes above the
+    contract: if a substitute may not stand in at that seam, the double stays
+    the hand-written fake B-010 already requires."
+  - "2026-10-05 — spec-author — B-003's test is `AircraftSnapshotClientTests`'s
+    and its behaviour is § 7's `IObservedClockWriter` call inside the method
+    that writes the cache, but the claim is `0002`'s and `0002` has shipped
+    without a client. No item can currently make that row pass. Raised rather
+    than fixed: whether B-003 joins this item's claims is the person's."
+
 
 out_of_scope:
   - "The domain projection — B-034 puts the first domain object in 0005."

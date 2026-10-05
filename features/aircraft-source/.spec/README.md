@@ -2,7 +2,7 @@
 title: "Specification: Aircraft source"
 description: "Poll OpenSky through a typed API contract, cache snapshots per client, project them to domain vehicles in a per-type strategy, and swap strategies behind a decorator the fleet tracker wraps."
 type: spec
-spec_status: draft
+spec_status: approved
 ---
 
 # Specification: Aircraft source
@@ -33,7 +33,8 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 Fifty-two claims, in nine groups — one per component, plus the boundary rules:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
 types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029 and
-B-050** the snapshot client; **B-030 – B-032** the cache; **B-033 – B-037** the
+B-050** the snapshot client — except **B-026 – B-028**, re-subjected to the HTTP
+transport when § 11 row 2 was answered, and still delivered by `0004`; **B-030 – B-032** the cache; **B-033 – B-037** the
 tracker source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044,
 B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries.
 
@@ -77,9 +78,9 @@ than being slotted into the sequence.
 | B-023 | The snapshot client SHALL write every fetched set to its cache as a differential update over the whole set, and SHALL expose the resulting snapshot changeset stream.                                                                                                                                                                                          | Decided call — the client diffs; README.md § "Core idea"            |
 | B-024 | The bounding box and the polling interval SHALL be supplied to the snapshot client as constructor or options input, and SHALL NOT appear on the API contract, on its own stream, or on anything downstream.                                                                                                                                                    | api-contract § "The traps"                                          |
 | B-025 | When the application offers grouping by aircraft category, the request SHALL set `extended=1`; a request without it SHALL yield snapshots whose category is absent rather than defaulted.                                                                                                                                                                      | README.md § "Data source"; links B-018                              |
-| B-026 | The snapshot client SHALL refresh its OAuth2 token both when the current token has expired and when a request returns `401`, retrying that request once after a successful refresh; it SHALL NOT rely on expiry alone.                                                                                                                                         | README.md § "Authentication"                                        |
-| B-027 | Every poll SHALL log the `X-Rate-Limit-Remaining` header value at debug level, and no log line, exception message, test fixture or diagnostic SHALL contain a token, `client_id` or `client_secret` value.                                                                                                                                                     | README.md § "Limits"; api-contract § "Credentials"                  |
-| B-028 | A `429` response SHALL be handled as data — inspected for `X-Rate-Limit-Retry-After-Seconds` and the next poll deferred by exactly that many seconds — and SHALL NOT surface as an exception or trigger an invented backoff; every other non-2xx status SHALL remain an exception.                                                                             | README.md § "Limits"; flurl-http-client                             |
+| B-026 | The HTTP transport SHALL refresh its OAuth2 token both when the current token has expired and when a request returns `401`, retrying that request once after a successful refresh; it SHALL NOT rely on expiry alone.                                                                                                                                          | README.md § "Authentication"; § 11 row 2                            |
+| B-027 | The HTTP transport SHALL log the `X-Rate-Limit-Remaining` header value at debug level on every poll, and no log line, exception message, test fixture or diagnostic SHALL contain a token, `client_id` or `client_secret` value.                                                                                                                               | README.md § "Limits"; api-contract § "Credentials"; § 11 row 2      |
+| B-028 | A `429` response SHALL be inspected for `X-Rate-Limit-Retry-After-Seconds` in the HTTP transport, and SHALL defer the snapshot client's next poll by exactly that many seconds; no exception SHALL reach a subscriber of the client's stream and no backoff SHALL be invented; every other non-2xx status SHALL remain an exception.                           | README.md § "Limits"; flurl-http-client; ADR-0008; § 11 row 2       |
 | B-029 | A missing OpenSky credential SHALL fail at application startup with a message naming which credential is absent; and a failed poll — timeout, `429`, `5xx`, or an unreadable body — SHALL NOT complete or error-terminate the client's stream.                                                                                                                 | api-contract § "Credentials"; hot-swap-source                       |
 | B-030 | The cache SHALL be a plain keyed store of snapshots: no diff policy of its own, no projection, and no clock.                                                                                                                                                                                                                                                   | Decided call — the cache is dumb                                    |
 | B-031 | There SHALL be one cache per client, typed to that client's snapshot, and its lifetime SHALL be the application's rather than the client's.                                                                                                                                                                                                                    | Decided call; hot-swap-source § "What must not be rebuilt"          |
@@ -191,7 +192,7 @@ why it was allowed.
 | One unreadable row costs one row                                    | Both           | Technically a per-row result and a count. The business reason: the grid keeps its other aircraft on stage, which is the difference between a blemish and a dead demo. B-022.                                                                                                                                                                                                                                                                                                       |
 | The box, the interval, and the credit budget                        | Both           | § 2 need 5 — one day's credits, and a rehearsal must not spend the talk's. § 4 row 8 is the technical half: credits bound the _box_, not the interval, which is the opposite of the intuition. B-024, B-050.                                                                                                                                                                                                                                                                       |
 | Houston specifically                                                | Business       | `decisions/0001`: chosen for the variety the grouped view needs, and so the vessel closing act shares one geography. Any box works technically.                                                                                                                                                                                                                                                                                                                                    |
-| Token lifecycle, the credit header, and the throttle                | Technical      | § 4 rows 7 and 9 are the provider's terms, not ours to simplify. B-026, B-028. **See § 11 — these claims name a component that cannot hold a credential.**                                                                                                                                                                                                                                                                                                                         |
+| Token lifecycle, the credit header, and the throttle                | Technical      | § 4 rows 7 and 9 are the provider's terms, not ours to simplify. B-026, B-028, which name the transport: it is the only thing holding the response, and B-006 keeps the credential off the contract.                                                                                                                                                                                                                                                                               |
 | A credential never reaches a log, a fixture or a screenshot         | Both           | Technically § 4 row 12. The business reason is that this runs in front of a room and is recorded, so "it is only a debug log" does not apply. B-027.                                                                                                                                                                                                                                                                                                                               |
 | A missing credential stops the application at startup               | Business       | Chosen so the presenter learns before the stage rather than during it (§ 2 need 5). Failing lazily on the first poll compiles equally well and is the natural implementation. B-029, first half.                                                                                                                                                                                                                                                                                   |
 | A failed poll does not end the stream                               | Both           | Technically an `IObservable` that errors is finished for good. Why it is claimed at all: the grid must not go dead mid-sentence on a venue network. B-029, second half.                                                                                                                                                                                                                                                                                                            |
@@ -458,8 +459,8 @@ third decision item.
 method: all three of B-007's clauses are readable in the file. **It is not
 finished.** `0002` built it taking the Flurl client cache and nothing else;
 the token source and the logger it is designed to take arrive with B-026 and
-B-027, which are `0004`'s and which § 11 question 2 has not yet placed on a
-component. The name
+B-027, which are `0004`'s and which § 11 row 2 has now placed here rather than
+on the client. The name
 says **the transport**, which is the axis B-007 counts along, so the replay
 sibling gets a name that pairs with it. Not `OpenSkyApiClient` — "client" is
 already the layer above, and that exact collision is the one-word-three-things
@@ -704,8 +705,15 @@ they do.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
-No Feature-scoped lesson yet. Five repository-wide lessons bear on this
-document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
+One Feature-scoped lesson.
+[Lessons 0001](lessons/0001-a-claim-needs-a-subject-that-can-satisfy-it.md) is
+§ 11 row 2: B-026 – B-028 named the snapshot client for behaviour only the
+holder of the HTTP response can perform, so no component could satisfy them as
+written. The design was right and the subject was a placeholder nobody went back
+to replace — and the signals were a diagram disagreeing with a claim, a scenario
+narrower than its sentence, and a § 9 row naming the transport's test class.
+
+Five repository-wide lessons also bear on this document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
 is why § 3 keeps no build state that § 9 owns, and why a § 9 row reads
 `Missing` until something proves it rather than inheriting the template's
 example `Verified`: a gate reporting a pass that nothing verified is the one
@@ -729,24 +737,39 @@ why a row naming two mechanisms reads `Missing` until both of them pass.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-Three open, of four asked. The first two were opened by § 7, the third by § 8
+Two open, of four asked. The first two were opened by § 7, the third by § 8
 and the fourth by review of pull request #1; writing a section surfaces a
-question, and so does reading the code it produced. Question 1 has been
-answered and moved to the closing paragraph. Its number is not reused and the
-others keep theirs, so a reference written while it was open still points at
+question, and so does reading the code it produced. Questions 1 and 2 have been
+answered and moved to the paragraphs below. Their numbers are not reused and the
+others keep theirs, so a reference written while one was open still points at
 the question it meant.
 
-| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Owner         | Target date                                    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ---------------------------------------------- |
-| 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. B-028's ban needs a _where_ in the same pass: the claim forbids an exception outright, its scenario forbids one only at the subscriber, and [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) makes the contract throw — so the transport as built satisfies the scenario and contradicts the sentence. Blocks `0004`. | `spec-author` | Before `0004` starts                           |
-| 3   | What remains of the boundary analyzer, and when? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eighteen claims — B-002, B-004 – B-008, B-010, B-014, B-030 – B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, [`features/boundary-analyzer`](../../boundary-analyzer/.spec/README.md), not a task inside `0002` – `0007`. Its reference rules and its declaration rules are built, which is what moved twelve of these rows to `Verified`. Six are left, and they are two different waits: B-008, B-010, B-030 and B-031 want the registration and double rules on that Feature's `0024`, while B-037 and B-041 have their analyzer half and want an xUnit half each — `0005`'s mapper, and a test that `IFleetTracker` is what a view model depends on. Until all six land no item here can reach `done`, and scheduling them against the talk date is the call.                                                        | `the person`  | Before the first item claims `done`            |
-| 4   | Should B-010 still forbid a mocking framework for the contract's double? The claim says the double **SHALL** be hand-written and **SHALL NOT** be produced by one, and `0002` built it that way — but the repository has since adopted `Rocket.Surgery.Extensions.Testing.AutoFixtures`, and review of pull request #1 accepted the hand-written fake "for now" while saying the double should be built with it. The two halves of the claim can move independently: a generated fixture that _builds_ a hand-written fake already satisfies both, which is what `0002` ships, so what is actually in question is whether a substitute may stand in at this seam at all. Weigh it against the hazard § Scoring recorded — a double that returns `default` on an unset call makes every test above it pass for the wrong reason. Blocks nothing; `0004` and later are the items that would feel it.                                                                                                           | `spec-author` | Before `0004` writes a test above the contract |
+| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Owner         | Target date                                    |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------- |
+| 3   | What remains of the boundary analyzer, and when? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eighteen claims — B-002, B-004 – B-008, B-010, B-014, B-030 – B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, [`features/boundary-analyzer`](../../boundary-analyzer/.spec/README.md), not a task inside `0002` – `0007`. Its reference rules and its declaration rules are built, which is what moved twelve of these rows to `Verified`. Six are left, and they are two different waits: B-008, B-010, B-030 and B-031 want the registration and double rules on that Feature's `0024`, while B-037 and B-041 have their analyzer half and want an xUnit half each — `0005`'s mapper, and a test that `IFleetTracker` is what a view model depends on. Until all six land no item here can reach `done`, and scheduling them against the talk date is the call. | `the person`  | Before the first item claims `done`            |
+| 4   | Should B-010 still forbid a mocking framework for the contract's double? The claim says the double **SHALL** be hand-written and **SHALL NOT** be produced by one, and `0002` built it that way — but the repository has since adopted `Rocket.Surgery.Extensions.Testing.AutoFixtures`, and review of pull request #1 accepted the hand-written fake "for now" while saying the double should be built with it. The two halves of the claim can move independently: a generated fixture that _builds_ a hand-written fake already satisfies both, which is what `0002` ships, so what is actually in question is whether a substitute may stand in at this seam at all. Weigh it against the hazard § Scoring recorded — a double that returns `default` on an unset call makes every test above it pass for the wrong reason. Blocks nothing; `0004` and later are the items that would feel it.                                                    | `spec-author` | Before `0004` writes a test above the contract |
 
-**Row 3 — half answered: by whom, and with six of eighteen rules built.** The
+**Row 2 — answered: B-026 and B-027 name the HTTP transport, and B-028 names
+both it and the client.** The `429` is inspected where the response is held and
+the deferral is decided where the schedule is, which is the split § 7's poll
+diagram had already drawn and `OpenSkyThrottledException` had already been built
+for. B-028's ban on an exception gets the _where_ it was missing: the scenario
+forbade one at the subscriber, the sentence forbade one outright, and
+[ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md)
+makes the contract throw — so the sentence was the wrong one of the three. The
+claims are written **the HTTP transport**, not the transport: B-007 counts
+implementations per transport and a recording one has no token to refresh.
+Recorded as [lessons/0001](lessons/0001-a-claim-needs-a-subject-that-can-satisfy-it.md).
+The claim ids are unchanged, one sentence carries both halves of B-028, and all
+three remain `0004`'s to deliver — a claim's subject is not its owning item,
+which is why § 9 already named `OpenSkyHttpApiTests` for them. Its number is not
+reused and rows 3 and 4 keep theirs. It unblocked `0004`.
+
+**Row 3 — half answered: by whom, and with twelve of eighteen rules built.** The
 analyzer is [`features/boundary-analyzer`](../../boundary-analyzer/.spec/README.md),
 specified and under way; what it has proven is in § 9 and what is left is in the
 row above. The question keeps its number and stays open, because the half that
-blocks ship — when the remaining twelve rules land — is still a call rather than
+blocks ship — when the last six claims are proven — is still a call rather than
 a record.
 
 Everything else this specification opened has been answered and recorded. How
@@ -765,11 +788,11 @@ B-049, the integration layout in § 4 row 5, and the decoration package in
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../.spec/templates/feature.md).
@@ -856,8 +879,13 @@ and `0006` are `ready-for-implementation`; `0004` and `0007` stayed at
 children do.
 
 **ADR-0007 has since answered question 1**, so `0007` is
-`ready-for-implementation` too and `0004` is the only child still held by a
-question.
+`ready-for-implementation` too.
+
+**§ 11 row 2 has since answered the other**, which releases `0004`: B-026 and
+B-027 name the HTTP transport, B-028 names it and the client, and no claim id
+moved. No child is held by a question now. What holds the Feature is row 3 — the
+analyzer claims § 9 still reports as unproven — and that blocks `done`, not a
+start.
 
 **ADR-0008 has since replaced the contract's return shape.** Those two answers
 are the two re-scores below; nothing else about the design moved with either.
