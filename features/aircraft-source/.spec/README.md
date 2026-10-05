@@ -604,15 +604,20 @@ row 17.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and forty-eight of the fifty-two rows read `Missing`.** Four
-are `Verified`: `0002` built the contract, its envelope, the positional row's
-converter, the HTTP transport and the hand-written fake, and `0003` the snapshot
-and its cache — the tests this section names against B-001 and B-011 – B-013
-pass in a run. Every other row names what will
-prove its claim and records that it does not. A row's Status becomes `Verified`
-when **every** mechanism it names passes in a run, which is why a row naming a
-test that passes and an analyzer that does not exist still reads `Missing` —
-B-010 and B-037 are both that shape.
+**This is the gate, and forty-two of the fifty-two rows read `Missing`.** Ten
+are `Verified`, and they arrived two different ways. Four came from items:
+`0002` built the contract, its envelope, the positional row's converter, the
+HTTP transport and the hand-written fake, and `0003` the snapshot and its cache
+— the tests this section names against B-001 and B-011 – B-013 pass in a run.
+Six came from the mechanism rather than from an item: the analyzer
+[ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
+decides on now exists and carries the reference rules, so B-004, B-032 and
+B-044 – B-047 are reported at the line that violates them and the tests this
+section names for them pass. Every other row names what will prove its claim
+and records that it does not. A row's Status becomes `Verified` when **every**
+mechanism it names passes in a run, which is why a row naming a test that
+passes and an analyzer rule that is not built yet still reads `Missing` —
+B-010, B-037 and now B-041 are that shape.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Ten claims carry two
@@ -621,7 +626,10 @@ scenarios; the tag anchors both.
 Three kinds of entry appear in Test. An **xUnit test** proves a computed value.
 An **analyzer diagnostic** proves a claim about what may name what — the
 mechanism is [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md),
-the analyzer does not exist, and its tests are what these rows name. **Review**
+specified and built as
+[`features/boundary-analyzer`](../../boundary-analyzer/.spec/README.md). Six of
+its eighteen rules exist; the rows for the other twelve name the test each will
+have and read `Missing` until it passes. **Review**
 appears twice, for the two claims that constrain code the repository does not
 contain; § 8 says why, and those two rows are the honest form of "a row naming
 no test", not an omission.
@@ -631,7 +639,7 @@ no test", not an omission.
 | B-001 | `@B-001` | `OpenSkyStatesResponseTests.GivenAReportedTimeAndThreeRows_WhenTheResponseIsRead_ThenBothArriveNamedAsTheProviderNamesThem` | Verified |
 | B-002 | `@B-002` | analyzer — `BoundaryAnalyzerTests.GivenAnEnvelopeMemberThatNamesAPerAircraftType_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-003 | `@B-003` | `AircraftSnapshotClientTests.GivenAResponseReportingAnInstant_WhenTheSetIsApplied_ThenThatInstantIsTheObservedOne` | Missing |
-| B-004 | `@B-004` | analyzer — `BoundaryAnalyzerTests.GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach` | Missing |
+| B-004 | `@B-004` | analyzer — `BoundaryAnalyzerTests.GivenADomainTypeNamingThePositionalRow_WhenAnalyzed_ThenTheRowIsReportedOutOfReach` | Verified |
 | B-005 | `@B-005` | analyzer — `BoundaryAnalyzerTests.GivenAContractMethodThatIsNotOnePerEndpointOrDoesNotTakeCancellationLast_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-006 | `@B-006` | analyzer — `BoundaryAnalyzerTests.GivenAContractNamingAnObservableCacheBoxIntervalOrCredential_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-007 | `@B-007` | analyzer — `BoundaryAnalyzerTests.GivenASecondImplementationForOneTransportOrAPublicEndpointMethod_WhenAnalyzed_ThenItIsReported` | Missing |
@@ -659,7 +667,7 @@ no test", not an omission.
 | B-029 | `@B-029` | `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` and `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors` | Missing |
 | B-030 | `@B-030` | analyzer — `BoundaryAnalyzerTests.GivenACacheWrappedInATypeOfItsOwn_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-031 | `@B-031` | analyzer — `BoundaryAnalyzerTests.GivenACacheRegisteredWithAnyLifetimeButTheApplicationsOrSharedBetweenClients_WhenAnalyzed_ThenItIsReported` | Missing |
-| B-032 | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-032 | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported` | Verified |
 | B-033 | `@B-033` | `AircraftTrackerSourceTests.GivenTheSeam_WhenItIsInspected_ThenItDeclaresTheTransportVehicleChangesetAndNothingElse` | Missing |
 | B-034 | `@B-034` | `AircraftTrackerSourceTests.GivenASnapshotChangeset_WhenItIsProjected_ThenTheStrategyIsWhereAnAircraftFirstExists` | Missing |
 | B-035 | `@B-035` | `AircraftSnapshotMapperTests.GivenMetresMetresPerSecondAndDegrees_WhenProjected_ThenEachReachesTheVehicleUnconverted` | Missing |
@@ -668,13 +676,13 @@ no test", not an omission.
 | B-038 | `@B-038` | `SwappingTrackerSourceTests.GivenTwoStrategies_WhenTheLiveOneIsSelected_ThenTheDecoratorChoosesAndNoResolverTypeExists` | Missing |
 | B-039 | `@B-039` | `SwappingTrackerSourceTests.GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt` | Missing |
 | B-040 | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped` | Missing |
-| B-041 | `@B-041` | analyzer — `BoundaryAnalyzerTests.GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-041 | `@B-041` | the negative half is analyzer — `BoundaryAnalyzerTests.GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported`, which passes; the wrapping half — `IFleetTracker` wraps `ITrackerSource` and is what a view model depends on — is `FleetTrackerTests.GivenAViewModelBuiltByTheContainer_WhenItsDependenciesAreRead_ThenTheyAreIFleetTrackerAndNothingBelowIt` | Missing |
 | B-042 | `@B-042` | `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction` | Missing |
 | B-043 | `@B-043` | `FleetTrackerTests.GivenAnInjectedClockAdvancedPastTheThreshold_WhenStalenessIsRead_ThenItDerivesFromLastContactAndNoAmbientClockIsRead` | Missing |
-| B-044 | `@B-044` | analyzer — `BoundaryAnalyzerTests.GivenCodeAddingToOrRemovingFromABoundCollection_WhenAnalyzed_ThenItIsReported` | Missing |
-| B-045 | `@B-045` | analyzer — `BoundaryAnalyzerTests.GivenATypeOtherThanTheContractImplementationOrClientNamingTheEnvelopeOrRow_WhenAnalyzed_ThenItIsReported` | Missing |
-| B-046 | `@B-046` | analyzer — `BoundaryAnalyzerTests.GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported` | Missing |
-| B-047 | `@B-047` | analyzer — `BoundaryAnalyzerTests.GivenAConsumerOfTheFleetTrackerNamingAnythingUpstream_WhenAnalyzed_ThenItIsReported` | Missing |
+| B-044 | `@B-044` | analyzer — `BoundaryAnalyzerTests.GivenCodeAddingToOrRemovingFromABoundCollection_WhenAnalyzed_ThenItIsReported` | Verified |
+| B-045 | `@B-045` | analyzer — `BoundaryAnalyzerTests.GivenATypeOtherThanTheContractImplementationOrClientNamingTheEnvelopeOrRow_WhenAnalyzed_ThenItIsReported` | Verified |
+| B-046 | `@B-046` | analyzer — `BoundaryAnalyzerTests.GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported` | Verified |
+| B-047 | `@B-047` | analyzer — `BoundaryAnalyzerTests.GivenAConsumerOfTheFleetTrackerNamingAnythingUpstream_WhenAnalyzed_ThenItIsReported` | Verified |
 | B-048 | `@B-048` | analyzer — `BoundaryAnalyzerTests.GivenAContractCarryingAVersionSuffixOrAMarkerAboveIt_WhenAnalyzed_ThenItIsReported` | Missing |
 | B-049 | `@B-049` | **Review** — no push provider exists, so there is nothing to analyze and no type to load. An obligation on the Feature that adds the second provider. | Missing |
 | B-050 | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault` | Missing |
@@ -683,10 +691,12 @@ no test", not an omission.
 
 Fifty-two rows, fifty-two claims, each appearing once. A scenario existing is
 not coverage; this section is the only place a claim's build state is written,
-and forty-eight of its rows still say the claim is not proven. Eighteen of
-those wait on a mechanism rather than on an item: until the analyzer ADR-0006
-decides on exists, no claim about structure can leave `Missing`, so no item
-can reach `done`.
+and forty-two of its rows still say the claim is not proven. Twelve of those
+wait on a mechanism rather than on an item, down from eighteen: the analyzer
+exists and its reference rules are built, so the claims about what may *name*
+what have left `Missing`, and the ones about a declaration, a registration and
+the contract's double wait on the rest of it. No item can reach `done` until
+they do.
 
 ## 10. Lessons / Spec Deltas
 
@@ -727,8 +737,15 @@ the question it meant.
 | #   | Question | Owner | Target date |
 | --- | -------- | ----- | ----------- |
 | 2   | Which component do B-026, B-027 and B-028 actually name? Each attributes to "the snapshot client" behaviour only the thing holding the HTTP response can perform — a `401`, the `X-Rate-Limit-Remaining` header, the `X-Rate-Limit-Retry-After-Seconds` header — while B-006 forbids a credential on the contract, so the client cannot hold the token, and a recording transport has no token to refresh at all. § 7 could not place the behaviour without contradicting one claim or the other, and `implementer` does not edit § 3. Expect B-026 and B-027 to be re-subjected and B-028 split: inspected in the transport, deferred in the client. B-028's ban needs a *where* in the same pass: the claim forbids an exception outright, its scenario forbids one only at the subscriber, and [ADR-0008](../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) makes the contract throw — so the transport as built satisfies the scenario and contradicts the sentence. Blocks `0004`. | `spec-author` | Before `0004` starts |
-| 3   | When is the boundary analyzer built, and by whom? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eighteen claims — B-002, B-004 – B-008, B-010, B-014, B-030 – B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, not a task inside `0002` – `0007`. Until it exists those eighteen rows cannot leave `Missing`, so every item except `0006` can be implemented and none can ship. Scheduling it against the talk date is the call. | the person | Before the first item claims `done` |
+| 3   | What remains of the boundary analyzer, and when? [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md) makes it the mechanism for eighteen claims — B-002, B-004 – B-008, B-010, B-014, B-030 – B-032, B-037, B-041, B-044, B-045 – B-048 — and it is its own Feature, [`features/boundary-analyzer`](../../boundary-analyzer/.spec/README.md), not a task inside `0002` – `0007`. Its reference rules are built, which is what moved six of these rows to `Verified`. Twelve are left: the declaration rules on that Feature's `0023`, the registration and double rules on its `0024`. Until those land no item here can reach `done`, and scheduling them against the talk date is the call. | `the person` | Before the first item claims `done` |
 | 4   | Should B-010 still forbid a mocking framework for the contract's double? The claim says the double **SHALL** be hand-written and **SHALL NOT** be produced by one, and `0002` built it that way — but the repository has since adopted `Rocket.Surgery.Extensions.Testing.AutoFixtures`, and review of pull request #1 accepted the hand-written fake "for now" while saying the double should be built with it. The two halves of the claim can move independently: a generated fixture that *builds* a hand-written fake already satisfies both, which is what `0002` ships, so what is actually in question is whether a substitute may stand in at this seam at all. Weigh it against the hazard § Scoring recorded — a double that returns `default` on an unset call makes every test above it pass for the wrong reason. Blocks nothing; `0004` and later are the items that would feel it. | `spec-author` | Before `0004` writes a test above the contract |
+
+**Row 3 — half answered: by whom, and with six of eighteen rules built.** The
+analyzer is [`features/boundary-analyzer`](../../boundary-analyzer/.spec/README.md),
+specified and under way; what it has proven is in § 9 and what is left is in the
+row above. The question keeps its number and stays open, because the half that
+blocks ship — when the remaining twelve rules land — is still a call rather than
+a record.
 
 Everything else this specification opened has been answered and recorded. How
 the envelope's reported time reaches the clock `IFleetTracker` owns is
@@ -844,7 +861,14 @@ question.
 are the two re-scores below; nothing else about the design moved with either.
 
 Nothing is re-scored for §§ 8-9. The risks above were set against § 7's design
-and §§ 8-9 changed none of it, and re-scoring against a mechanism that does not
-exist yet would be churn rather than assessment. The analyzer's effect on
-`0001`'s boundary-claim hazard is ADR-0006 § Consequences' to state; it becomes
-a row here the day the analyzer does.
+and §§ 8-9 changed none of it, and re-scoring against a mechanism that did not
+exist yet would have been churn rather than assessment.
+
+**The analyzer has since taken the boundary-claim hazard off `0001`, and the
+re-score is not written yet.** ADR-0006 § Consequences said the "satisfied by
+absence" hazard retires when a diagnostic fires on the side that violates a
+rule, and six of the eighteen rules now do: B-045 – B-047 are the three the
+hazard was recorded against, and they are `Verified` without either side of a
+boundary having to exist first. The row that records what that does to `0001`'s
+risk waits for the other twelve rules, because a hazard half-retired is a
+number that would move twice.
