@@ -12,8 +12,18 @@ internal sealed class OpenSkyOptions
     /// <summary>The configuration section both this and <see cref="OpenSkyCredentials"/> bind under.</summary>
     internal const string Section = "OpenSky";
 
+    /// <summary>The provider's own base URL, which there is nothing to decide about.</summary>
+    internal const string DefaultBaseUrl = "https://opensky-network.org/api";
+
     /// <summary>The interval a poll defaults to, per decisions/0001 (B-050).</summary>
     internal static readonly TimeSpan DefaultPollInterval = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Gets or sets the provider's base URL. Defaulted, unlike <see cref="Box"/>: the URL is
+    /// OpenSky's and nobody here chooses it, so compiling one in settles nothing a reader has a
+    /// stake in. Configuration overrides it, which is what a test and a recording both need.
+    /// </summary>
+    public string BaseUrl { get; set; } = DefaultBaseUrl;
 
     /// <summary>
     /// Gets or sets how often to poll. Fifteen seconds unless configuration says otherwise: above

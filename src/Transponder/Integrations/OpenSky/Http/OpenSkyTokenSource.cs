@@ -78,7 +78,7 @@ internal sealed class OpenSkyTokenSource : IOpenSkyTokenSource
         _token = granted.AccessToken;
         _expires = _schedulers.BackgroundThread.Now + TimeSpan.FromSeconds(granted.ExpiresIn);
 
-        // That a refresh happened, never what it returned (flurl-http-client § "Tokens").
+        // B-027.
         _logger.LogDebug(
             "OpenSky token refreshed; it expires in {ExpiresInSeconds} seconds.",
             granted.ExpiresIn);

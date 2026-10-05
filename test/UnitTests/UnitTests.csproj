@@ -28,10 +28,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="Integrations/OpenSky/Fixtures/*.json" CopyToOutputDirectory="PreserveNewest"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <Using Include="Xunit"/>
     </ItemGroup>
 

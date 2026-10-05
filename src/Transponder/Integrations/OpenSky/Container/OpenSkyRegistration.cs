@@ -1,5 +1,7 @@
+using System.Reactive.Concurrency;
 using DynamicData;
 using Flurl.Http.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
@@ -23,26 +25,36 @@ public static class OpenSkyRegistration
     /// by construction rather than by assertion.
     /// </summary>
     /// <param name="services">The collection to register into.</param>
-    /// <param name="baseUrl">The provider's base URL.</param>
+    /// <param name="configuration">
+    /// Where the options and the credentials are read from. The <c>OpenSky</c> section carries the base URL,
+    /// the poll interval and the bounding box, and the client id and secret beside them.
+    /// </param>
     /// <returns>The same collection, so registration chains.</returns>
     /// <remarks>
+    /// <para>
+    /// This method is the whole composition of the integration, and it takes configuration rather than
+    /// pre-bound options so that there is exactly one of it: an application and a test both call this and
+    /// differ only in what configuration they supply. A test that assembled the same graph by hand would be a
+    /// second composition to keep in step, and the first production scenario it missed would pass.
+    /// </para>
+    /// <para>
     /// The options and the credentials are two registrations, not one, and both validate on start: an absent
     /// credential or an absent bounding box stops the application here rather than failing the first poll on
-    /// stage (B-029, B-050). Binding them to configuration is the host's, because which configuration sources
-    /// exist is the host's question — this method only says what has to be valid before anything runs.
+    /// stage (B-029, B-050).
+    /// </para>
     /// </remarks>
-    public static IServiceCollection AddOpenSky(this IServiceCollection services, string baseUrl)
+    public static IServiceCollection AddOpenSky(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IFlurlClientCache>(_ => new FlurlClientCache()
-            .Add(OpenSkyHttpApi.ClientName, baseUrl)
-            .Add(OpenSkyTokenSource.ClientName, OpenSkyTokenSource.TokenUrl));
-
         var validator = new OpenSkyConfigurationValidator();
 
         services.AddSingleton<IValidateOptions<OpenSkyOptions>>(validator);
         services.AddSingleton<IValidateOptions<OpenSkyCredentials>>(validator);
-        services.AddOptions<OpenSkyOptions>().ValidateOnStart();
-        services.AddOptions<OpenSkyCredentials>().ValidateOnStart();
+        services.AddOptions<OpenSkyOptions>().Bind(configuration.GetSection(OpenSkyOptions.Section)).ValidateOnStart();
+        services.AddOptions<OpenSkyCredentials>().Bind(configuration.GetSection(OpenSkyOptions.Section)).ValidateOnStart();
+
+        services.AddSingleton<IFlurlClientCache>(static provider => new FlurlClientCache()
+            .Add(OpenSkyHttpApi.ClientName, provider.GetRequiredService<IOptions<OpenSkyOptions>>().Value.BaseUrl)
+            .Add(OpenSkyTokenSource.ClientName, OpenSkyTokenSource.TokenUrl));
 
         services.TryAddSchedulers();
 
@@ -83,6 +95,7 @@ public static class OpenSkyRegistration
             }
         }
 
-        services.AddSingleton<ISchedulerProvider, SchedulerProvider>();
+        services.AddSingleton<ISchedulerProvider>(static _ =>
+            new SchedulerProvider(CurrentThreadScheduler.Instance, TaskPoolScheduler.Default));
     }
 }

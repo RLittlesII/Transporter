@@ -1,55 +1,61 @@
 using System.Reactive.Linq;
-using System.Text.Json;
 using AwesomeAssertions;
 using DynamicData;
 using LanguageExt;
 using Microsoft.Extensions.Options;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
-using Rocket.Surgery.Airframe;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Integrations.OpenSky;
 using Transponder.Integrations.OpenSky.Contracts;
+using Transponder.Scheduling;
 using Transponder.Tracking;
+using Transponder.UnitTests.Scheduling;
 
 namespace Transponder.UnitTests.Integrations.OpenSky;
 
 public class AircraftSnapshotClientTests
 {
+    /// <summary>
+    /// B-003. The write side of the clock is the only source of an instant this client has — it is
+    /// handed that and nothing else — so a client reading an ambient clock could not make this pass.
+    /// Staleness downstream is measured against what the provider said, which is what lets a
+    /// recording age its fleet the way the live feed does.
+    /// </summary>
+    /// <returns>The running test.</returns>
     [Fact]
     public async Task GivenAResponseReportingAnInstant_WhenTheSetIsApplied_ThenThatInstantIsTheObservedOne()
     {
-        // Given. The write side of the clock is the only source of an instant this client has, so a
-        // client reading an ambient one could not make this pass.
+        // Given
         var clock = new ObservedClock();
         AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
-            .WithApi(Answering(Payload(ThreeRows)))
+            .WithApi(Answering(OpenSkyPayloads.ThreeRows))
             .WithWriter(clock);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
         // Then
-        ((IObservedClock) clock).Current
-            .Should()
-            .Be(
-                new DateTimeOffset(2026, 10, 4, 14, 32, 10, TimeSpan.Zero),
-                "the envelope reported 1791124330, and staleness is measured against what the provider said");
+        ((IObservedClock) clock).Current.Should().Be(OpenSkyPayloads.ReportedInstant);
     }
 
+    /// <summary>
+    /// B-015. The contract handed in is the one called and the items land in the very cache instance
+    /// the test holds — neither of which a client constructing its own collaborators could do.
+    /// </summary>
+    /// <returns>The running test.</returns>
     [Fact]
     public async Task GivenTheClient_WhenItIsConstructed_ThenItTakesContractAndCacheAndConstructsNeither()
     {
         // Given
-        var api = Answering(Payload(ThreeRows));
+        var api = Answering(OpenSkyPayloads.ThreeRows);
         var cache = Cache();
         AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(api).WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. The contract handed in was the one called, and the items landed in the very cache
-        // instance this test holds — neither of which a client constructing its own could do.
+        // Then
         await api.Received(1).GetStates(
             Arg.Any<double>(),
             Arg.Any<double>(),
@@ -60,17 +66,25 @@ public class AircraftSnapshotClientTests
         cache.Items.Should().HaveCount(3);
     }
 
+    /// <summary>
+    /// B-016. Every member against the index <c>README.md</c> § "Response shape" reads it from, so a
+    /// reader that shifted by one — the failure index 12 invites — fails here rather than putting an
+    /// aircraft at a plausible wrong altitude.
+    /// </summary>
+    /// <returns>The running test.</returns>
     [Fact]
     public async Task GivenAnEighteenElementRow_WhenItIsRead_ThenEveryMemberComesFromItsOwnIndex()
     {
         // Given
         var cache = Cache();
-        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(Answering(Payload(ThreeRows))).WithCache(cache);
+        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
+            .WithApi(Answering(OpenSkyPayloads.ThreeRows))
+            .WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. Every member against the index README.md § "Response shape" reads it from.
+        // Then
         var snapshot = cache.Lookup("a1b2c3").Value;
         snapshot.Icao24.Should().Be("a1b2c3");
         Some(snapshot.Callsign, "TRN0001");
@@ -91,18 +105,25 @@ public class AircraftSnapshotClientTests
         Some(snapshot.Category, 1);
     }
 
+    /// <summary>
+    /// B-017. The second row of <see cref="OpenSkyPayloads.ThreeRows"/> reports null velocity, true
+    /// track and vertical rate. Absent is not 0: an aircraft reported at 0 m/s is stationary, which
+    /// is a different answer and a plausible one.
+    /// </summary>
+    /// <returns>The running test.</returns>
     [Fact]
     public async Task GivenANullElement_WhenTheRowIsRead_ThenTheValueIsAbsentRatherThanADefault()
     {
-        // Given. The second row reports null velocity, true track and vertical rate.
+        // Given
         var cache = Cache();
-        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(Answering(Payload(ThreeRows))).WithCache(cache);
+        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
+            .WithApi(Answering(OpenSkyPayloads.ThreeRows))
+            .WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. Absent, not 0 — an aircraft reported at 0 m/s is stationary, which is a different
-        // answer and a plausible one.
+        // Then
         var snapshot = cache.Lookup("d4e5f6").Value;
         None(snapshot.Velocity);
         None(snapshot.TrueTrack);
@@ -112,22 +133,23 @@ public class AircraftSnapshotClientTests
         NotSome(snapshot.VerticalRate, 0d);
     }
 
+    /// <summary>
+    /// B-018. Presence is decided by element count and element count alone — never by whether
+    /// <c>extended=1</c> was asked for, because the two can disagree. A converter that collapsed
+    /// absent and present-with-zero would pass every other test in this class.
+    /// </summary>
+    /// <param name="payload">The row, carrying index 17 or stopping before it.</param>
+    /// <param name="category">The category it reads as, or <see langword="null"/> for absent.</param>
+    /// <returns>The running test.</returns>
     [Theory]
-    [InlineData(17, null, null)]
-    [InlineData(18, "null", null)]
-    [InlineData(18, "0", 0)]
-    [InlineData(18, "3", 3)]
+    [ClassData(typeof(CategoryCases))]
     public async Task GivenASeventeenElementRowAndAnEighteenElementRowEndingInZero_WhenBothAreRead_ThenTheirCategoriesDiffer(
-        int elements,
-        string? indexSeventeen,
+        OpenSkyPayload payload,
         int? category)
     {
-        // Given. Presence is decided by element count and element count alone — never by whether
-        // extended=1 was asked for, because the two can disagree.
+        // Given
         var cache = Cache();
-        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
-            .WithApi(Answering(Row(elements == 18 ? indexSeventeen : null)))
-            .WithCache(cache);
+        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(Answering(payload)).WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
@@ -145,25 +167,27 @@ public class AircraftSnapshotClientTests
         }
     }
 
+    /// <summary>
+    /// B-019. The wire pads a callsign to eight characters, so padding alone is no callsign: it is
+    /// absent, never an empty string and never whitespace a view would render as a blank cell.
+    /// </summary>
+    /// <param name="payload">The row, carrying index 1.</param>
+    /// <param name="callsign">The callsign it reads as, or <see langword="null"/> for absent.</param>
+    /// <returns>The running test.</returns>
     [Theory]
-    [InlineData("\"FLT0421\"", "FLT0421")]
-    [InlineData("\"FLT42   \"", "FLT42")]
-    [InlineData("\"        \"", null)]
-    [InlineData("null", null)]
+    [ClassData(typeof(CallsignCases))]
     public async Task GivenAPaddedCallsign_WhenTheRowIsRead_ThenPaddingIsRemovedAndPaddingAloneIsAbsent(
-        string wireValue,
+        OpenSkyPayload payload,
         string? callsign)
     {
         // Given
         var cache = Cache();
-        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
-            .WithApi(Answering(Row("1", callsign: wireValue)))
-            .WithCache(cache);
+        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(Answering(payload)).WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. Padding alone is absent — never an empty string and never whitespace.
+        // Then
         var read = cache.Lookup("a1b2c3").Value.Callsign;
 
         if (callsign is null)
@@ -177,25 +201,27 @@ public class AircraftSnapshotClientTests
         }
     }
 
+    /// <summary>
+    /// B-020. A squawk is a code rather than a number, so it is read with <c>GetString()</c>: four
+    /// characters, leading zeros intact, and <c>"0021"</c> never the number 21.
+    /// </summary>
+    /// <param name="payload">The row, carrying index 14.</param>
+    /// <param name="squawk">The squawk it reads as, or <see langword="null"/> for absent.</param>
+    /// <returns>The running test.</returns>
     [Theory]
-    [InlineData("\"0021\"", "0021")]
-    [InlineData("\"7700\"", "7700")]
-    [InlineData("\"0000\"", "0000")]
-    [InlineData("null", null)]
+    [ClassData(typeof(SquawkCases))]
     public async Task GivenASquawkOfZeroZeroTwoOne_WhenTheRowIsRead_ThenItIsFourCharactersAndNotTwentyOne(
-        string wireValue,
+        OpenSkyPayload payload,
         string? squawk)
     {
         // Given
         var cache = Cache();
-        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
-            .WithApi(Answering(Row("1", squawk: wireValue)))
-            .WithCache(cache);
+        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(Answering(payload)).WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. A squawk is a code: four characters, leading zeros intact, never the number 21.
+        // Then
         var read = cache.Lookup("a1b2c3").Value.Squawk;
 
         if (squawk is null)
@@ -205,57 +231,72 @@ public class AircraftSnapshotClientTests
         else
         {
             Some(read, squawk);
-            read.IfSome(static value => value.Length.Should().Be(4, "a squawk the provider sent as four characters stays four"));
+            read.IfSome(static value => value.Length.Should().Be(4));
         }
     }
 
+    /// <summary>
+    /// B-021. Index 12 carries a value here, which is the case a reader that forgot it shifts on.
+    /// Nothing carries <c>sensors</c>, and the members either side of it still hold their own
+    /// values — which is what separates an exclusion stated in the reader from a gap nobody noticed.
+    /// </summary>
+    /// <returns>The running test.</returns>
     [Fact]
     public async Task GivenARowWithSensors_WhenItIsRead_ThenIndexTwelveReachesNoSnapshotOrVehicleMember()
     {
-        // Given. Index 12 carries a value, which is the case a reader that forgot it shifts on.
+        // Given
         var cache = Cache();
         AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
-            .WithApi(Answering(Row("1", sensors: "[1, 2, 3]")))
+            .WithApi(Answering(OpenSkyPayloads.Row("1", sensors: "[1, 2, 3]")))
             .WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. Nothing carries it, and the members either side of index 12 still hold their own
-        // values — a reader that skipped it by accident rather than by statement would shift them.
+        // Then
         var snapshot = cache.Lookup("a1b2c3").Value;
         Some(snapshot.VerticalRate, -1.3);
         Some(snapshot.GeometricAltitude, 1250.0);
         Some(snapshot.Squawk, "0021");
     }
 
+    /// <summary>
+    /// B-022. A malformed row is data about the provider, not a reason to lose the rows beside it:
+    /// it is excluded and counted, and one bad row does not cost a poll its other three.
+    /// </summary>
+    /// <param name="payload">Four rows, one of them defective.</param>
+    /// <returns>The running test.</returns>
     [Theory]
-    [InlineData("twelve elements")]
-    [InlineData("twenty-five elements")]
-    [InlineData("index 0 is null")]
-    [InlineData("index 8 is a string")]
-    public async Task GivenOneUnreadableRowAmongSeveral_WhenTheSetIsRead_ThenItIsExcludedAndCountedAndTheRestSurvive(string defect)
+    [ClassData(typeof(UnreadableRowCases))]
+    public async Task GivenOneUnreadableRowAmongSeveral_WhenTheSetIsRead_ThenItIsExcludedAndCountedAndTheRestSurvive(
+        OpenSkyPayload payload)
     {
-        // Given. Four rows, one of them defective in one of the ways B-022 names.
+        // Given
         var cache = Cache();
-        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(Answering(FourRowsOneDefective(defect))).WithCache(cache);
+        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(Answering(payload)).WithCache(cache);
 
         // When
         await sut.Fetch(CancellationToken.None);
 
         // Then
-        cache.Items.Should().HaveCount(3, "the readable rows are unaffected by the one beside them");
-        sut.UnreadableRows.Should().Be(1, "an excluded row is counted, not silently dropped");
+        cache.Items.Should().HaveCount(3);
+        sut.UnreadableRows.Should().Be(1);
         cache.Lookup("a1b2c3").HasValue.Should().BeTrue();
         cache.Lookup("d4e5f6").HasValue.Should().BeTrue();
         cache.Lookup("070809").HasValue.Should().BeTrue();
     }
 
+    /// <summary>
+    /// B-023, and the claim the demo's core idea rests on. A cache already holding three aircraft
+    /// takes a second fetch in which one is unchanged, one changed, one gone and one new, and what
+    /// reaches a subscriber is one changeset of exactly three changes. The unchanged aircraft is not
+    /// in it, which is the whole point of a differential write over the whole set.
+    /// </summary>
+    /// <returns>The running test.</returns>
     [Fact]
     public async Task GivenAFetchedSet_WhenItIsApplied_ThenTheCacheTakesOneDifferentialUpdateOverTheWholeSet()
     {
-        // Given. A cache already holding three aircraft, and a second fetch in which one is
-        // unchanged, one changed, one gone and one new.
+        // Given
         var cache = Cache();
         var polls = 0;
         var api = Substitute.For<IOpenSkyApi>();
@@ -266,7 +307,7 @@ public class AircraftSnapshotClientTests
                 Arg.Any<double>(),
                 Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult(Deserialize(++polls == 1 ? Payload(ThreeRows) : SecondPoll)));
+            .Returns(_ => Task.FromResult((++polls == 1 ? OpenSkyPayloads.ThreeRows : OpenSkyPayloads.SecondPoll).Response));
         AircraftSnapshotClient sut = new AircraftSnapshotClientFixture().WithApi(api).WithCache(cache);
         await sut.Fetch(CancellationToken.None);
 
@@ -276,9 +317,8 @@ public class AircraftSnapshotClientTests
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. One changeset carrying exactly three changes, and the unchanged aircraft is not in
-        // it — which is the whole point of a differential write over the whole set.
-        changes.Should().ContainSingle("the whole set is applied as one differential update");
+        // Then
+        changes.Should().ContainSingle();
         var changeset = changes.Single();
         changeset.Should().HaveCount(3);
         changeset.Should().ContainSingle(change => change.Key == "b1c2d3" && change.Reason == ChangeReason.Add);
@@ -287,16 +327,22 @@ public class AircraftSnapshotClientTests
         changeset.Should().NotContain(change => change.Key == "a1b2c3");
     }
 
+    /// <summary>
+    /// B-024. The box and the interval are options input, and the contract takes four loose
+    /// coordinates — which is what keeps a bounding box off it (B-006). Thirty seconds rather than
+    /// the fifteen-second default, so the assertion fails if the client polls on a cadence of its
+    /// own rather than the one it was given.
+    /// </summary>
     [Fact]
     public void GivenABoxAndAnInterval_WhenTheClientIsBuilt_ThenBothArriveAsInputAndNeitherIsOnTheContract()
     {
-        // Given. The box and the interval are options input; the contract takes four loose
-        // coordinates, which is what keeps a bounding box off it (B-006, B-024).
+        // Given
         var scheduler = new TestScheduler();
-        var api = Answering(Payload(ThreeRows));
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var api = Answering(OpenSkyPayloads.ThreeRows);
         AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
             .WithApi(api)
-            .WithProvider(Scheduling(scheduler))
+            .WithProvider(schedulers)
             .WithOptions(Options.Create(new OpenSkyOptions { Box = Houston, PollInterval = TimeSpan.FromSeconds(30) }));
 
         // When
@@ -307,7 +353,7 @@ public class AircraftSnapshotClientTests
 
         // Then
         beforeTheInterval.Should().Be(1, "the first poll is immediate and the second waits out the interval");
-        api.ReceivedCalls().Should().HaveCount(2, "thirty seconds on, the second poll is due");
+        api.ReceivedCalls().Should().HaveCount(2);
         api.Received().GetStates(
             Houston.LatitudeMinimum,
             Houston.LongitudeMinimum,
@@ -317,13 +363,24 @@ public class AircraftSnapshotClientTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>
+    /// B-025. The flag reaches the contract, and a request without it yields snapshots whose
+    /// category is absent rather than defaulted — the two halves of the claim, which only hold
+    /// together because B-018 decides presence by element count.
+    /// </summary>
+    /// <param name="offered">Whether the application offers grouping by category.</param>
+    /// <param name="payload">What the provider answers with when asked that way.</param>
+    /// <param name="category">The category the snapshot carries, or <see langword="null"/>.</param>
+    /// <returns>The running test.</returns>
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task GivenCategoryGroupingIsOffered_WhenThePollIsSent_ThenTheRequestAsksForExtendedRows(bool offered)
+    [ClassData(typeof(CategoryGroupingCases))]
+    public async Task GivenCategoryGroupingIsOffered_WhenThePollIsSent_ThenTheRequestAsksForExtendedRows(
+        bool offered,
+        OpenSkyPayload payload,
+        int? category)
     {
         // Given
-        var api = Answering(Payload(offered ? ThreeRows : SeventeenElementRow));
+        var api = Answering(payload);
         var cache = Cache();
         AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
             .WithApi(api)
@@ -333,8 +390,7 @@ public class AircraftSnapshotClientTests
         // When
         await sut.Fetch(CancellationToken.None);
 
-        // Then. The flag reaches the contract, and a request without it yields snapshots whose
-        // category is absent rather than defaulted.
+        // Then
         await api.Received(1).GetStates(
             Arg.Any<double>(),
             Arg.Any<double>(),
@@ -344,21 +400,27 @@ public class AircraftSnapshotClientTests
             Arg.Any<CancellationToken>());
         var read = cache.Lookup("a1b2c3").Value.Category;
 
-        if (offered)
-        {
-            Some(read, 1);
-        }
-        else
+        if (category is null)
         {
             None(read);
         }
+        else
+        {
+            Some(read, category.Value);
+        }
     }
 
+    /// <summary>
+    /// B-029, second half. One poll times out and the next succeeds: the subscriber receives the
+    /// following poll's changes and nothing ended the stream in between, because a demo that loses
+    /// its collection to one bad response ends on a blank grid.
+    /// </summary>
     [Fact]
     public void GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors()
     {
-        // Given. The first poll times out and the next succeeds.
+        // Given
         var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
         var polls = 0;
         var api = Substitute.For<IOpenSkyApi>();
         api.GetStates(
@@ -371,10 +433,10 @@ public class AircraftSnapshotClientTests
             .Returns(
                 _ => ++polls == 1
                     ? throw new TaskCanceledException("The request timed out.")
-                    : Task.FromResult(Deserialize(Payload(ThreeRows))));
+                    : Task.FromResult(OpenSkyPayloads.ThreeRows.Response));
         AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
             .WithApi(api)
-            .WithProvider(Scheduling(scheduler))
+            .WithProvider(schedulers)
             .WithOptions(Options.Create(new OpenSkyOptions { Box = Houston, PollInterval = TimeSpan.FromSeconds(1) }));
 
         var changes = new List<IChangeSet<AircraftSnapshot, string>>();
@@ -386,8 +448,7 @@ public class AircraftSnapshotClientTests
         using var polling = sut.Poll();
         scheduler.AdvanceBy(TimeSpan.FromSeconds(3).Ticks);
 
-        // Then. The subscriber received the following poll's changes, and nothing ended the stream
-        // in between — a demo that loses its collection to one bad response ends on a blank grid.
+        // Then
         errored.Should().BeNull("a failed poll is not a failed stream");
         completed.Should().BeFalse();
         changes.SelectMany(static changeset => changeset)
@@ -396,17 +457,38 @@ public class AircraftSnapshotClientTests
             .Contain(["a1b2c3", "d4e5f6", "070809"]);
     }
 
+    /// <summary>Asserts an optional value is present, and what it holds.</summary>
+    /// <typeparam name="T">What the option holds.</typeparam>
+    /// <param name="actual">The option read from a snapshot.</param>
+    /// <param name="expected">What it should hold.</param>
+    /// <remarks>
+    /// Asserted through <see cref="object"/> because <c>Option&lt;T&gt;</c> is both an
+    /// <see cref="IEnumerable{T}"/> and an <see cref="IComparable{T}"/>, which makes
+    /// <c>Should()</c> ambiguous on it. The equality is the option's own.
+    /// </remarks>
     private static void Some<T>(Option<T> actual, T expected) =>
         ((object) actual).Should().Be(Option<T>.Some(expected));
 
+    /// <summary>Asserts an optional value is absent.</summary>
+    /// <typeparam name="T">What the option would have held.</typeparam>
+    /// <param name="actual">The option read from a snapshot.</param>
     private static void None<T>(Option<T> actual) => ((object) actual).Should().Be(Option<T>.None);
 
+    /// <summary>Asserts an optional value is not one particular present value.</summary>
+    /// <typeparam name="T">What the option holds.</typeparam>
+    /// <param name="actual">The option read from a snapshot.</param>
+    /// <param name="unwanted">The value a defaulting reader would have produced.</param>
     private static void NotSome<T>(Option<T> actual, T unwanted) =>
         ((object) actual).Should().NotBe(Option<T>.Some(unwanted));
 
+    /// <summary>A cache keyed the way the registration keys it.</summary>
+    /// <returns>The cache a client writes into.</returns>
     private static SourceCache<AircraftSnapshot, string> Cache() => new(static snapshot => snapshot.Icao24);
 
-    private static IOpenSkyApi Answering(string payload)
+    /// <summary>A contract answering every poll with one payload.</summary>
+    /// <param name="payload">What the provider sent.</param>
+    /// <returns>The substituted contract.</returns>
+    private static IOpenSkyApi Answering(OpenSkyPayload payload)
     {
         var api = Substitute.For<IOpenSkyApi>();
 
@@ -417,132 +499,10 @@ public class AircraftSnapshotClientTests
                 Arg.Any<double>(),
                 Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult(Deserialize(payload)));
+            .Returns(_ => Task.FromResult(payload.Response));
 
         return api;
     }
-
-    private static ISchedulerProvider Scheduling(TestScheduler scheduler)
-    {
-        var schedulers = Substitute.For<ISchedulerProvider>();
-
-        schedulers.BackgroundThread.Returns(scheduler);
-        schedulers.UserInterfaceThread.Returns(scheduler);
-
-        return schedulers;
-    }
-
-    private static OpenSkyStatesResponse Deserialize(string payload) =>
-        JsonSerializer.Deserialize<OpenSkyStatesResponse>(payload)
-        ?? throw new InvalidOperationException("The fixture did not deserialize.");
-
-    private static string Payload(string fixture) =>
-        File.ReadAllText(Path.Combine("Integrations", "OpenSky", "Fixtures", fixture));
-
-    /// <summary>The three readable rows of the committed fixture, plus one defective row.</summary>
-    /// <param name="defect">Which of B-022's defects the fourth row carries.</param>
-    /// <returns>A response payload of four rows.</returns>
-    private static string FourRowsOneDefective(string defect)
-    {
-        var readable = JsonDocument.Parse(Payload(ThreeRows))
-            .RootElement.GetProperty("states")
-            .GetRawText()
-            .Trim()
-            .Trim('[', ']');
-
-        var defective = defect switch
-        {
-            "twelve elements" => "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]",
-            "twenty-five elements" => "[" + string.Join(", ", Enumerable.Repeat("0", 25)) + "]",
-            "index 0 is null" => Elements("null", "false"),
-            "index 8 is a string" => Elements("\"ff0011\"", "\"yes\""),
-            _ => throw new ArgumentOutOfRangeException(nameof(defect), defect, "No such defect."),
-        };
-
-        return $"{{ \"time\": 1791124330, \"states\": [{readable}, {defective}] }}";
-    }
-
-    /// <summary>One eighteen-element row, varying only what a defect needs it to.</summary>
-    /// <param name="icao24">Index 0's raw JSON.</param>
-    /// <param name="onGround">Index 8's raw JSON.</param>
-    /// <returns>The row, as raw JSON.</returns>
-    private static string Elements(string icao24, string onGround) =>
-        "[" + string.Join(
-            ", ",
-            icao24,
-            "\"TRN0009 \"",
-            "\"Testland\"",
-            "null",
-            "1791124320",
-            "null",
-            "null",
-            "null",
-            onGround,
-            "null",
-            "null",
-            "null",
-            "null",
-            "null",
-            "null",
-            "false",
-            "0",
-            "1") + "]";
-
-    /// <summary>One row, with the elements a test varies spelled as the wire spells them.</summary>
-    /// <param name="category">Index 17's raw JSON, or <see langword="null"/> for a 17-element row.</param>
-    /// <param name="callsign">Index 1's raw JSON.</param>
-    /// <param name="squawk">Index 14's raw JSON.</param>
-    /// <param name="sensors">Index 12's raw JSON.</param>
-    /// <returns>A response payload carrying that one row.</returns>
-    private static string Row(
-        string? category,
-        string callsign = "\"TRN0001 \"",
-        string squawk = "\"0021\"",
-        string sensors = "null")
-    {
-        var elements = string.Join(
-            ", ",
-            "\"a1b2c3\"",
-            callsign,
-            "\"Testland\"",
-            "1791124315",
-            "1791124320",
-            "-95.3698",
-            "29.7604",
-            "1234.5",
-            "false",
-            "128.6",
-            "91.2",
-            "-1.3",
-            sensors,
-            "1250.0",
-            squawk,
-            "false",
-            "0");
-
-        return category is null
-            ? $"{{ \"time\": 1791124330, \"states\": [[{elements}]] }}"
-            : $"{{ \"time\": 1791124330, \"states\": [[{elements}, {category}]] }}";
-    }
-
-    private const string ThreeRows = "states-three-rows.json";
-
-    private const string SeventeenElementRow = "states-seventeen-element-row.json";
-
-    /// <summary>
-    /// The second poll: "a1b2c3" unchanged, "d4e5f6" at a new barometric altitude, "070809" gone,
-    /// "b1c2d3" newly present.
-    /// </summary>
-    private const string SecondPoll = """
-        {
-          "time": 1791124345,
-          "states": [
-            ["a1b2c3", "TRN0001 ", "Testland", 1791124315, 1791124320, -95.3698, 29.7604, 1234.5, false, 128.6, 91.2, -1.3, null, 1250.0, "0021", false, 0, 1],
-            ["d4e5f6", null, "Testland", null, 1791124310, null, null, 10668.0, true, null, null, null, null, null, null, false, 0, 2],
-            ["b1c2d3", "TRN0004 ", "Testland", 1791124340, 1791124344, -95.2, 29.8, 600.0, false, 90.0, 180.0, 1.0, null, 610.0, "1200", false, 0, 1]
-          ]
-        }
-        """;
 
     /// <summary>The box decisions/0001 chose, so a test asserting the request asserts a real box.</summary>
     private static readonly BoundingBox Houston = new()
@@ -563,6 +523,7 @@ internal partial class AircraftSnapshotClientFixture
         WithCache(new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
         WithWriter(new ObservedClock());
         WithLogger(new RecordingLogger<AircraftSnapshotClient>());
+        WithProvider(DefaultSchedulers);
         WithOptions(
             Options.Create(
                 new OpenSkyOptions
@@ -576,4 +537,7 @@ internal partial class AircraftSnapshotClientFixture
                     },
                 }));
     }
+
+    /// <summary>The schedulers a test that never advances time still has to be given.</summary>
+    private static SchedulerProvider DefaultSchedulers => new SchedulerProviderFixture();
 }

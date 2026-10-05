@@ -175,6 +175,19 @@ delivered: |
   a `catch` filter that excluded every `OperationCanceledException` also excluded the
   timeout B-029 is named for, and `TRN0016`'s wrapper clause reported the client for
   holding the cache B-015 requires it to take.
+  - "2026-10-05 — the person, in review of pull request #18 — fifteen comments,
+    twelve of them a test convention this repository held nowhere. Addressed in
+    full and recorded as `lessons/0003`, with the rules themselves added to
+    `transponder-conventions` § testing so the next item reads them before
+    writing rather than after. Two were design rather than style and changed
+    production code: `SchedulerProvider` now takes both schedulers by
+    constructor, so a test builds the real type through a fixture instead of
+    substituting `ISchedulerProvider`; and `AddOpenSky` now takes
+    `IConfiguration` and binds both options types itself, so the startup test
+    exercises the application's own composition rather than a second graph
+    assembled beside it. `OpenSkyOptions.BaseUrl` arrives with that, defaulted,
+    because the URL is the provider's. No claim moved and no § 9 row changed —
+    every test § 9 names still exists under that name."
 
 out_of_scope:
   - "The domain projection — B-034 puts the first domain object in 0005."

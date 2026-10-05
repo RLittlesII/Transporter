@@ -91,6 +91,33 @@ internal sealed class AircraftSnapshotClient
     /// </summary>
     /// <param name="cancellationToken">Stops the poll.</param>
     /// <returns>The interval normally; the delay the provider asked for after a throttle.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// No bounding box is configured. B-050 gives the box no default, so a poll cannot invent one.
+    /// Validation is supposed to have stopped the host before this (B-029); reaching it means the
+    /// options were supplied without going through <c>AddOpenSky</c>.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// Two exceptions are caught here, and each is caught because B-028 and B-029 say what the next
+    /// poll does rather than letting the stream end.
+    /// </para>
+    /// <para>
+    /// <see cref="OpenSkyThrottledException"/> — the provider answered with a throttle instead of a
+    /// payload. The transport read <c>X-Rate-Limit-Retry-After-Seconds</c> off the response before
+    /// throwing (ADR-0008), so the wait is exactly the seconds OpenSky asked for and never a backoff
+    /// of this code's own. Nothing is written to the cache for that poll, and no exception reaches a
+    /// subscriber of <see cref="Snapshots"/> (B-028).
+    /// </para>
+    /// <para>
+    /// Anything else — a timeout, a <c>5xx</c>, an unreadable body — costs this poll and nothing
+    /// else, because a demo that loses its collection to one bad response ends on a blank grid
+    /// (B-029). The filter reads <paramref name="cancellationToken"/> rather than the exception's
+    /// type: a timed-out request surfaces as <see cref="System.Threading.Tasks.TaskCanceledException"/>,
+    /// which <em>is</em> an <see cref="OperationCanceledException"/>, so excluding that type excluded
+    /// the one failure the claim is named for. What must still end the loop is this client's own
+    /// cancellation — the subscription being disposed — and that is the token, not the type.
+    /// </para>
+    /// </remarks>
     internal async Task<TimeSpan> Fetch(CancellationToken cancellationToken)
     {
         var options = _options.Value;
@@ -116,8 +143,7 @@ internal sealed class AircraftSnapshotClient
         }
         catch (OpenSkyThrottledException throttled)
         {
-            // B-028: exactly the seconds the provider asked for, and no backoff of our own. Nothing
-            // was written to the cache for this poll, and no exception reaches a subscriber.
+            // B-028.
             _logger.LogDebug(
                 "OpenSky throttled the poll and asked for {RetryAfterSeconds} seconds; the next poll waits exactly that long.",
                 throttled.RetryAfter.TotalSeconds);
@@ -126,15 +152,7 @@ internal sealed class AircraftSnapshotClient
         }
         catch (Exception failure) when (failure is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
-            // B-029: a timeout, a 5xx or an unreadable body costs this poll and nothing else. The
-            // stream stays open, because a demo that loses its collection to one bad response is a
-            // demo that ends on a blank grid.
-            //
-            // The filter reads the token rather than the exception's type on purpose. A timed-out
-            // request surfaces as `TaskCanceledException`, which *is* an
-            // `OperationCanceledException`, so excluding that type excluded the one failure this
-            // claim is named for. What must still end the loop is *our* cancellation — the
-            // subscription being disposed — and that is the token, not the type.
+            // B-029.
             _logger.LogWarning(failure, "An OpenSky poll failed; the next one is still due.");
 
             return options.PollInterval;
@@ -147,9 +165,26 @@ internal sealed class AircraftSnapshotClient
     /// <param name="row">The row to read.</param>
     /// <returns>The snapshot, or <see langword="null"/> when the row cannot be read.</returns>
     /// <remarks>
+    /// <para>
     /// The index order is README.md § "Response shape" and nothing else (B-016). Element count is
     /// read first, because two of B-022's three ways to be unreadable are answerable before any
     /// member is parsed.
+    /// </para>
+    /// <para>
+    /// Index 12 is <c>sensors</c>, and the discard that reads past it is deliberate: B-021 keeps it
+    /// off the snapshot and off every domain type, and requires the exclusion to be a statement
+    /// rather than a gap nobody notices. It is also the one element whose value is a collection,
+    /// which is part of why the snapshot can hold value equality.
+    /// </para>
+    /// <para>
+    /// Two exceptions mean "this row is unreadable" rather than "this poll failed".
+    /// <see cref="FormatException"/> is thrown by the reads above for a row with no
+    /// <c>icao24</c>, a null where the index table declares no nullability, or a flag element that
+    /// is neither <c>true</c> nor <c>false</c>. <see cref="InvalidOperationException"/> is what
+    /// <see cref="JsonElement"/> itself throws when an element is of the wrong kind for the
+    /// accessor — a row whose index 8 is the string <c>"yes"</c>, one of B-022's three defects.
+    /// Either way the row is excluded and counted, and the rows beside it survive.
+    /// </para>
     /// </remarks>
     private static AircraftSnapshot? Read(OpenSkyStateRow row)
     {
@@ -160,10 +195,7 @@ internal sealed class AircraftSnapshotClient
 
         try
         {
-            // Index 12 is `sensors`, and it is read past deliberately: B-021 keeps it off the
-            // snapshot and off every domain type, and requires the exclusion to be a statement
-            // rather than a gap nobody notices. It is also the one element whose value is a
-            // collection, which is part of why the snapshot can hold value equality.
+            // B-021: index 12 is read past, and said so.
             _ = row[12];
 
             return new AircraftSnapshot
@@ -193,8 +225,7 @@ internal sealed class AircraftSnapshotClient
         }
         catch (InvalidOperationException)
         {
-            // What JsonElement throws when an element is of the wrong kind for the accessor — a
-            // row whose index 8 is the string "yes" is one of B-022's three defects.
+            // B-022.
             return null;
         }
     }

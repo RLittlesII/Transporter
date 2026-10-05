@@ -53,10 +53,7 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
             return await Read(first);
         }
 
-        // B-026's second half: a token can die before it expires, so a 401 refreshes and retries
-        // this request once — and once only. The retry does not allow a 401, so a second rejection
-        // is Flurl's exception rather than another refresh: retrying again would spend a credit to
-        // learn what the first retry already said.
+        // B-026, second half.
         _tokens.Invalidate();
 
         using var retried = await Send(lamin, lomin, lamax, lomax, extended, false, cancellationToken);
@@ -69,6 +66,22 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
             ? TimeSpan.FromSeconds(seconds)
             : TimeSpan.Zero;
 
+    /// <summary>
+    /// Sends one request, carrying the current token.
+    /// </summary>
+    /// <param name="lamin">The box's lower latitude bound.</param>
+    /// <param name="lomin">The box's lower longitude bound.</param>
+    /// <param name="lamax">The box's upper latitude bound.</param>
+    /// <param name="lomax">The box's upper longitude bound.</param>
+    /// <param name="extended">Whether to ask for the category element.</param>
+    /// <param name="allowUnauthorized">
+    /// Whether a <c>401</c> comes back as a response to inspect rather than as an exception. True
+    /// for the first attempt, which may refresh and retry; false for that retry, so a second
+    /// rejection is Flurl's exception instead of another refresh — retrying again would spend a
+    /// credit to learn what the first retry already said (B-026).
+    /// </param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>The response, whether or not it carries a payload.</returns>
     private async Task<IFlurlResponse> Send(
         double lamin,
         double lomin,
@@ -92,19 +105,31 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
         return await request.GetAsync(cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Reads a response the provider has answered with, logging what is left of the budget.
+    /// </summary>
+    /// <param name="response">The response to read.</param>
+    /// <returns>The payload, when there is one.</returns>
+    /// <exception cref="OpenSkyThrottledException">
+    /// The provider answered <c>429</c>. It is inspected here, where the headers still are, so the
+    /// seconds <c>X-Rate-Limit-Retry-After-Seconds</c> asked for travel on the exception rather
+    /// than being lost with the response (B-028, ADR-0008). Every other non-2xx status is already
+    /// an exception, because nothing allowed it.
+    /// </exception>
+    /// <remarks>
+    /// <c>X-Rate-Limit-Remaining</c> is written at debug on every poll (B-027): the header is the
+    /// only place a burn rate is visible before it bites, and any call style that keeps the body
+    /// and throws the response away loses it (§ 4 row 9).
+    /// </remarks>
     private async Task<OpenSkyStatesResponse> Read(IFlurlResponse response)
     {
-        // B-027: what is left of the budget, at debug, on every poll. The header is the only place
-        // a burn rate is visible before it bites, and it is lost by any call style that keeps the
-        // body and throws the response away (§ 4 row 9).
+        // B-027.
         if (response.Headers.TryGetFirst(RemainingHeader, out var remaining))
         {
             _logger.LogDebug("OpenSky reports {RemainingCredits} credits remaining.", remaining);
         }
 
-        // B-028: the 429 is read here, where the headers are, so the seconds the provider asked for
-        // travel on the exception instead of being lost with the response. Every other non-2xx
-        // status is already an exception, because nothing allowed it (ADR-0008).
+        // B-028.
         return response.StatusCode == (int) HttpStatusCode.TooManyRequests
             ? throw new OpenSkyThrottledException(RetryAfter(response))
             : await response.GetJsonAsync<OpenSkyStatesResponse>();

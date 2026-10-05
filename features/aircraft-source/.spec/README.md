@@ -487,8 +487,22 @@ the work is written rather than inherited from whatever one `IScheduler` the
 container happened to hold. That package declares the interface and ships no
 implementation, so `Transponder.Scheduling.SchedulerProvider` is this
 repository's, and `AddOpenSky` registers it only when the host has not
-registered its own. A test substitutes the provider and gives both members one
-`TestScheduler`, which keeps § 4 row 14's one-object discipline.
+registered its own. **It takes both schedulers by constructor** rather than
+reading `CurrentThreadScheduler` and `TaskPoolScheduler` inside its members: the
+composition root chooses them once, and a test builds the real type through its
+fixture with one `TestScheduler` in both positions rather than substituting the
+interface — which keeps § 4 row 14's one-object discipline and leaves no
+arrangement to get wrong.
+
+**The registration takes configuration, and is the only composition there is.**
+`AddOpenSky(IConfiguration)` binds `OpenSkyOptions` and `OpenSkyCredentials`
+from the `OpenSky` section, validates both on start, and wires the chain. An
+application and a test call that same method and differ only in what
+configuration they supply, so there is no second graph to keep in step — which is
+what makes B-029's startup failure provable against the thing that actually
+starts. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
+box: the URL is the provider's and nobody here chooses it, while B-050 leaves the
+box with no default on purpose.
 
 Options and credentials are **two types, not one**, because B-027 bans a
 credential reaching a log line and a single options object invites being logged
@@ -555,7 +569,7 @@ seam. The clock itself is registered alongside the chain and injected into
 | DI seams           | Pass          | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and a substituted `IOpenSkyApi` is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. The double was a hand-written fake until B-010 was withdrawn (§ 4 row 18); it is NSubstitute's now, like every other double here.                                                       | —                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Behavior isolation | Pass          | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043).                                                                                                                                                                                                                                                                                                                       | —                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Coverage potential | **Qualified** | Thirty-two claims are about a computed value and are ordinary tests. Eighteen are about structure — what may _name_ what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it _can_ reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the eighteen as build-time diagnostics ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Seven of them briefly had tests over a declaration, a container or a registration's lifetime and no longer do ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
-| Fixtures           | Pass          | Every value is synthetic and committed beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array and the 17-versus-18 element cases are two files rather than two code paths.                                                                                                                                                                                                                                                                                                                                                   | —                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Fixtures           | Pass          | Every value is synthetic and lives beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array held as a `static readonly` field — not a committed `.json` file, because a unit test that reads from disk depends on the file system and on a build step that puts the file there — and the 17-versus-18 element cases are two payloads rather than two code paths. Parsing one is `IJson`'s, once, rather than a helper per test class.                                                                                          | —                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Determinism        | Pass          | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it.                                                                                                                                                                                                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 **Two mechanisms, and which proves what**
@@ -741,13 +755,17 @@ they do.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
 
-Two Feature-scoped lessons.
+Three Feature-scoped lessons.
 [Lessons 0001](lessons/0001-a-claim-needs-a-subject-that-can-satisfy-it.md) is
 § 11 row 2: B-026 – B-028 named the snapshot client for behaviour only the
 holder of the HTTP response can perform, so no component could satisfy them as
 written. The design was right and the subject was a placeholder nobody went back
 to replace — and the signals were a diagram disagreeing with a claim, a scenario
 narrower than its sentence, and a § 9 row naming the transport's test class.
+[Lessons 0003](lessons/0003-a-review-is-a-convention-nobody-wrote-down.md) is
+`0004`'s review: twelve of its fifteen comments were each a test convention this
+repository had an opinion about and had recorded nowhere, so the tests were
+written to a reasonable guess and every later item would have guessed again.
 [Lessons 0002](lessons/0002-an-inherited-rule-is-not-a-decision.md) is B-010:
 a rule arrived from a pattern skill, was recorded as a conflict resolved rather
 than as a decision taken, and then grew a claim, an analyzer rule and a test
