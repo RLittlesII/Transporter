@@ -12,6 +12,14 @@ namespace Transponder.UnitTests;
 /// <see cref="JsonSerializerOptions.Default"/> deliberately: a <c>[JsonConverter]</c> attribute on
 /// the type being read is honoured by those, which is how the provider's positional row is read
 /// here exactly as the transport reads it.
+/// <para>
+/// It sits in the test project because nothing in production parses JSON itself — Flurl owns the
+/// one boundary that exists. When a second one appears that is this repository's rather than a
+/// library's, the replay recorder being the known candidate, this moves to that layer and gains a
+/// concrete marker type to register as <see cref="IJson"/>, since an interface whose members are
+/// all default implementations has nothing to register. Recorded as chore <c>0029</c> rather than
+/// built ahead of a caller.
+/// </para>
 /// </remarks>
 public interface IJson
 {
