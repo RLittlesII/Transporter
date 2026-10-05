@@ -562,9 +562,12 @@ names a missing member rather than a broken rule. § 9 names no such test.
 
 **B-009 and B-049 take neither**, for the reason ADR-0006 § Decision gives:
 each constrains code this repository does not contain, so there is nothing to
-load and nothing to analyze. § 9 marks them Review. They are the honest form of
-"a row naming no test", not an oversight — and the only two rows whose Status
-will not move when the tests and the analyzer arrive.
+load and nothing to analyze. § 9 marks them Review, which is the honest form of
+"a row naming no test" and not an oversight. It is not the same as a row that
+can never move: a review is performed by a reader, recorded with what was looked
+at, and re-done by the change that alters what it looked at. B-009's was done on
+`0002`. B-049's waits on `0005`, which declares the `ITrackerSource` its third
+clause names.
 
 **Scenarios**
 
@@ -605,12 +608,15 @@ row 17.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and thirty-two of the fifty-two rows read `Missing`.**
-Twenty are `Verified`, and they arrived two different ways. Four came from
+**This is the gate, and thirty-one of the fifty-two rows read `Missing`.**
+Twenty-one are `Verified`, and they arrived three different ways. Four came from
 items: `0002` built the contract, its envelope, the positional row's converter,
 the HTTP transport and the hand-written fake, and `0003` the snapshot and its
 cache — the tests this section names against B-001 and B-011 – B-013 pass in a
-run. **Sixteen came from the mechanism rather than from an item**: the analyzer
+run. **One came from a review rather than from a run**: B-009 constrains what a
+second contract interface would have to be, so there is no value to compute and
+no declaration to analyze, and the row records what was looked at and when it is
+looked at again. **Sixteen came from the mechanism rather than from an item**: the analyzer
 [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
 decides on is now complete, and all eighteen of its rules report — the reference
 rules (B-004, B-032, B-044 – B-047), the declaration rules (B-002,
@@ -621,10 +627,12 @@ section named for it.
 Every other row names what will prove its claim and records that it does not. A
 row's Status becomes `Verified` when **every** mechanism it names passes in a
 run, which is why a row naming a passing test and an unbuilt half still reads
-`Missing`. **Two rows are now that shape and nothing else**: B-037's analyzer
+`Missing`. **Three rows are now that shape and nothing else**: B-037's analyzer
 half is built and its mapper half waits on `0005`; B-041's analyzer half is
 built and the half that says `IFleetTracker` wraps `ITrackerSource` has no test
-yet. The remaining thirty rows wait on the items that compute their values.
+yet; and B-049's two reviewable clauses hold, while the clause naming
+`ITrackerSource` has no subject until `0005` declares it. The remaining
+twenty-eight rows wait on the items that compute their values.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Ten claims carry two
@@ -636,9 +644,14 @@ mechanism is [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-b
 specified and built as
 [`features/boundary-analyzer`](../../boundary-analyzer/.spec/README.md). All
 eighteen of its rules exist and report, so no row here is waiting on one.
-**Review** appears twice, for the two claims that constrain code the repository
-does not contain; § 8 says why, and those two rows are the honest form of "a row
-naming no test", not an omission.
+A **review** proves a claim that constrains code the repository does not yet
+contain, where there is no value to compute and no declaration to analyze; § 8
+says why those two claims take neither of the other mechanisms. It appears
+twice. A review is a mechanism and it can be performed: **Review** in a row
+reading `Verified` records what was looked at, on which item, and what change
+re-does it — the form `boundary-analyzer` § 9 uses for its four. A review that
+cannot be performed yet leaves the row `Missing` and names what is absent, which
+is B-049 and the clause waiting on `0005`.
 
 | Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                                                                                      | Status   |
 | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -650,7 +663,7 @@ naming no test", not an omission.
 | B-006    | `@B-006` | analyzer — `BoundaryAnalyzerTests.GivenAContractNamingAnObservableCacheBoxIntervalOrCredential_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                             | Verified |
 | B-007    | `@B-007` | analyzer — `BoundaryAnalyzerTests.GivenASecondImplementationForOneTransportOrAPublicEndpointMethod_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                         | Verified |
 | B-008    | `@B-008` | analyzer — `BoundaryAnalyzerTests.GivenAnImplementationTypeRegisteredOrResolvedOrASecondAliasForTheContract_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                | Verified |
-| B-009    | `@B-009` | **Review** — the precondition cannot be arranged: OpenSky has published no version. An obligation on the change that adds a versioned interface.                                                                                                                                                                                                                                          | Missing  |
+| B-009    | `@B-009` | **Review**, done on `0002` — one contract interface exists, `IOpenSkyApi`, for the one version OpenSky publishes; its declared surface has not changed since `OpenSkyHttpApi` implemented it in #1. The file was touched once after, by #12, which added two `using` directives and no member. Re-done by the change that adds a version.                                                 | Verified |
 | B-010    | `@B-010` | `OpenSkyApiFakeTests.GivenAFakeWithNoResponseConfigured_WhenTheEndpointIsCalled_ThenItThrowsNamingTheUnsetResponse`; the mocking-framework half is analyzer — `BoundaryAnalyzerTests.GivenTheContractsDoubleProducedByAMockingFramework_WhenAnalyzed_ThenItIsReported`                                                                                                                    | Verified |
 | B-011    | `@B-011` | `AircraftSnapshotTests.GivenTwoSnapshotsReportingIdenticalValues_WhenCompared_ThenTheyAreEqual`                                                                                                                                                                                                                                                                                           | Verified |
 | B-012    | `@B-012` | `AircraftSnapshotTests.GivenASnapshot_WhenItsKeyIsRead_ThenItIsTheNonOptionalIcao24`                                                                                                                                                                                                                                                                                                      | Verified |
@@ -690,7 +703,7 @@ naming no test", not an omission.
 | B-046    | `@B-046` | analyzer — `BoundaryAnalyzerTests.GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                       | Verified |
 | B-047    | `@B-047` | analyzer — `BoundaryAnalyzerTests.GivenAConsumerOfTheFleetTrackerNamingAnythingUpstream_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                    | Verified |
 | B-048    | `@B-048` | analyzer — `BoundaryAnalyzerTests.GivenAContractCarryingAVersionSuffixOrAMarkerAboveIt_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                     | Verified |
-| B-049    | `@B-049` | **Review** — no push provider exists, so there is nothing to analyze and no type to load. An obligation on the Feature that adds the second provider.                                                                                                                                                                                                                                     | Missing  |
+| B-049    | `@B-049` | **Review** — two clauses hold as the repository stands: one contract layer, over the one request/response provider, and no contract invented for a socket because no push provider exists. The third cannot be reviewed yet — `ITrackerSource` is `0005`'s and no strategy exists to share it — so this row is `0005`'s to close, and the Feature that adds a push provider re-does it.   | Missing  |
 | B-050    | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault`                                                                                                                                                                                                                                                                        | Missing  |
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                     | Missing  |
 | B-052    | `@B-052` | `TransponderContainerTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                       | Missing  |
@@ -729,7 +742,19 @@ last of them. No claim is added, altered or withdrawn and no § 9 status moves,
 so § 12 keeps its 🟢 rows: what is agreed here did not change, and two
 statements about it stopped being false.
 
-Five repository-wide lessons also bear on this document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
+**Delta, 2026-10-05 — B-009's review is performed, B-049 goes to `0005`, and
+`0002` closes.** Trigger: `0002` still read `blocked` after B-003 moved, on two
+rows § 8 had described as rows whose status "will not move". That description
+was the defect. A review is a mechanism, and `boundary-analyzer` § 9 performs
+four of them; these two had never been attempted. B-009's could be done and is
+recorded in its row — one contract interface, for the one version OpenSky
+publishes, declared surface unchanged since `OpenSkyHttpApi` implemented it.
+B-049's could not: its third clause names an `ITrackerSource` that `0005`
+declares, so the row is `0005`'s. § 11 row 5 asked which of two bad options to
+take and the answer was neither; no row is waived and no status was added. One
+row moves to `Verified` and one changes items, so §§ 8, 9 and Tasks all say so.
+
+Six repository-wide lessons also bear on this document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
 is why § 3 keeps no build state that § 9 owns, and why a § 9 row reads
 `Missing` until something proves it rather than inheriting the template's
 example `Verified`: a gate reporting a pass that nothing verified is the one
@@ -748,24 +773,41 @@ why the shape it argued first is named there rather than quietly replaced.
 [Lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)
 is why three of § 9's rows name the analyzer rather than an xUnit test, and
 why a row naming two mechanisms reads `Missing` until both of them pass.
+[Lesson 0011](../../../.spec/lessons/0011-a-review-nobody-performed-is-not-a-review-nobody-can-perform.md)
+is why § 8 no longer calls B-009 and B-049 rows whose status cannot move, and
+why a `Review` row says what was looked at and what re-does it: both reviews had
+been described as impossible and neither had been attempted.
 
 ## 11. Open Questions
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-Two open, of five asked. The first two were opened by § 7, the third by § 8,
+One open, of five asked. The first two were opened by § 7, the third by § 8,
 the fourth by review of pull request #1, and the fifth by `0002` running out of
 ways to reach `done`; writing a section surfaces a question, reading the code it
 produced surfaces another, and so does an item whose last two rows name no test
-anything can write. Questions 1, 2 and 3 have been
+anything can write. Questions 1, 2, 3 and 5 have been
 answered and moved to the paragraphs below. Their numbers are not reused and the
 others keep theirs, so a reference written while one was open still points at
 the question it meant.
 
-| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Owner         | Target date                                    |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------- |
-| 4   | Should B-010 still forbid a mocking framework for the contract's double? The claim says the double **SHALL** be hand-written and **SHALL NOT** be produced by one, and `0002` built it that way — but the repository has since adopted `Rocket.Surgery.Extensions.Testing.AutoFixtures`, and review of pull request #1 accepted the hand-written fake "for now" while saying the double should be built with it. The two halves of the claim can move independently: a generated fixture that _builds_ a hand-written fake already satisfies both, which is what `0002` ships, so what is actually in question is whether a substitute may stand in at this seam at all. Weigh it against the hazard § Scoring recorded — a double that returns `default` on an unset call makes every test above it pass for the wrong reason. Blocks nothing; `0004` and later are the items that would feel it.                                                                                                                                                                                                                                                                                                                                            | `spec-author` | Before `0004` writes a test above the contract |
-| 5   | What terminal state do B-009 and B-049 permit `0002`? Both rows read `Missing` with **Review** in Test, and neither precondition can be arranged: OpenSky has published no version, so nothing can add the second contract interface B-009 governs, and no push provider exists — § 4 row 4 holds it as a forward reference with no specification — so B-049's ban on inventing a contract has nothing to be checked against. They are the last two rows holding `0002`, whose other ten claims are `Verified`. The move that answered B-003 cannot answer these: it gave a claim to the item that builds its subject, and neither of these has an item to be given to. [The template](../../../.spec/templates/feature.md) § 9 admits two statuses, `Verified` and `Missing`, so the choice is between a third one for an obligation whose precondition cannot exist — a repository-wide change, read by the tests that parse these tables — and accepting `blocked` as this item's terminal state, which is the never-closing gate [lesson 0007](../../../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md) names. **Blocks `0002` reaching `done`** and nothing else; every other item in this Feature is unaffected. | `the person`  | Before `0002` closes                           |
+| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Owner         | Target date                                    |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------- |
+| 4   | Should B-010 still forbid a mocking framework for the contract's double? The claim says the double **SHALL** be hand-written and **SHALL NOT** be produced by one, and `0002` built it that way — but the repository has since adopted `Rocket.Surgery.Extensions.Testing.AutoFixtures`, and review of pull request #1 accepted the hand-written fake "for now" while saying the double should be built with it. The two halves of the claim can move independently: a generated fixture that _builds_ a hand-written fake already satisfies both, which is what `0002` ships, so what is actually in question is whether a substitute may stand in at this seam at all. Weigh it against the hazard § Scoring recorded — a double that returns `default` on an unset call makes every test above it pass for the wrong reason. Blocks nothing; `0004` and later are the items that would feel it. | `spec-author` | Before `0004` writes a test above the contract |
+
+**Row 5 — answered: neither row needed a new status, because one of the two
+reviews could be performed and the other belongs to `0005`.** The question
+offered a third § 9 status or `blocked` as `0002`'s terminal state, and the
+answer was that both options accepted a false premise. A review is a mechanism
+like any other: `boundary-analyzer` § 9 performs four and records in each row
+what was looked at, on which item, and what change re-does it. B-009's review
+was performable and is done on `0002` — one contract interface, for the one
+version OpenSky publishes, its declared surface unchanged since
+`OpenSkyHttpApi` implemented it. B-049's is not: two of its three clauses hold
+as the repository stands, and the third names an `ITrackerSource` that `0005`
+declares, so the row is `0005`'s the way B-003's was `0004`'s. `0002` reaches
+`done` with every claim it still carries `Verified`, and no row was waived to
+get there. Its number is not reused and row 4 keeps its own.
 
 **Row 2 — answered: B-026 and B-027 name the HTTP transport, and B-028 names
 both it and the client.** The `429` is inspected where the response is held and
@@ -840,10 +882,10 @@ neither here nor in this Feature's `adr/`.
 | Item                                                     | Claims                                          |
 | -------------------------------------------------------- | ----------------------------------------------- |
 | [`0001`](../.issue/0001-aircraft-source.yml)             | all 52 — the parent; its children hold the work |
-| [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001, B-002, B-004 – B-010, B-048, B-049       |
+| [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001, B-002, B-004 – B-010, B-048              |
 | [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml) | B-011 – B-014, B-030 – B-032                    |
 | [`0004`](../.issue/0004-aircraft-snapshot-client.yml)    | B-003, B-015 – B-029, B-045, B-050              |
-| [`0005`](../.issue/0005-aircraft-tracker-source.yml)     | B-033 – B-037, B-046                            |
+| [`0005`](../.issue/0005-aircraft-tracker-source.yml)     | B-033 – B-037, B-046, B-049                     |
 | [`0006`](../.issue/0006-source-swap-decorator.yml)       | B-038 – B-040                                   |
 | [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-041 – B-044, B-047, B-051, B-052              |
 
