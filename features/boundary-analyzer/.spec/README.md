@@ -346,7 +346,7 @@ describes.
 | B-007    | `@B-007` | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreCompared_ThenNoneIsDuplicatedAndNoRetiredIdIsReused`                                                                                          | Verified |
 | B-008    | `@B-008` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheEighteenAndNothingMore`                                                                                        | Verified |
 | B-009    | `@B-009` | `BoundaryAnalyzerTests.GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported`                                                                                                                | Verified |
-| B-010    | `@B-010` | `BoundaryAnalyzerTests.GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration`                                                                                                                | Missing  |
+| B-010    | `@B-010` | `BoundaryAnalyzerTests.GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration`                                                                                                                | Verified |
 | B-011    | `@B-011` | `BoundaryAnalyzerTests.GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall`                                                                                                                   | Missing  |
 | B-012    | `@B-012` | `BoundaryAnalyzerTests.GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall`                                                                                                        | Missing  |
 | B-013    | `@B-013` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenEachClaimIsClassified_ThenNoneIsAClaimAboutAComputedValue`                                                                                                     | Verified |
@@ -356,18 +356,19 @@ describes.
 | B-017    | `@B-017` | **Review**, done on `0021` — a seeded reference to the row from `DemoViewModel` failed `./build.sh` with `error TRN0001` at that line and column, and the seed was reverted.                                             | Verified |
 | B-018    | `@B-018` | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoClaimInTheMappingTable_WhenTheDescriptorsAreRead_ThenItIsReportedAsUnclaimed`                                                                                     | Verified |
 | B-019    | `@B-019` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenARowIsRead_ThenItNamesASpecificationAndClaimAndRestatesNeitherTextNorTest`                                                                                     | Verified |
-| B-020    | `@B-020` | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoCodeFix_WhenTheMappingTableIsRead_ThenItRecordsWhyNoneIsPossible`                                                                                                 | Missing  |
+| B-020    | `@B-020` | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoCodeFix_WhenTheMappingTableIsRead_ThenItRecordsWhyNoneIsPossible`                                                                                                 | Verified |
 
-Fifteen rows `Verified`, five `Missing` — **and the five are the gate**. What is
-proven is the analyzer's surface — the ids, the messages, the severities, the
+Seventeen rows `Verified`, three `Missing` — **and the three are the gate**. What
+is proven is the analyzer's surface — the ids, the messages, the severities, the
 release record, the mapping against this document's own § 7 table, the
 exclusion of generated code, and a diagnostic that lands on the node and names
 the symbol — and B-009: a reference named only inside a method body is
-reported, which is the claim ADR-0006 rejected reflection over. What is not is
-the other three rule families, B-010 – B-012 on `0023` and `0024`; B-016, which
-cannot be `Verified` until the eighteen test names exist; and B-020, which
-arrived with § 5 row 2's reversal and waits on the three code fixes landing with
-the rules they fix.
+reported, which is the claim ADR-0006 rejected reflection over. B-010 and B-020
+joined them on `0023`, which built the seven declaration rules and the two fixes
+whose compliant form the claim determines. What is not proven is B-011 and
+B-012, the call-site rules on `0024`; and B-016, which cannot be `Verified`
+until the eighteen test names exist, so the last of them arrives with `0024`
+too.
 
 The eighteen rows in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 are a separate

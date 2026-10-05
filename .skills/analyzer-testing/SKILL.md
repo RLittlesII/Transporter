@@ -28,8 +28,8 @@ var results = await GeneratorTestContextBuilder
    .AddSource("ViewModel.cs", source)
    .GenerateAsync();
 
-results.TryGetAnalyzerResult<BoundaryAnalyzer>(out var analyzed);
-analyzed.Diagnostics.Should().ContainSingle().Which.Id.Should().Be("TRN0001");
+results.AnalyzerResults[typeof(BoundaryAnalyzer)]
+   .Diagnostics.Should().ContainSingle().Which.Id.Should().Be("TRN0001");
 ```
 
 Every test builds its own context, the way Airframe's `Rsa####Tests` do. Pin
@@ -75,14 +75,26 @@ constant per layer.
 - **The default reference set is not the platform.** `System.ObjectModel` is
   absent, and `ObservableCollection<T>` is forwarded there — so a source that
   binds a collection fails to compile and the rule under test reports nothing.
-  `AddReferences(typeof(ObservableCollection<>))` fixes it;
-  `BoundaryAnalyzerContext` carries it for every run. A test that suddenly
-  reports nothing is a compile failure before it is an analyzer bug, which is
-  what the guard above exists to say out loud.
+  `AddReferences(typeof(ObservableCollection<>))` fixes it, per test. A test that
+  suddenly reports nothing is a compile failure before it is an analyzer bug,
+  which is what the guard above exists to say out loud.
 - **Several diagnostics in one document cross-attribute.** The builder can pair
   a resolved fix with code actions from a different diagnostic
   (`RocketSurgeonsGuild/Airframe#359`), so a fix test asserts the diagnostic
   count and the final text — not which rule each pass resolved.
+- **Read a fix's result by applying the action, not off `Changes`.** A
+  `ResolvedCodeFixTestResult` carries `CodeActions` _and_ a `Changes`, and with
+  three diagnostics on one document all three `Changes` reported the same edit —
+  the same cross-attribution as above. `TargetDocument` is the document the
+  action was offered on and still reads as it did before. What is true is
+  `action.CodeAction.GetOperationsAsync(...)`, whose `ApplyChangesOperation`
+  holds that action's own solution.
+- **An analyzer reports nothing while a declaration error stands.** Seeding a
+  violation in the application to prove a rule in a real build only works if the
+  seed compiles: reordering a contract's parameters reported `CS0535` and
+  `CS0539` and no `TRN` at all, and the rule appeared the moment the
+  implementation was reordered to match. A seed that breaks the build proves
+  nothing about the rule.
 - **A fix that only works in isolation is the common defect.** Apply one action
   per pass and re-analyze, the way an IDE does; Airframe's
   `AllDesignRulesFixedTests` is the worked example.
@@ -97,6 +109,22 @@ exist yet are decisions, not fixes.
 
 A fix changes only what the claim requires, and applying it twice offers no
 second change.
+
+**The fixes are a project of their own**
+([`src/Transponder.CodeFixes`](../../src/Transponder.CodeFixes/)), because a
+`CodeFixProvider` needs `Microsoft.CodeAnalysis.Workspaces` and an analyzer must
+not carry that into the compiler's load path. It takes **no project reference to
+the analyzer** either — both sit in that load path from different directories, so
+a reference between them is resolved by the host rather than by the build. The
+diagnostic ids are literals there, and
+`BoundaryCodeFixTests.GivenTheShippedFixes_WhenTheirFixableIdsAreRead_ThenEachIsOneTheSpecificationMarksFixable`
+holds them to § 7's table rather than to hope.
+
+**One diagnostic id can report several clauses**, so a fix decides whether to
+offer from the syntax rather than from the message. `TRN0009` reports four
+clauses of B-005 and only the misplaced token is mechanical; `TRN0011` reports
+five clauses of B-007 and the second implementation per transport is not. A
+provider that offers on the id alone offers a fix for a claim that has none.
 
 ## Never add
 

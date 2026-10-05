@@ -65,7 +65,34 @@ acceptance_criteria:
   - "Each of the seven claims is proven by the test aircraft-source § 9 names
     for it, under that name (B-016)."
 
-decisions: []
+decisions:
+  - "2026-10-05 — implementer — `src/Transponder.CodeFixes` takes no
+    `ProjectReference` to `Transponder.Analyzers`, so the `TRN` ids are literals
+    in both projects. Both assemblies sit in the compiler's analyzer load path
+    from different output directories, and a reference between them is resolved
+    by the host rather than by the build — the shape `CS8032` reports by
+    silently not loading the analyzer at all. `BoundaryCodeFixTests` holds the
+    two id lists in step, so the duplication is checked. Rejected: referencing
+    the analyzer and widening `Diagnostics` with `InternalsVisibleTo`, which
+    buys one shared constant at the cost of the load path."
+  - "2026-10-05 — implementer — `Layers` gained `IsEnvelope`, `IsPositionalRow`
+    and `IsPerTypeSeam`, matched by name suffix as `IsSnapshot` and `IsClient`
+    already are. The envelope and the row are both classes in `Contracts`, and
+    no structural test separates them: an indexer makes a type positional in the
+    same way a property makes it named. adr/0002 already took namespace over
+    attribute, and this is the same trade one level down."
+  - "2026-10-05 — implementer — a fix test reads its result by applying the
+    `CodeAction` itself rather than off `ResolvedCodeFixTestResult.Changes`. With
+    three `TRN0011` diagnostics on one document all three `Changes` reported the
+    same edit — `RocketSurgeonsGuild/Airframe#359`, which the harness skill
+    already records for code actions and which turns out to reach `Changes` too.
+    Recorded in `analyzer-testing` so the next fix test does not pay for it."
+  - "2026-10-05 — implementer — a seeded violation proves a rule in a real build
+    only when the seed compiles. Reordering `IOpenSkyApi`'s parameters reported
+    `CS0535` and `CS0539` and no `TRN0009`: an analyzer reports nothing while a
+    declaration error stands. Reordering the implementation to match produced
+    `error TRN0009` on the declaration, which is the proof § 9's Review rows ask
+    for."
 
 out_of_scope:
   - "Reference rules — 0022. Call-site rules — 0024."
