@@ -1,0 +1,77 @@
+id: "0039"
+type: task
+title: Swap the source from the screen, and hold the view models to their job
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 4
+rank: 68
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0036"
+  - "0006"
+blocks: []
+spikes: []
+
+spec: features/fleet-dashboard/.spec/README.md
+
+claims:
+  - B-016
+  - B-017
+  - B-018
+  - B-020
+  - B-021
+  - B-022
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  The closing act is performed with this control, in front of people. A swap is
+  an effect, so it is told to an actor rather than published as a value
+  (`mvvm` § "Two kinds of input, two routes"), and a busy indicator covers it
+  until the new fleet arrives — `aircraft-source` decision 0002's call, honoured
+  rather than re-decided.
+
+  The rest of the item is the boundaries: what a view model may not hold, what
+  it may not compute, what it may not name, and the swap test — that no view is
+  edited to show a different source. Four of the six claims are analyzer rules,
+  extending the set ADR-0006 established.
+
+  Runs after `0036`, and after `aircraft-source` `0006`, which is the decorator
+  this control drives.
+
+  `DemoViewModel` is the existing example of exactly what B-017 forbids — an
+  `Ask` continued with `.Result` — so the pattern is in the repository to be
+  copied. `0036` removes it under B-002; this item is what makes its absence a
+  rule rather than a tidy-up.
+
+acceptance_criteria:
+  - "B-016 — the actor is told, not asked, and the indicator clears when the
+    new fleet's first change arrives rather than when the message is sent."
+  - "B-017 — no transport, timer, cache write, blocking call or untimed `Ask`
+    in a view or view model. Analyzer rule."
+  - "B-018 — no filtering, sorting, grouping, expiry or staleness arithmetic in
+    a view or view model. Analyzer rule."
+  - "B-020 — dependencies stop at the tracker, the query and the actors.
+    Analyzer rule."
+  - "B-021 — a swap edits no view, markup or comparer."
+  - "B-022 — only the detail pane asks which kind of vehicle it has. Analyzer
+    rule."
+  - "§ 9 Traceability Matrix carries a row naming a test or an analyzer rule
+    for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The decorator, the disposal of an outgoing source, and the actor that
+    performs the swap (§ 5 row 2) — `aircraft-source` `0006`."
+  - "Whether the same indicator covers the first load — § 11 row 3 is open, and
+    this item claims the swap only."

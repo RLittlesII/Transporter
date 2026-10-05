@@ -1,0 +1,64 @@
+id: "0037"
+type: task
+title: Turn a keystroke into a predicate and a header tap into a comparer
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 2
+rank: 74
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0036"
+  - "0033"
+blocks: []
+spikes: []
+
+spec: features/fleet-dashboard/.spec/README.md
+
+claims:
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  `FleetViewModel` implements `fleet-pipeline`'s `IFleetQuery`: the four
+  observables that Feature consumes are the four things the user changes, so the
+  view model that collects them is the one that publishes them. Search text and
+  the filter selection compose into one predicate; a header choice publishes the
+  description's comparer and a second choice its reverse; the grouping selection
+  publishes one of the description's groupings.
+
+  Runs after `0036`, which builds the controls, and after `fleet-pipeline`
+  `0033`, which is what consumes a predicate and a grouping.
+
+  The trap is a view model that filters its own copy to make something work —
+  the pattern this demo exists to replace, reported by the analyzer rule
+  B-018 names.
+
+acceptance_criteria:
+  - "B-009 — one predicate published; no collection enumerated or edited in a
+    view model."
+  - "B-010 — case-insensitive, trimmed, and empty text matches everything."
+  - "B-011 — a filter and a search compose by conjunction, and clearing one
+    keeps the other."
+  - "B-012 — a header publishes the description's comparer, a second tap its
+    reverse, and a grouping is published from the description."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "What the pipeline does with a predicate, a comparer or a grouping
+    (§ 5 row 1) — `fleet-pipeline` B-006, B-009 and B-012."
+  - "The controls themselves (B-001) — `0036`."

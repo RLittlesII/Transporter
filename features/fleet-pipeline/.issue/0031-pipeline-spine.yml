@@ -17,7 +17,8 @@ depends_on:
 blocks:
   - "0032"
   - "0034"
-spikes: []
+spikes:
+  - "0040"
 
 spec: features/fleet-pipeline/.spec/README.md
 

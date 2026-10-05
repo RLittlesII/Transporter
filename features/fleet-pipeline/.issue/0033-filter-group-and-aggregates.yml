@@ -7,7 +7,7 @@ status: ready-for-architecture
 priority: high
 value: 4
 risk: 3
-rank: 71
+rank: 81
 
 parent: "0030"
 children: []
@@ -15,7 +15,9 @@ children: []
 depends_on:
   - "0032"
   - "0034"
-blocks: []
+blocks:
+  - "0037"
+  - "0041"
 spikes: []
 
 spec: features/fleet-pipeline/.spec/README.md

@@ -1,0 +1,80 @@
+id: "0036"
+type: task
+title: Build the fleet page in C# markup and bind the tracker's collection
+
+status: ready-for-architecture
+
+priority: high
+value: 5
+risk: 3
+rank: 111
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0032"
+blocks:
+  - "0037"
+  - "0038"
+  - "0039"
+  - "0041"
+spikes:
+  - "0040"
+
+spec: features/fleet-dashboard/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  One page in C# markup carrying the five surfaces, binding the collection
+  `IFleetTracker` exposes, with its columns built from the live source's
+  description. The template's `MainPage.xaml`, its code-behind and
+  `DemoViewModel` go as this item replaces them (B-002) — a removal without a
+  replacement would leave the application with no page, which is why it is not
+  an item of its own.
+
+  Runs after `fleet-pipeline` `0032`, the first item with a description to build
+  columns from.
+
+  Three claims here are proven by a recorded review rather than a run (§ 8):
+  B-001 and B-002 by reading the project, B-006 by watching one vehicle change.
+
+acceptance_criteria:
+  - "B-001 — the page carries the grid, the search and filter controls, the
+    grouping selection, the summary and the detail pane. Review."
+  - "B-002 — C# markup only; the template's page, code-behind and demo view
+    model are gone, and startup registers none of them. Review."
+  - "B-003 — a page takes its view model by constructor and resolves nothing."
+  - "B-004 — registration through the user-interface builder block only."
+  - "B-005 — the grid binds the tracker's own collection, not a copy."
+  - "B-006 — one vehicle changing updates one row. The hazard is an item
+    template that re-creates its children and flickers only once the feed is
+    real. Review."
+  - "B-007 — columns from the description, none compiled into the markup. The
+    hazard is columns built once from the first description, which looks right
+    until a swap."
+  - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule or a
+    performed review for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The search, filter, sort and grouping inputs (B-009 – B-012) — `0037`.
+    This item builds the controls; what they publish is that item's."
+  - "The stale mark, the detail pane and the summary's projection (B-008,
+    B-013 – B-015, B-019) — `0038`."
+  - "The swap control and the view-model boundaries (B-016 – B-018, B-020 –
+    B-022) — `0039`."
