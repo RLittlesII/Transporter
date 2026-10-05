@@ -2,7 +2,7 @@ id: "0005"
 type: task
 title: Project cached snapshots into domain vehicles behind ITrackerSource
 
-status: in-progress
+status: in-review
 
 priority: high
 risk: 2
@@ -32,7 +32,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-05"
-closed: null
+closed: "2026-10-05"
 
 summary: |
   The item that answers the original complaint. `ITrackerSource` declares the
@@ -73,6 +73,46 @@ decisions:
     this one can finish the row. Same shape as B-003 moving to `0004`: the claim
     goes to the item that builds its subject. § 3's sentence is unchanged and
     the row stays `Missing` until this item closes it."
+  - "2026-10-05 — implementer — the projection takes an `[ObjectFactory]` rather
+    than an object initialiser, because ADR-0005 item 3 sets the key and the last
+    contact through a `protected` constructor and Mapperly cannot set `init`
+    members on an instance a factory returned. The remaining reported values are
+    settable, which ADR-0005 already allows — a domain item is keyed and mutable
+    in its reported values."
+  - "2026-10-05 — implementer — the strategy re-keys its changesets on the
+    vehicle's own key. The cache is keyed on `icao24` as the wire spelled it and
+    `ToKey` lowercases it, so leaving the stream on the cache's key would put the
+    split B-037 bans one layer further down. § 7 records it."
+  - "2026-10-05 — implementer — `ToKey` and the non-optional `ToInstant` are
+    scoped out of Mapperly's default mappings. A user-implemented mapping is a
+    rule about a type pair, so `ToKey` lowercased the origin country as well as
+    the key in the first generated projection. Recorded as `lessons/0004` and as
+    a rule in `mapping`; the test that would have caught it is now written."
+  - "2026-10-05 — implementer — the strategy and its mapper are registered in
+    `AddOpenSky`, behind `IAircraftTrackerSource` rather than as themselves. § 7
+    says that registration is the only composition there is, and the service type
+    being the seam is also what keeps `TRN0016`'s wrapper clause off a strategy
+    that holds the cache. The decorator that selects between strategies is
+    `0006`'s and nothing here anticipates it."
+
+delivered: |
+  Six claims to `Verified`: B-033 – B-037 and B-049; B-046 was already carried by the
+  analyzer and is unchanged. `ITrackerSource` declares the `TransportVehicle` changeset
+  and nothing else, `IAircraftTrackerSource` declares nothing at all, and
+  `AircraftTrackerSource` projects the snapshot cache's changesets through an
+  `AircraftSnapshotMapper` whose `ToKey`, `ToInstant`, `ToPosition` and
+  `ToPositionSource` are named methods the tests call directly. `TransportVehicle`,
+  `Aircraft`, `GeoPosition` and `PositionSource` are the domain model ADR-0005 decided,
+  built here because this is the item that needed one.
+
+  B-049's review was performed rather than deferred: one contract layer over the one
+  request/response provider, no contract invented for a socket, and `ITrackerSource` the
+  only surface the strategies share, with no type above it.
+
+  One defect was found by reading the generated projection before writing the tests —
+  `ToKey` applied to every string member, lowercasing the origin country — and
+  `lessons/0004` holds it along with the rule now in `mapping`. Thirteen tests, and
+  `./build.sh` green.
 
 out_of_scope:
   - "Unit conversion and display formatting (§ 5 row 11)."
