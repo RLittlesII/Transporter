@@ -2,7 +2,7 @@
 title: "Specification: Boundary analyzer"
 description: "Report the layer-boundary and structural claims as compiler diagnostics from an analyzer shipped in this repository, so a reference that crosses a boundary fails the build at the line that wrote it instead of being 'satisfied' by a test that cannot see method bodies."
 type: spec
-spec_status: draft
+spec_status: approved
 ---
 
 # Specification: Boundary analyzer
@@ -412,11 +412,10 @@ are about to write has exactly that failure mode available to it.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                            | Owner         | Target date                            |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------- |
-| 2   | ADR-0006 § Context enumerates seventeen claim ids and says eighteen; `aircraft-source` § 11 row 3 enumerates eighteen, including B-044, and that Feature's § 9 row for B-044 does name the analyzer. § 7's table takes the § 9 rows as authoritative. Correcting the ADR — still `proposed`, so it may change freely — is `spec-author`'s call, not something to settle by writing an eighteenth rule and leaving the record wrong. | `spec-author` | Before this specification leaves draft |
-| 3   | Does this analyzer also carry [`replay-source`](../../replay-source/.spec/README.md) claims? That specification's § 9 is unwritten, so none is assigned yet, and B-008 fixes the set at eighteen. If any arrive, this is a § 3 amendment and a new `TRN` id, not an extension of an existing rule.                                                                                                                                  | `spec-author` | Before `replay-source` § 9 is written  |
-| 4   | When is this Feature scheduled against the talk date? This document answers the "by whom" half of `aircraft-source` § 11 row 3 and the "when" half remains open there. Its items can be cut and ranked without the answer; nothing can ship without it.                                                                                                                                                                             | the person    | Before any item claims `done`          |
+| #   | Question                                                                                                                                                                                                                                                                                           | Owner         | Target date                           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------- |
+| 3   | Does this analyzer also carry [`replay-source`](../../replay-source/.spec/README.md) claims? That specification's § 9 is unwritten, so none is assigned yet, and B-008 fixes the set at eighteen. If any arrive, this is a § 3 amendment and a new `TRN` id, not an extension of an existing rule. | `spec-author` | Before `replay-source` § 9 is written |
+| 4   | When is this Feature scheduled against the talk date? This document answers the "by whom" half of `aircraft-source` § 11 row 3 and the "when" half remains open there. Its items can be cut and ranked without the answer; nothing can ship without it.                                            | the person    | Before any item claims `done`         |
 
 **Row 1 — answered: a rule identifies a layer by namespace.** Recorded as
 [adr/0002](adr/0002-layers-are-identified-by-namespace.md) rather than deleted,
@@ -425,15 +424,25 @@ was rejected. Its number is not reused and rows 2 – 4 keep theirs, so a
 reference written while it was open still points at the question it meant. It
 unblocked `0022`.
 
+**Row 2 — answered: B-044 is the eighteenth, and
+[ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
+§ Context now lists it.** The record said eighteen and enumerated seventeen;
+the missing id was the one claim here reported on a call rather than on a
+name, which is why it fell out of a list written by what each rule examines.
+Nothing else moved: B-008 already fixed the set at eighteen, § 7's table
+already carried `TRN0007` for it, and `0022` already built and proved the
+rule. The ADR is `proposed`, so correcting it is an edit rather than a
+supersession. Its number is not reused and rows 3 and 4 keep theirs.
+
 ## 12. Sign-off
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../.spec/templates/feature.md).

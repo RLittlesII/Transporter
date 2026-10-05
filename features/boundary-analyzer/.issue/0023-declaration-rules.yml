@@ -2,7 +2,7 @@ id: "0023"
 type: task
 title: Report a declaration that is the wrong shape, on the declaration
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 risk: 3
@@ -23,7 +23,7 @@ claims:
   - B-020
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-05"
 closed: null
 
 summary: |

@@ -2,7 +2,7 @@ id: "0020"
 type: task
 title: Stand up the analyzer project the compiler loads, and the build gate
 
-status: in-progress
+status: done
 
 priority: high
 risk: 3
@@ -24,8 +24,8 @@ claims:
   - B-017
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-05"
+closed: "2026-10-05"
 
 summary: |
   The project every later child is written into: src/Transponder.Analyzers,

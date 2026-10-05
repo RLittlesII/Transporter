@@ -33,6 +33,9 @@ registration may look like:
 - B-014, B-030, B-031 — what the snapshot may declare, whether the cache is
   wrapped in a type of its own, and what lifetime it is registered with.
 - B-010's second clause — what may produce the contract's double.
+- B-044 — a collection a view binds is not mutated imperatively. The only
+  one of these reported on a call rather than on a name, and the only one
+  whose violation is an expression rather than a declaration.
 
 [`aircraft-source.feature`](../../features/aircraft-source/.spec/aircraft-source.feature)
 phrases these as "when every reference to them is identified" and "no domain
