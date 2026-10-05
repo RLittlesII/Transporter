@@ -22,6 +22,7 @@ spikes: []
 spec: features/aircraft-source/.spec/README.md
 
 claims:
+  - B-003
   - B-015
   - B-016
   - B-017
@@ -62,6 +63,12 @@ summary: |
   two.
 
 acceptance_criteria:
+  - "B-003 — each fetched envelope's reported time is written to
+    `IObservedClockWriter` in the same method that writes the cache, per
+    ADR-0007. Both clauses ride the one test § 9 names: the second — that no
+    consumer reads an ambient clock for an instant — has no analyzer rule,
+    because ADR-0006 assigned none, so the test has to leave the client with no
+    other source of one."
   - "B-015 — contract and cache by constructor."
   - "B-016 — positional reading, per README.md § \"Response shape\"."
   - "B-017, B-018 — absent versus defaulted, and absent versus present-zero.
@@ -95,11 +102,21 @@ decisions:
     blocks nothing and targets the first test this item writes above the
     contract: if a substitute may not stand in at that seam, the double stays
     the hand-written fake B-010 already requires."
-  - "2026-10-05 — spec-author — B-003's test is `AircraftSnapshotClientTests`'s
-    and its behaviour is § 7's `IObservedClockWriter` call inside the method
-    that writes the cache, but the claim is `0002`'s and `0002` has shipped
-    without a client. No item can currently make that row pass. Raised rather
-    than fixed: whether B-003 joins this item's claims is the person's."
+  - "**Answered 2026-10-05 by the decision below.** 2026-10-05 — spec-author —
+    B-003's test is `AircraftSnapshotClientTests`'s and its behaviour is § 7's
+    `IObservedClockWriter` call inside the method that writes the cache, but the
+    claim is `0002`'s and `0002` has shipped without a client. No item can
+    currently make that row pass. Raised rather than fixed: whether B-003 joins
+    this item's claims is the person's."
+  - "2026-10-05 — the person — B-003 is this item's. It gains the claim and an
+    acceptance criterion; `0002` loses both and records the move. § 9's row is
+    unchanged, because it already named the test and the class this item
+    creates — the row was right and the claim list was wrong. Nothing else
+    moves: a claim's owning item is which item builds it, and the subject of
+    B-003's sentence is the envelope `0002` declares, so § 3 stands as written.
+    ADR-0007 is the mechanism, and § 6 row 3 no longer reads `Unresolved`
+    against it — it had kept that word, and a cite to a § 7 heading that no
+    longer exists, since before the ADR was written."
 
 
 out_of_scope:
