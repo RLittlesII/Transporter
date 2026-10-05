@@ -78,7 +78,7 @@ this document's own.
 | B-012 | The mocking-framework half of `aircraft-source` B-010 SHALL be reported at the call that produces the double.                                                                                                                                                                                                       | `aircraft-source` § 9 row B-010                                              |
 | B-013 | No diagnostic SHALL assert a computed value; a claim about behaviour SHALL remain an xUnit test, and the analyzer SHALL NOT become a second place to assert one.                                                                                                                                                    | ADR-0006 § Decision 6                                                        |
 | B-014 | The analyzer SHALL be its own project, referenced by the projects it analyzes as an analyzer and not as an assembly, so no analyzer code reaches the shipped application.                                                                                                                                           | ADR-0006 § Consequences — nothing new in the app's graph                      |
-| B-015 | The analyzer SHALL take no dependency the application takes, and no application or test project SHALL name a type from it.                                                                                                                                                                                         | `transponder-conventions` § Dependencies; ADR-0006 § Consequences            |
+| B-015 | The analyzer SHALL take no dependency the application takes, and no application project SHALL name a type from it; the test project names it only in order to test it. | `transponder-conventions` § Dependencies; ADR-0006 § Consequences            |
 | B-016 | Each enforced claim SHALL be proven by the test `aircraft-source` § 9 already names for it, under that name; those names SHALL NOT be changed to suit the implementation.                                                                                                                                           | `aircraft-source` § 9; `spec-and-traceability` § "A cite names something that exists" |
 | B-017 | A violation SHALL fail the ordinary build — `./build.sh` and the pull-request workflow it drives — rather than a separate lint step a contributor can skip.                                                                                                                                                         | ADR-0006 § Consequences — "a build error for everyone"                       |
 | B-018 | A rule SHALL NOT exist before the claim it enforces: a new diagnostic requires a § 3 row in the specification it serves, written by that specification's `spec-author`.                                                                                                                                             | ADR-0006 § Decision 4; `spec-and-traceability` § "Section ownership"         |
@@ -172,7 +172,7 @@ call that builds a double (B-011, B-012).
 src/Transponder.Analyzers/            the analyzer project (B-014)
   BoundaryAnalyzer.cs                 one DiagnosticAnalyzer; the registrations
   Diagnostics.cs                      the TRN descriptors (B-002, B-003, B-006)
-  Layers.cs                           how a layer is identified — see Decision required
+  Layers.cs                           namespace to layer, per adr/0002
 test/UnitTests/Analyzers/             BoundaryAnalyzerTests, BoundaryAnalyzerDescriptorTests
 ```
 
@@ -244,22 +244,17 @@ checkable in one place by one test class rather than eighteen.
 
 **Decision required**
 
-> How does a rule know which layer a type belongs to? B-009 needs the question
-> answered before a reference rule can be written, and the answer binds all
-> seven of them.
->
-> | Option | Summary | Tradeoff |
-> | ------ | ------- | -------- |
-> | A. Namespace and folder convention | `Integrations.<Provider>.Contracts`, `Model`, `Tracking`, `Features.*.ViewModels` are already fixed by `transponder-conventions` § Project structure. The rule reads the containing namespace. | Nothing new to maintain, and the convention is already enforced socially and by `dotnet_style_namespace_match_folder`. A file in the wrong folder silently changes which rules apply to it, and the analyzer then enforces the layout rather than the boundary. |
-> | B. A marker attribute per layer | Each layer's types carry `[Layer(Layer.Contract)]` or similar; the rule reads the attribute. | Explicit and unambiguous, and survives a reorganization. It is also a new public surface on every type the analyzer cares about, invented for the analyzer's benefit, which `aircraft-source` B-037's own argument — do not widen a seam to describe its source — argues against. |
-> | C. Project boundaries | One project per layer; the rule reads the assembly. | The compiler enforces it with no analyzer at all for the coarse cases. It is also a restructure of the whole repository for one Feature, and the integration deliberately lives inside `Transponder` so its types can stay `internal`. |
->
-> **Recommendation:** A, with the layout read from one place in the analyzer
-> (`Layers.cs`) so B's attribute remains available later for a type that the
-> convention cannot classify. The hazard A carries — a misfiled file quietly
-> changing its own rules — is worth one test of its own rather than a different
-> mechanism.
-> **Awaiting:** the person (§ 11 row 1).
+No open decisions. The one this section carried — how a rule identifies a layer
+— is answered in [adr/0002](adr/0002-layers-are-identified-by-namespace.md):
+the containing namespace, read against the layout
+[`transponder-conventions`](../../../.skills/transponder-conventions/SKILL.md)
+§ "Project structure" already fixes, with the mapping held in `Layers.cs` so the
+seven reference rules ask one place. A marker attribute stays available for a
+type the convention cannot classify, and is built for nothing today.
+
+The hazard that answer carries is recorded with it: a misfiled file silently
+changes which rules apply to it. It is paid for with a test of its own rather
+than with a different mechanism.
 
 ## 8. Testing Strategy
 
@@ -365,10 +360,16 @@ are about to write has exactly that failure mode available to it.
 
 | #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                       | Owner         | Target date                      |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------- |
-| 1   | How does a rule identify a layer — namespace convention, a marker attribute, or project boundaries? § 7's "Decision required" carries the three options and recommends the namespace convention with the attribute held in reserve. It binds all seven reference rules, so it is answered before `0022` starts rather than inside it.                                                                                            | the person    | Before `0022` starts             |
 | 2   | ADR-0006 § Context enumerates seventeen claim ids and says eighteen; `aircraft-source` § 11 row 3 enumerates eighteen, including B-044, and that Feature's § 9 row for B-044 does name the analyzer. § 7's table takes the § 9 rows as authoritative. Correcting the ADR — still `proposed`, so it may change freely — is `spec-author`'s call, not something to settle by writing an eighteenth rule and leaving the record wrong. | `spec-author` | Before this specification leaves draft |
 | 3   | Does this analyzer also carry [`replay-source`](../../replay-source/.spec/README.md) claims? That specification's § 9 is unwritten, so none is assigned yet, and B-008 fixes the set at eighteen. If any arrive, this is a § 3 amendment and a new `TRN` id, not an extension of an existing rule.                                                                                                                              | `spec-author` | Before `replay-source` § 9 is written |
 | 4   | When is this Feature scheduled against the talk date? This document answers the "by whom" half of `aircraft-source` § 11 row 3 and the "when" half remains open there. Its items can be cut and ranked without the answer; nothing can ship without it.                                                                                                                                                                         | the person    | Before any item claims `done`    |
+
+**Row 1 — answered: a rule identifies a layer by namespace.** Recorded as
+[adr/0002](adr/0002-layers-are-identified-by-namespace.md) rather than deleted,
+with the marker attribute and the project-per-layer option and the reason each
+was rejected. Its number is not reused and rows 2 – 4 keep theirs, so a
+reference written while it was open still points at the question it meant. It
+unblocked `0022`.
 
 ## 12. Sign-off
 
@@ -380,9 +381,8 @@ are about to write has exactly that failure mode available to it.
 | §§ 6-7   | implementer | 🟡 Draft |
 | §§ 8-9   | test-writer | 🟡 Draft |
 
-Overall is the frontmatter's `spec_status`, not a row here. `spec-reviewer`
-flips it to `approved` when every row above is 🟢 and § 9 has no `Missing`
-row.
+What `approved` requires, and why a `Missing` row in § 9 does not hold it
+back, is [the template's § 12](../../../.spec/templates/feature.md).
 
 ## Decisions
 

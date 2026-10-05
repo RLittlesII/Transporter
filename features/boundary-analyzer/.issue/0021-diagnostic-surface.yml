@@ -54,6 +54,14 @@ summary: |
   analyzer of our own has the same failure mode available to it, and a rule
   nobody can act on gets switched off.
 
+  It also lands TRN0001 — aircraft-source B-004, the positional row out of reach
+  — and Layers.cs with it. B-004 and B-005 are claims about where a diagnostic
+  lands and whether generated code is exempt, and a descriptor that never
+  reports cannot prove either. One real rule is also what distinguishes a loaded
+  analyzer from a silently inert one, which is 0020's hazard. The remaining
+  seventeen descriptors exist with no registration behind them yet; their
+  aircraft-source § 9 rows stay Missing until 0022 – 0024 land.
+
   B-016, B-018 and B-019 are the discipline half: the eighteen tests keep the
   names aircraft-source § 9 gave them, a descriptor with no claim behind it is
   reported as unclaimed, and § 7's table stays the only store for the mapping.
@@ -76,8 +84,13 @@ acceptance_criteria:
     and no row of § 7's table restates a claim's text or a test name."
   - "§ 9 carries a row naming a test for each id above except B-016, which is a
     Review row: a test asserting its own name proves nothing."
+  - "TRN0001 reports, so the analyzer is demonstrably loaded rather than
+    silently inert — 0020's hazard, closed here."
 
 decisions:
+  - "2026-10-04 — implementer — TRN0001 lands here rather than in 0022. B-004
+    and B-005 cannot be proven against a descriptor that never reports, and the
+    load proof 0020 needs is a rule that fires. 0022 holds TRN0002 – TRN0007."
   - "2026-10-04 — implementer — one DiagnosticAnalyzer with eighteen descriptors
     rather than one analyzer class per rule. Eighteen classes would hold
     eighteen copies of the layer identification § 11 row 1 is about, which is

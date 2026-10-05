@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <!-- The compiler loads this assembly, not the application, so the target framework is
+             fixed by what csc will load rather than by global.json's SDK or the app's net10.0.
+             Roslyn hosts analyzers as netstandard2.0; a net10.0 analyzer does not load at all. -->
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <IsPackable>false</IsPackable>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- PrivateAssets="all": Roslyn is the host's, not ours to carry anywhere. This is also
+             B-015 — the application takes no dependency the analyzer takes, and the reverse. -->
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>
+    </ItemGroup>
+
+</Project>

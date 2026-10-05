@@ -143,8 +143,9 @@ Feature: Boundary analyzer — the layer claims reported as compiler diagnostics
     Given the analyzer project's package references
       And the application projects' package references
     When the two sets are compared
-    Then the Roslyn packages the analyzer needs are referenced by the analyzer project alone
-      And no application or test file names a type from the analyzer
+    Then the Roslyn packages the analyzer needs are referenced by the analyzer project and its tests
+      And no application file names a type from the analyzer
+      And the test project names it only in order to test it
 
   @B-016
   Scenario: Each rule is proven under the name the other specification already gave it
