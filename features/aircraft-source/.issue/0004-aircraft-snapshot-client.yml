@@ -117,6 +117,33 @@ decisions:
     ADR-0007 is the mechanism, and § 6 row 3 no longer reads `Unresolved`
     against it — it had kept that word, and a cite to a § 7 heading that no
     longer exists, since before the ADR was written."
+  - "2026-10-05 — the person — **§ 11 row 4 is answered: B-010 is withdrawn
+    outright, both halves.** The person asked why the hand-written fake was
+    decided in the first place and the answer is that nobody decided it on its
+    merits. Commit 31dda56 records the whole of it — the versioned-contract
+    pattern bans a mocking framework for the contract's double, `AGENTS.md`
+    mandates NSubstitute, and the conflict was resolved by obeying the pattern
+    inside the contract layer. There is no ADR and no decision record. The
+    hazard § Scoring and TRN0018's message both cite — a double returning
+    `default` passes every test above it — was written around a rule that was
+    already there, so it is this repository's rationalisation of an inherited
+    obligation rather than the reason it was adopted. The cost had already
+    landed and this item would have grown it: `OpenSkyApiFakeTests` is a test
+    suite whose subject is a test double, and the arrangements this item needs
+    (throw-then-succeed, timeout-then-succeed, two sets across two intervals,
+    `extended=1` asserted on the request) meant a response queue and a
+    recorded-calls list inside the fake — more untested behaviour under
+    fifteen claims. NSubstitute stands in at the contract seam from here, and
+    the throw-on-unset half goes with the ban: an unarranged `GetStates`
+    fails loudly without a named message, which is enough. This item carries
+    every consequence, the analyzer's included."
+  - "2026-10-05 — the person — the logger B-027 names is
+    `Microsoft.Extensions.Logging`'s `ILogger<T>` at the call site, with
+    Serilog behind it through an adapter at the composition root — the shape
+    the person's own prior work uses (`Finder.Logging`'s
+    `SerilogLoggerFactory : ILoggerFactory` and its `AddSerilog` registration
+    extension). B-027's test asserts against `ILogger<OpenSkyHttpApi>`, so the
+    sink choice is the composition root's and no test depends on it."
 
 
 out_of_scope:
