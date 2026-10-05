@@ -2,7 +2,7 @@ id: "0024"
 type: task
 title: Report a registration or a double at the call that writes it
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 risk: 4
@@ -24,7 +24,7 @@ claims:
   - B-020
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-05"
 closed: null
 
 summary: |

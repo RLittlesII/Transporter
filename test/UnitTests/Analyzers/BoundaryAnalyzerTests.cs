@@ -557,6 +557,262 @@ public class BoundaryAnalyzerTests
         reported.Location.GetLineSpan().Path.Should().Be("Snapshot.cs");
     }
 
+    [Fact]
+    public async Task GivenAnImplementationTypeRegisteredOrResolvedOrASecondAliasForTheContract_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Http.cs", BoundaryTestData.TwoTransports)
+            .AddSource("Registration.cs", BoundaryTestData.ImplementationRegisteredResolvedAndAliasedTwice)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Http.cs", BoundaryTestData.TwoTransports)
+            .AddSource("Registration.cs", BoundaryTestData.TheOneAliasPerChain)
+            .GenerateAsync();
+
+        // Then. Registered as itself, registered in a spelling the rule does not recognize,
+        // aliased twice in one chain, and resolved — four clauses of B-008, one case each.
+        NothingFailedToCompile(reported);
+        NothingFailedToCompile(allowed);
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0015")
+            .Should()
+            .HaveCount(4, "a registration spelling the rule does not recognize is reported rather than passed");
+        var spans = reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0015")
+            .Select(static diagnostic => TextAt(diagnostic))
+            .ToList();
+        spans.Should().Contain("AddSingleton<OpenSkyHttpApi>", "registered as itself");
+        spans.Should().Contain("Add", "a spelling the rule does not recognize, reported rather than passed");
+        spans.Should().Contain("AddSingleton<IOpenSkyApi, OpenSkyBackupApi>", "the second alias in one chain");
+        spans.Should().Contain("GetRequiredService<OpenSkyHttpApi>", "resolved by implementation type");
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .NotContain(
+                static diagnostic => diagnostic.Id == "TRN0015",
+                "aliasing the contract to one implementation is the shape the claim asks for");
+    }
+
+    [Fact]
+    public async Task GivenACacheWrappedInATypeOfItsOwn_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var wrapped = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Registration.cs", BoundaryTestData.CacheWrappedInATypeOfItsOwn)
+            .GenerateAsync();
+
+        var projected = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Domain.cs", BoundaryTestData.Domain)
+            .AddSource("Registration.cs", BoundaryTestData.CacheOfADomainTypeRegistered)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Registration.cs", BoundaryTestData.TheOneCachePerClient)
+            .GenerateAsync();
+
+        // Then. A wrapper and a projection are two of B-030's three clauses; the third — a policy
+        // beside the key selector — needs a cache taking more than one argument, which the
+        // stand-in's constructor cannot express, and § 9 records the claim as this rule's.
+        NothingFailedToCompile(wrapped);
+        NothingFailedToCompile(allowed);
+        wrapped.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.GetMessage()
+            .Should()
+            .Contain("a type of its own");
+        projected.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0016")
+            .Should()
+            .ContainSingle()
+            .Which.GetMessage()
+            .Should()
+            .Contain("a projection");
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("a SourceCache of snapshots with no wrapper is what the claim asks for");
+    }
+
+    [Fact]
+    public async Task GivenACacheRegisteredWithAnyLifetimeButTheApplicationsOrSharedBetweenClients_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Registration.cs", BoundaryTestData.CacheRegisteredScopedAndTwice)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Registration.cs", BoundaryTestData.TheOneCachePerClient)
+            .GenerateAsync();
+
+        // Then. Both clauses: the lifetime, and one cache per client.
+        NothingFailedToCompile(reported);
+        NothingFailedToCompile(allowed);
+        var messages = reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0017")
+            .Select(static diagnostic => diagnostic.GetMessage())
+            .ToList();
+        messages.Should().HaveCount(2);
+        messages.Should().Contain(static message => message.Contains("as scoped rather than with the application's lifetime"));
+        messages.Should().Contain(static message => message.Contains("more than once"));
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .NotContain(static diagnostic => diagnostic.Id == "TRN0017");
+    }
+
+    [Fact]
+    public async Task GivenTheContractsDoubleProducedByAMockingFramework_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Substitute.cs", BoundaryTestData.MockingFrameworkStandIn)
+            .AddSource("Tests.cs", BoundaryTestData.DoubleFromAMockingFramework)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Fake.cs", BoundaryTestData.HandWrittenFake)
+            .GenerateAsync();
+
+        // Then. The one rule that fires inside the test project, because a double lives nowhere
+        // else: every other rule reads a production layer and skips tests by design.
+        NothingFailedToCompile(reported);
+        NothingFailedToCompile(allowed);
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.Id.Should()
+            .Be("TRN0018");
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.GetMessage()
+            .Should()
+            .Contain("Substitute.For");
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("the hand-written fake is what the claim asks for, and it is not reported");
+    }
+
+    [Fact]
+    public async Task GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall()
+    {
+        // Given, When. The registration is in one file and the implementation's declaration in
+        // another, so the span says which of the two the rule was evaluated against.
+        var results = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(IServiceProvider))
+            .AddSource("Container.cs", BoundaryTestData.ContainerStandIn)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Registration.cs", BoundaryTestData.CacheRegisteredScopedAndTwice)
+            .GenerateAsync();
+
+        // Then
+        NothingFailedToCompile(results);
+        var reported = results.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.GetMessage().Contains("as scoped"))
+            .Should()
+            .ContainSingle()
+            .Subject;
+        reported.Location.GetLineSpan().Path.Should().Be("Registration.cs");
+        TextAt(reported)
+            .Should()
+            .Be(
+                "AddScoped<SourceCache<AircraftSnapshot, string>>",
+                "the lifetime is an argument to the call, so the call is where the fix is");
+    }
+
+    [Fact]
+    public async Task GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall()
+    {
+        // Given, When
+        var results = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Substitute.cs", BoundaryTestData.MockingFrameworkStandIn)
+            .AddSource("Tests.cs", BoundaryTestData.DoubleFromAMockingFramework)
+            .GenerateAsync();
+
+        // Then
+        NothingFailedToCompile(results);
+        var reported = results.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Should().ContainSingle().Subject;
+        reported.Location.GetLineSpan().Path.Should().Be("Tests.cs");
+        TextAt(reported)
+            .Should()
+            .Be("For<IOpenSkyApi>", "the call that produces the double, not the contract's own declaration");
+    }
+
     /// <summary>The text the diagnostic's span covers — what a caret lands on, and edit-proof where a line number is not.</summary>
     /// <param name="diagnostic">The diagnostic to read.</param>
     /// <returns>The source text at the diagnostic's location.</returns>

@@ -14,4 +14,7 @@ internal static class Diagnostics
 
     /// <summary>One internal sealed implementation per transport, implemented explicitly.</summary>
     internal const string ContractImplementationShape = "TRN0011";
+
+    /// <summary>One cache per client, at the application's lifetime.</summary>
+    internal const string CacheLifetime = "TRN0017";
 }

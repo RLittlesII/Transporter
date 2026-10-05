@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -43,6 +44,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
             SyntaxKind.RecordDeclaration,
             SyntaxKind.RecordStructDeclaration,
             SyntaxKind.StructDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeCall, SyntaxKind.InvocationExpression);
 #pragma warning restore RSA1007
     }
 
@@ -195,6 +197,325 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
                 member.Name.GetLocation(),
                 Containing(enclosing)));
     }
+
+    /// <remarks>
+    /// B-011 and B-012: a lifetime and an alias are arguments to a call, and the registered type's
+    /// own declaration is legal in every case these rules report, so the diagnostic goes where the
+    /// answer is. <see cref="ReportMockedDouble"/> runs before the test exclusion, because a double
+    /// is only ever built in a test — it is the one rule here whose subject lives there.
+    /// </remarks>
+    private static void AnalyzeCall(SyntaxNodeAnalysisContext context)
+    {
+        if (context.Node is not InvocationExpressionSyntax invocation
+            || context.SemanticModel.GetSymbolInfo(invocation, context.CancellationToken).Symbol is not IMethodSymbol called)
+        {
+            return;
+        }
+
+        if (ReportMockedDouble(context, invocation, called))
+        {
+            return;
+        }
+
+        var enclosing = context.SemanticModel.GetEnclosingSymbol(context.Node.SpanStart, context.CancellationToken);
+
+        if (enclosing is null || Layers.IsTest(enclosing))
+        {
+            return;
+        }
+
+        // The name alone is not enough: `new FlurlClientCache().Add(...)` is an `Add` and no
+        // registration at all. What makes a call a registration is what it is called on.
+        if (Resolutions.Contains(called.Name) && Receives(called, "IServiceProvider", "IKeyedServiceProvider"))
+        {
+            ReportResolution(context, invocation, called, enclosing);
+
+            return;
+        }
+
+        if (!Registrations.Contains(called.Name) || !Receives(called, "IServiceCollection"))
+        {
+            return;
+        }
+
+        ReportRegisteredImplementation(context, invocation, called, enclosing);
+        ReportCacheShape(context, invocation, called, enclosing);
+        ReportCacheLifetime(context, invocation, called);
+    }
+
+    private static bool ReportMockedDouble(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol called)
+    {
+        if (!Layers.IsMockingFramework(called) || !called.TypeArguments.Any(Layers.IsContract))
+        {
+            return false;
+        }
+
+        // B-010's second clause — TRN0018. A hand-written fake throws on an unset response; a
+        // framework's double returns default, and every test above it then passes for that reason.
+        ReportAt(
+            context,
+            Diagnostics.ContractDoubleFromAMockingFramework,
+            NameOf(invocation).GetLocation(),
+            called.ContainingType.Name + "." + called.Name);
+
+        return true;
+    }
+
+    private static void ReportResolution(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol called,
+        ISymbol enclosing)
+    {
+        // B-008, first clause: resolving the implementation is what "not resolvable from outside"
+        // forbids, and a composition root is no exception — it is the place that would do it.
+        if (called.TypeArguments.FirstOrDefault(Layers.IsContractImplementation) is not { } implementation)
+        {
+            return;
+        }
+
+        ReportAt(
+            context,
+            Diagnostics.ImplementationTypeIsReachable,
+            NameOf(invocation).GetLocation(),
+            Containing(enclosing),
+            implementation.Name);
+    }
+
+    private static void ReportRegisteredImplementation(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol called,
+        ISymbol enclosing)
+    {
+        var implementation = NamedImplementations(context, invocation, called).FirstOrDefault();
+
+        if (implementation is null)
+        {
+            return;
+        }
+
+        // B-008, second clause: aliasing the contract to one implementation is the shape it asks
+        // for. The service type comes first, whether as a type argument or as a typeof.
+        var service = ServiceTypeOf(context, invocation, called);
+
+        if (service is not null
+            && Layers.IsContract(service)
+            && SymbolEqualityComparer.Default.Equals(Layers.ContractOf(implementation), service)
+            && !AliasedTwice(context, invocation, service))
+        {
+            return;
+        }
+
+        ReportAt(
+            context,
+            Diagnostics.ImplementationTypeIsReachable,
+            NameOf(invocation).GetLocation(),
+            Containing(enclosing),
+            implementation.Name);
+    }
+
+    private static void ReportCacheShape(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol called,
+        ISymbol enclosing)
+    {
+        var service = ServiceTypeOf(context, invocation, called);
+
+        if (service is null)
+        {
+            return;
+        }
+
+        // B-030, clause by clause. A wrapper is read here rather than on its own declaration,
+        // because the declaration of a class holding a cache is legal until it is the cache.
+        if (!Layers.IsCache(service) && WrappedCache(service) is not null)
+        {
+            ReportAt(
+                context,
+                Diagnostics.CacheIsMoreThanAKeyedStore,
+                NameOf(invocation).GetLocation(),
+                Containing(enclosing),
+                "a type of its own");
+
+            return;
+        }
+
+        if (!Layers.IsCache(service))
+        {
+            return;
+        }
+
+        if (service.TypeArguments.FirstOrDefault() is { } stored && !Layers.IsSnapshot(stored))
+        {
+            ReportAt(
+                context,
+                Diagnostics.CacheIsMoreThanAKeyedStore,
+                NameOf(invocation).GetLocation(),
+                Containing(enclosing),
+                "a projection, by typing it to '" + stored.Name + "' rather than to a snapshot");
+
+            return;
+        }
+
+        // A keyed store takes its key selector and nothing else: an expiry or a clock beside it is
+        // a policy, and the policy is the client's.
+        foreach (var creation in invocation.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
+        {
+            if (context.SemanticModel.GetTypeInfo(creation, context.CancellationToken).Type is not INamedTypeSymbol created
+                || !Layers.IsCache(created)
+                || creation.ArgumentList is null or { Arguments.Count: <= 1 })
+            {
+                continue;
+            }
+
+            ReportAt(
+                context,
+                Diagnostics.CacheIsMoreThanAKeyedStore,
+                NameOf(invocation).GetLocation(),
+                Containing(enclosing),
+                "a policy of its own, beside the key selector");
+
+            return;
+        }
+    }
+
+    private static void ReportCacheLifetime(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol called)
+    {
+        if (ServiceTypeOf(context, invocation, called) is not { } service || !Layers.IsCache(service))
+        {
+            return;
+        }
+
+        // B-031. The application's lifetime, and one cache per client — a second registration of
+        // the same cache is two clients sharing one.
+        if (Lifetimes.TryGetValue(called.Name, out var lifetime))
+        {
+            ReportAt(
+                context,
+                Diagnostics.CacheLifetimeIsNotTheApplications,
+                NameOf(invocation).GetLocation(),
+                "as " + lifetime + " rather than with the application's lifetime");
+
+            return;
+        }
+
+        if (RegisteredTwice(context, invocation, service))
+        {
+            ReportAt(
+                context,
+                Diagnostics.CacheLifetimeIsNotTheApplications,
+                NameOf(invocation).GetLocation(),
+                "more than once for one snapshot, so two clients share one cache");
+        }
+    }
+
+    private static bool AliasedTwice(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation, INamedTypeSymbol service) =>
+        SiblingRegistrations(context, invocation, service).FirstOrDefault() is { } first
+        && first != invocation;
+
+    private static bool RegisteredTwice(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation, INamedTypeSymbol service) =>
+        SiblingRegistrations(context, invocation, service).Skip(1).Any()
+        && SiblingRegistrations(context, invocation, service).First() != invocation;
+
+    /// <remarks>One constructed chain is one method: that is where a composition root assembles it.</remarks>
+    private static IEnumerable<InvocationExpressionSyntax> SiblingRegistrations(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        INamedTypeSymbol service)
+    {
+        if (invocation.FirstAncestorOrSelf<MethodDeclarationSyntax>() is not { } chain)
+        {
+            return [];
+        }
+
+        return chain.DescendantNodes()
+            .OfType<InvocationExpressionSyntax>()
+            .Where(sibling =>
+                context.SemanticModel.GetSymbolInfo(sibling, context.CancellationToken).Symbol is IMethodSymbol called
+                && Registrations.Contains(called.Name)
+                && SymbolEqualityComparer.Default.Equals(ServiceTypeOf(context, sibling, called), service));
+    }
+
+    private static bool Receives(IMethodSymbol called, params string[] names) =>
+        called.ReceiverType is INamedTypeSymbol receiver && names.Contains(receiver.Name);
+
+    /// <remarks>
+    /// Registered, not merely mentioned: a type argument, a <c>typeof</c>, or a construction. A
+    /// static member read off the implementation — <c>OpenSkyHttpApi.ClientName</c> in a factory —
+    /// names the type without making it resolvable, and reporting it was this rule's first
+    /// false positive.
+    /// </remarks>
+    private static IEnumerable<INamedTypeSymbol> NamedImplementations(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol called) =>
+        called.TypeArguments
+            .Concat(invocation.DescendantNodes()
+                .Where(static node => node is TypeOfExpressionSyntax or ObjectCreationExpressionSyntax)
+                .Select(node => context.SemanticModel.GetTypeInfo(
+                        node is TypeOfExpressionSyntax typed ? typed.Type : node,
+                        context.CancellationToken)
+                    .Type)
+                .Where(static type => type is not null)
+                .Select(static type => type!))
+            .OfType<INamedTypeSymbol>()
+            .Where(Layers.IsContractImplementation);
+
+    /// <remarks>The service a registration exposes: its first type argument, or the first <c>typeof</c> it names.</remarks>
+    private static INamedTypeSymbol? ServiceTypeOf(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol called)
+    {
+        if (called.TypeArguments.FirstOrDefault() is INamedTypeSymbol argument)
+        {
+            return argument;
+        }
+
+        foreach (var typed in invocation.DescendantNodes().OfType<TypeOfExpressionSyntax>())
+        {
+            if (context.SemanticModel.GetTypeInfo(typed.Type, context.CancellationToken).Type is INamedTypeSymbol named)
+            {
+                return named;
+            }
+        }
+
+        // A factory with no type argument registers what it returns.
+        foreach (var creation in invocation.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
+        {
+            if (context.SemanticModel.GetTypeInfo(creation, context.CancellationToken).Type is INamedTypeSymbol created)
+            {
+                return created;
+            }
+        }
+
+        return null;
+    }
+
+    private static ITypeSymbol? WrappedCache(INamedTypeSymbol type) =>
+        type.GetMembers()
+            .Select(static member => member switch
+            {
+                IFieldSymbol field => field.Type,
+                IPropertySymbol property => property.Type,
+                _ => null,
+            })
+            .FirstOrDefault(static held => held is not null && Layers.IsCache(held));
+
+    private static SyntaxNode NameOf(InvocationExpressionSyntax invocation) =>
+        invocation.Expression switch
+        {
+            MemberAccessExpressionSyntax member => member.Name,
+            _ => invocation.Expression,
+        };
 
     private static bool IsBoundCollection(INamedTypeSymbol? type)
     {
@@ -625,6 +946,44 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
     private static string Containing(ISymbol symbol) =>
         symbol.ContainingType is { } type ? type.ToDisplayString() : symbol.ToDisplayString();
+
+    /// <remarks>
+    /// The spellings this repository uses, in <c>src/Gui/Container</c> and
+    /// <c>Integrations/OpenSky/Container</c>. A registration naming an implementation in any other
+    /// shape falls through to a report rather than to silence, which is what `0024` asks for: a
+    /// rule keyed to one spelling misses the others while the § 9 row flips to `Verified` anyway.
+    /// </remarks>
+    private static readonly ImmutableHashSet<string> Registrations = ImmutableHashSet.Create(
+        "Add",
+        "AddSingleton",
+        "AddScoped",
+        "AddTransient",
+        "AddKeyedSingleton",
+        "AddKeyedScoped",
+        "AddKeyedTransient",
+        "TryAdd",
+        "TryAddSingleton",
+        "TryAddScoped",
+        "TryAddTransient",
+        "Decorate");
+
+    private static readonly ImmutableHashSet<string> Resolutions = ImmutableHashSet.Create(
+        "GetService",
+        "GetRequiredService",
+        "GetKeyedService",
+        "GetRequiredKeyedService",
+        "Resolve");
+
+    private static readonly ImmutableDictionary<string, string> Lifetimes = ImmutableDictionary
+        .CreateRange(
+        [
+            new KeyValuePair<string, string>("AddScoped", "scoped"),
+            new KeyValuePair<string, string>("AddTransient", "transient"),
+            new KeyValuePair<string, string>("AddKeyedScoped", "scoped"),
+            new KeyValuePair<string, string>("AddKeyedTransient", "transient"),
+            new KeyValuePair<string, string>("TryAddScoped", "scoped"),
+            new KeyValuePair<string, string>("TryAddTransient", "transient"),
+        ]);
 
     private static readonly ImmutableArray<string> Derived = ImmutableArray.Create(
         "Stale",
