@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -29,11 +30,19 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        // B-044 is about a call rather than a type, so it registers separately. RSA1007 reports
-        // both registrations with an empty symbol name, as RSA2011 did in Airframe#403.
+        // Three actions, because the claims are about three different things: a name (B-009), a
+        // call (B-044) and a declaration (B-010). RSA1007 reports every registration with an
+        // empty symbol name, as RSA2011 did in Airframe#403.
 #pragma warning disable RSA1007
         context.RegisterSyntaxNodeAction(AnalyzeTypeMention, SyntaxKind.IdentifierName, SyntaxKind.GenericName);
         context.RegisterSyntaxNodeAction(AnalyzeCollectionMutation, SyntaxKind.InvocationExpression);
+        context.RegisterSyntaxNodeAction(
+            AnalyzeTypeDeclaration,
+            SyntaxKind.InterfaceDeclaration,
+            SyntaxKind.ClassDeclaration,
+            SyntaxKind.RecordDeclaration,
+            SyntaxKind.RecordStructDeclaration,
+            SyntaxKind.StructDeclaration);
 #pragma warning restore RSA1007
     }
 
@@ -200,6 +209,413 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
+    /// <remarks>
+    /// B-010: a claim about a declaration's shape is read on that declaration and reported on it,
+    /// not at a call site that uses it. A claim with an "and" in it gets a case per clause — three
+    /// of these messages take a clause phrase for exactly that reason, and a rule satisfying three
+    /// clauses of four must not leave the fourth unreported.
+    /// </remarks>
+    private static void AnalyzeTypeDeclaration(SyntaxNodeAnalysisContext context)
+    {
+        if (context.Node is not TypeDeclarationSyntax declaration)
+        {
+            return;
+        }
+
+        if (context.SemanticModel.GetDeclaredSymbol(declaration, context.CancellationToken) is not INamedTypeSymbol declared
+            || Layers.IsTest(declared))
+        {
+            return;
+        }
+
+        if (Layers.IsEnvelope(declared))
+        {
+            ReportEnvelopeMembers(context, declaration);
+        }
+        else if (Layers.IsContract(declared))
+        {
+            ReportContractShape(context, declaration, declared);
+        }
+        else if (Layers.IsSnapshot(declared))
+        {
+            ReportDerivedSnapshotMembers(context, declaration);
+        }
+        else if (Layers.IsPerTypeSeam(declared))
+        {
+            ReportSeamMembers(context, declaration);
+        }
+
+        ReportImplementationShape(context, declaration, declared);
+    }
+
+    private static void ReportEnvelopeMembers(SyntaxNodeAnalysisContext context, TypeDeclarationSyntax declaration)
+    {
+        foreach (var member in declaration.Members)
+        {
+            if (DeclaredTypeSyntax(member) is not { } syntax)
+            {
+                continue;
+            }
+
+            if (context.SemanticModel.GetTypeInfo(syntax, context.CancellationToken).Type is not { } type)
+            {
+                continue;
+            }
+
+            // B-002: the positional row is the shape the provider sent. Anything else with names
+            // on it is a per-aircraft type, and reading the row is the client's job, not here.
+            if (NamedPerAircraftType(ElementTypeOf(type)) is not { } named)
+            {
+                continue;
+            }
+
+            ReportAt(
+                context,
+                Diagnostics.EnvelopeMemberLeavesThePositionalShape,
+                LocationOf(member),
+                NameOf(member),
+                named.Name);
+        }
+    }
+
+    private static void ReportContractShape(
+        SyntaxNodeAnalysisContext context,
+        TypeDeclarationSyntax declaration,
+        INamedTypeSymbol declared)
+    {
+        // B-048, first clause: a suffix the provider has not earned.
+        if (VersionSuffixOf(declared.Name) is { } suffix)
+        {
+            ReportAt(
+                context,
+                Diagnostics.ContractCarriesAVersion,
+                declaration.Identifier.GetLocation(),
+                declared.Name,
+                "carries the version suffix '" + suffix + "'");
+        }
+
+        // B-048, second clause: a marker is an interface with nothing on it, which is the whole
+        // point of one. An interface above the contract that declares members is a different
+        // design, and a different conversation.
+        foreach (var above in declaration.BaseList?.Types ?? default)
+        {
+            if (context.SemanticModel.GetSymbolInfo(above.Type, context.CancellationToken).Symbol
+                is not INamedTypeSymbol { TypeKind: TypeKind.Interface } marker
+                || !marker.GetMembers().IsEmpty)
+            {
+                continue;
+            }
+
+            ReportAt(
+                context,
+                Diagnostics.ContractCarriesAVersion,
+                above.Type.GetLocation(),
+                declared.Name,
+                "has the marker interface '" + marker.Name + "' above it");
+        }
+
+        foreach (var member in declaration.Members)
+        {
+            ReportContractMemberNames(context, member);
+
+            if (member is MethodDeclarationSyntax method
+                && context.SemanticModel.GetDeclaredSymbol(method, context.CancellationToken) is { } declaredMethod)
+            {
+                ReportContractMethodShape(context, method, declared, declaredMethod);
+            }
+        }
+    }
+
+    private static void ReportContractMemberNames(SyntaxNodeAnalysisContext context, MemberDeclarationSyntax member)
+    {
+        foreach (var syntax in member.DescendantNodesAndSelf().OfType<TypeSyntax>())
+        {
+            if (context.SemanticModel.GetTypeInfo(syntax, context.CancellationToken).Type is not { } type)
+            {
+                continue;
+            }
+
+            // B-006. The contract is the shape of one endpoint; a stream, a store, a box, an
+            // interval and a credential all belong to something that calls it.
+            if (ForbiddenOnAContract(type) is not { } forbidden)
+            {
+                continue;
+            }
+
+            ReportAt(context, Diagnostics.ContractNamesSomethingBeyondItsEndpoint, LocationOf(member), forbidden.Name);
+
+            return;
+        }
+    }
+
+    private static void ReportContractMethodShape(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax syntax,
+        INamedTypeSymbol declared,
+        IMethodSymbol method)
+    {
+        var location = syntax.Identifier.GetLocation();
+
+        // B-005, clause by clause. Each is its own report, so a method breaking two says so twice
+        // rather than being fixed once and still wrong.
+        if (declared.GetMembers(method.Name).Length > 1)
+        {
+            ReportAt(
+                context,
+                Diagnostics.ContractMethodIsNotOnePerEndpoint,
+                location,
+                method.Name,
+                "shares its name with another declaration, so one endpoint has more than one method");
+        }
+
+        if (method.ReturnType is not INamedTypeSymbol { Name: "Task", IsGenericType: true })
+        {
+            ReportAt(context, Diagnostics.ContractMethodIsNotOnePerEndpoint, location, method.Name, "does not return Task<T>");
+        }
+
+        var token = IndexOfCancellationToken(method);
+
+        if (token < 0)
+        {
+            ReportAt(context, Diagnostics.ContractMethodIsNotOnePerEndpoint, location, method.Name, "takes no CancellationToken");
+        }
+        else if (token != method.Parameters.Length - 1)
+        {
+            ReportAt(
+                context,
+                Diagnostics.ContractMethodIsNotOnePerEndpoint,
+                location,
+                method.Name,
+                "does not take its CancellationToken last");
+        }
+    }
+
+    private static void ReportImplementationShape(
+        SyntaxNodeAnalysisContext context,
+        TypeDeclarationSyntax declaration,
+        INamedTypeSymbol declared)
+    {
+        if (declared.TypeKind != TypeKind.Class
+            || declared.AllInterfaces.FirstOrDefault(Layers.IsContract) is not { } contract)
+        {
+            return;
+        }
+
+        var location = declaration.Identifier.GetLocation();
+
+        // B-007, clause by clause.
+        if (declared.DeclaredAccessibility != Accessibility.Internal)
+        {
+            ReportAt(context, Diagnostics.ContractImplementationIsNotTheOnePerTransport, location, declared.Name, "is not internal");
+        }
+
+        if (!declared.IsSealed)
+        {
+            ReportAt(context, Diagnostics.ContractImplementationIsNotTheOnePerTransport, location, declared.Name, "is not sealed");
+        }
+
+        // One per transport, and a transport is a namespace (adr/0002). The first declaration in
+        // metadata order keeps the slot, so the report lands on the one that arrived second.
+        var siblings = declared.ContainingNamespace
+            .GetTypeMembers()
+            .Where(type => type.TypeKind == TypeKind.Class && type.AllInterfaces.Contains(contract, SymbolEqualityComparer.Default))
+            .ToImmutableArray();
+
+        if (siblings.Length > 1 && !SymbolEqualityComparer.Default.Equals(siblings[0], declared))
+        {
+            ReportAt(
+                context,
+                Diagnostics.ContractImplementationIsNotTheOnePerTransport,
+                location,
+                declared.Name,
+                "is a second implementation of '" + contract.Name + "' for this transport");
+        }
+
+        foreach (var endpoint in contract.GetMembers().OfType<IMethodSymbol>())
+        {
+            if (declared.FindImplementationForInterfaceMember(endpoint) is not IMethodSymbol implementation
+                || !SymbolEqualityComparer.Default.Equals(implementation.ContainingType, declared)
+                || !implementation.ExplicitInterfaceImplementations.IsEmpty)
+            {
+                continue;
+            }
+
+            ReportAt(
+                context,
+                Diagnostics.ContractImplementationIsNotTheOnePerTransport,
+                DeclarationOf(declaration, implementation, context) ?? location,
+                declared.Name,
+                implementation.DeclaredAccessibility == Accessibility.Public
+                    ? "declares '" + implementation.Name + "' as a public method rather than an explicit implementation"
+                    : "implements '" + implementation.Name + "' implicitly rather than explicitly");
+        }
+    }
+
+    private static void ReportDerivedSnapshotMembers(SyntaxNodeAnalysisContext context, TypeDeclarationSyntax declaration)
+    {
+        foreach (var member in declaration.Members)
+        {
+            if (member is not PropertyDeclarationSyntax property)
+            {
+                continue;
+            }
+
+            // B-014. A computed getter is derived by construction; the kinds the claim names are
+            // reported by name as well, because storing one does not make it reported.
+            if (!IsComputed(property) && !Describes(property.Identifier.ValueText, Derived))
+            {
+                continue;
+            }
+
+            ReportAt(context, Diagnostics.SnapshotMemberIsDerived, property.Identifier.GetLocation(), property.Identifier.ValueText);
+        }
+    }
+
+    private static void ReportSeamMembers(SyntaxNodeAnalysisContext context, TypeDeclarationSyntax declaration)
+    {
+        foreach (var member in declaration.Members)
+        {
+            // B-037, second clause. What strategies share is the changeset; where it came from is
+            // the one thing a consumer of the seam must not be able to ask.
+            if (!Describes(NameOf(member), SourceDescribing))
+            {
+                continue;
+            }
+
+            ReportAt(context, Diagnostics.PerTypeSeamDescribesItsSource, LocationOf(member), NameOf(member));
+        }
+    }
+
+    private static ITypeSymbol? NamedPerAircraftType(ITypeSymbol type) =>
+        (Layers.IsWireType(type) && !Layers.IsPositionalRow(type)) || Layers.IsSnapshot(type) || Layers.IsDomain(type)
+            ? type
+            : null;
+
+    /// <remarks>
+    /// The type itself, unwrapped from nothing: the caller walks every type named in the
+    /// declaration, so <c>Task&lt;IObservable&lt;T&gt;&gt;</c> arrives here three times and the
+    /// forbidden one is seen on its own turn rather than unwrapped past.
+    /// </remarks>
+    private static ITypeSymbol? ForbiddenOnAContract(ITypeSymbol element)
+    {
+        if (Layers.IsCache(element))
+        {
+            return element;
+        }
+
+        return element.Name switch
+        {
+            "IObservable" or "IObservableList" or "IChangeSet" or "ChangeSet" or "TimeSpan" => element,
+            "CancellationToken" => null,
+            var name when name.EndsWith("BoundingBox", StringComparison.Ordinal) => element,
+            var name when name.IndexOf("Credential", StringComparison.Ordinal) >= 0 => element,
+            var name when name.EndsWith("Token", StringComparison.Ordinal) => element,
+            _ => null,
+        };
+    }
+
+    private static ITypeSymbol ElementTypeOf(ITypeSymbol type) =>
+        type switch
+        {
+            IArrayTypeSymbol array => ElementTypeOf(array.ElementType),
+            INamedTypeSymbol { IsGenericType: true } generic when generic.TypeArguments.Length == 1 && !Layers.IsCache(generic) =>
+                ElementTypeOf(generic.TypeArguments[0]),
+            _ => type,
+        };
+
+    private static string? VersionSuffixOf(string name)
+    {
+        var digits = name.Length;
+
+        while (digits > 0 && char.IsDigit(name[digits - 1]))
+        {
+            digits--;
+        }
+
+        return digits > 1 && digits < name.Length && name[digits - 1] == 'V' ? name.Substring(digits - 1) : null;
+    }
+
+    private static int IndexOfCancellationToken(IMethodSymbol method)
+    {
+        for (var index = 0; index < method.Parameters.Length; index++)
+        {
+            if (method.Parameters[index].Type.Name == "CancellationToken")
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool IsComputed(PropertyDeclarationSyntax property) =>
+        property.ExpressionBody is not null
+        || property.AccessorList?.Accessors.Any(static accessor =>
+            accessor.IsKind(SyntaxKind.GetAccessorDeclaration)
+            && (accessor.Body is not null || accessor.ExpressionBody is not null)) == true;
+
+    private static bool Describes(string name, ImmutableArray<string> words) =>
+        words.Any(word => name.IndexOf(word, StringComparison.Ordinal) >= 0);
+
+    private static TypeSyntax? DeclaredTypeSyntax(MemberDeclarationSyntax member) =>
+        member switch
+        {
+            PropertyDeclarationSyntax property => property.Type,
+            FieldDeclarationSyntax field => field.Declaration.Type,
+            _ => null,
+        };
+
+    private static Location? DeclarationOf(TypeDeclarationSyntax declaration, ISymbol symbol, SyntaxNodeAnalysisContext context)
+    {
+        foreach (var member in declaration.Members)
+        {
+            if (SymbolEqualityComparer.Default.Equals(
+                    context.SemanticModel.GetDeclaredSymbol(member, context.CancellationToken),
+                    symbol))
+            {
+                return LocationOf(member);
+            }
+        }
+
+        return null;
+    }
+
+    private static Location LocationOf(MemberDeclarationSyntax member) =>
+        member switch
+        {
+            PropertyDeclarationSyntax property => property.Identifier.GetLocation(),
+            MethodDeclarationSyntax method => method.Identifier.GetLocation(),
+            EventDeclarationSyntax @event => @event.Identifier.GetLocation(),
+            IndexerDeclarationSyntax indexer => indexer.ThisKeyword.GetLocation(),
+            FieldDeclarationSyntax field when field.Declaration.Variables.Count > 0 =>
+                field.Declaration.Variables[0].Identifier.GetLocation(),
+            _ => member.GetLocation(),
+        };
+
+    private static string NameOf(MemberDeclarationSyntax member) =>
+        member switch
+        {
+            PropertyDeclarationSyntax property => property.Identifier.ValueText,
+            MethodDeclarationSyntax method => method.Identifier.ValueText,
+            EventDeclarationSyntax @event => @event.Identifier.ValueText,
+            IndexerDeclarationSyntax => "this[]",
+            FieldDeclarationSyntax field when field.Declaration.Variables.Count > 0 =>
+                field.Declaration.Variables[0].Identifier.ValueText,
+            _ => string.Empty,
+        };
+
+    /// <summary>Reports at a location of the rule's choosing, which a declaration rule needs — B-010.</summary>
+    /// <param name="context">The analysis context.</param>
+    /// <param name="descriptor">The rule reporting.</param>
+    /// <param name="location">Where the violation is written.</param>
+    /// <param name="arguments">The message arguments.</param>
+    private static void ReportAt(
+        SyntaxNodeAnalysisContext context,
+        DiagnosticDescriptor descriptor,
+        Location location,
+        params object[] arguments) =>
+        context.ReportDiagnostic(Diagnostic.Create(descriptor, location, arguments));
+
     /// <summary>Reports at the node, naming the symbol — B-004.</summary>
     /// <param name="context">The analysis context.</param>
     /// <param name="descriptor">The rule reporting.</param>
@@ -209,6 +625,22 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
 
     private static string Containing(ISymbol symbol) =>
         symbol.ContainingType is { } type ? type.ToDisplayString() : symbol.ToDisplayString();
+
+    private static readonly ImmutableArray<string> Derived = ImmutableArray.Create(
+        "Stale",
+        "Label",
+        "Display",
+        "Caption",
+        "Group",
+        "Formatted");
+
+    private static readonly ImmutableArray<string> SourceDescribing = ImmutableArray.Create(
+        "Source",
+        "Provider",
+        "Origin",
+        "Feed",
+        "Transport",
+        "Endpoint");
 
     private static readonly ImmutableHashSet<string> Mutators = ImmutableHashSet.Create(
         "Add",

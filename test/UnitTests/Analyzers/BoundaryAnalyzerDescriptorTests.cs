@@ -181,6 +181,38 @@ public class BoundaryAnalyzerDescriptorTests
                 .Be(ClaimReference(row.Claim)));
     }
 
+    [Fact]
+    public void GivenADiagnosticWithNoCodeFix_WhenTheMappingTableIsRead_ThenItRecordsWhyNoneIsPossible()
+    {
+        // Given
+        var sut = new BoundaryAnalyzer();
+        var rows = SpecificationTables.Rows(Specification, SpecificationTables.CodeFixRow);
+
+        // When
+        var recorded = rows
+            .SelectMany(static cells => SpecificationTables.Ids(cells[0]).Select(id => (Diagnostic: id, Fix: cells[1], Reason: cells[2])))
+            .ToArray();
+
+        // Then. B-020 is satisfied either way, and the table is where the second way is kept.
+        recorded.Select(static row => row.Diagnostic).Should().BeEquivalentTo(
+            sut.SupportedDiagnostics.Select(static descriptor => descriptor.Id),
+            "every diagnostic either ships a fix or records why it cannot, and no diagnostic does both");
+        recorded.Should().AllSatisfy(static row =>
+        {
+            row.Reason.Should().NotBeEmpty();
+            row.Reason.Should().NotContain("SHALL", "a reason that quotes the claim restates it instead of explaining the absence");
+        });
+        recorded.Where(static row => row.Fix == "No")
+            .Should()
+            .AllSatisfy(static row => row.Reason.Split(' ')
+                .Should()
+                .HaveCountGreaterThan(8, "a word or two in the Fix column's place is a gate reporting that it passed"));
+        recorded.Where(static row => row.Fix == "Yes")
+            .Select(static row => row.Diagnostic)
+            .Should()
+            .BeEquivalentTo(["TRN0009", "TRN0011", "TRN0017"], "a fix exists where the compliant form is determined by the claim");
+    }
+
     private static string ClaimOf(DiagnosticDescriptor descriptor) =>
         descriptor.Title.ToString().Split(Diagnostics.ClaimSeparator)[0];
 

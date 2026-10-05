@@ -10,9 +10,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- The one project that needs the assembly as well as the analyzer: its tests name
-             BoundaryAnalyzer (B-015). An Update, not a second ProjectReference. -->
+        <!-- The one project that needs the assemblies as well as the analyzers: its tests name
+             BoundaryAnalyzer and the fixes (B-015). Updates, not second ProjectReferences. -->
         <ProjectReference Update="$(TransponderAnalyzerProject)" ReferenceOutputAssembly="true"/>
+        <ProjectReference Update="$(TransponderCodeFixProject)" ReferenceOutputAssembly="true"/>
     </ItemGroup>
 
 </Project>

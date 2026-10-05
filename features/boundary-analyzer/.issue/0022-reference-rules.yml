@@ -2,7 +2,7 @@ id: "0022"
 type: task
 title: Report a forbidden reference wherever it is written, method bodies included
 
-status: in-progress
+status: done
 
 priority: high
 risk: 4
@@ -22,8 +22,8 @@ claims:
   - B-009
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-05"
+closed: "2026-10-05"
 
 summary: |
   TRN0002 – TRN0007, six of the seven rules ADR-0006 exists for: the envelope

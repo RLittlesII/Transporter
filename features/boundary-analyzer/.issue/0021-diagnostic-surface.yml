@@ -2,7 +2,7 @@ id: "0021"
 type: task
 title: Fix what a diagnostic is — ids, message, location, severity, and the mapping
 
-status: in-progress
+status: blocked
 
 priority: high
 risk: 2
@@ -36,7 +36,7 @@ claims:
   - B-019
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-05"
 closed: null
 
 summary: |
@@ -95,6 +95,11 @@ decisions:
     rather than one analyzer class per rule. Eighteen classes would hold
     eighteen copies of the layer identification § 11 row 1 is about, which is
     the part most likely to change."
+  - "2026-10-05 — implementer — this item landed in pull request #6 and is
+    `blocked` rather than `done`. B-016 is one of its twelve claims and stands
+    `Missing` in § 9: the cite check it names cannot pass until all eighteen
+    test names exist, and the last of them arrives with `0024`. Every other
+    claim here is `Verified`. The same shape as `aircraft-source` `0002`."
 
 out_of_scope:
   - "The rules themselves — 0022, 0023, 0024."

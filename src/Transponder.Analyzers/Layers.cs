@@ -66,6 +66,21 @@ internal static class Layers
     internal static bool IsContract(ISymbol symbol) =>
         IsWireSurface(symbol) && symbol is INamedTypeSymbol { TypeKind: TypeKind.Interface };
 
+    /// <summary>Whether a symbol is a provider's positional row — the wire type that keeps the provider's own element order instead of naming its fields.</summary>
+    /// <remarks>By suffix, as <see cref="IsSnapshot"/> and <see cref="IsClient"/> are: the order is the provider's, and no structural test separates a row from a type that merely has an indexer.</remarks>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a positional row.</returns>
+    internal static bool IsPositionalRow(ISymbol symbol) =>
+        IsWireType(symbol) && symbol.Name.EndsWith("Row", StringComparison.Ordinal);
+
+    /// <summary>Whether a symbol is a provider's response envelope — the wire type a call returns, holding the positional rows and the instant they were reported at.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is an envelope.</returns>
+    internal static bool IsEnvelope(ISymbol symbol) =>
+        IsWireType(symbol)
+        && !IsPositionalRow(symbol)
+        && symbol.Name.EndsWith("Response", StringComparison.Ordinal);
+
     /// <summary>Whether a symbol sits in a provider's <c>Contracts</c> namespace at all.</summary>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is part of the wire surface.</returns>
@@ -117,6 +132,12 @@ internal static class Layers
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is tracking code.</returns>
     internal static bool IsTrackingLayer(ISymbol symbol) => In(symbol, Tracking);
+
+    /// <summary>Whether a symbol is a per-type tracker source seam — the interface a consumer depends on, as opposed to the class behind it.</summary>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is a seam interface.</returns>
+    internal static bool IsPerTypeSeam(ISymbol symbol) =>
+        In(symbol, Tracking) && symbol is INamedTypeSymbol { TypeKind: TypeKind.Interface };
 
     /// <summary>Whether a symbol is a view model.</summary>
     /// <param name="symbol">The symbol to classify.</param>
