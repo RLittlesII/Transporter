@@ -31,10 +31,10 @@ mapper runs from that record.
 Two mappings, two owners, two mechanisms — the arrangement
 [ADR-0002](../../.spec/adr/0002-contract-client-strategy-tracker.md) records:
 
-| Mapping | Owner | Mechanism |
-|---|---|---|
+| Mapping                 | Owner                        | Mechanism              |
+| ----------------------- | ---------------------------- | ---------------------- |
 | wire payload → snapshot | the client, as its first act | hand-written, by index |
-| snapshot → domain | the per-type strategy | Mapperly |
+| snapshot → domain       | the per-type strategy        | Mapperly               |
 
 The cache in between stores snapshots and maps nothing.
 

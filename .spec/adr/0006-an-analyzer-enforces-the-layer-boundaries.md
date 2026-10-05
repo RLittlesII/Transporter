@@ -13,7 +13,7 @@ type: adr
 [ADR-0002](0002-contract-client-strategy-tracker.md) gives every layer one
 responsibility and one name, and a third of this Feature's claims exist to keep
 those layers apart. They are not claims about what the code computes; they are
-claims about its shape — what may *name* what, and what a declaration or a
+claims about its shape — what may _name_ what, and what a declaration or a
 registration may look like:
 
 - B-004 — no domain type, cache, strategy or view can name the positional row.
@@ -71,12 +71,12 @@ likely to be 'satisfied' by absence rather than by a test".
 
 ## Considered options
 
-| Option | Summary | Why not |
-| --- | --- | --- |
-| Reflection tests in xUnit | Assert over loaded types in the test project. No new dependency, and the stack already mandated. | Cannot see method bodies, so B-045 – B-047 — the three claims this is most needed for — would be asserted over signatures and reported as covered. A § 9 row claiming a reference rule is proven when only its signatures are is the fake-gate failure [lesson 0002](../lessons/0002-metadata-about-a-rule-drifts-too.md) is about. |
+| Option                                                  | Summary                                                                                                                                               | Why not                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reflection tests in xUnit                               | Assert over loaded types in the test project. No new dependency, and the stack already mandated.                                                      | Cannot see method bodies, so B-045 – B-047 — the three claims this is most needed for — would be asserted over signatures and reported as covered. A § 9 row claiming a reference rule is proven when only its signatures are is the fake-gate failure [lesson 0002](../lessons/0002-metadata-about-a-rule-drifts-too.md) is about.                                               |
 | An architecture-rule library — NetArchTest, ArchUnitNET | A dependency-rule engine over compiled IL: "no type in `Model` may reference `Integrations.OpenSky.Contracts`" as one assertion that genuinely holds. | Reads IL, so it does see method bodies, and it would work. It reports at test time: the violation is already written and compiled before anything says so, and what fails is an assertion in another file rather than the line that broke the rule. It also answers only the dependency claims; B-007's explicit implementation and B-048's naming still need a second mechanism. |
-| A Roslyn analyzer **(chosen)** | Diagnostics over the syntax and semantic model at compile time, shipped from this repository. | — |
-| Code review | Write the rules down and enforce them by reading. | What the repository does today, and `domain-model` § "Never add" already lists the downcast rule. The swap breaks "one line at a time", which is precisely the failure review is worst at catching. |
+| A Roslyn analyzer **(chosen)**                          | Diagnostics over the syntax and semantic model at compile time, shipped from this repository.                                                         | —                                                                                                                                                                                                                                                                                                                                                                                 |
+| Code review                                             | Write the rules down and enforce them by reading.                                                                                                     | What the repository does today, and `domain-model` § "Never add" already lists the downcast rule. The swap breaks "one line at a time", which is precisely the failure review is worst at catching.                                                                                                                                                                               |
 
 ## Decision
 

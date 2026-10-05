@@ -21,7 +21,7 @@ starts at 15 seconds. The box is configuration too, with no default compiled in
 
 ## Why
 
-**One geography serves both fleets.** The box contains two busy airports *and*
+**One geography serves both fleets.** The box contains two busy airports _and_
 one of the busiest ports in the United States, so the vessel closing act
 subscribes AISStream to the same coordinates. The swap becomes "same box, same
 grid, different fleet" rather than also moving the audience to a different part

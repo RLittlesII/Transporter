@@ -96,7 +96,7 @@ answer standing in for the assumption:
 It belongs in that skill rather than in `deliver-change`, because the failure
 is in how the question was framed, not in how the answer was delivered. The
 skill already says "an answer that lives only in the conversation was not
-recorded"; this is the case where the answer *was* recorded and the thing that
+recorded"; this is the case where the answer _was_ recorded and the thing that
 produced it was not.
 
 No rule is added about acting on a recorded hazard.

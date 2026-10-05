@@ -30,7 +30,7 @@ undecided is recorded as an open question rather than asked again.
     - credential handling, a provider's terms, or a metered budget;
     - a guarantee the design exists to make.
 
-  State:
+    State:
     - the evidence already available;
     - the two concrete readings;
     - the impact of each;

@@ -36,23 +36,23 @@ is an observation, not an agreement — and names no specification. A bug that
 reveals a specification gap then produces a delta: a lesson, and the claim that
 proves the delta held.
 
-Put the other way round: the specification is where *agreement* starts; the item
-is where *delivery* starts. They are different questions, answered in that
+Put the other way round: the specification is where _agreement_ starts; the item
+is where _delivery_ starts. They are different questions, answered in that
 order.
 
 ## Two records, one authority each
 
-| Record | Authority over | Never holds | Exists first? |
-|---|---|---|---|
-| The specification | **content** — requirements, constraints, design, testing strategy, traceability | the live status of the work | **yes, for a Feature** |
-| The work item | **delivery state** — status, priority, value, risk, rank, dependencies | requirements, design, test plans | yes, for a bug, spike or chore |
+| Record            | Authority over                                                                  | Never holds                      | Exists first?                  |
+| ----------------- | ------------------------------------------------------------------------------- | -------------------------------- | ------------------------------ |
+| The specification | **content** — requirements, constraints, design, testing strategy, traceability | the live status of the work      | **yes, for a Feature**         |
+| The work item     | **delivery state** — status, priority, value, risk, rank, dependencies          | requirements, design, test plans | yes, for a bug, spike or chore |
 
 - A specification carries its own **document** maturity and nothing about
   delivery. The work's status and scoring live in the item, and only there. Two
   copies of a status is two answers to one question.
 - The specification lists item **ids**, not restated titles.
 - **One claim lives in one place**: the acceptance-criteria section. An item
-  *references* claim ids; it never restates the claim text. Those ids are always
+  _references_ claim ids; it never restates the claim text. Those ids are always
   already there — the specification was written first.
 - Derived fields are recomputed, never hand-edited. The inverse of a dependency
   is not a claim of its own.
@@ -89,7 +89,7 @@ form, and it is also the useful one — it tells the next reader what is missing
 rather than making them diff against the blank to find out.
 
 **An unwritten section that gates something says that too.** Where a section is
-the coverage gate, its emptiness *is* the gate holding, and the document should
+the coverage gate, its emptiness _is_ the gate holding, and the document should
 say which downstream stage is therefore blocked. A gate that looks satisfied is
 worse than no gate: it is the one failure mode nothing downstream can detect,
 because every reader takes it at its word.
@@ -172,7 +172,7 @@ not hold that, so the prose has to, or it leaves with the paste.
   ([`test-from-scenarios`](../test-from-scenarios/SKILL.md)). An unbuilt claim
   is marked once, in its matrix row — the row that names no test. The claim
   itself carries no build state, or there are two stores for one answer. A
-  *withdrawn* claim is the exception, marked on the claim, because the matrix
+  _withdrawn_ claim is the exception, marked on the claim, because the matrix
   has no row for a claim that was never going to be built. Nothing else, and
   nothing implying the scenarios execute.
 
@@ -189,7 +189,7 @@ names the scheme.
 This is a writing rule, not a renumbering one. Per-scheme numbering is
 deliberate: it is what lets a scope carry its own records without reserving
 numbers from a shared pool. The collision is only ever in how a number is
-*referred to*.
+_referred to_.
 
 ## Section ownership
 

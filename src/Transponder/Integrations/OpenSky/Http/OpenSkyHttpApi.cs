@@ -1,4 +1,7 @@
+using System;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Transponder.Integrations.OpenSky.Contracts;

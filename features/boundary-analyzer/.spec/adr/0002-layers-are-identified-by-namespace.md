@@ -12,7 +12,7 @@ type: adr
 
 Seven of the eighteen rules are about what may reference what — § 7's
 `TRN0001` – `TRN0007`, and B-009 requires them to be evaluated over method
-bodies. Every one of them is a sentence of the form "no *X* may name a *Y*",
+bodies. Every one of them is a sentence of the form "no _X_ may name a _Y_",
 so before any of them can be written the analyzer has to answer a question
 neither [ADR-0006](../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
 nor § 3 settles: **given a type, which layer is it?**
@@ -45,11 +45,11 @@ identification seven times against a guess.
 
 ## Considered options
 
-| Option | Summary | Why not |
-| ------ | ------- | ------- |
-| A marker attribute per layer | Each layer's types carry `[Layer(Layer.Contract)]`; the rule reads the attribute. | Unambiguous and it survives a reorganization, but it is a new public surface on every type the analyzer cares about, invented for the analyzer. It also fails open: a type that forgets the attribute is classified as nothing and every rule passes it, which is the "satisfied by absence" failure ADR-0006 exists to retire. |
-| One project per layer | The compiler enforces the coarse cases with no analyzer at all; the rule reads the assembly. | It is a restructure of the whole repository for one Feature, and it breaks something deliberate: the integration lives inside `Transponder` so its contract, wire types and implementation can stay `internal` and be reached by tests through `InternalsVisibleTo`. Split into projects, they would have to be `public` to be composed — the visibility claim traded away for the enforcement of it. |
-| **Namespace, from the folder convention (chosen)** | The rule reads the containing namespace of the declaring symbol and of the referenced symbol, against the layout `transponder-conventions` references/coding.md § "Project structure" already fixes. | — |
+| Option                                             | Summary                                                                                                                                                                                              | Why not                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A marker attribute per layer                       | Each layer's types carry `[Layer(Layer.Contract)]`; the rule reads the attribute.                                                                                                                    | Unambiguous and it survives a reorganization, but it is a new public surface on every type the analyzer cares about, invented for the analyzer. It also fails open: a type that forgets the attribute is classified as nothing and every rule passes it, which is the "satisfied by absence" failure ADR-0006 exists to retire.                                                                       |
+| One project per layer                              | The compiler enforces the coarse cases with no analyzer at all; the rule reads the assembly.                                                                                                         | It is a restructure of the whole repository for one Feature, and it breaks something deliberate: the integration lives inside `Transponder` so its contract, wire types and implementation can stay `internal` and be reached by tests through `InternalsVisibleTo`. Split into projects, they would have to be `public` to be composed — the visibility claim traded away for the enforcement of it. |
+| **Namespace, from the folder convention (chosen)** | The rule reads the containing namespace of the declaring symbol and of the referenced symbol, against the layout `transponder-conventions` references/coding.md § "Project structure" already fixes. | —                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ## Decision
 

@@ -6,9 +6,10 @@ This document establishes development practices for the Transponder repository, 
 
 **Design Authority**: `README.md` is the canonical specification today — audience, core idea, the app, the operators, the data sources and their limits, demo resilience, the closing act, and the open items. When a Feature gets its own specification it lives in that Feature's `.spec/README.md` — [`spec-and-traceability`](.skills/spec-and-traceability/SKILL.md) holds the model, [`transponder-conventions`](.skills/transponder-conventions/SKILL.md) this repository's layout, and [`.spec/templates/feature.md`](.spec/templates/feature.md) the blank. When conflicts arise between implementation and specification, the specification takes precedence and must be updated alongside code changes.
 
-**Specification-Driven Chain**: Development follows an artifact progression from specification (§§ 1-5 of the Feature's `.spec/README.md`) → claim (§ 3) → scenario (its `.feature` file) → work item (`<id>.yml`, beside that Feature's specification) → xUnit test → implementation. **The specification comes first and stands alone** — it needs no work item to exist, because it is the agreement that items are later cut from. The item sits where *delivery* begins, not where the thinking begins; a bug, spike or chore starts there instead, and may produce a spec delta afterwards. Every stage must be traceable through § 9 Traceability Matrix, and none can be skipped without documented exemption. Scenarios are documentation — there is no Gherkin runner in this repository; the tests in `test/UnitTests` are what execute.
+**Specification-Driven Chain**: Development follows an artifact progression from specification (§§ 1-5 of the Feature's `.spec/README.md`) → claim (§ 3) → scenario (its `.feature` file) → work item (`<id>.yml`, beside that Feature's specification) → xUnit test → implementation. **The specification comes first and stands alone** — it needs no work item to exist, because it is the agreement that items are later cut from. The item sits where _delivery_ begins, not where the thinking begins; a bug, spike or chore starts there instead, and may produce a spec delta afterwards. Every stage must be traceable through § 9 Traceability Matrix, and none can be skipped without documented exemption. Scenarios are documentation — there is no Gherkin runner in this repository; the tests in `test/UnitTests` are what execute.
 
 **Four Mandatory Rules**:
+
 1. Author or amend scenarios before implementing changes
 2. Correct specifications rather than relying on conversation for clarification
 3. Pull requests document what changed upstream through their body text
@@ -40,12 +41,12 @@ One rule belongs here, because it is what stops two people taking the same work:
 
 Each class of rule has one home. Read the owner, not a copy of it:
 
-| What | Where it is written |
-| --- | --- |
-| Naming, modifier order, braces, analyzer suppressions | [`.editorconfig`](.editorconfig) — the compiler reads it |
+| What                                                                                | Where it is written                                                   |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Naming, modifier order, braces, analyzer suppressions                               | [`.editorconfig`](.editorconfig) — the compiler reads it              |
 | Project layout, where integrations go, testing conventions, build and test commands | [`transponder-conventions`](.skills/transponder-conventions/SKILL.md) |
-| Package versions | [`Directory.Packages.props`](Directory.Packages.props) |
-| Build targets, CI, regenerating the workflow | [`nuke-build`](.skills/nuke-build/SKILL.md) |
+| Package versions                                                                    | [`Directory.Packages.props`](Directory.Packages.props)                |
+| Build targets, CI, regenerating the workflow                                        | [`nuke-build`](.skills/nuke-build/SKILL.md)                           |
 
 Four traps are worth carrying here, because each costs real damage when missed
 and none of them changes:
@@ -86,39 +87,39 @@ Skills come in three kinds, and a skill is never a mixture of them.
 
 **Method** — portable to another repository; names no path, command or provider. Each one's **Project rules** preamble points at the companion:
 
-| Skill | Covers |
-| --- | --- |
-| `deliver-change` | item → worktree → specification → pull request → checks |
-| `coding-conventions` | orient, stop on a gap, keep the design direct, put a rule where it runs, what a skill is for |
-| `test-from-scenarios` | a claim first, an injected clock, synthetic fixtures, an assertion that can fail |
-| `clarify-requirements` | when to ask versus decide, and writing the answer back |
-| `spec-and-traceability` | the specification model: two records, one authority each; claims and blast radius |
+| Skill                   | Covers                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| `deliver-change`        | item → worktree → specification → pull request → checks                                      |
+| `coding-conventions`    | orient, stop on a gap, keep the design direct, put a rule where it runs, what a skill is for |
+| `test-from-scenarios`   | a claim first, an injected clock, synthetic fixtures, an assertion that can fail             |
+| `clarify-requirements`  | when to ask versus decide, and writing the answer back                                       |
+| `spec-and-traceability` | the specification model: two records, one authority each; claims and blast radius            |
 
 **Companion** — the only skill that names this repository:
 
-| Skill | Covers |
-| --- | --- |
+| Skill                     | Covers                                                                                                                                                                |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `transponder-conventions` | paths, layout, `.editorconfig` traps, central packages, the `.issue/` tracker, the build and test commands, the `B-00n` scheme, the twelve sections and who owns each |
 
 **Technology** — about a library or tool, and silent about the product:
 
-| Skill | Covers |
-| --- | --- |
-| `flurl-http-client` | the client cache, URL building, keeping the response, 429 as data, tokens, `HttpTest` |
-| `dynamic-data-pipeline` | `EditDiff` in the client through `Bind`, staleness and expiry |
-| `akka-actor` | actor shape, registration, supervision, what an actor is for |
-| `mapping` | Mapperly at one boundary; conversions and derived values stay explicit |
-| `language-ext-usage` | `Option`/`Either`, and where they stop |
-| `mvvm` | thin view models: user input in, actor message out, projection back |
-| `maui-ui` | C# markup, the binding surface, the swap test |
-| `nuke-build` | targets, the CI path-filter trap, regenerating the workflow |
+| Skill                   | Covers                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `flurl-http-client`     | the client cache, URL building, keeping the response, 429 as data, tokens, `HttpTest` |
+| `dynamic-data-pipeline` | `EditDiff` in the client through `Bind`, staleness and expiry                         |
+| `akka-actor`            | actor shape, registration, supervision, what an actor is for                          |
+| `mapping`               | Mapperly at one boundary; conversions and derived values stay explicit                |
+| `language-ext-usage`    | `Option`/`Either`, and where they stop                                                |
+| `mvvm`                  | thin view models: user input in, actor message out, projection back                   |
+| `maui-ui`               | C# markup, the binding surface, the swap test                                         |
+| `nuke-build`            | targets, the CI path-filter trap, regenerating the workflow                           |
 
 **Architecture** — this system's shape, with the reasoning in an ADR:
 
-| Skill | Covers |
-| --- | --- |
-| `api-contract` | the components between a provider and the domain, and which responsibility each owns ([ADR-0002](.spec/adr/0002-contract-client-strategy-tracker.md)) |
-| `hot-swap-source` | the swap decorator, disposal discipline, what must not be rebuilt ([ADR-0003](.spec/adr/0003-scrutor-for-decorator-registration.md)) |
-| `domain-model` | the abstract base, units, optional values ([ADR-0005](.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)) |
+| Skill             | Covers                                                                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api-contract`    | the components between a provider and the domain, and which responsibility each owns ([ADR-0002](.spec/adr/0002-contract-client-strategy-tracker.md)) |
+| `hot-swap-source` | the swap decorator, disposal discipline, what must not be rebuilt ([ADR-0003](.spec/adr/0003-scrutor-for-decorator-registration.md))                  |
+| `domain-model`    | the abstract base, units, optional values ([ADR-0005](.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md))                                   |
 
 Read the method skill your work belongs to **and** `transponder-conventions`, plus the skills a role names before acting in that role. The stage-day runbook is [`docs/runbook.md`](docs/runbook.md), not a skill — it is operational, not a rule.

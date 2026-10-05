@@ -1,3 +1,7 @@
+using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui.Hosting;
+
 namespace Gui.Container;
 
 public class UserInterfaceBuilder

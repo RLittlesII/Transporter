@@ -1,6 +1,8 @@
+using System;
 using Akka.Actor;
 using Akka.Hosting;
 using Akka.Hosting.Maui;
+using Microsoft.Maui.Hosting;
 
 namespace Gui.Container;
 

@@ -41,7 +41,7 @@ and § 9 has no `Missing` row". § 9 is the coverage matrix: a row leaves
 coverage waited on the implementation, and the implementation was supposed to
 wait on approval. For most Features that circle is merely uncomfortable — the
 work goes ahead and the document is signed afterwards, which is what `0002` and
-`0003` did. For a Feature whose § 9 names *its own* tests, an analyzer that
+`0003` did. For a Feature whose § 9 names _its own_ tests, an analyzer that
 enforces claims, the circle is closed: that specification could never have been
 approved before being built, no matter who was being careful.
 

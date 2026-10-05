@@ -9,13 +9,13 @@ Everything specific to this repository. Each section below extends one method
 skill — read that skill first, then the reference here, which wins where they
 differ.
 
-| Reference | Extends | Holds |
-|---|---|---|
-| [coding](references/coding.md) | [`coding-conventions`](../coding-conventions/SKILL.md) | naming, layout, project structure, dependencies, generated files, comments |
-| [delivery](references/delivery.md) | [`deliver-change`](../deliver-change/SKILL.md) | the local tracker, branch and worktree shapes, verify and publish |
-| [testing](references/testing.md) | [`test-from-scenarios`](../test-from-scenarios/SKILL.md) | xUnit, assertions, doubles, generated fixtures, analyzer tests |
-| [questions](references/questions.md) | [`clarify-requirements`](../clarify-requirements/SKILL.md) | what is worth asking here, and where the answer already is |
-| [specs](references/specs.md) | [`spec-and-traceability`](../spec-and-traceability/SKILL.md) | where records live, the templates, claim ids, section ownership |
+| Reference                            | Extends                                                      | Holds                                                                      |
+| ------------------------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| [coding](references/coding.md)       | [`coding-conventions`](../coding-conventions/SKILL.md)       | naming, layout, project structure, dependencies, generated files, comments |
+| [delivery](references/delivery.md)   | [`deliver-change`](../deliver-change/SKILL.md)               | the local tracker, branch and worktree shapes, verify and publish          |
+| [testing](references/testing.md)     | [`test-from-scenarios`](../test-from-scenarios/SKILL.md)     | xUnit, assertions, doubles, generated fixtures, analyzer tests             |
+| [questions](references/questions.md) | [`clarify-requirements`](../clarify-requirements/SKILL.md)   | what is worth asking here, and where the answer already is                 |
+| [specs](references/specs.md)         | [`spec-and-traceability`](../spec-and-traceability/SKILL.md) | where records live, the templates, claim ids, section ownership            |
 
 ## Before anything
 
@@ -49,7 +49,7 @@ start at all, or stop it being started twice.
   ([lesson 0009](../../.spec/lessons/0009-a-stack-drains-into-its-base-not-into-main.md)).
 - **Terse, and XML over inline.** A `<summary>` is one line, `<remarks>` one
   sentence and only for what the code cannot state, an inline comment one line
-  saying a *why*. Reasoning belongs in the specification, an ADR or a lesson —
+  saying a _why_. Reasoning belongs in the specification, an ADR or a lesson —
   cite instead of explaining.
 - **`./build.sh`** is what CI runs and what a change is verified with; read
   `Format`'s output rather than its exit code

@@ -4,30 +4,30 @@ Where every record lives, the templates, claim ids, the numbering schemes, and w
 
 ## Where things live
 
-| Path | Holds |
-|---|---|
-| [`README.md`](../../../README.md) | the project-wide specification |
-| `features/<slug>/.spec/README.md` | one Feature's specification, twelve sections in order — permanent, never archived |
-| `features/<slug>/.spec/<slug>.feature` | that Feature's scenarios |
-| `features/<slug>/.spec/{decisions,lessons,adr}/` | that Feature's own records |
-| [`.spec/adr/`](../../../.spec/adr/) | **cross-cutting** technical decisions, numbered repository-wide from `0001` |
-| [`.spec/lessons/`](../../../.spec/lessons/) | **cross-cutting** lessons, numbered repository-wide from `0001` |
-| [`.spec/templates/`](../../../.spec/templates/) | the blanks |
-| `features/<slug>/.issue/<id>-<slug>.yml` | one work item cut from that Feature's specification |
-| [`.issue/`](../../../.issue/) | **cross-cutting** work items — a bug, spike or chore with no specification; `.issue/.sequence` is the last id handed out, repository-wide |
+| Path                                             | Holds                                                                                                                                     |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [`README.md`](../../../README.md)                | the project-wide specification                                                                                                            |
+| `features/<slug>/.spec/README.md`                | one Feature's specification, twelve sections in order — permanent, never archived                                                         |
+| `features/<slug>/.spec/<slug>.feature`           | that Feature's scenarios                                                                                                                  |
+| `features/<slug>/.spec/{decisions,lessons,adr}/` | that Feature's own records                                                                                                                |
+| [`.spec/adr/`](../../../.spec/adr/)              | **cross-cutting** technical decisions, numbered repository-wide from `0001`                                                               |
+| [`.spec/lessons/`](../../../.spec/lessons/)      | **cross-cutting** lessons, numbered repository-wide from `0001`                                                                           |
+| [`.spec/templates/`](../../../.spec/templates/)  | the blanks                                                                                                                                |
+| `features/<slug>/.issue/<id>-<slug>.yml`         | one work item cut from that Feature's specification                                                                                       |
+| [`.issue/`](../../../.issue/)                    | **cross-cutting** work items — a bug, spike or chore with no specification; `.issue/.sequence` is the last id handed out, repository-wide |
 
 There is no epic directory: an epic is an item of `type: epic` whose `children`
 list the Features under it.
 
 ## The templates
 
-| Template | Produces |
-|---|---|
-| [`feature.md`](../../../.spec/templates/feature.md) | a Feature's `.spec/README.md` |
-| [`adr.md`](../../../.spec/templates/adr.md) | one `adr/` record |
-| [`decision.md`](../../../.spec/templates/decision.md) | one `decisions/` record |
-| [`lesson.md`](../../../.spec/templates/lesson.md) | one `lessons/` record |
-| [`item.yml`](../../../.spec/templates/item.yml) | one `.issue/` work item |
+| Template                                              | Produces                      |
+| ----------------------------------------------------- | ----------------------------- |
+| [`feature.md`](../../../.spec/templates/feature.md)   | a Feature's `.spec/README.md` |
+| [`adr.md`](../../../.spec/templates/adr.md)           | one `adr/` record             |
+| [`decision.md`](../../../.spec/templates/decision.md) | one `decisions/` record       |
+| [`lesson.md`](../../../.spec/templates/lesson.md)     | one `lessons/` record         |
+| [`item.yml`](../../../.spec/templates/item.yml)       | one `.issue/` work item       |
 
 **[`item.yml`](../../../.spec/templates/item.yml) is the item schema**, commented
 field by field — `type`, `status`, `risk` and `title` are never omitted, and
@@ -73,17 +73,17 @@ Claims carry a `B-` prefix and identify themselves. Nothing else here does:
 three schemes number from `0001` independently, and the per-Feature schemes
 start again in every Feature.
 
-| Written in full | Scheme |
-|---|---|
+| Written in full                                            | Scheme                              |
+| ---------------------------------------------------------- | ----------------------------------- |
 | `features/aircraft-source/.issue/0001-aircraft-source.yml` | work item, repository-wide sequence |
-| `ADR-0001` | root ADR, repository-wide |
-| `lesson 0001` | root lesson, repository-wide |
-| `features/<slug>/.spec/decisions/0001` | that Feature's decisions |
-| `features/<slug>/.spec/adr/0001` | that Feature's own ADRs |
+| `ADR-0001`                                                 | root ADR, repository-wide           |
+| `lesson 0001`                                              | root lesson, repository-wide        |
+| `features/<slug>/.spec/decisions/0001`                     | that Feature's decisions            |
+| `features/<slug>/.spec/adr/0001`                           | that Feature's own ADRs             |
 
 **In prose, write the scheme with the number.** A number may appear bare only
 where its field says what it is — `parent: "0001"` in an item, or a `## Tasks`
-table whose column reads *Item*.
+table whose column reads _Item_.
 
 ## Section ownership
 
@@ -91,23 +91,23 @@ Four roles own the specification chain, declared under
 [`.agents/`](../../../.agents/README.md). **This is the only place the mapping is
 written**; each role file names its own sections and links here.
 
-| Section | Owner |
-|---|---|
-| 1 Business Goal | `spec-author` |
-| 2 User Needs | `spec-author` |
-| 3 Acceptance Criteria | `spec-author` |
-| 4 Constraints | `spec-author` |
-| 5 Out of Scope | `spec-author` |
-| 6 Concern Separation | `implementer` |
-| 7 Technical Design | `implementer` |
-| 8 Testing Strategy | `test-writer` |
-| 9 Traceability Matrix | `test-writer` |
-| 10 Lessons / Spec Deltas | the role that closed the bug |
-| 11 Open Questions | any blocked role |
-| 12 Sign-off | `spec-reviewer` |
-| Decisions (index) | the role that made or reversed the call |
-| `## Tasks` | `spec-author`, from that Feature's `.issue/` items |
-| `## Scoring` | `spec-author`, from the item's value and risk |
+| Section                  | Owner                                              |
+| ------------------------ | -------------------------------------------------- |
+| 1 Business Goal          | `spec-author`                                      |
+| 2 User Needs             | `spec-author`                                      |
+| 3 Acceptance Criteria    | `spec-author`                                      |
+| 4 Constraints            | `spec-author`                                      |
+| 5 Out of Scope           | `spec-author`                                      |
+| 6 Concern Separation     | `implementer`                                      |
+| 7 Technical Design       | `implementer`                                      |
+| 8 Testing Strategy       | `test-writer`                                      |
+| 9 Traceability Matrix    | `test-writer`                                      |
+| 10 Lessons / Spec Deltas | the role that closed the bug                       |
+| 11 Open Questions        | any blocked role                                   |
+| 12 Sign-off              | `spec-reviewer`                                    |
+| Decisions (index)        | the role that made or reversed the call            |
+| `## Tasks`               | `spec-author`, from that Feature's `.issue/` items |
+| `## Scoring`             | `spec-author`, from the item's value and risk      |
 
 **`implementer` owning § 7 is a compromise.** There is no separate architect
 role here and § 7 must have exactly one owner, so it sits with the role that

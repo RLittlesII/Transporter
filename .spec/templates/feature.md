@@ -218,11 +218,11 @@ spec_status: draft
      There is NO Overall row. The frontmatter's `spec_status` is the single
      store for document maturity. -->
 
-| Sections   | Owner          | Status   |
-| ---------- | -------------- | -------- |
-| §§ 1-5     | spec-author    | 🟡 Draft |
-| §§ 6-7     | implementer    | 🟡 Draft |
-| §§ 8-9     | test-writer    | 🟡 Draft |
+| Sections | Owner       | Status   |
+| -------- | ----------- | -------- |
+| §§ 1-5   | spec-author | 🟡 Draft |
+| §§ 6-7   | implementer | 🟡 Draft |
+| §§ 8-9   | test-writer | 🟡 Draft |
 
 Overall is the frontmatter's `spec_status`, not a row here. `spec-reviewer`
 flips it to `approved` when every row above is 🟢 — when the sections are
@@ -256,9 +256,9 @@ is that incident. The rule that an item does not start against 🟡 rows is
      agreed. The items are in .issue/ beside this file, so link each id to
      its own file. -->
 
-| Item                            | Claims              |
-| ------------------------------- | ------------------- |
-| [`0002`](../.issue/{{item_file}}) | {{claim_ids}}     |
+| Item                              | Claims        |
+| --------------------------------- | ------------- |
+| [`0002`](../.issue/{{item_file}}) | {{claim_ids}} |
 
 ## Scoring
 

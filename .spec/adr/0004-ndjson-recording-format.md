@@ -49,12 +49,12 @@ replace it with a timestamp of the recorder's own.
 
 ## Considered options
 
-| Option | Summary | Why not |
-| ------ | ------- | ------- |
+| Option                     | Summary                                                                                                                                  | Why not                                                                                                                                                                                                                                                                        |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | One JSON file per snapshot | A directory of timestamped files, one payload each. Trivially inspectable one at a time, and deleting a bad snapshot is deleting a file. | Hundreds of files for a few minutes of polling, and the playback order lives in the filenames rather than in the data. A snapshot interrupted mid-write is a silent gap in a directory listing, where in a line-oriented file it is a torn last line that reads as what it is. |
-| SQLite | A `snapshot(seq, received_at, raw_body)` table. Durable, ordered, indexed. | A persistence package and a schema to serve playback that only reads forward. The indexing is bought and never used, and the recording stops being something `head` and `wc -l` can answer questions about — which matters because these files get scrubbed by hand. |
-| Parquet or a binary log | Columnar or framed binary. Compact. | Compression and column layout for a few minutes of JSON that is never aggregated. Not inspectable, not scrubbable without tooling, and a second serialization concept in a demo that has one. |
-| **NDJSON append log** | **Chosen.** One line per snapshot: the provider's payload verbatim, beside the instant it arrived. | — |
+| SQLite                     | A `snapshot(seq, received_at, raw_body)` table. Durable, ordered, indexed.                                                               | A persistence package and a schema to serve playback that only reads forward. The indexing is bought and never used, and the recording stops being something `head` and `wc -l` can answer questions about — which matters because these files get scrubbed by hand.           |
+| Parquet or a binary log    | Columnar or framed binary. Compact.                                                                                                      | Compression and column layout for a few minutes of JSON that is never aggregated. Not inspectable, not scrubbable without tooling, and a second serialization concept in a demo that has one.                                                                                  |
+| **NDJSON append log**      | **Chosen.** One line per snapshot: the provider's payload verbatim, beside the instant it arrived.                                       | —                                                                                                                                                                                                                                                                              |
 
 ## Decision
 

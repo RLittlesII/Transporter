@@ -1,3 +1,5 @@
+using System;
+
 namespace Transponder.Integrations.OpenSky.Contracts;
 
 /// <summary>

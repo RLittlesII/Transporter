@@ -7,23 +7,23 @@
 
 ### New Rules
 
-Rule ID | Category | Severity | Notes
---------|----------|----------|------
-TRN0001 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0002 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0003 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0004 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0005 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0006 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0007 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0008 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0009 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0010 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0011 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0012 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0013 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0014 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0015 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0016 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0017 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
-TRN0018 | Transponder.Boundaries | Error | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7
+| Rule ID | Category               | Severity | Notes                                                               |
+| ------- | ---------------------- | -------- | ------------------------------------------------------------------- |
+| TRN0001 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0002 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0003 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0004 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0005 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0006 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0007 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0008 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0009 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0010 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0011 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0012 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0013 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0014 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0015 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0016 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0017 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |
+| TRN0018 | Transponder.Boundaries | Error    | A boundary rule; see features/boundary-analyzer/.spec/README.md § 7 |

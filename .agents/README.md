@@ -30,11 +30,11 @@ implementer works from the failing test and the claims it cites. The reviewer
 works from the diff and the claims it cites. That is what makes the chain worth
 having: no stage has to reconstruct the reasoning of the stage before.
 
-| Role | File |
-|---|---|
-| `spec-author` | [`spec-author.md`](spec-author.md) |
-| `test-writer` | [`test-writer.md`](test-writer.md) |
-| `implementer` | [`implementer.md`](implementer.md) |
+| Role            | File                                   |
+| --------------- | -------------------------------------- |
+| `spec-author`   | [`spec-author.md`](spec-author.md)     |
+| `test-writer`   | [`test-writer.md`](test-writer.md)     |
+| `implementer`   | [`implementer.md`](implementer.md)     |
 | `spec-reviewer` | [`spec-reviewer.md`](spec-reviewer.md) |
 
 Which sections each role owns — including § 10, § 11 and Decisions — is written

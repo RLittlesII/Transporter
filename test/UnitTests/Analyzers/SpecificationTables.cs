@@ -34,6 +34,6 @@ internal static class SpecificationTables
         }
 
         return directory?.FullName
-            ?? throw new InvalidOperationException("No Transponder.slnx above the test assembly, so the repository root cannot be found.");
+               ?? throw new InvalidOperationException("No Transponder.slnx above the test assembly, so the repository root cannot be found.");
     });
 }

@@ -58,10 +58,10 @@ Under the method skill's step numbers:
    treating a green build as a green test run, and note that `Format` proceeds
    after failure, so read its output rather than the exit code. CI skips a
    markdown-only pull request, so run it locally for a documentation change too.
-6. The user-visible surface is the MAUI app ([`maui-ui`](../../maui-ui/SKILL.md)).
-7. Launch against a recorded or simulated source
+2. The user-visible surface is the MAUI app ([`maui-ui`](../../maui-ui/SKILL.md)).
+3. Launch against a recorded or simulated source
    ([`api-contract`](../../api-contract/SKILL.md)), never a live provider.
-9. CI runs `./build.cmd` on pull requests to `main`. A markdown-only pull
+4. CI runs `./build.cmd` on pull requests to `main`. A markdown-only pull
    request shows no check at all, by design — see
    [`nuke-build`](../../nuke-build/SKILL.md).
 

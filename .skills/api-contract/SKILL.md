@@ -41,16 +41,16 @@ public interface ITrackerSource
 }
 ```
 
-| Component | ADR-0002 item |
-| --- | --- |
-| API types and the envelope | 1 |
-| The API contract | 2 |
-| The snapshot | 3 |
-| The snapshot client | 4 |
-| The cache | 5 |
-| The tracker source strategy | 6 |
-| The swap decorator | 7 |
-| The fleet tracker | 8 |
+| Component                   | ADR-0002 item |
+| --------------------------- | ------------- |
+| API types and the envelope  | 1             |
+| The API contract            | 2             |
+| The snapshot                | 3             |
+| The snapshot client         | 4             |
+| The cache                   | 5             |
+| The tracker source strategy | 6             |
+| The swap decorator          | 7             |
+| The fleet tracker           | 8             |
 
 Two mappings, two owners — ADR-0002 states it after item 8: rows to snapshot is
 hand-written in the client, snapshot to domain is the mapper in the strategy
@@ -91,7 +91,7 @@ provider publishing no version has nothing to be agnostic about, so an invented
 `V1` is the internal version number the pattern forbids.
 
 **Source-specific controls are constructor or options input to one client**,
-never on a contract or a seam. A source that needs to tell the UI *about itself*
+never on a contract or a seam. A source that needs to tell the UI _about itself_
 — display name, which columns make sense — does so through a separate small
 description, not by widening a per-type interface.
 

@@ -26,7 +26,7 @@ gap, and an empty grid reads as a crash to anyone not following closely.
 
 A busy indicator says "this is a transition, not a failure", which is exactly
 what the audience needs to be told at the one moment the demo is making its
-point. The claim being demonstrated is that *nothing downstream changed*, so the
+point. The claim being demonstrated is that _nothing downstream changed_, so the
 gap should look deliberate and the refill should look instant.
 
 ## Rejected
@@ -50,7 +50,7 @@ rehearse.
 
 ## Affects
 
-- § 5 row 7 — the indicator's *rendering* stays out of scope here; this records
+- § 5 row 7 — the indicator's _rendering_ stays out of scope here; this records
   the behavior it must express, not the control.
 - `hot-swap-source` § "There is a gap, and something must occupy it" — the table now records
   this as the chosen option.

@@ -38,16 +38,16 @@ makes the default and what a build sees. Sources live in
 [`BoundaryTestData`](../../test/UnitTests/Analyzers/BoundaryTestData.cs), one
 constant per layer.
 
-| Need | API |
-|---|---|
-| Name a file, so `*.g.cs` makes a tree generated code | `AddSource(name, source)` |
-| Several sources | `AddSources(params string[])`, or `AddSource` per file when names matter |
-| An `.editorconfig` severity or option | `AddGlobalOption(key, value)`, `AddOption(path, key, value)` |
-| Documentation comments visible to the analyzer | `WithDocumentationMode(DocumentationMode.Parse)` |
-| A code fix | `WithCodeFix<TFix>()`, then `results.CodeFixResults` |
-| A refactoring | `WithCodeRefactoring<T>()` |
-| A generator | `WithGenerator<T>()`, then `results.Results` |
-| Language version, preprocessor symbols, references | `WithLanguageVersion`, `AddPreprocessorSymbol`, `AddReferences` |
+| Need                                                 | API                                                                      |
+| ---------------------------------------------------- | ------------------------------------------------------------------------ |
+| Name a file, so `*.g.cs` makes a tree generated code | `AddSource(name, source)`                                                |
+| Several sources                                      | `AddSources(params string[])`, or `AddSource` per file when names matter |
+| An `.editorconfig` severity or option                | `AddGlobalOption(key, value)`, `AddOption(path, key, value)`             |
+| Documentation comments visible to the analyzer       | `WithDocumentationMode(DocumentationMode.Parse)`                         |
+| A code fix                                           | `WithCodeFix<TFix>()`, then `results.CodeFixResults`                     |
+| A refactoring                                        | `WithCodeRefactoring<T>()`                                               |
+| A generator                                          | `WithGenerator<T>()`, then `results.Results`                             |
+| Language version, preprocessor symbols, references   | `WithLanguageVersion`, `AddPreprocessorSymbol`, `AddReferences`          |
 
 ## Traps, each one paid for
 
@@ -89,7 +89,7 @@ constant per layer.
 
 ## A diagnostic ships a fix, or says why not
 
-B-020. A rule whose compliant form is *determined* by the claim gets a
+B-020. A rule whose compliant form is _determined_ by the claim gets a
 `CodeFixProvider` in the same item that builds the rule. A rule whose compliant
 form is a design decision gets a row in § 7 of the specification saying so.
 Deleting a member, renaming a public type, or introducing a seam that does not

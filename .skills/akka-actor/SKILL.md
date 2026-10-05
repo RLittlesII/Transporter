@@ -15,7 +15,7 @@ The division matters more than the syntax:
 
 - **Actors own time and failure.** A poll interval, a token refresh, a retry
   after a throttle response, a socket reconnect, a backoff. Anything that needs
-  to happen *again later* is an actor's job.
+  to happen _again later_ is an actor's job.
 - **The reactive cache owns collection state.** Which items exist, what changed,
   what expired ([`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md)).
 - An actor therefore emits snapshots and **never holds the collection the UI
@@ -31,14 +31,14 @@ The division matters more than the syntax:
   parameterless message gets a private constructor and a
   `static readonly Instance`, so there is one of it:
 
-  ```csharp
-  internal class Click
-  {
-      private Click() { }
+    ```csharp
+    internal class Click
+    {
+        private Click() { }
 
-      public static readonly Click Instance = new();
-  }
-  ```
+        public static readonly Click Instance = new();
+    }
+    ```
 
 - State is actor-local and private. It is not an invitation to share mutable
   state between actors.
@@ -50,10 +50,10 @@ The division matters more than the syntax:
 - Register through the container's Akka builder block, not ad-hoc at a call
   site:
 
-  ```csharp
-  .AddAkkaHost("<name>", static (system, registry) =>
-      registry.Register<ThingActor>(system.ActorOf(ThingActor.Props)))
-  ```
+    ```csharp
+    .AddAkkaHost("<name>", static (system, registry) =>
+        registry.Register<ThingActor>(system.ActorOf(ThingActor.Props)))
+    ```
 
 - View models take `IActorRegistry` and resolve from it. **Every `Ask<T>`
   carries an explicit timeout**; an `Ask` with no timeout is a hang waiting for
@@ -67,7 +67,7 @@ The division matters more than the syntax:
 
 - **A poller** schedules itself, refreshes its token on expiry or on a `401`,
   and honours the provider's retry-after header on a throttle response. It owns
-  *when* and *how often*; the HTTP mechanics belong to a plain client class it
+  _when_ and _how often_; the HTTP mechanics belong to a plain client class it
   calls ([`flurl-http-client`](../flurl-http-client/SKILL.md)) — which is also
   what keeps that client testable, since `HttpTest` does not reach inside an
   actor.

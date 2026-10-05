@@ -49,15 +49,15 @@ touching nothing but documentation does not build. The attribute's
 [`.build/Build.cs`](../../.build/Build.cs) are the filter — read them there.
 
 **The include is not redundant.** An exclude list alone generates a `paths:`
-list of nothing but `!` patterns, and GitHub triggers on *no* event when every
+list of nothing but `!` patterns, and GitHub triggers on _no_ event when every
 pattern is negative — the whole workflow would stop running. The `**/*` include
 is what makes the exclusions subtractive:
 
 ```yaml
-    paths:
-      - '**/*'
-      - '!**/*.md'
-      - …
+paths:
+    - "**/*"
+    - "!**/*.md"
+    - …
 ```
 
 Three consequences:
@@ -67,7 +67,7 @@ Three consequences:
   list, ask whether a code change could ever match it. If it could, the filter
   will hide a broken build behind a green tick. Keep the list narrow and
   explicit rather than a blanket wildcard.
-- **A mixed pull request still builds.** `paths` skips only when *every* changed
+- **A mixed pull request still builds.** `paths` skips only when _every_ changed
   file matches an exclusion, so documentation plus one source file runs normally.
 - **A documentation change gets no CI build at all**, so the local run is the
   only run it will ever get. Run it anyway.

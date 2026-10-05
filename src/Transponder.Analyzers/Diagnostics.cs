@@ -173,5 +173,5 @@ internal static class Diagnostics
             DiagnosticSeverity.Error,
             isEnabledByDefault: true,
             description: claim + ClaimSeparator + summary
-                + ". The claim's text is in that specification's § 3; the diagnostic it is enforced by is in its § 7.");
+                         + ". The claim's text is in that specification's § 3; the diagnostic it is enforced by is in its § 7.");
 }
