@@ -6,14 +6,15 @@ status: ready-for-implementation
 
 priority: high
 risk: 3
-rank: 91
+rank: 96
 
 parent: "0001"
 children: []
 
 depends_on:
   - "0005"
-blocks: []
+blocks:
+  - "0031"
 spikes: []
 
 spec: features/aircraft-source/.spec/README.md
@@ -28,7 +29,7 @@ claims:
   - B-052
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-05"
 closed: null
 
 summary: |

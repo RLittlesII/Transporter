@@ -1,0 +1,108 @@
+id: "0030"
+type: feature
+title: Filter, sort, group, count, mark and bind one collection of vehicles
+
+status: ready-for-architecture
+
+priority: high
+value: 5
+risk: 3
+rank: 91
+
+parent: null
+children:
+  - "0031"
+  - "0032"
+  - "0033"
+  - "0034"
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: features/fleet-pipeline/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+  - B-021
+  - B-022
+  - B-023
+  - B-024
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  As a line-of-business .NET developer whose data lives behind REST endpoints
+  I want one collection of tracked vehicles that filters, sorts, groups, counts
+  and marks itself downstream of the tracker seam so that I can see that
+  nothing after the snapshot-to-changeset step is special, and lift the whole
+  pipeline into an application of my own.
+
+  `aircraft-source` built the step into the pipeline and stopped there on
+  purpose: its § 5 row 1 excludes the operators and says building them is the
+  next feature, and its B-042 claims only that `IFleetTracker` **owns** a
+  pipeline. Ownership of nothing survives any swap, so the closing act's claim
+  is vacuous until this Feature exists.
+
+  The children are slices of this item rather than work beside it, which is why
+  it carries all twenty-four claims.
+
+  § 12 is 🟡 on every row and § 11 holds three open questions, so this stays at
+  `ready-for-architecture` until the specification is signed.
+
+acceptance_criteria:
+  - "B-001 – B-005 — the spine: built once, one collection, no imperative
+    edit, disposal, the injected scheduler."
+  - "B-006 – B-008 — filtering from an observable predicate."
+  - "B-009 – B-011 — sorting from an observable comparer, ties on the key."
+  - "B-012 – B-015 — grouping, the abstract grouping key, and the counts."
+  - "B-016 – B-019 — a silent vehicle is marked and kept, at a configurable
+    five minutes, against the observed clock."
+  - "B-020 – B-022 — the source description, and the swap that edits nothing."
+  - "B-023, B-024 — what nothing here may name, and what no test may reach."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-05 — the person — the pipeline and the dashboard are two Features,
+    not one. This item is the pipeline, provable with no UI at all; the MAUI
+    surfaces, the view models and the composition of search text into a
+    predicate are `fleet-dashboard`'s, routed by § 5 rows 1 and 4. Rejected: a
+    single cache-to-screen Feature, whose § 9 could not go Verified until the
+    UI existed and which would have needed a decomposition pass later."
+  - "2026-10-05 — the person — the map view is excluded rather than deferred to
+    a named Feature (§ 5 row 3). It is optional in README.md and binds the same
+    one collection B-002 requires, so nothing here forecloses it."
+  - "2026-10-05 — the person — the abstract grouping key ADR-0005 item 2
+    requires, and the source-supplied column description `maui-ui` § \"The swap
+    test\" assumes, are claimed here (B-013, B-020) rather than added to
+    `aircraft-source` as a spec delta. The pipeline is what needs them, and the
+    claim belongs with the need. The cost is recorded in § Scoring against
+    `0032`: the member lands in a file `aircraft-source` owns."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The MAUI surfaces and the view models (§ 5 row 1) — `fleet-dashboard`."
+  - "`ExpireAfter` and removal on silence (§ 5 row 2) — the closing act's
+    source decides it the other way."
+  - "The swap decorator itself (§ 5 row 5) — `aircraft-source` `0006`."
