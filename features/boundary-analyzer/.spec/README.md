@@ -347,39 +347,49 @@ describes.
 | B-008    | `@B-008` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheEighteenAndNothingMore`                                                                                        | Verified |
 | B-009    | `@B-009` | `BoundaryAnalyzerTests.GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported`                                                                                                                | Verified |
 | B-010    | `@B-010` | `BoundaryAnalyzerTests.GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration`                                                                                                                | Verified |
-| B-011    | `@B-011` | `BoundaryAnalyzerTests.GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall`                                                                                                                   | Missing  |
-| B-012    | `@B-012` | `BoundaryAnalyzerTests.GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall`                                                                                                        | Missing  |
+| B-011    | `@B-011` | `BoundaryAnalyzerTests.GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall`                                                                                                                   | Verified |
+| B-012    | `@B-012` | `BoundaryAnalyzerTests.GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall`                                                                                                        | Verified |
 | B-013    | `@B-013` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenEachClaimIsClassified_ThenNoneIsAClaimAboutAComputedValue`                                                                                                     | Verified |
 | B-014    | `@B-014` | **Review**, done on `0020` — `OutputItemType="Analyzer"` with `ReferenceOutputAssembly="false"`, and no copy of `Transponder.Analyzers.dll` under `src/Transponder/bin`, `src/Gui/bin` or `test/UnitTests/bin`.          | Verified |
 | B-015    | `@B-015` | **Review**, done on `0020` and `0021` — `Microsoft.CodeAnalysis.CSharp` is referenced by the analyzer project and by the tests that drive it, by no application project, and no application file names an analyzer type. | Verified |
-| B-016    | `@B-016` | **Review** — a cite check, not a behaviour: each test name in `aircraft-source` § 9 exists in `test/UnitTests` spelled that way. A test asserting its own name proves nothing.                                           | Missing  |
+| B-016    | `@B-016` | **Review** — a cite check, not a behaviour: each test name in `aircraft-source` § 9 exists in `test/UnitTests` spelled that way. A test asserting its own name proves nothing.                                           | Verified |
 | B-017    | `@B-017` | **Review**, done on `0021` — a seeded reference to the row from `DemoViewModel` failed `./build.sh` with `error TRN0001` at that line and column, and the seed was reverted.                                             | Verified |
 | B-018    | `@B-018` | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoClaimInTheMappingTable_WhenTheDescriptorsAreRead_ThenItIsReportedAsUnclaimed`                                                                                     | Verified |
 | B-019    | `@B-019` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenARowIsRead_ThenItNamesASpecificationAndClaimAndRestatesNeitherTextNorTest`                                                                                     | Verified |
 | B-020    | `@B-020` | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoCodeFix_WhenTheMappingTableIsRead_ThenItRecordsWhyNoneIsPossible`                                                                                                 | Verified |
 
-Seventeen rows `Verified`, three `Missing` — **and the three are the gate**. What
-is proven is the analyzer's surface — the ids, the messages, the severities, the
-release record, the mapping against this document's own § 7 table, the
-exclusion of generated code, and a diagnostic that lands on the node and names
-the symbol — and B-009: a reference named only inside a method body is
-reported, which is the claim ADR-0006 rejected reflection over. B-010 and B-020
-joined them on `0023`, which built the seven declaration rules and the two fixes
-whose compliant form the claim determines. What is not proven is B-011 and
-B-012, the call-site rules on `0024`; and B-016, which cannot be `Verified`
-until the eighteen test names exist, so the last of them arrives with `0024`
-too.
+**Twenty rows `Verified`, none `Missing`: the gate is closed.** What is proven is
+the analyzer's surface — the ids, the messages, the severities, the release
+record, the mapping against this document's own § 7 table, the exclusion of
+generated code, and a diagnostic that lands on the node and names the symbol —
+and the three rule families, each reporting on what its claims are about: a
+reference named anywhere including a method body (B-009), a declaration's shape
+on that declaration (B-010), a registration and a double at the call that
+writes them (B-011, B-012). B-020 holds every diagnostic to a fix or a recorded
+reason, and three fixes ship. B-016 was the last to close, and only `0024` could
+close it: it is a cite check over the eighteen test names `aircraft-source` § 9
+fixes, and it cannot pass until the eighteenth exists.
+
+**A closed gate here is not a closed gate there.** This specification's own
+§ 9 says the analyzer does what it claims; `aircraft-source` § 9 still reports
+thirty-two rows unproven, because the behaviour its items compute is not this
+Feature's to build. What did leave that matrix is every claim ADR-0006 assigned
+to a diagnostic.
 
 The eighteen rows in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 are a separate
-gate, and six of them have now left `Missing`: its B-004 from `0021`, and its
-B-032 and B-044 – B-047 from `0022`, each by the test that matrix named for it
-(B-016). Its B-041 did not. The analyzer proves the half that forbids a view
-model naming a strategy, a client, a cache or the decorator; the half that says
-`IFleetTracker` wraps `ITrackerSource` and is what a view model depends on has
-no test yet, so that row now names both mechanisms and stays `Missing` — the
-shape its own § 9 prose gives B-010 and B-037. That matrix remains the only
-place those claims' build state is written.
+gate, and **sixteen of them have now left `Missing`**: B-004 from `0021`; B-032
+and B-044 – B-047 from `0022`; B-002, B-005 – B-007, B-014 and B-048 from
+`0023`; B-008, B-010, B-030 and B-031 from `0024`. Each left by the test that
+matrix named for it (B-016), under that name.
+
+**Two did not, and both for the same reason**: the claim has a half the analyzer
+cannot reach. B-037 wants the key lowercased on construction, which is `0005`'s
+mapper. B-041 wants `IFleetTracker` to wrap `ITrackerSource` and be what a view
+model depends on, which no test asserts yet. The analyzer's half of each passes;
+the rows name both mechanisms and stay `Missing`, because a row's status is the
+conjunction of what it names. That matrix remains the only place those claims'
+build state is written.
 
 Four rows name a review obligation rather than a test, for the reason § 8's
 coverage row gives: a test over a project file or a build script asserts the
@@ -416,7 +426,6 @@ are about to write has exactly that failure mode available to it.
 | #   | Question                                                                                                                                                                                                                                                                                           | Owner         | Target date                           |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------- |
 | 3   | Does this analyzer also carry [`replay-source`](../../replay-source/.spec/README.md) claims? That specification's § 9 is unwritten, so none is assigned yet, and B-008 fixes the set at eighteen. If any arrive, this is a § 3 amendment and a new `TRN` id, not an extension of an existing rule. | `spec-author` | Before `replay-source` § 9 is written |
-| 4   | When is this Feature scheduled against the talk date? This document answers the "by whom" half of `aircraft-source` § 11 row 3 and the "when" half remains open there. Its items can be cut and ranked without the answer; nothing can ship without it.                                            | the person    | Before any item claims `done`         |
 
 **Row 1 — answered: a rule identifies a layer by namespace.** Recorded as
 [adr/0002](adr/0002-layers-are-identified-by-namespace.md) rather than deleted,
@@ -424,6 +433,14 @@ with the marker attribute and the project-per-layer option and the reason each
 was rejected. Its number is not reused and rows 2 – 4 keep theirs, so a
 reference written while it was open still points at the question it meant. It
 unblocked `0022`.
+
+**Row 4 — answered: it landed on 2026-10-05, before the talk rather than
+against it.** The question was when this Feature would be scheduled, and the
+answer is that it is finished: `0020` – `0024` built all eighteen rules, § 9
+above reads twenty `Verified` and none `Missing`, and sixteen of the eighteen
+`aircraft-source` rows left `Missing` with them. That retires the "when" half of
+that specification's § 11 row 3, which this document had only answered the "by
+whom" half of. Its number is not reused and row 3 keeps its own.
 
 **Row 2 — answered: B-044 is the eighteenth, and
 [ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
