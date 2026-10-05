@@ -462,6 +462,34 @@ internal static class BoundaryTestData
         """;
 
     // lang=csharp
+    internal const string ContractMethodTakingCancellationFirst = """
+        using System.Threading;
+        using System.Threading.Tasks;
+
+        namespace Transponder.Integrations.OpenSky.Contracts;
+
+        internal interface IOpenSkyApi
+        {
+            Task<int> GetStates(CancellationToken cancellationToken, double lamin);
+        }
+        """;
+
+    // lang=csharp
+    internal const string PublicImplementation = """
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.Integrations.OpenSky.Http;
+
+        public class OpenSkyHttpApi : IOpenSkyApi
+        {
+            public Task<OpenSkyStatesResponse> GetStates(CancellationToken cancellationToken) =>
+                Task.FromResult(new OpenSkyStatesResponse());
+        }
+        """;
+
+    // lang=csharp
     internal const string ContractCarryingAVersion = """
         using System.Threading;
         using System.Threading.Tasks;

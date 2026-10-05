@@ -8,6 +8,7 @@
   <Folder Name="/src/">
     <Project Path="src/Transponder/Transponder.csproj" />
     <Project Path="src/Transponder.Analyzers/Transponder.Analyzers.csproj" />
+    <Project Path="src/Transponder.CodeFixes/Transponder.CodeFixes.csproj" />
     <Project Path="src\Gui\Gui.csproj" />
   </Folder>
   <Folder Name="/test/">

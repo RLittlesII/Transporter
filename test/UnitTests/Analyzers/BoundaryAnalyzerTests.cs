@@ -414,6 +414,14 @@ public class BoundaryAnalyzerTests
         messages.Should().Contain(static message => message.Contains("is not sealed"));
         messages.Should().Contain(static message => message.Contains("as a public method rather than an explicit implementation"));
         messages.Should().Contain(static message => message.Contains("is a second implementation"));
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0011")
+            .Select(static diagnostic => TextAt(diagnostic))
+            .Should()
+            .BeEquivalentTo(
+                ["OpenSkyHttpApi", "OpenSkyHttpApi", "GetStates", "OpenSkyBackupApi"],
+                "the clause about a member lands on that member, and the clauses about the type on the type");
         allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
             .Diagnostics
             .Should()
