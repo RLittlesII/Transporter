@@ -32,7 +32,7 @@ it. The traps:
   a reason written beside it, not a second blanket exclusion.
 - **Terse, and XML over inline.** A `<summary>` is one line. `<remarks>` is one
   sentence, and only for a fact the code cannot state. An inline comment is one
-  line, says a *why*, and is never a paragraph. Reasoning belongs in the
+  line, says a _why_, and is never a paragraph. Reasoning belongs in the
   specification, an ADR or a lesson — those are linkable; a comment restating one
   drifts from it. Cite instead of explaining.
 
@@ -79,15 +79,16 @@ All versions live in
   **Never hand-edit either** — the next regeneration discards the edit. The
   workflow is regenerated deliberately, because `AutoGenerate` is off:
 
-  ```
-  ./build.sh --generate-configuration GitHubActions_ci --host GitHubActions
-  ```
+    ```
+    ./build.sh --generate-configuration GitHubActions_ci --host GitHubActions
+    ```
 
-  Change the attribute, regenerate, and commit `.build/Build.cs` and `ci.yml`
-  together. [`nuke-build`](../../nuke-build/SKILL.md) has the traps — what
-  regeneration also rewrites, and why a negative-only path filter kills the
-  workflow. Mapperly's mappers are generated too
-  ([`mapping`](../../mapping/SKILL.md)).
+    Change the attribute, regenerate, and commit `.build/Build.cs` and `ci.yml`
+    together. [`nuke-build`](../../nuke-build/SKILL.md) has the traps — what
+    regeneration also rewrites, and why a negative-only path filter kills the
+    workflow. Mapperly's mappers are generated too
+    ([`mapping`](../../mapping/SKILL.md)).
+
 - `obj/` and `bin/` are build output and never appear in a diff.
 
 ## Documentation and diagrams

@@ -16,7 +16,7 @@ Review of pull request #1 rejected three tests in one pass:
 > We should not use reflection to test concerns. These are brittle low value
 > tests
 
-> Reflection makes it harder to reason about what is *actually* being tested.
+> Reflection makes it harder to reason about what is _actually_ being tested.
 
 The three were the ones that asserted over a type object rather than over a
 value the code computed — the contract's method list and parameter order for
@@ -26,7 +26,7 @@ reported `Verified`.
 
 A fourth followed in the next exchange. B-008's test resolved the contract out
 of a built container and asserted that the implementation type did not resolve
-and that one alias existed. It read as behaviour — a container *doing*
+and that one alias existed. It read as behaviour — a container _doing_
 something — which is why the first correction left it alone. It is not: what
 B-008 forbids is a registration shape, and asserting a shape by building the
 thing and looking at it is the same test in a costume.
@@ -52,10 +52,10 @@ the only time this costs nothing.
 The decision that should have stopped it was already in the repository and
 already made the argument.
 [ADR-0006](../adr/0006-an-analyzer-enforces-the-layer-boundaries.md) says the
-mechanism for a claim about what may *name* what is a compiler diagnostic, and
-names this exact failure in its rejected-options table: *"A § 9 row claiming a
+mechanism for a claim about what may _name_ what is a compiler diagnostic, and
+names this exact failure in its rejected-options table: _"A § 9 row claiming a
 reference rule is proven when only its signatures are is the fake-gate failure
-[lesson 0002] is about."* § 9 applied that to the eleven claims the ADR listed
+[lesson 0002] is about."_ § 9 applied that to the eleven claims the ADR listed
 and to no others — so B-002, B-005, B-008 and B-010's second clause, which are
 the same kind of claim, got xUnit names instead. The ADR's examples were read
 as its scope, and then the review's examples were read as theirs.
@@ -84,7 +84,7 @@ whole chain first exists to resolve. Finding the gap is the better half of
 this lesson: moving a claim to the mechanism that fits it is what exposed that
 no claim covered the other thing at all.
 
-B-010 keeps its xUnit test for the half that *is* behaviour, the throw on an
+B-010 keeps its xUnit test for the half that _is_ behaviour, the throw on an
 unset response, and reads `Missing` because the other half names a mechanism
 that does not exist. § 9 now states that rule where a reader meets it: a row is
 `Verified` when **every** mechanism it names passes, which is also why B-037

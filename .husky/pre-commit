@@ -1,0 +1,77 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+## IMPORTANT: husky re-execs this whole file as `sh -e "$0" "$@"`
+## (.husky/_/husky.sh:24), so everything below runs under errexit. A bare
+## command that fails aborts the hook on the spot. Each check therefore captures
+## its own exit status and the script decides at the end, so that one failing
+## check cannot silently skip the ones after it. Do not rewrite these `if !`
+## guards into bare invocations -- `if` conditions are the only reason errexit
+## is not already terminating this script.
+prettier_status=0
+npx --yes prettier --write "**/*.md" || prettier_status=$?
+
+## Verify staged C# files against the same formatting CI enforces
+## (VerifyFormat in .build/Build.cs, run by api.continuous.integration.yml).
+##
+## Verify, never fix. --verify-no-changes puts dotnet format in report mode, so
+## analyzer code fixes never fire here -- notably xUnit1026, which strips an
+## unused [Theory] parameter but leaves its data column, breaking arity at run
+## time. The alternative design, format-then-`git add`, would additionally fold
+## unstaged hunks of a partially staged file into the commit; this hook never
+## touches the index at all.
+##
+## Scoped to staged files, so a commit is never blocked by pre-existing drift in
+## files it does not touch. That is deliberately narrower than CI, which checks
+## the whole solution -- a commit that stages no .cs file but edits
+## Directory.Build.props or .editorconfig checks nothing here and can still
+## redden VerifyFormat. Passing this hook is not a guarantee of a green CI
+## format gate, only of the far more common case.
+##
+## Restore is left on: a developer's obj/ may be stale, unlike CI, where
+## VerifyFormat depends on the Restore target.
+##
+## Splitting on newline alone (IFS + set -f) keeps filenames containing spaces
+## intact, and core.quotePath=false keeps non-ASCII paths literal rather than
+## C-quoted. Both matter more than they look: `dotnet format` exits 0 on an
+## --include pattern that matches nothing, so a mis-split path does not error,
+## it fails open and lets an unformatted commit through.
+format_status=0
+staged_cs=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=AMR -- '*.cs')
+
+if [ -n "$staged_cs" ]; then
+    saved_ifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $staged_cs
+    set +f
+    IFS=$saved_ifs
+
+    if ! dotnet format Transponder.slnx --verify-no-changes --include "$@"; then
+        format_status=1
+        echo
+        echo "pre-commit: these staged C# files are not formatted:"
+        echo
+        printf '    %s\n' "$@"
+        echo
+        echo "Fix with:"
+        echo
+        echo "    dotnet format Transponder.slnx --include \$(git diff --cached --name-only --diff-filter=AMR -- '*.cs')"
+        echo
+        echo "That command DOES apply analyzer code fixes. If the diff it produces"
+        echo "removes a [Theory] parameter, that is xUnit1026 -- make the parameter"
+        echo "genuinely used rather than deleting it, or its data column is orphaned."
+        echo
+        echo "Bypass with: git commit --no-verify"
+    fi
+fi
+
+if [ "$prettier_status" -ne 0 ]; then
+    echo
+    echo "pre-commit: prettier exited $prettier_status."
+fi
+
+if [ "$prettier_status" -ne 0 ] || [ "$format_status" -ne 0 ]; then
+    exit 1
+fi

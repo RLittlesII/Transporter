@@ -31,7 +31,7 @@ internal sealed class SwappingTrackerSource : ITrackerSource
   subscribes to the incoming one. The tracker and everything it owns never know
   it happened.
 - **There is no strategy resolver.** Nobody asks which strategy to use: the
-  decorator *is* the registration, so the set of strategies is known in one
+  decorator _is_ the registration, so the set of strategies is known in one
   place and no caller has to know it at all.
 - It is registered with Scrutor's `Decorate<>`
   ([ADR-0003](../../.spec/adr/0003-scrutor-for-decorator-registration.md)),
@@ -86,7 +86,7 @@ the tracker, which is why a swap cannot reach them:
 - `Group` and the per-group aggregates,
 - the `Bind` target and every view binding.
 
-A strategy's own cache is *not* on this list. It belongs to one strategy and
+A strategy's own cache is _not_ on this list. It belongs to one strategy and
 goes quiet with it; the continuity is downstream of the seam, not upstream. The
 UI's version of this rule is the swap test in
 [`maui-ui`](../maui-ui/SKILL.md).

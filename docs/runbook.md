@@ -21,7 +21,7 @@ this file is the order to do them in.
 - **Verify every credential** — the polled provider's client id and secret, and
   the push provider's key for the closing act. An expired key discovered
   mid-sentence is the worst possible time.
-- **Record replay data in rehearsal**, aircraft *and* vessels
+- **Record replay data in rehearsal**, aircraft _and_ vessels
   ([`features/replay-source`](../features/replay-source/.spec/README.md)).
   Record long enough that items go stale on playback, or the staleness part of
   the talk has nothing to show.
@@ -49,7 +49,7 @@ this file is the order to do them in.
 Swap the polled feed for the push feed **in the running app** and let the
 audience watch the same grid, filters, sorts and groups refill.
 
-What they should be watching is *the code that did not change*. Have the
+What they should be watching is _the code that did not change_. Have the
 pipeline on screen, or ready to show immediately after: same cache, same
 `Filter`, same `Sort`, same `Group`, same `Bind`. That is the whole argument.
 
@@ -69,11 +69,11 @@ looks like a bug.
 
 ## If something breaks
 
-| Symptom | First move |
-|---|---|
-| No data at all, live source | Check the IP — a cloud VM, or a VPN exiting through one. Switch to replay. |
-| Throttle responses | The budget is spent, or the retry is ignoring the provider's retry-after header. Switch to replay. |
-| Grid empty after the swap | The push feed never authenticated or never emitted. Swap to recorded vessel replay. |
+| Symptom                                       | First move                                                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| No data at all, live source                   | Check the IP — a cloud VM, or a VPN exiting through one. Switch to replay.                                   |
+| Throttle responses                            | The budget is spent, or the retry is ignoring the provider's retry-after header. Switch to replay.           |
+| Grid empty after the swap                     | The push feed never authenticated or never emitted. Swap to recorded vessel replay.                          |
 | Grid filling with items that should have gone | Expiry or staleness is not running — the clock is wrong. Mention it, move on; it is one slide, not the talk. |
 
 In every row the answer is the same shape: **swap the source, keep talking.**

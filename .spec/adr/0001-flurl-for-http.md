@@ -18,7 +18,7 @@ the places a hand-rolled client is easy to get wrong:
   every call. `extended=1` is the only thing that supplies aircraft category, so
   losing it degrades the grouped view silently rather than loudly.
 - **OAuth2 client credentials only**, with 30-minute tokens that must refresh on
-  expiry *and* on a `401`, because a token can die early.
+  expiry _and_ on a `401`, because a token can die early.
 - **A credit budget that the response reports.** `X-Rate-Limit-Remaining` is how
   a rehearsal learns its burn rate, and a `429` carries
   `X-Rate-Limit-Retry-After-Seconds` that should be honoured as given.
@@ -34,7 +34,7 @@ and `System.Text.Json`. That reverses here.
 
 ## Decision drivers
 
-- Tests that assert the *request*, not only the parsed response.
+- Tests that assert the _request_, not only the parsed response.
 - Token and rate-limit plumbing that lives in one place, not at every call site.
 - No second JSON serializer: the positional-array converter must keep working.
 - The talk's subject is the DynamicData pipeline — the HTTP layer should be
@@ -42,11 +42,11 @@ and `System.Text.Json`. That reverses here.
 
 ## Considered options
 
-| Option | Summary | Why not |
-| ------ | ------- | ------- |
-| Hand-rolled `HttpClient` | No dependency; full control. | Every item above is written and tested by us: query assembly, a `BeforeCall` equivalent for tokens, retry-after handling, and a fake `HttpMessageHandler` per test. That is the most code for the least interesting part of the demo. |
-| Refit or another generated client | Typed interface from attributes. | There is no OpenAPI spec to generate from, and a positional array fits an attribute-driven interface badly. Adds a generator for no gain. |
-| **Flurl.Http** | **Chosen.** Fluent URL building, `BeforeCall`/`OnError` hooks, `IFlurlResponse` header access, `AllowHttpStatus`, and `HttpTest`. | — |
+| Option                            | Summary                                                                                                                           | Why not                                                                                                                                                                                                                               |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hand-rolled `HttpClient`          | No dependency; full control.                                                                                                      | Every item above is written and tested by us: query assembly, a `BeforeCall` equivalent for tokens, retry-after handling, and a fake `HttpMessageHandler` per test. That is the most code for the least interesting part of the demo. |
+| Refit or another generated client | Typed interface from attributes.                                                                                                  | There is no OpenAPI spec to generate from, and a positional array fits an attribute-driven interface badly. Adds a generator for no gain.                                                                                             |
+| **Flurl.Http**                    | **Chosen.** Fluent URL building, `BeforeCall`/`OnError` hooks, `IFlurlResponse` header access, `AllowHttpStatus`, and `HttpTest`. | —                                                                                                                                                                                                                                     |
 
 ## Decision
 

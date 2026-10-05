@@ -1,6 +1,9 @@
 using CommunityToolkit.Maui.Markup;
 using Gui.Container;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls.Hosting;
+using Microsoft.Maui.Hosting;
 using Transponder.Features.Demo.Actors;
 using Transponder.Features.Demo.ViewModels;
 

@@ -21,7 +21,7 @@ interface cannot carry that much, and the specific failures are three.
   snapshot of a fleet. What a cache holds is a third thing again. Only the
   middle one had a type, and it took the first one's name, so `Snapshots`
   returning domain objects reads backwards: a snapshot is the record you map
-  *into* a domain object.
+  _into_ a domain object.
 - **The thing that varies had no owner.** What actually differs between an
   aircraft feed and a vessel feed is how a provider's record becomes a
   `TransportVehicle`. With the seam at the wire boundary, that projection was a
@@ -63,18 +63,18 @@ seriously and gives each step an owner.
 
 ## Considered options
 
-| Option                                                                 | Summary                                                                                          | Why not                                                                                                                                                                                                                                                                                                                          |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Today's single seam — a source emitting domain objects, no named cache  | No new types. `EditDiff` stays row one of an operator table and nothing in the skills changes.    | The collection every later feature depends on has no owner; `Snapshot` names both the provider's row and the domain set; the projection is a step rather than a component; and there is no typed provider surface to version or fake. The status quo, and what this record reverses.                                               |
-| Loose DTOs plus a converter, no typed contract                          | A named DTO and a `JsonConverter`, with no interface at the provider.                             | Nothing to version when OpenSky changes, and nothing a test can replace but the HTTP transport — which ADR-0001's `HttpTest` constraint makes the least useful seam to own. A hand-written fake of a typed contract gives every layer above it a test with no HTTP at all.                                                        |
-| A cache that stores **and** diffs                                       | One component owning the collection and the differential update.                                  | Forces every source through one write strategy, so a push feed that already knows its deltas must assemble a full set to use them. Two responsibilities in one component, and the cache's behavior becomes a policy callers have to know about.                                                                                    |
-| The strategy seam at the wire boundary, carrying snapshots               | What `ITrackingSource` did: every source emits snapshots and something downstream projects them.   | Puts the seam where sources are *similar* rather than where they *differ*. Both feeds produce records; what differs is the projection. A seam at the wire boundary therefore leaves the varying part unowned, which is the second failure above.                                                                                   |
-| A cache per app, holding a common snapshot base                         | One cache, one stream, with `AircraftSnapshot` and `VesselSnapshot` deriving from a shared base.   | Adds a second inheritance hierarchy beside `TransportVehicle`'s, mirroring it for no new reason, and the base can only carry what both feeds happen to share. Per-client caches cost nothing downstream, because the invariant that matters is one *domain* collection.                                                            |
-| `IStrategyResolver` plus `IStrategy`                                     | The conventional shape: a resolver knows the strategies and callers ask it which to use.           | The resolver is a second place the strategy set is known, and every caller has to ask. Registering every strategy as `ITrackerSource` and putting the selection in a decorator makes the swap invisible to callers — nobody asks anything.                                                                                         |
-| Replay as a strategy with its own client and cache                       | Replay reads recorded envelopes through a replay client, parallel to the snapshot client.          | Needs B-045 widened — the envelope and the positional row are restricted to the contract's implementation and the snapshot client — and leaves a second positional row reader to keep correct against the same index table. Worse, it is a second place B-003 has to be honoured, and B-003 is what makes staleness behave on replay exactly as it does live. A boundary rule honoured in two implementations is one that drifts. |
-| Replay at the contract, selection below the seam                         | A replay contract, but the source choice made where the contract is resolved.                      | Keeps B-045 and B-007 untouched and still costs nothing in duplication, but replay stops being an `ITrackerSource` and therefore stops being a swap target — contradicting replay-source B-015 and `hot-swap-source`, which both require replay to be selected by the same mechanism as the live swap.                            |
-| **Replay at the contract, selection at the seam**                        | **Chosen.** A second contract implementation; the live chain above it unchanged; the chain registers as `ITrackerSource`. | —                                                                                                                                                                                                                                                                                                                  |
-| **Contract → client → cache → strategy → decorator → tracker**           | **Chosen.**                                                                                       | —                                                                                                                                                                                                                                                                                                                                |
+| Option                                                                 | Summary                                                                                                                   | Why not                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Today's single seam — a source emitting domain objects, no named cache | No new types. `EditDiff` stays row one of an operator table and nothing in the skills changes.                            | The collection every later feature depends on has no owner; `Snapshot` names both the provider's row and the domain set; the projection is a step rather than a component; and there is no typed provider surface to version or fake. The status quo, and what this record reverses.                                                                                                                                              |
+| Loose DTOs plus a converter, no typed contract                         | A named DTO and a `JsonConverter`, with no interface at the provider.                                                     | Nothing to version when OpenSky changes, and nothing a test can replace but the HTTP transport — which ADR-0001's `HttpTest` constraint makes the least useful seam to own. A hand-written fake of a typed contract gives every layer above it a test with no HTTP at all.                                                                                                                                                        |
+| A cache that stores **and** diffs                                      | One component owning the collection and the differential update.                                                          | Forces every source through one write strategy, so a push feed that already knows its deltas must assemble a full set to use them. Two responsibilities in one component, and the cache's behavior becomes a policy callers have to know about.                                                                                                                                                                                   |
+| The strategy seam at the wire boundary, carrying snapshots             | What `ITrackingSource` did: every source emits snapshots and something downstream projects them.                          | Puts the seam where sources are _similar_ rather than where they _differ_. Both feeds produce records; what differs is the projection. A seam at the wire boundary therefore leaves the varying part unowned, which is the second failure above.                                                                                                                                                                                  |
+| A cache per app, holding a common snapshot base                        | One cache, one stream, with `AircraftSnapshot` and `VesselSnapshot` deriving from a shared base.                          | Adds a second inheritance hierarchy beside `TransportVehicle`'s, mirroring it for no new reason, and the base can only carry what both feeds happen to share. Per-client caches cost nothing downstream, because the invariant that matters is one _domain_ collection.                                                                                                                                                           |
+| `IStrategyResolver` plus `IStrategy`                                   | The conventional shape: a resolver knows the strategies and callers ask it which to use.                                  | The resolver is a second place the strategy set is known, and every caller has to ask. Registering every strategy as `ITrackerSource` and putting the selection in a decorator makes the swap invisible to callers — nobody asks anything.                                                                                                                                                                                        |
+| Replay as a strategy with its own client and cache                     | Replay reads recorded envelopes through a replay client, parallel to the snapshot client.                                 | Needs B-045 widened — the envelope and the positional row are restricted to the contract's implementation and the snapshot client — and leaves a second positional row reader to keep correct against the same index table. Worse, it is a second place B-003 has to be honoured, and B-003 is what makes staleness behave on replay exactly as it does live. A boundary rule honoured in two implementations is one that drifts. |
+| Replay at the contract, selection below the seam                       | A replay contract, but the source choice made where the contract is resolved.                                             | Keeps B-045 and B-007 untouched and still costs nothing in duplication, but replay stops being an `ITrackerSource` and therefore stops being a swap target — contradicting replay-source B-015 and `hot-swap-source`, which both require replay to be selected by the same mechanism as the live swap.                                                                                                                            |
+| **Replay at the contract, selection at the seam**                      | **Chosen.** A second contract implementation; the live chain above it unchanged; the chain registers as `ITrackerSource`. | —                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Contract → client → cache → strategy → decorator → tracker**         | **Chosen.**                                                                                                               | —                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 ## Decision
 
@@ -95,40 +95,41 @@ Each component has one responsibility.
    constructed chain, and no implementing class is resolvable from outside. Its
    test double is a hand-written fake that throws naming the unset response.
 
-   **Per transport, because this is where replay substitutes.** One
-   implementation reaches OpenSky over HTTP; another reads a recording. The
-   snapshot client, its cache and its projection are constructed over whichever
-   one, unchanged, and that whole chain registers as an `ITrackerSource` — so
-   replay is a swap target at the seam (B-038 – B-040) while standing in below
-   the client. A recording is the provider's own envelope written verbatim
-   ([ADR-0004](0004-ndjson-recording-format.md)), which is what makes this
-   possible: the recorded envelope carries the provider's reported time, so the
-   observed instant and staleness-on-replay come free, with no second
-   implementation to honour them in. This is a deliberate departure from the
-   versioned-contract pattern's "exactly one production class" — see the
-   consequences.
+    **Per transport, because this is where replay substitutes.** One
+    implementation reaches OpenSky over HTTP; another reads a recording. The
+    snapshot client, its cache and its projection are constructed over whichever
+    one, unchanged, and that whole chain registers as an `ITrackerSource` — so
+    replay is a swap target at the seam (B-038 – B-040) while standing in below
+    the client. A recording is the provider's own envelope written verbatim
+    ([ADR-0004](0004-ndjson-recording-format.md)), which is what makes this
+    possible: the recorded envelope carries the provider's reported time, so the
+    observed instant and staleness-on-replay come free, with no second
+    implementation to honour them in. This is a deliberate departure from the
+    versioned-contract pattern's "exactly one production class" — see the
+    consequences.
 
-   **No version suffix, and no marker interface above it.** The pattern's rule
-   is that a suffix matches the *provider's* major version, and OpenSky
-   publishes none — there is no `/v1/` in its path — so an invented `V1` would
-   be exactly the internal version number the rule forbids. A marker exists to
-   make domain code version-agnostic; with no version to be agnostic about, a
-   split with one member on each side buys nothing and costs a cast at every
-   call site. The versioned layer is introduced the day OpenSky declares a
-   version, and a provider that *does* version gets the full pattern from its
-   first line of code.
+    **No version suffix, and no marker interface above it.** The pattern's rule
+    is that a suffix matches the _provider's_ major version, and OpenSky
+    publishes none — there is no `/v1/` in its path — so an invented `V1` would
+    be exactly the internal version number the rule forbids. A marker exists to
+    make domain code version-agnostic; with no version to be agnostic about, a
+    split with one member on each side buys nothing and costs a cast at every
+    call site. The versioned layer is introduced the day OpenSky declares a
+    version, and a provider that _does_ version gets the full pattern from its
+    first line of code.
 
-   It lives under `src/Transponder/Integrations/OpenSky/`, split
-   `Contracts/`, `Http/` and `Container/` — **not** under `Features/`. A
-   provider's code belongs to the provider, not to one feature, and two
-   features can want the same provider. `AGENTS.md` governs feature layout and
-   was silent on integrations; it gains that line in this change.
+    It lives under `src/Transponder/Integrations/OpenSky/`, split
+    `Contracts/`, `Http/` and `Container/` — **not** under `Features/`. A
+    provider's code belongs to the provider, not to one feature, and two
+    features can want the same provider. `AGENTS.md` governs feature layout and
+    was silent on integrations; it gains that line in this change.
 
-   **This layer is conditional.** One `Task<T>` per endpoint only describes a
-   request/response provider, so a push provider has no contract at all and
-   none is invented for it: a socket's subscribe frame is connection state, not
-   a call with a return value. The vessel strategy is therefore shorter than
-   this one, and that is fine — see the consequences.
+    **This layer is conditional.** One `Task<T>` per endpoint only describes a
+    request/response provider, so a push provider has no contract at all and
+    none is invented for it: a socket's subscribe frame is connection state, not
+    a call with a return value. The vessel strategy is therefore shorter than
+    this one, and that is fine — see the consequences.
+
 3. **The snapshot** — a named record: the server's values with names on them.
    Value equality over every member, keyed on `icao24`, converting and deriving
    nothing, and carrying no staleness flag or display label.
@@ -198,7 +199,7 @@ is **not** in this record. Those are claims, in § 3 of
   asymmetry is accepted.** Aircraft replay stands in below the snapshot client,
   at the contract. A push provider has no contract to stand in for, so vessel
   replay must substitute higher — at the strategy itself. This follows from
-  *this* record's reading rather than from anything about the vessel feed, which
+  _this_ record's reading rather than from anything about the vessel feed, which
   is why it is stated here. The symmetry that matters is unchanged: both land on
   `ITrackerSource` and both are swap targets.
 - **Only the contract layer claims conformance to that pattern.** The pattern is
@@ -207,7 +208,7 @@ is **not** in this record. Those are claims, in § 3 of
   decorator and the tracker are this repository's own design, and the
   specification says so instead of implying otherwise.
 - **"One cache" is no longer literally true.** Caches are per client and typed
-  to their snapshot. The invariant that survives is one *domain* collection,
+  to their snapshot. The invariant that survives is one _domain_ collection,
   downstream of `IFleetTracker` — which is the only one anything was ever bound
   to.
 - **The push source stops being a special case in a different way.** It is not

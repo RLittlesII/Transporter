@@ -11,7 +11,7 @@ type: adr
 ## Context
 
 [ADR-0004](../../../../.spec/adr/0004-ndjson-recording-format.md) fixes what a
-recording *is* — NDJSON, one line per payload, named
+recording _is_ — NDJSON, one line per payload, named
 `recordings/<source>-<utc-instant>.ndjson` — and deliberately says nothing
 about which recording a run loads or where that directory sits relative to the
 running application. The specification carried that gap as § 11 row 3.
@@ -39,7 +39,7 @@ absent.
   in front of people once.
 - Rehearsal writes recordings and the stage reads them; neither should have to
   name an absolute path.
-- Configuration answers *which* recording. The selector answers *whether*
+- Configuration answers _which_ recording. The selector answers _whether_
   replay is live. Neither may grow into the other.
 - A test must reach the pacer without a file system.
 - The failure a presenter cares about — the recording is missing — should be
@@ -47,12 +47,12 @@ absent.
 
 ## Considered options
 
-| Option | Summary | Why not |
-| ------ | ------- | ------- |
-| Newest recording wins | Configuration names the directory; the app picks the most recent recording per source, ordering by the UTC instant already in the filename. Nothing to edit after a rehearsal. | A thirty-second test capture taken after the real rehearsal silently becomes the stage recording, and B-005 — a recording long enough to show staleness — fails invisibly at the one moment it matters. Convenience bought with a silent wrong answer. |
-| The presenter picks one in the UI | A list of available recordings, chosen at or before the swap. | A second selection surface for replay, which B-015 forbids and § 5 row 8 excludes; it is also a transport control by another name (§ 5 row 5). The presenter already has one switch, and adding a second thing to get right under pressure is the opposite of the goal. |
-| A recording embedded in the application | Ship a known-good recording inside the bundle, so there is always one. | A recording is operational data that is never committed (B-006); embedding it commits it to the build artifact instead, with real callsigns and positions in a redistributable. |
-| **Named in configuration, per source, no default** | **Chosen.** One key per replay source names the recording; paths resolve against one configured recordings root. | — |
+| Option                                             | Summary                                                                                                                                                                        | Why not                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Newest recording wins                              | Configuration names the directory; the app picks the most recent recording per source, ordering by the UTC instant already in the filename. Nothing to edit after a rehearsal. | A thirty-second test capture taken after the real rehearsal silently becomes the stage recording, and B-005 — a recording long enough to show staleness — fails invisibly at the one moment it matters. Convenience bought with a silent wrong answer.                  |
+| The presenter picks one in the UI                  | A list of available recordings, chosen at or before the swap.                                                                                                                  | A second selection surface for replay, which B-015 forbids and § 5 row 8 excludes; it is also a transport control by another name (§ 5 row 5). The presenter already has one switch, and adding a second thing to get right under pressure is the opposite of the goal. |
+| A recording embedded in the application            | Ship a known-good recording inside the bundle, so there is always one.                                                                                                         | A recording is operational data that is never committed (B-006); embedding it commits it to the build artifact instead, with real callsigns and positions in a redistributable.                                                                                         |
+| **Named in configuration, per source, no default** | **Chosen.** One key per replay source names the recording; paths resolve against one configured recordings root.                                                               | —                                                                                                                                                                                                                                                                       |
 
 ## Decision
 

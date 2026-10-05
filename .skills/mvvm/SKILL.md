@@ -22,9 +22,9 @@ own API, see
 
 - Derive from `RxObject`, and use the `field`-keyword property form:
 
-  ```csharp
-  public string Count { get; set => RaiseAndSetIfChanged(ref field, value); } = "Click me";
-  ```
+    ```csharp
+    public string Count { get; set => RaiseAndSetIfChanged(ref field, value); } = "Click me";
+    ```
 
 - Take dependencies by constructor — `IActorRegistry`, an observable of domain
   state, a scheduler. Nothing is resolved from a static or a service locator.
@@ -64,10 +64,10 @@ belong in the view model.**
 
 This distinction is most of what keeps a view model thin:
 
-| Input | Route | Why |
-|---|---|---|
-| Continuous — search text, chosen comparer, selected group | An **observable** feeding `Filter` / `Sort` / `Group` | A keystroke is not a domain event. Pushing each one through an actor adds a hop and buys nothing. |
-| Discrete with an effect — swap the source, start, stop, refresh now | An **actor message** | These change what the system is doing. An actor owns that, including failure and retry. |
+| Input                                                               | Route                                                 | Why                                                                                               |
+| ------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Continuous — search text, chosen comparer, selected group           | An **observable** feeding `Filter` / `Sort` / `Group` | A keystroke is not a domain event. Pushing each one through an actor adds a hop and buys nothing. |
+| Discrete with an effect — swap the source, start, stop, refresh now | An **actor message**                                  | These change what the system is doing. An actor owns that, including failure and retry.           |
 
 So a search box sets a property that a subject publishes; a swap button tells an
 actor. Both end up influencing the same bound collection, and neither puts logic

@@ -13,11 +13,11 @@ report shapes, and the paths for each step here, and wins where they differ.
 A change moves through three phases. Read the reference for the phase you are
 in; they are ordered, and skipping one is what produces work nobody can review.
 
-| Reference | When | Holds |
-|---|---|---|
-| [start](references/start.md) | before the first edit | which way in — specification, item, bug or chore; claiming the item; settling the requirement; filing one; the worktree and branch; what to read first |
-| [document](references/document.md) | while building | the specification, the scenarios and their coverage exemptions, lessons, decision records, markdown and agent files |
-| [publish](references/publish.md) | finishing | keeping the item true, the verify steps in order, and the continuous-integration traps |
+| Reference                          | When                  | Holds                                                                                                                                                  |
+| ---------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [start](references/start.md)       | before the first edit | which way in — specification, item, bug or chore; claiming the item; settling the requirement; filing one; the worktree and branch; what to read first |
+| [document](references/document.md) | while building        | the specification, the scenarios and their coverage exemptions, lessons, decision records, markdown and agent files                                    |
+| [publish](references/publish.md)   | finishing             | keeping the item true, the verify steps in order, and the continuous-integration traps                                                                 |
 
 ## The shape of it
 

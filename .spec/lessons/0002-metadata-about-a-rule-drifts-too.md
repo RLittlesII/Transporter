@@ -54,7 +54,7 @@ stated once, inside one Feature's specification, so the two items that could not
 see it were the two that disagreed with it.
 
 A fact restated in the wrong place is wrong when the fact changes. A **rule**
-restated in the wrong place is wrong when the *rule* changes — and a rule about
+restated in the wrong place is wrong when the _rule_ changes — and a rule about
 where something is written changes every time the layout does, which is more
 often.
 

@@ -100,8 +100,7 @@ internal static class Layers
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is a cache.</returns>
     internal static bool IsCache(ISymbol symbol) =>
-        symbol is INamedTypeSymbol { IsGenericType: true } cache
-        && (cache.Name == "SourceCache" || cache.Name == "ISourceCache" || cache.Name == "IObservableCache");
+        symbol is INamedTypeSymbol { IsGenericType: true, Name: "SourceCache" or "ISourceCache" or "IObservableCache" };
 
     /// <summary>Whether a symbol is a domain type — one that survives the provider being replaced.</summary>
     /// <param name="symbol">The symbol to classify.</param>
@@ -148,7 +147,7 @@ internal static class Layers
         var integration = $"{Integrations}.{provider}";
 
         return containing == integration
-            || containing.StartsWith(integration + ".", StringComparison.Ordinal);
+               || containing.StartsWith(integration + ".", StringComparison.Ordinal);
     }
 
     /// <summary>Whether a symbol belongs to the test project, which names internals by design.</summary>

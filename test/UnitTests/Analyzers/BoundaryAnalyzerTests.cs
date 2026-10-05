@@ -13,12 +13,12 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var results = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Contracts.cs", BoundaryTestData.WireType)
-           .AddSource("ViewModel.cs", BoundaryTestData.ViewModelNamingTheRow)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireType)
+            .AddSource("ViewModel.cs", BoundaryTestData.ViewModelNamingTheRow)
+            .GenerateAsync();
 
         // Then
         var reported = results.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Should().ContainSingle().Subject;
@@ -34,30 +34,30 @@ public class BoundaryAnalyzerTests
     {
         // Given, When. The file name is what makes a source generated code.
         var generated = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Contracts.cs", BoundaryTestData.WireType)
-           .AddSource("ViewModel.g.cs", BoundaryTestData.ViewModelNamingTheRow)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireType)
+            .AddSource("ViewModel.g.cs", BoundaryTestData.ViewModelNamingTheRow)
+            .GenerateAsync();
 
         var handWritten = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Contracts.cs", BoundaryTestData.WireType)
-           .AddSource("ViewModel.cs", BoundaryTestData.ViewModelNamingTheRow)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireType)
+            .AddSource("ViewModel.cs", BoundaryTestData.ViewModelNamingTheRow)
+            .GenerateAsync();
 
         // Then
         generated.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .BeEmpty("the fix for generated source is upstream, and the only escape from a report on it is disabling the rule");
+            .Diagnostics
+            .Should()
+            .BeEmpty("the fix for generated source is upstream, and the only escape from a report on it is disabling the rule");
         handWritten.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .ContainSingle("the same violation written by hand is still a violation");
+            .Diagnostics
+            .Should()
+            .ContainSingle("the same violation written by hand is still a violation");
     }
 
     [Fact]
@@ -65,19 +65,19 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var results = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSources(BoundaryTestData.WireType, BoundaryTestData.DomainTypeNamingTheRow)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSources(BoundaryTestData.WireType, BoundaryTestData.DomainTypeNamingTheRow)
+            .GenerateAsync();
 
         // Then
         results.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .ContainSingle()
-           .Which.Id.Should()
-           .Be("TRN0001");
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.Id.Should()
+            .Be("TRN0001");
     }
 
     [Fact]
@@ -85,18 +85,18 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var results = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSources(BoundaryTestData.WireType, BoundaryTestData.IntegrationCodeNamingTheRow)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSources(BoundaryTestData.WireType, BoundaryTestData.IntegrationCodeNamingTheRow)
+            .GenerateAsync();
 
         // Then
         NothingFailedToCompile(results);
         results.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .BeEmpty("the wire surface is the integration's to name; the claim holds it out of everything else");
+            .Diagnostics
+            .Should()
+            .BeEmpty("the wire surface is the integration's to name; the claim holds it out of everything else");
     }
 
     [Fact]
@@ -104,12 +104,12 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var diagnostics = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
-           .AddSource("Vehicle.cs", BoundaryTestData.DomainTypeNamingASnapshotInABodyOnly)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Vehicle.cs", BoundaryTestData.DomainTypeNamingASnapshotInABodyOnly)
+            .GenerateAsync();
 
         // Then
         var reported = diagnostics.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Should().ContainSingle().Subject;
@@ -122,30 +122,30 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var reported = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
-           .AddSource("Registration.cs", BoundaryTestData.RegistrationNamingTheRow)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Registration.cs", BoundaryTestData.RegistrationNamingTheRow)
+            .GenerateAsync();
         var allowed = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
-           .AddSource("Http.cs", BoundaryTestData.IntegrationCodeNamingTheRow)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Http.cs", BoundaryTestData.IntegrationCodeNamingTheRow)
+            .GenerateAsync();
 
         // Then
         reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .ContainSingle()
-           .Which.Id.Should()
-           .Be("TRN0002");
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.Id.Should()
+            .Be("TRN0002");
         allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should().BeEmpty("the transport implements the contract, so the envelope and the row are its to hold");
+            .Diagnostics
+            .Should().BeEmpty("the transport implements the contract, so the envelope and the row are its to hold");
     }
 
     [Fact]
@@ -153,30 +153,30 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var reported = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
-           .AddSource("Vehicle.cs", BoundaryTestData.DomainTypeNamingASnapshot)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Vehicle.cs", BoundaryTestData.DomainTypeNamingASnapshot)
+            .GenerateAsync();
         var allowed = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
-           .AddSource("Projection.cs", BoundaryTestData.ProjectionNamingASnapshot)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Projection.cs", BoundaryTestData.ProjectionNamingASnapshot)
+            .GenerateAsync();
 
         // Then
         reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .ContainSingle()
-           .Which.Id.Should()
-           .Be("TRN0003");
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.Id.Should()
+            .Be("TRN0003");
         allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should().BeEmpty("the projection is where the snapshot dies, so it is the last thing allowed to read one");
+            .Diagnostics
+            .Should().BeEmpty("the projection is where the snapshot dies, so it is the last thing allowed to read one");
     }
 
     [Fact]
@@ -184,20 +184,20 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var diagnostics = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
-           .AddSource("Page.cs", BoundaryTestData.HostNamingTheContract)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Page.cs", BoundaryTestData.HostNamingTheContract)
+            .GenerateAsync();
 
         // Then
         diagnostics.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .ContainSingle()
-           .Which.Id.Should()
-           .Be("TRN0004");
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.Id.Should()
+            .Be("TRN0004");
     }
 
     [Fact]
@@ -205,29 +205,29 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var reported = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
-           .AddSource("Vehicle.cs", BoundaryTestData.Domain)
-           .AddSource("Client.cs", BoundaryTestData.CacheOfADomainType)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Vehicle.cs", BoundaryTestData.Domain)
+            .AddSource("Client.cs", BoundaryTestData.CacheOfADomainType)
+            .GenerateAsync();
         var allowed = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
-           .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
-           .AddSource("Client.cs", BoundaryTestData.CacheOfASnapshot)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .AddSource("Client.cs", BoundaryTestData.CacheOfASnapshot)
+            .GenerateAsync();
 
         // Then
         reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .ContainSingle()
-           .Which.Id.Should()
-           .Be("TRN0005");
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.Id.Should()
+            .Be("TRN0005");
         allowed.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Should().BeEmpty("a cache of snapshots is what the claim asks for");
     }
 
@@ -236,20 +236,20 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var diagnostics = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddSource("Source.cs", BoundaryTestData.ConcreteTrackerSource)
-           .AddSource("ViewModel.cs", BoundaryTestData.ViewModelNamingAStrategy)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Source.cs", BoundaryTestData.ConcreteTrackerSource)
+            .AddSource("ViewModel.cs", BoundaryTestData.ViewModelNamingAStrategy)
+            .GenerateAsync();
 
         // Then
         diagnostics.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should()
-           .ContainSingle()
-           .Which.Id.Should()
-           .Be("TRN0006");
+            .Diagnostics
+            .Should()
+            .ContainSingle()
+            .Which.Id.Should()
+            .Be("TRN0006");
     }
 
     [Fact]
@@ -257,17 +257,17 @@ public class BoundaryAnalyzerTests
     {
         // Given, When
         var diagnostics = await GeneratorTestContextBuilder
-           .Create()
-           .WithAnalyzer<BoundaryAnalyzer>()
-           .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-           .AddReferences(typeof(ObservableCollection<>))
-           .AddSource("ViewModel.cs", BoundaryTestData.ViewModelMutatingABoundCollection)
-           .GenerateAsync();
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddReferences(typeof(ObservableCollection<>))
+            .AddSource("ViewModel.cs", BoundaryTestData.ViewModelMutatingABoundCollection)
+            .GenerateAsync();
 
         // Then
         diagnostics.AnalyzerResults[typeof(BoundaryAnalyzer)]
-           .Diagnostics
-           .Should().HaveCount(2).And.OnlyContain(static diagnostic => diagnostic.Id == "TRN0007");
+            .Diagnostics
+            .Should().HaveCount(2).And.OnlyContain(static diagnostic => diagnostic.Id == "TRN0007");
         diagnostics.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Select(static diagnostic => TextAt(diagnostic))
             .Should()
             .BeEquivalentTo(["Add", "Clear"], "each lands on the member being called, not on the statement around it");

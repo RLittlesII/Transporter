@@ -25,7 +25,7 @@ to OpenSky:
 - **The failure channel ended up being `catch` regardless.** A throttle was one
   of several ways a poll can fail to produce data; the rest — a server error, a
   timeout, a body that will not parse — stayed exceptions. A caller asking the
-  single question "did this call produce data?" had to write a match *and* a
+  single question "did this call produce data?" had to write a match _and_ a
   `try`/`catch`, and the one thing in the `Left` was the one outcome that was
   not a failure.
 - **`Left` reads as the error arm.** A reader who knows the type expects the
@@ -54,12 +54,12 @@ to OpenSky:
 
 ## Considered options
 
-| Option | Summary | Why not |
-| --- | --- | --- |
-| The payload, and a contract-owned exception per actionable failure **(chosen)** | The method returns what the provider sent. A failure the caller must act on is a typed exception carrying what it must act on. | — |
-| The payload, and the transport library's own exception | One type fewer: let the HTTP library throw and have the caller read the detail off its exception object. | The caller is then written against the transport library, which is the coupling the contract exists to stop — and the detail it needs arrives as a loosely-typed bag on an exception shaped for a different purpose. A recording transport throws nothing of the kind, so the caller's handling would be transport-specific too. |
-| A discriminated union of the outcomes | An abstract record with one sealed case per outcome, so both arms are plainly valid answers and there is no error connotation to misread. | Honest, and it survives the first objection — but it keeps the caller's two mechanisms, because the failures that stay exceptions are still exceptions. It also adds an idiom beside the one the repository already has, and C# cannot prove the switch exhaustive, so every consumer carries an unreachable arm. |
-| Keep the `Either` | No change; the library is already referenced and `Match` is total over its two named arms. | The four objections in Context. |
+| Option                                                                          | Summary                                                                                                                                   | Why not                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The payload, and a contract-owned exception per actionable failure **(chosen)** | The method returns what the provider sent. A failure the caller must act on is a typed exception carrying what it must act on.            | —                                                                                                                                                                                                                                                                                                                                |
+| The payload, and the transport library's own exception                          | One type fewer: let the HTTP library throw and have the caller read the detail off its exception object.                                  | The caller is then written against the transport library, which is the coupling the contract exists to stop — and the detail it needs arrives as a loosely-typed bag on an exception shaped for a different purpose. A recording transport throws nothing of the kind, so the caller's handling would be transport-specific too. |
+| A discriminated union of the outcomes                                           | An abstract record with one sealed case per outcome, so both arms are plainly valid answers and there is no error connotation to misread. | Honest, and it survives the first objection — but it keeps the caller's two mechanisms, because the failures that stay exceptions are still exceptions. It also adds an idiom beside the one the repository already has, and C# cannot prove the switch exhaustive, so every consumer carries an unreachable arm.                |
+| Keep the `Either`                                                               | No change; the library is already referenced and `Match` is total over its two named arms.                                                | The four objections in Context.                                                                                                                                                                                                                                                                                                  |
 
 ## Decision
 

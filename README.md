@@ -27,16 +27,16 @@ UI features:
 
 In roughly the order the audience meets them:
 
-| Operator | Used for |
-|---|---|
-| `EditDiff` | Snapshot to changeset (the headline feature) |
-| `Filter` with an observable predicate | Search box and dropdowns |
-| `Sort` with a user-selected comparer | Column sorting |
-| `Group` | Grouped grid by country or category |
-| `Bind` | Pushing changes into the UI collection |
-| Aggregates (`Count`, etc.) | Summary counts per group |
-| `AutoRefresh` | Re-evaluating filters and sorts when properties change |
-| `ExpireAfter` / staleness | Items that stop reporting. Aircraft are *marked* at five minutes rather than removed; `ExpireAfter` itself is for vessels, which go silent rather than departing |
+| Operator                              | Used for                                                                                                                                                         |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EditDiff`                            | Snapshot to changeset (the headline feature)                                                                                                                     |
+| `Filter` with an observable predicate | Search box and dropdowns                                                                                                                                         |
+| `Sort` with a user-selected comparer  | Column sorting                                                                                                                                                   |
+| `Group`                               | Grouped grid by country or category                                                                                                                              |
+| `Bind`                                | Pushing changes into the UI collection                                                                                                                           |
+| Aggregates (`Count`, etc.)            | Summary counts per group                                                                                                                                         |
+| `AutoRefresh`                         | Re-evaluating filters and sorts when properties change                                                                                                           |
+| `ExpireAfter` / staleness             | Items that stop reporting. Aircraft are _marked_ at five minutes rather than removed; `ExpireAfter` itself is for vessels, which go silent rather than departing |
 
 ## Data source: OpenSky Network
 
@@ -51,26 +51,26 @@ In roughly the order the audience meets them:
 
 `states` is an array of arrays; fields are positional, not named. Needs a custom `JsonConverter`.
 
-| Index | Field | Notes |
-|---|---|---|
-| 0 | `icao24` | **The cache key** |
-| 1 | `callsign` | May be null; padded to 8 chars |
-| 2 | `origin_country` | Good for grouping |
-| 3 | `time_position` | Unix seconds, nullable |
-| 4 | `last_contact` | Unix seconds |
-| 5 | `longitude` | Nullable |
-| 6 | `latitude` | Nullable |
-| 7 | `baro_altitude` | Meters, nullable |
-| 8 | `on_ground` | bool |
-| 9 | `velocity` | m/s, nullable |
-| 10 | `true_track` | Degrees from north, nullable |
-| 11 | `vertical_rate` | m/s, nullable |
-| 12 | `sensors` | Usually null |
-| 13 | `geo_altitude` | Meters, nullable |
-| 14 | `squawk` | Nullable |
-| 15 | `spi` | bool |
-| 16 | `position_source` | 0 ADS-B, 1 ASTERIX, 2 MLAT, 3 FLARM |
-| 17 | `category` | Only with `extended=1` |
+| Index | Field             | Notes                               |
+| ----- | ----------------- | ----------------------------------- |
+| 0     | `icao24`          | **The cache key**                   |
+| 1     | `callsign`        | May be null; padded to 8 chars      |
+| 2     | `origin_country`  | Good for grouping                   |
+| 3     | `time_position`   | Unix seconds, nullable              |
+| 4     | `last_contact`    | Unix seconds                        |
+| 5     | `longitude`       | Nullable                            |
+| 6     | `latitude`        | Nullable                            |
+| 7     | `baro_altitude`   | Meters, nullable                    |
+| 8     | `on_ground`       | bool                                |
+| 9     | `velocity`        | m/s, nullable                       |
+| 10    | `true_track`      | Degrees from north, nullable        |
+| 11    | `vertical_rate`   | m/s, nullable                       |
+| 12    | `sensors`         | Usually null                        |
+| 13    | `geo_altitude`    | Meters, nullable                    |
+| 14    | `squawk`          | Nullable                            |
+| 15    | `spi`             | bool                                |
+| 16    | `position_source` | 0 ADS-B, 1 ASTERIX, 2 MLAT, 3 FLARM |
+| 17    | `category`        | Only with `extended=1`              |
 
 ### Authentication
 
@@ -81,10 +81,10 @@ In roughly the order the audience meets them:
 
 ### Limits
 
-| Tier | Daily credits | Resolution |
-|---|---|---|
-| Anonymous | 400 | 10 seconds |
-| Registered (free) | 4,000 | 5 seconds |
+| Tier              | Daily credits | Resolution |
+| ----------------- | ------------- | ---------- |
+| Anonymous         | 400           | 10 seconds |
+| Registered (free) | 4,000         | 5 seconds  |
 
 Credit cost per `/states/all` call by bounding box area: ≤25 sq° = 1, 25–100 = 2, 100–400 = 3, >400 or global = 4.
 
@@ -121,27 +121,27 @@ Replace the polled source with a push source and show that everything downstream
 
 ## Alternatives considered
 
-| Option | Why not the main demo |
-|---|---|
-| Coinbase order book | Great fit technically, but push-only lesson, fast/bursty data, crypto domain may distract |
-| Ships (AISStream) | Very cool, but push-based so it skips the `EditDiff` lesson; kept as the closing act |
-| Wikimedia EventStreams | Append-only events; needs derived state |
-| Bluesky Jetstream | Event-shaped; main .NET library (FishyFlip) deprecated in favor of CarpaNet |
-| Local processes / FileSystemWatcher | Great offline fallback, less compelling story |
+| Option                              | Why not the main demo                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| Coinbase order book                 | Great fit technically, but push-only lesson, fast/bursty data, crypto domain may distract |
+| Ships (AISStream)                   | Very cool, but push-based so it skips the `EditDiff` lesson; kept as the closing act      |
+| Wikimedia EventStreams              | Append-only events; needs derived state                                                   |
+| Bluesky Jetstream                   | Event-shaped; main .NET library (FishyFlip) deprecated in favor of CarpaNet               |
+| Local processes / FileSystemWatcher | Great offline fallback, less compelling story                                             |
 
 ## Open items
 
 - [ ] Register an OpenSky account and create an API client
-- [X] Pick the bounding box (metro area) and polling interval — Houston: IAH, HOU, the ship channel and Galveston Bay, polled every 15 seconds ([decision 0001](features/aircraft-source/.spec/decisions/0001-houston-bounding-box.md))
-- [X] Decide UI framework (WPF, Avalonia, Blazor, MAUI)
+- [x] Pick the bounding box (metro area) and polling interval — Houston: IAH, HOU, the ship channel and Galveston Bay, polled every 15 seconds ([decision 0001](features/aircraft-source/.spec/decisions/0001-houston-bounding-box.md))
+- [x] Decide UI framework (WPF, Avalonia, Blazor, MAUI)
 - [ ] Record replay snapshots during rehearsal
 - [ ] Decide on the closing act (ships, Coinbase, or simulated)
 - [ ] If using ships: get an AISStream API key
-  - [X] Intend to show ships
+    - [x] Intend to show ships
 - [ ] Add OpenSky citation slide
 - [ ] Decide the vessel WebSocket client: `ClientWebSocket` or `AISStream.NET` (§ "Closing act" names both)
 - [ ] Decide, per command, whether a view model reaches its actor with `Tell` or `Ask` (`mvvm` § "Two kinds of input, two routes")
-- [X] Decide whether the build gets a `Test` target — yes; `Default` depends on it, so a green build is a green test run ([item 0017](.issue/0017-test-target.yml))
+- [x] Decide whether the build gets a `Test` target — yes; `Default` depends on it, so a green build is a green test run ([item 0017](.issue/0017-test-target.yml))
 
 ## Technology Decisions
 

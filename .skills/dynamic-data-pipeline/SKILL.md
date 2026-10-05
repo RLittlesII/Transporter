@@ -42,16 +42,16 @@ snapshot changesets into domain changesets
 What the tracker does with the items a strategy hands it. The differ is not in
 it — it ran in the client, and the projection ran in the strategy:
 
-| Stage | Operator | Note |
-|---|---|---|
-| Changeset in | the strategy seam's `Connect()` | Where the tracker starts. |
+| Stage              | Operator                              | Note                                                                         |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------------- |
+| Changeset in       | the strategy seam's `Connect()`       | Where the tracker starts.                                                    |
 | Search and filters | `Filter` with an observable predicate | The predicate is an observable so a keystroke re-filters without rebuilding. |
-| Column sorting | `Sort` with a user-selected comparer | The comparer arrives as an observable too. |
-| Grouped view | `Group` | By whatever grouping key the domain base exposes. |
-| Summary counts | `Count` and other aggregates | Per group, derived from the same stream. |
-| Property changes | `AutoRefresh` | Re-evaluates filters and sorts when an item's own properties change. |
-| Silent items | `ExpireAfter` / staleness | Items that stop reporting. |
-| Into the UI | `Bind` | The collection the view binds to ([`maui-ui`](../maui-ui/SKILL.md)). |
+| Column sorting     | `Sort` with a user-selected comparer  | The comparer arrives as an observable too.                                   |
+| Grouped view       | `Group`                               | By whatever grouping key the domain base exposes.                            |
+| Summary counts     | `Count` and other aggregates          | Per group, derived from the same stream.                                     |
+| Property changes   | `AutoRefresh`                         | Re-evaluates filters and sorts when an item's own properties change.         |
+| Silent items       | `ExpireAfter` / staleness             | Items that stop reporting.                                                   |
+| Into the UI        | `Bind`                                | The collection the view binds to ([`maui-ui`](../maui-ui/SKILL.md)).         |
 
 **Built once, at startup, and never rebuilt because the live source changed.**
 Each client has its own cache of its own snapshot type, so "one cache" is not
@@ -82,7 +82,7 @@ It is also why the seam sits at the domain boundary rather than the wire one.
   against an **injected clock**, never an ambient `UtcNow` read inline.
 - A recorded source must age items the same way a live one does, and the
   provider's own reported time, carried on the response, is what lets it.
-- **Two treatments, and they are not interchangeable.** A *stale indicator*
+- **Two treatments, and they are not interchangeable.** A _stale indicator_
   keeps the row visible and marked; `ExpireAfter` removes it. A row vanishing
   unannounced reads as a bug; a row flagged as stale reads as information. Which
   a source gets is that source's decision, recorded in its specification, and
@@ -91,7 +91,7 @@ It is also why the seam sits at the domain boundary rather than the wire one.
 ## Keep the pipeline the thing that does the work
 
 - Build the pipeline once. Filters, sorts, groups and bindings are constructed
-  at startup and live for the application's lifetime; only their *inputs*
+  at startup and live for the application's lifetime; only their _inputs_
   change.
 - No imperative list editing anywhere. If code is adding to or removing from the
   bound collection by hand, it is working around the pipeline.
@@ -116,7 +116,7 @@ change for the untouched item
 - A cache with a diff policy, a projection, or a clock.
 - A domain object built anywhere but a strategy's projection.
 - A push client assembling a full set purely so a shared differ can run — it
-  knows what changed; writing that *is* the route.
+  knows what changed; writing that _is_ the route.
 - A second collection of tracked items alongside the tracker's.
 - An ambient `UtcNow` read inline in an expiry or staleness check.
 - An imperative add or remove on the bound collection.

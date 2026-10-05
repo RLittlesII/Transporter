@@ -8,7 +8,7 @@ description: Build the UI in .NET MAUI with Maui.Markup C# markup and RxObject v
 For MAUI and the markup library's own API, see
 [CommunityToolkit/Maui.Markup](https://github.com/CommunityToolkit/Maui.Markup).
 This file covers **how UI is wired here and what a view is allowed to know**.
-What the UI is *for* — which surfaces exist, what each one shows — is the
+What the UI is _for_ — which surfaces exist, what each one shows — is the
 specification's to say, not this file's.
 
 ## Stack and wiring

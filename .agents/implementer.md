@@ -28,7 +28,7 @@ request. Settling one quietly is the failure this note exists to prevent.
   the § 9 matrix: what else the code you are about to touch is claimed to
   satisfy.
 - § 4 Constraints and your own § 7, before writing. The specification says
-  *what*; § 7 says what shape it takes.
+  _what_; § 7 says what shape it takes.
 - **What already exists, before writing anything.** Query the knowledge graph
   when `graphify-out/` has one (`AGENTS.md` § "Knowledge Graph Integration");
   otherwise read the tree. Either way, **cite what you found** so review can
