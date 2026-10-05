@@ -2,7 +2,7 @@ id: "0004"
 type: task
 title: Poll OpenSky, read the positional rows, and diff them into the cache
 
-status: in-progress
+status: done
 
 priority: high
 risk: 3
@@ -43,7 +43,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-05"
-closed: null
+closed: "2026-10-05"
 
 summary: |
   The headline mechanism and the largest item: `AircraftSnapshotClient` takes
@@ -158,6 +158,23 @@ decisions:
     extension). B-027's test asserts against `ILogger<OpenSkyHttpApi>`, so the
     sink choice is the composition root's and no test depends on it."
 
+
+delivered: |
+  Seventeen claims to `Verified`: B-003, B-015 - B-029 and B-050. `AircraftSnapshotClient`
+  reads every field of a row by index, applies each fetched set to its cache as one
+  `EditDiff` over the whole set, and reports the envelope's instant to
+  `IObservedClockWriter` in that same method. The transport gained the token source
+  (refresh on expiry *and* on `401`, retried once) and the logger that records the
+  remaining credit at debug and no credential anywhere. `OpenSkyOptions`,
+  `OpenSkyCredentials` and `BoundingBox` carry the box and the interval, validated on
+  start so an absent credential stops the host rather than the first poll.
+
+  B-010 is Withdrawn with the person's answer to § 11 row 4, which also retired the
+  analyzer's `TRN0018` and the hand-written contract fake; `lessons/0002` holds the
+  reasoning. Two defects were found by the tests that were written for other claims:
+  a `catch` filter that excluded every `OperationCanceledException` also excluded the
+  timeout B-029 is named for, and `TRN0016`'s wrapper clause reported the client for
+  holding the cache B-015 requires it to take.
 
 out_of_scope:
   - "The domain projection — B-034 puts the first domain object in 0005."

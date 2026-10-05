@@ -372,8 +372,8 @@ holds seventeen of this analyzer's claims rather than eighteen.
 
 **A closed gate here is not a closed gate there.** This specification's own
 § 9 says the analyzer does what it claims; `aircraft-source` § 9 still reports
-thirty-two rows unproven, because the behaviour its items compute is not this
-Feature's to build. What did leave that matrix is every claim ADR-0006 assigned
+fourteen rows unproven — thirty-two until its `0004` landed — because the
+behaviour its items compute is not this Feature's to build. What did leave that matrix is every claim ADR-0006 assigned
 to a diagnostic.
 
 The seventeen rows in
