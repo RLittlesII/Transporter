@@ -267,4 +267,212 @@ internal static class BoundaryTestData
             }
         }
         """;
+
+    // lang=csharp
+    internal const string EnvelopeNamingPerAircraftTypes = """
+        namespace Transponder.Integrations.OpenSky.Contracts;
+
+        internal sealed class OpenSkyStateRow
+        {
+            public int Index { get; set; }
+        }
+
+        internal sealed class OpenSkyAircraft
+        {
+            public string Icao24 { get; set; } = string.Empty;
+        }
+
+        internal sealed class OpenSkyStatesResponse
+        {
+            public OpenSkyAircraft[] States { get; set; } = [];
+
+            public OpenSkyAircraft First { get; set; } = new();
+        }
+        """;
+
+    // lang=csharp
+    internal const string ContractMethodsOfTheWrongShape = """
+        using System.Threading;
+        using System.Threading.Tasks;
+
+        namespace Transponder.Integrations.OpenSky.Contracts;
+
+        internal sealed class OpenSkyStatesResponse
+        {
+            public int Time { get; set; }
+        }
+
+        internal interface IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> GetStates(CancellationToken cancellationToken);
+
+            Task<OpenSkyStatesResponse> GetStates(double lamin, CancellationToken cancellationToken);
+
+            void Ping(CancellationToken cancellationToken);
+
+            Task<OpenSkyStatesResponse> GetFlights(double lamin);
+
+            Task<OpenSkyStatesResponse> GetTracks(CancellationToken cancellationToken, double lamin);
+        }
+        """;
+
+    // lang=csharp
+    internal const string ContractNamingWhatBelongsAboveIt = """
+        using System;
+        using System.Threading;
+        using System.Threading.Tasks;
+        using DynamicData;
+        using Transponder.Integrations.OpenSky;
+
+        namespace Transponder.Integrations.OpenSky.Contracts;
+
+        internal interface IOpenSkyApi
+        {
+            Task<IObservable<int>> Stream(CancellationToken cancellationToken);
+
+            Task<int> Count(SourceCache<string, string> cache, CancellationToken cancellationToken);
+
+            Task<int> Inside(BoundingBox box, CancellationToken cancellationToken);
+
+            Task<int> Poll(TimeSpan interval, CancellationToken cancellationToken);
+
+            Task<int> Authorize(OpenSkyCredentials credentials, CancellationToken cancellationToken);
+        }
+        """;
+
+    // lang=csharp
+    internal const string OptionsAndCredentials = """
+        namespace Transponder.Integrations.OpenSky;
+
+        internal sealed class BoundingBox
+        {
+            public double Lamin { get; set; }
+        }
+
+        internal sealed class OpenSkyCredentials
+        {
+            public string ClientId { get; set; } = string.Empty;
+        }
+        """;
+
+    // lang=csharp
+    internal const string PublicContract = """
+        using System.Threading;
+        using System.Threading.Tasks;
+
+        namespace Transponder.Integrations.OpenSky.Contracts;
+
+        public sealed class OpenSkyStatesResponse
+        {
+            public int Time { get; set; }
+        }
+
+        public interface IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> GetStates(CancellationToken cancellationToken);
+        }
+        """;
+
+    // lang=csharp
+    internal const string ImplementationsOfTheWrongShape = """
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.Integrations.OpenSky.Http;
+
+        public class OpenSkyHttpApi : IOpenSkyApi
+        {
+            public Task<OpenSkyStatesResponse> GetStates(CancellationToken cancellationToken) =>
+                Task.FromResult(new OpenSkyStatesResponse());
+        }
+
+        internal sealed class OpenSkyBackupApi : IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(CancellationToken cancellationToken) =>
+                Task.FromResult(new OpenSkyStatesResponse());
+        }
+        """;
+
+    // lang=csharp
+    internal const string TheOneImplementationPerTransport = """
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.Integrations.OpenSky.Http;
+
+        internal sealed class OpenSkyHttpApi : IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(CancellationToken cancellationToken) =>
+                Task.FromResult(new OpenSkyStatesResponse());
+        }
+        """;
+
+    // lang=csharp
+    internal const string SnapshotCarryingDerivedMembers = """
+        namespace Transponder.Integrations.OpenSky;
+
+        internal sealed record AircraftSnapshot
+        {
+            public string Icao24 { get; init; } = string.Empty;
+
+            public bool IsStale { get; init; }
+
+            public string GroupingKey { get; init; } = string.Empty;
+
+            public string DisplayLabel => Icao24;
+
+            public int Age => Icao24.Length;
+        }
+        """;
+
+    // lang=csharp
+    internal const string ClientReadingADerivedMember = """
+        namespace Transponder.Integrations.OpenSky;
+
+        internal sealed class AircraftSnapshotClient
+        {
+            public string Describe(AircraftSnapshot snapshot) => snapshot.DisplayLabel;
+        }
+        """;
+
+    // lang=csharp
+    internal const string SeamDescribingItsSource = """
+        namespace Transponder.Tracking;
+
+        internal interface IAircraftTrackerSource
+        {
+            string SourceName { get; }
+
+            string ProviderUrl { get; }
+
+            void Connect();
+        }
+        """;
+
+    // lang=csharp
+    internal const string Seam = """
+        namespace Transponder.Tracking;
+
+        internal interface IAircraftTrackerSource
+        {
+            void Connect();
+        }
+        """;
+
+    // lang=csharp
+    internal const string ContractCarryingAVersion = """
+        using System.Threading;
+        using System.Threading.Tasks;
+
+        namespace Transponder.Integrations.OpenSky.Contracts;
+
+        internal interface IOpenSkyApiMarker;
+
+        internal interface IOpenSkyApiV2 : IOpenSkyApiMarker
+        {
+            Task<int> GetStates(CancellationToken cancellationToken);
+        }
+        """;
 }

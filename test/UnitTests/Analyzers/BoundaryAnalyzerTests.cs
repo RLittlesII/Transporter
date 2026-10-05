@@ -273,6 +273,282 @@ public class BoundaryAnalyzerTests
             .BeEquivalentTo(["Add", "Clear"], "each lands on the member being called, not on the statement around it");
     }
 
+    [Fact]
+    public async Task GivenAnEnvelopeMemberThatNamesAPerAircraftType_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.EnvelopeNamingPerAircraftTypes)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .GenerateAsync();
+
+        // Then. Both clauses: the positional member, and any other member of the envelope.
+        NothingFailedToCompile(allowed);
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .HaveCount(2)
+            .And.OnlyContain(static diagnostic => diagnostic.Id == "TRN0008");
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Select(static diagnostic => TextAt(diagnostic))
+            .Should()
+            .BeEquivalentTo(["States", "First"], "each lands on the member that left the positional shape");
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("an envelope holding the provider's own rows is what the claim asks for");
+    }
+
+    [Fact]
+    public async Task GivenAContractMethodThatIsNotOnePerEndpointOrDoesNotTakeCancellationLast_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.ContractMethodsOfTheWrongShape)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .GenerateAsync();
+
+        // Then. A clause reported is a clause fixed; three of four green is the failure this guards.
+        NothingFailedToCompile(allowed);
+        var messages = reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0009")
+            .Select(static diagnostic => diagnostic.GetMessage())
+            .ToList();
+        messages.Should().HaveCount(5, "two overloads, one return type, one missing token and one misplaced token");
+        messages.Should().Contain(static message => message.Contains("more than one method"));
+        messages.Should().Contain(static message => message.Contains("does not return Task<T>"));
+        messages.Should().Contain(static message => message.Contains("takes no CancellationToken"));
+        messages.Should().Contain(static message => message.Contains("does not take its CancellationToken last"));
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .NotContain(static diagnostic => diagnostic.Id == "TRN0009");
+    }
+
+    [Fact]
+    public async Task GivenAContractNamingAnObservableCacheBoxIntervalOrCredential_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Cache.cs", BoundaryTestData.CacheStandIn)
+            .AddSource("Options.cs", BoundaryTestData.OptionsAndCredentials)
+            .AddSource("Contracts.cs", BoundaryTestData.ContractNamingWhatBelongsAboveIt)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .GenerateAsync();
+
+        // Then. One per forbidden kind the claim lists.
+        NothingFailedToCompile(reported);
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0010")
+            .Select(static diagnostic => TextAt(diagnostic))
+            .Should()
+            .BeEquivalentTo(
+                ["Stream", "Count", "Inside", "Poll", "Authorize"],
+                "the report lands on the declaration that named it, not on a call that uses it");
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .NotContain(static diagnostic => diagnostic.Id == "TRN0010");
+    }
+
+    [Fact]
+    public async Task GivenASecondImplementationForOneTransportOrAPublicEndpointMethod_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.PublicContract)
+            .AddSource("Http.cs", BoundaryTestData.ImplementationsOfTheWrongShape)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.PublicContract)
+            .AddSource("Http.cs", BoundaryTestData.TheOneImplementationPerTransport)
+            .GenerateAsync();
+
+        // Then. B-007 is four conditions in one sentence; each gets its own report.
+        NothingFailedToCompile(reported);
+        NothingFailedToCompile(allowed);
+        var messages = reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0011")
+            .Select(static diagnostic => diagnostic.GetMessage())
+            .ToList();
+        messages.Should().HaveCount(4);
+        messages.Should().Contain(static message => message.Contains("is not internal"));
+        messages.Should().Contain(static message => message.Contains("is not sealed"));
+        messages.Should().Contain(static message => message.Contains("as a public method rather than an explicit implementation"));
+        messages.Should().Contain(static message => message.Contains("is a second implementation"));
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .NotContain(
+                static diagnostic => diagnostic.Id == "TRN0011",
+                "one internal sealed class implementing explicitly is what the claim asks for");
+    }
+
+    [Fact]
+    public async Task GivenASnapshotMemberThatIsDerivedRatherThanReported_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", BoundaryTestData.SnapshotCarryingDerivedMembers)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", BoundaryTestData.Snapshot)
+            .GenerateAsync();
+
+        // Then. The three the claim names, and the "any other value derived" clause behind them.
+        NothingFailedToCompile(reported);
+        NothingFailedToCompile(allowed);
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0012")
+            .Select(static diagnostic => TextAt(diagnostic))
+            .Should()
+            .BeEquivalentTo(
+                ["IsStale", "GroupingKey", "DisplayLabel", "Age"],
+                "a computed getter is derived whatever it is called, and the named kinds are derived even when stored");
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("a member carrying what the provider reported is the whole point of the snapshot");
+    }
+
+    [Fact]
+    public async Task GivenAPerTypeSeamWithASourceDescribingMember_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Seam.cs", BoundaryTestData.SeamDescribingItsSource)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Seam.cs", BoundaryTestData.Seam)
+            .GenerateAsync();
+
+        // Then
+        NothingFailedToCompile(reported);
+        NothingFailedToCompile(allowed);
+        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0013")
+            .Select(static diagnostic => TextAt(diagnostic))
+            .Should()
+            .BeEquivalentTo(["SourceName", "ProviderUrl"]);
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("the changeset is what the seam is for; where it came from is what it must not say");
+    }
+
+    [Fact]
+    public async Task GivenAContractCarryingAVersionSuffixOrAMarkerAboveIt_WhenAnalyzed_ThenItIsReported()
+    {
+        // Given, When
+        var reported = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.ContractCarryingAVersion)
+            .GenerateAsync();
+
+        var allowed = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .GenerateAsync();
+
+        // Then. Both clauses of B-048, which are two ways of claiming a version that does not exist.
+        NothingFailedToCompile(reported);
+        var messages = reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => diagnostic.Id == "TRN0014")
+            .Select(static diagnostic => diagnostic.GetMessage())
+            .ToList();
+        messages.Should().HaveCount(2);
+        messages.Should().Contain(static message => message.Contains("carries the version suffix 'V2'"));
+        messages.Should().Contain(static message => message.Contains("has the marker interface 'IOpenSkyApiMarker' above it"));
+        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .NotContain(static diagnostic => diagnostic.Id == "TRN0014");
+    }
+
+    [Fact]
+    public async Task GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration()
+    {
+        // Given, When. The declaration is in one file and the call that reads it in another, so
+        // the span says which of the two the rule was evaluated against.
+        var results = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", BoundaryTestData.SnapshotCarryingDerivedMembers)
+            .AddSource("Client.cs", BoundaryTestData.ClientReadingADerivedMember)
+            .GenerateAsync();
+
+        // Then
+        NothingFailedToCompile(results);
+        var reported = results.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Where(static diagnostic => TextAt(diagnostic) == "DisplayLabel")
+            .Should()
+            .ContainSingle("the declaration is reported, and the call site that reads it is not")
+            .Subject;
+        reported.Id.Should().Be("TRN0012");
+        reported.Location.GetLineSpan().Path.Should().Be("Snapshot.cs");
+    }
+
     /// <summary>The text the diagnostic's span covers — what a caret lands on, and edit-proof where a line number is not.</summary>
     /// <param name="diagnostic">The diagnostic to read.</param>
     /// <returns>The source text at the diagnostic's location.</returns>
