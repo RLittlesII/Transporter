@@ -124,11 +124,17 @@ internal sealed class AircraftSnapshotClient
 
             return throttled.RetryAfter;
         }
-        catch (Exception failure) when (failure is not OperationCanceledException)
+        catch (Exception failure) when (failure is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
             // B-029: a timeout, a 5xx or an unreadable body costs this poll and nothing else. The
             // stream stays open, because a demo that loses its collection to one bad response is a
             // demo that ends on a blank grid.
+            //
+            // The filter reads the token rather than the exception's type on purpose. A timed-out
+            // request surfaces as `TaskCanceledException`, which *is* an
+            // `OperationCanceledException`, so excluding that type excluded the one failure this
+            // claim is named for. What must still end the loop is *our* cancellation — the
+            // subscription being disposed — and that is the token, not the type.
             _logger.LogWarning(failure, "An OpenSky poll failed; the next one is still due.");
 
             return options.PollInterval;

@@ -265,5 +265,6 @@ dotnet_diagnostic.SA1204.severity = none   # Statics before instance members —
 dotnet_diagnostic.SA1309.severity = none   # No underscore prefix — dotnet_naming_rule.private_fields_should_be_underscore_prefixed requires one
 dotnet_diagnostic.SA1600.severity = none   # Documentation on every member — RSA2014 owns that requirement, narrower, and CS1591 above is off for the same reason
 dotnet_diagnostic.SA1623.severity = none   # Property summary wording — RSA2014 asks for a summary, not for a prescribed first clause
+dotnet_diagnostic.SA1402.severity = none   # File should contain a single type - RSA2008 above is off for the same reason: a test's fixture belongs beside it
 dotnet_diagnostic.SA1633.severity = none   # File header — this repository ships none, and a copyright placeholder is worse than nothing
 
