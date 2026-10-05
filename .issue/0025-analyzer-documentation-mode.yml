@@ -1,0 +1,65 @@
+id: "0025"
+type: chore
+title: Let the analyzers see the documentation comments they ask for
+
+status: in-review
+
+priority: medium
+value: 2
+risk: 1
+rank: 37
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  RSA2014 and RSA2015 reported nine members as undocumented that already carried
+  a summary or an <inheritdoc/>. The cause is not the rules: nothing set
+  GenerateDocumentationFile, so csc ran with DocumentationMode.None and every
+  /// comment stayed plain comment trivia the analyzer cannot see.
+
+  Asking for the documentation file silences all nine and brings three compiler
+  warnings with it, every one in generated code — CS1591 on every public member,
+  CS1711 and CS8669 from the AutoFixtures generator, CS1591 again from the XAML
+  generator. Each is handled where it can be: CS1591 in .editorconfig, the
+  generator ones on their projects, because an .editorconfig severity does not
+  reach a source generator's output.
+
+  RSA2011 is suppressed in Gui alone. It reports once per target framework with
+  an empty symbol name and no location at all, so no #pragma and no
+  .editorconfig section can reach it, and every declaration in that project
+  already states its accessibility. Filed upstream as
+  RocketSurgeonsGuild/Airframe#403.
+
+  Observed rather than assumed: 34 warnings before, 0 analyzer and 0 compiler
+  warnings after, with the NuGet advisories on .build untouched and left for
+  their own item.
+
+acceptance_criteria:
+  - "No RSA2014 or RSA2015 report on a member that carries documentation."
+  - "No new compiler warning reaches the build in place of them."
+  - "Any suppression names what it is for, and the one that cannot be narrowed
+    says why and links the upstream report."
+
+decisions:
+  - "2026-10-04 — the person — suppress RSA2011 in Gui rather than leave the
+    noise, accepting that the rule is then unenforced for that project's
+    hand-written code until Airframe#403 is fixed."
+
+out_of_scope:
+  - "The NU1901 and NU1903 advisories on .build/.build.csproj, transitive from
+    Nuke.Common. Not analyzer configuration, and a version bump of its own."
+  - "The RSA1007 false positive on a RegisterSyntaxNodeAction call, found later
+    while writing the analyzer and suppressed at the line there."
