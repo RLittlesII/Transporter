@@ -163,6 +163,16 @@ belongs to no Feature — a bug, a spike, a chore — goes in the repository-roo
 - Branch: `<id>/<short-description>` from the item id, or
   `spec/<feature-slug>` when authoring a specification, which has no item to
   take an id from.
+- **Branch off `main`. If the work can be done off `main`, it is.** Stack only
+  where the later work cannot compile or be tested without the earlier — not
+  because the items are related, read better in order, or were written in one
+  sitting. One dependent level at most.
+- **A dependent pull request is retargeted to `main` the moment its base
+  merges.** GitHub retargets only the pull request directly above a deleted
+  branch, so in a deeper stack a merge lands in the *base branch* and goes no
+  further: the work is merged, reviewed and absent from `main`, which looks like
+  success from every screen
+  ([lesson 0009](../../.spec/lessons/0009-a-stack-drains-into-its-base-not-into-main.md)).
 - Worktree path: `.claude/worktrees/<branch>`.
 - Report prefix: `[<id> · PR #<pr>]`, or `[<id>]` before the pull request
   exists; a specification uses the Feature slug in place of an id.

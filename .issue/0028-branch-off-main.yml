@@ -1,0 +1,52 @@
+id: "0028"
+type: chore
+title: Branch off main, and retarget a dependent pull request when its base merges
+
+status: in-review
+
+priority: medium
+value: 2
+risk: 1
+rank: 37
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-04"
+updated: "2026-10-04"
+closed: null
+
+summary: |
+  A five-deep pull request stack dropped two reviewed merges into base branches
+  instead of main: GitHub retargets only the pull request directly above a
+  deleted branch, and nobody re-read the bases after the lower two landed. The
+  work was merged, reviewed and missing from main at the same time.
+
+  The rule is in transponder-conventions § deliver-change: branch off main where
+  the work can be, stack only where the later work cannot compile or be tested
+  without the earlier, one dependent level at most, and retarget a dependent
+  pull request the moment its base merges. Lesson 0009 holds the incident.
+
+acceptance_criteria:
+  - "The rule says when stacking is allowed, not merely that it is discouraged —
+    a rule without a test is advice."
+  - "The retargeting half is written down, because that is the half that failed
+    silently."
+
+decisions:
+  - "2026-10-04 — the person — if the work can be done off main, it is. Stated as
+    a rule rather than a preference."
+
+out_of_scope:
+  - "Landing 0022's reference rules on main. That is a merge decision, not this
+    chore, and the person has it."
+  - "Re-cutting the boundary analyzer's items, which lesson 0008 already records
+    and which the reviewer left alone."
