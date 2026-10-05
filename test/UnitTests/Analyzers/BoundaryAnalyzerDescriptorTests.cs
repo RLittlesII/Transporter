@@ -90,8 +90,8 @@ public class BoundaryAnalyzerDescriptorTests
     {
         // Given
         var sut = new BoundaryAnalyzer();
-        var released = AnalyzerHarness
-            .ReadRepositoryFile("src/Transponder.Analyzers/AnalyzerReleases.Unshipped.md")
+        var released = SpecificationTables
+            .Read("src/Transponder.Analyzers/AnalyzerReleases.Unshipped.md")
             .Split('\n')
             .Select(static line => Regex.Match(line, @"^(TRN\d{4})"))
             .Where(static match => match.Success)
@@ -158,7 +158,9 @@ public class BoundaryAnalyzerDescriptorTests
     {
         // Given
         var sut = new BoundaryAnalyzer();
-        var rows = AnalyzerHarness.TableRows(Specification, @"^\| `TRN\d{4}`");
+        // The Enforces cell is what makes a row the mapping table's: § 7 also carries a table of
+        // which diagnostics can have a code fix, and its rows open with a TRN id too.
+        var rows = SpecificationTables.Rows(Specification, @"^\| `TRN\d{4}` +\| `?aircraft-source`? B-\d{3}");
 
         // When
         var mapped = rows.Select(static cells => (Diagnostic: cells[0].Trim('`'), Claim: cells[1])).ToArray();
@@ -194,8 +196,8 @@ public class BoundaryAnalyzerDescriptorTests
     private static IEnumerable<string> BehaviouralClaims() => MatrixRows(static test => !test.Contains("analyzer"));
 
     private static IEnumerable<string> MatrixRows(Func<string, bool> takeTest) =>
-        AnalyzerHarness
-            .TableRows(AircraftSpecification, @"^\| B-\d{3} \| `@B-\d{3}`")
+        SpecificationTables
+            .Rows(AircraftSpecification, @"^\| B-\d{3} \| `@B-\d{3}`")
             .Where(cells => takeTest(cells[2]))
             .Select(static cells => cells[0]);
 
@@ -204,7 +206,7 @@ public class BoundaryAnalyzerDescriptorTests
 
     private const string AircraftSpecificationPath = "features/aircraft-source/.spec/README.md";
 
-    private static readonly string Specification = AnalyzerHarness.ReadRepositoryFile(SpecificationPath);
+    private static readonly string Specification = SpecificationTables.Read(SpecificationPath);
 
-    private static readonly string AircraftSpecification = AnalyzerHarness.ReadRepositoryFile(AircraftSpecificationPath);
+    private static readonly string AircraftSpecification = SpecificationTables.Read(AircraftSpecificationPath);
 }

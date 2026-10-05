@@ -143,6 +143,12 @@ belongs to no Feature — a bug, a spike, a chore — goes in the repository-roo
   [`feature.md`](../../.spec/templates/feature.md) § 12, and a `Missing` row in
   § 9 is not part of it: that is the ship gate, and it blocks `done`
   ([lesson 0007](../../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)).
+- **One item `in-progress` at a time, per Feature.** Two at once is the
+  exception and says so in the item's `decisions`. An item that cannot be
+  finished, demonstrated and reviewed without a sibling is not a small item; it
+  is a decomposition defect, and the remedy is to merge it with the sibling or
+  re-cut both — not to carry both
+  ([lesson 0008](../../.spec/lessons/0008-an-item-that-cannot-be-worked-alone-is-a-decomposition-defect.md)).
 - A pull request body says `Delivers <id>` — the bare id, since one id has one
   item wherever it lives — or `Specifies features/<slug>` when authoring a
   specification. There is no issue for `Closes` to close.
@@ -183,6 +189,10 @@ enforced by review: say which claim ids survive, in the pull request body.
 
 ## `test-from-scenarios`
 
+- **An analyzer, a code fix or a generator is tested through
+  [`analyzer-testing`](../analyzer-testing/SKILL.md)**, which holds the harness,
+  the traps in it, and the rule that a diagnostic ships a fix or records why it
+  cannot. Do not hand-roll a compilation.
 - **xUnit**, in [`test/UnitTests`](../../test/UnitTests); `Xunit` is a global
   using in the project file. For xUnit's own attributes and fixtures, see
   [xunit.net](https://xunit.net).

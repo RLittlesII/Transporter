@@ -46,12 +46,14 @@ is part of what is being demonstrated.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
-Nineteen claims in four groups: **B-001 – B-008** the diagnostic surface — what
+Twenty claims in five groups: **B-001 – B-008** the diagnostic surface — what
 a diagnostic is, what it carries, where it reports and how loud it is;
 **B-009 – B-013** what the rules may examine and what they may not;
 **B-014 – B-017** how the analyzer ships and how a violation reaches a build;
-and **B-018 and B-019** the discipline that keeps this Feature from becoming a
-second store for another specification's claims.
+**B-018 and B-019** the discipline that keeps this Feature from becoming a
+second store for another specification's claims; and **B-020**, appended when
+§ 5 row 2 was reversed rather than renumbered into the group it belongs to —
+ids here are permanent.
 
 Claim ids are per-Feature, per
 [`spec-and-traceability`](../../../.skills/spec-and-traceability/SKILL.md)
@@ -83,6 +85,7 @@ this document's own.
 | B-017 | A violation SHALL fail the ordinary build — `./build.sh` and the pull-request workflow it drives — rather than a separate lint step a contributor can skip.                                                                                                                                                         | ADR-0006 § Consequences — "a build error for everyone"                       |
 | B-018 | A rule SHALL NOT exist before the claim it enforces: a new diagnostic requires a § 3 row in the specification it serves, written by that specification's `spec-author`.                                                                                                                                             | ADR-0006 § Decision 4; `spec-and-traceability` § "Section ownership"         |
 | B-019 | § 7's mapping table SHALL be the only store for which diagnostic enforces which claim, and SHALL NOT restate a foreign claim's text, nor the test name `aircraft-source` § 9 owns.                                                                                                                                  | `spec-and-traceability` § "One answer, one section"                          |
+| B-020 | Every diagnostic SHALL ship a code fix, or § 7 SHALL record why its violation has no mechanical fix. A fix SHALL change only what the claim requires, and SHALL NOT guess at a design decision.                                                      | The person, 2026-10-04; `RocketSurgeonsGuild/Airframe#402`                   |
 
 ## 4. Constraints
 
@@ -105,7 +108,7 @@ this document's own.
 | #   | Item                                                                               | Exclusion reason                                                                                                                                                                                                         |
 | --- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | `aircraft-source` B-009 and B-049                                                   | ADR-0006 § Decision: both constrain code that does not exist — no published provider version, no push provider — so there is nothing to analyze. They are review obligations on the change that creates the precondition. |
-| 2   | A code fix for any diagnostic                                                      | A diagnostic reports; nothing here promises to rewrite the violation. A `CodeFixProvider` is a later Feature, and `RocketSurgeonsGuild/Airframe#402` is a reminder that a missing fix is a known, separate gap.           |
+| 2   | A code fix for a diagnostic whose violation has no mechanical fix                | **Reversed 2026-10-04** — this row read "a code fix for any diagnostic" and is now B-020: a diagnostic ships a fix, or § 7 records why the violation is a decision only the author can make. What stays excluded is a fix that would have to guess at a design change, which is most of the reference rules. |
 | 3   | Rules for [`replay-source`](../../replay-source/.spec/README.md) claims             | That specification's § 9 is unwritten, so no claim there has been assigned to this mechanism yet. § 11 row 3 carries the question.                                                                                        |
 | 4   | Re-litigating the Airframe `RSA` severities, or replacing that set                 | `.editorconfig` already configures them and ADR-0006 § Decision 3 treats this analyzer as the same mechanism with our rules in it, not a replacement.                                                                     |
 | 5   | Naming, ordering, line length and documentation rules                              | Airframe's `RSA1xxx` – `RSA3xxx` already cover style. B-008 and B-018 forbid a rule no claim asks for, and a style rule here would be exactly that.                                                                      |
@@ -159,6 +162,30 @@ that proves it in that specification's § 9, so neither is copied here.
 | `TRN0017`  | `aircraft-source` B-031  | The cache's registration: lifetime, and one per client                                |
 | `TRN0018`  | `aircraft-source` B-010  | Calls producing the contract's double (the mocking-framework half only)               |
 
+**What a fix can do, and where it cannot**
+
+B-020 asks for a code fix per diagnostic or a reason there is none. Three rules
+admit one; fifteen do not, and the pattern is the same one Airframe records for
+its own `RSA2008`, `RSA2009` and `RSA2012` — a fix exists where the compliant
+form is *determined*, and nowhere else.
+
+| Diagnostic | Fix | What it does, or why there is none |
+| ---------- | --- | ---------------------------------- |
+| `TRN0009` | Yes | Moves the `CancellationToken` to last. The compliant parameter order is determined by the claim. |
+| `TRN0011` | Yes | Adds the `internal` and `sealed` the claim requires and converts a public endpoint method to an explicit implementation. The modifiers are the ones the claim names, not a choice. |
+| `TRN0017` | Yes | Rewrites the cache's registration to the application's lifetime. One call, one argument. |
+| `TRN0001` – `TRN0007` | No | A forbidden reference is removed by moving work to the layer that may hold it. Which layer, and what the replacement seam is, is the design decision the claim exists to force — a fix that deleted the reference would delete the behaviour with it. |
+| `TRN0008`, `TRN0012`, `TRN0013` | No | The compliant form is a member that is not there. Deleting a member is destructive and the author may instead want it moved, so the fix is a conversation. |
+| `TRN0010`, `TRN0014` | No | Both are satisfied by renaming or re-siting a type. Either changes a public surface, and `TRN0014`'s compliant form depends on whether the provider has published a version. |
+| `TRN0015`, `TRN0016` | No | A registration that reaches an implementation type is fixed by introducing or using an alias that may not exist yet. |
+| `TRN0018` | No | Replacing a mocking framework's double with a hand-written fake is writing a new type, not editing an expression. |
+
+A fix ships with the rule it fixes, in the item that builds it and in
+`src/Transponder.CodeFixes`, and its own test applies one action per pass and
+re-analyzes — a fix that only works in
+isolation is the failure mode Airframe's `AllDesignRulesFixedTests` exists to
+catch.
+
 `TRN0001` – `TRN0007` are the rules that cannot be written any other way:
 each is satisfied or violated by a reference that may appear only inside a
 method body, which is ADR-0006 § Context's whole argument and this
@@ -173,8 +200,18 @@ src/Transponder.Analyzers/            the analyzer project (B-014)
   BoundaryAnalyzer.cs                 one DiagnosticAnalyzer; the registrations
   Diagnostics.cs                      the TRN descriptors (B-002, B-003, B-006)
   Layers.cs                           namespace to layer, per adr/0002
-test/UnitTests/Analyzers/             BoundaryAnalyzerTests, BoundaryAnalyzerDescriptorTests
+  AnalyzerReleases.Unshipped.md       every id handed out (B-007)
+src/Transponder.CodeFixes/            the fixes B-020 asks for, in a project of their own
+test/UnitTests/Analyzers/             the tests, and the harness wrapper they share
 ```
+
+**The fixes are a second project**, not a folder in the first. A
+`CodeFixProvider` needs `Microsoft.CodeAnalysis.Workspaces`, which an analyzer
+does not and should not carry into the compiler's load path; the `source-generators`
+skill § "Project Structure" fixes that split, and § "Why Separate Analyzer and
+CodeFix Assemblies" says why. It is referenced the same way the analyzer is —
+`OutputItemType="Analyzer"`, `ReferenceOutputAssembly="false"` — from the same
+item group in the root `Directory.Build.props`.
 
 The analyzer project sits under `src/` beside the application projects rather
 than under `.build/`: it is shipped code that the compiler loads, not build
@@ -280,6 +317,7 @@ the xUnit tests execute
 - What a rule may examine → B-009 – B-013
 - Shipping and the build gate → B-014 – B-017
 - The discipline that keeps one store → B-018, B-019
+- A fix, or a recorded reason there is none → B-020
 
 A rule's own correctness is proven by the test
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 names for the
@@ -318,15 +356,18 @@ describes.
 | B-017    | `@B-017`  | **Review**, done on `0021` — a seeded reference to the row from `DemoViewModel` failed `./build.sh` with `error TRN0001` at that line and column, and the seed was reverted. | Verified |
 | B-018    | `@B-018`  | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoClaimInTheMappingTable_WhenTheDescriptorsAreRead_ThenItIsReportedAsUnclaimed` | Verified |
 | B-019    | `@B-019`  | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenARowIsRead_ThenItNamesASpecificationAndClaimAndRestatesNeitherTextNorTest` | Verified |
+| B-020    | `@B-020`  | `BoundaryAnalyzerDescriptorTests.GivenADiagnosticWithNoCodeFix_WhenTheMappingTableIsRead_ThenItRecordsWhyNoneIsPossible` | Missing |
 
-Fifteen rows `Verified`, four `Missing` — **and the four are the gate**. What
-is proven is the analyzer's surface — the ids, the messages, the severities, the
+Fifteen rows `Verified`, five `Missing` — **and the five are the gate**. What is
+proven is the analyzer's surface — the ids, the messages, the severities, the
 release record, the mapping against this document's own § 7 table, the
 exclusion of generated code, and a diagnostic that lands on the node and names
-the symbol — and now B-009: a reference named only inside a method body is
+the symbol — and B-009: a reference named only inside a method body is
 reported, which is the claim ADR-0006 rejected reflection over. What is not is
-the other three rule families, B-010 – B-012 on `0023` and `0024`, and B-016,
-which cannot be `Verified` until the eighteen test names exist.
+the other three rule families, B-010 – B-012 on `0023` and `0024`; B-016, which
+cannot be `Verified` until the eighteen test names exist; and B-020, which
+arrived with § 5 row 2's reversal and waits on the three code fixes landing with
+the rules they fix.
 
 The eighteen rows in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 9 are a separate
