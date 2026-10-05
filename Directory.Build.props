@@ -11,6 +11,12 @@
         <PackageReference Include="Rocket.Surgery.Airframe.CodeAnalysis"/>
     </ItemGroup>
 
+    <PropertyGroup>
+        <!-- Named so the one project whose metadata differs can Update the item by the same
+             evaluated path rather than by a second copy of it. -->
+        <TransponderAnalyzerProject>$(MSBuildThisFileDirectory)src/Transponder.Analyzers/Transponder.Analyzers.csproj</TransponderAnalyzerProject>
+    </PropertyGroup>
+
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Transponder.Analyzers'">
         <!-- This repository's own analyzer, referenced the same way and in the same place as the
              Airframe set above: every project the file governs gets it, including one added later.
@@ -23,7 +29,7 @@
              ProjectReference against the project that imports it and the importers sit at three
              different depths. The condition keeps the analyzer out of its own reference list; a
              project cannot be its own analyzer. -->
-        <ProjectReference Include="$(MSBuildThisFileDirectory)src/Transponder.Analyzers/Transponder.Analyzers.csproj"
+        <ProjectReference Include="$(TransponderAnalyzerProject)"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"/>
     </ItemGroup>
