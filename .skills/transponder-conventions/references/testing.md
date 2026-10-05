@@ -28,6 +28,12 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   the authority on the generated surface.
 - `coverlet.collector` is referenced, so coverage is collectible; no threshold
   is enforced.
+- **Substituting an `internal` interface needs a second grant.** NSubstitute
+  builds its doubles with Castle's dynamic proxy, which cannot see an
+  `internal` type unless the assembly declaring it grants
+  `InternalsVisibleTo("DynamicProxyGenAssembly2")`. `src/Transponder` does.
+  Without it the failure is a run-time proxy error naming an inaccessible type,
+  not a compile error, so it looks like a test bug rather than a missing grant.
 - **A test reaches an `internal` type through `InternalsVisibleTo`, not by
   widening the type.** An integration keeps its contract, its wire types and
   its implementation `internal` so nothing outside can name them; the project

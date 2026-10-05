@@ -139,23 +139,6 @@ internal static class Layers
         return null;
     }
 
-    /// <summary>Whether a symbol belongs to a mocking framework, by the names the three in common use give their entry points.</summary>
-    /// <remarks>By name rather than by package, as <see cref="IsCache"/> is: the analyzer takes no dependency the tests take.</remarks>
-    /// <param name="symbol">The symbol to classify.</param>
-    /// <returns><see langword="true"/> when the symbol is a mocking framework's.</returns>
-    internal static bool IsMockingFramework(ISymbol symbol)
-    {
-        for (var containing = symbol.ContainingNamespace; containing is { IsGlobalNamespace: false }; containing = containing.ContainingNamespace)
-        {
-            if (containing.Name is "NSubstitute" or "Moq" or "FakeItEasy")
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /// <summary>Whether a symbol is a domain type — one that survives the provider being replaced.</summary>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol belongs to the domain model.</returns>

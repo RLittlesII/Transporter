@@ -716,50 +716,6 @@ public class BoundaryAnalyzerTests
     }
 
     [Fact]
-    public async Task GivenTheContractsDoubleProducedByAMockingFramework_WhenAnalyzed_ThenItIsReported()
-    {
-        // Given, When
-        var reported = await GeneratorTestContextBuilder
-            .Create()
-            .WithAnalyzer<BoundaryAnalyzer>()
-            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
-            .AddSource("Substitute.cs", BoundaryTestData.MockingFrameworkStandIn)
-            .AddSource("Tests.cs", BoundaryTestData.DoubleFromAMockingFramework)
-            .GenerateAsync();
-
-        var allowed = await GeneratorTestContextBuilder
-            .Create()
-            .WithAnalyzer<BoundaryAnalyzer>()
-            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
-            .AddSource("Fake.cs", BoundaryTestData.HandWrittenFake)
-            .GenerateAsync();
-
-        // Then. The one rule that fires inside the test project, because a double lives nowhere
-        // else: every other rule reads a production layer and skips tests by design.
-        NothingFailedToCompile(reported);
-        NothingFailedToCompile(allowed);
-        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
-            .Diagnostics
-            .Should()
-            .ContainSingle()
-            .Which.Id.Should()
-            .Be("TRN0018");
-        reported.AnalyzerResults[typeof(BoundaryAnalyzer)]
-            .Diagnostics
-            .Should()
-            .ContainSingle()
-            .Which.GetMessage()
-            .Should()
-            .Contain("Substitute.For");
-        allowed.AnalyzerResults[typeof(BoundaryAnalyzer)]
-            .Diagnostics
-            .Should()
-            .BeEmpty("the hand-written fake is what the claim asks for, and it is not reported");
-    }
-
-    [Fact]
     public async Task GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall()
     {
         // Given, When. The registration is in one file and the implementation's declaration in
@@ -789,28 +745,6 @@ public class BoundaryAnalyzerTests
             .Be(
                 "AddScoped<SourceCache<AircraftSnapshot, string>>",
                 "the lifetime is an argument to the call, so the call is where the fix is");
-    }
-
-    [Fact]
-    public async Task GivenAMockingFrameworkProducingTheContractsDouble_WhenAnalyzed_ThenItIsReportedAtThatCall()
-    {
-        // Given, When
-        var results = await GeneratorTestContextBuilder
-            .Create()
-            .WithAnalyzer<BoundaryAnalyzer>()
-            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
-            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
-            .AddSource("Substitute.cs", BoundaryTestData.MockingFrameworkStandIn)
-            .AddSource("Tests.cs", BoundaryTestData.DoubleFromAMockingFramework)
-            .GenerateAsync();
-
-        // Then
-        NothingFailedToCompile(results);
-        var reported = results.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Should().ContainSingle().Subject;
-        reported.Location.GetLineSpan().Path.Should().Be("Tests.cs");
-        TextAt(reported)
-            .Should()
-            .Be("For<IOpenSkyApi>", "the call that produces the double, not the contract's own declaration");
     }
 
     /// <summary>The text the diagnostic's span covers — what a caret lands on, and edit-proof where a line number is not.</summary>

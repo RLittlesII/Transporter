@@ -20,6 +20,9 @@
 
     <ItemGroup>
       <InternalsVisibleTo Include="Transponder.UnitTests" />
+      <!-- Castle's dynamic proxy, which NSubstitute builds its doubles with. Every type under
+           Integrations/ is internal, so a substitute for an internal interface needs this grant. -->
+      <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
     </ItemGroup>
 
 </Project>

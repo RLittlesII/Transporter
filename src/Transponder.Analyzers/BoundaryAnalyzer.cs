@@ -199,20 +199,15 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
     }
 
     /// <remarks>
-    /// B-011 and B-012: a lifetime and an alias are arguments to a call, and the registered type's
-    /// own declaration is legal in every case these rules report, so the diagnostic goes where the
-    /// answer is. <see cref="ReportMockedDouble"/> runs before the test exclusion, because a double
-    /// is only ever built in a test — it is the one rule here whose subject lives there.
+    /// B-011: a lifetime and an alias are arguments to a call, and the registered type's own
+    /// declaration is legal in every case these rules report, so the diagnostic goes where the
+    /// answer is. Every rule here is excluded inside a test, which was not true while TRN0018
+    /// existed — its subject was a call only a test makes, and it is retired (B-012, Withdrawn).
     /// </remarks>
     private static void AnalyzeCall(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not InvocationExpressionSyntax invocation
             || context.SemanticModel.GetSymbolInfo(invocation, context.CancellationToken).Symbol is not IMethodSymbol called)
-        {
-            return;
-        }
-
-        if (ReportMockedDouble(context, invocation, called))
         {
             return;
         }
@@ -241,27 +236,6 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         ReportRegisteredImplementation(context, invocation, called, enclosing);
         ReportCacheShape(context, invocation, called, enclosing);
         ReportCacheLifetime(context, invocation, called);
-    }
-
-    private static bool ReportMockedDouble(
-        SyntaxNodeAnalysisContext context,
-        InvocationExpressionSyntax invocation,
-        IMethodSymbol called)
-    {
-        if (!Layers.IsMockingFramework(called) || !called.TypeArguments.Any(Layers.IsContract))
-        {
-            return false;
-        }
-
-        // B-010's second clause — TRN0018. A hand-written fake throws on an unset response; a
-        // framework's double returns default, and every test above it then passes for that reason.
-        ReportAt(
-            context,
-            Diagnostics.ContractDoubleFromAMockingFramework,
-            NameOf(invocation).GetLocation(),
-            called.ContainingType.Name + "." + called.Name);
-
-        return true;
     }
 
     private static void ReportResolution(
