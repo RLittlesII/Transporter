@@ -2,7 +2,7 @@ id: "0003"
 type: task
 title: Add the aircraft snapshot record and its cache
 
-status: in-review
+status: blocked
 
 priority: high
 risk: 1
@@ -28,7 +28,7 @@ claims:
   - B-032
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-05"
 closed: null
 
 summary: |
@@ -65,6 +65,13 @@ decisions:
     `SourceCache<AircraftSnapshot, string>` in `AddOpenSky` rather than given a
     type of its own, per § 7. There is nothing else to build for B-030: the
     absence of a wrapper is the claim."
+  - "2026-10-05 — spec-author — this item landed in pull request #2 and is
+    `blocked` rather than `done`. Three of its seven claims stand `Missing` in
+    § 9: B-014 is now proven by the analyzer's `TRN0012`, but B-030 and B-031
+    wait on `TRN0016` and `TRN0017`, which are `boundary-analyzer`'s `0024`.
+    `deliver-change` says an item whose claims are unbuilt is not done, and
+    `0002` carries the same status for the same reason. The blocker is § 11
+    row 3."
 
 out_of_scope:
   - "The differential write itself — B-023, which belongs to the client (0004).
