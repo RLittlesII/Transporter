@@ -2,7 +2,7 @@ id: "0048"
 type: chore
 title: Move each specification beside the code that implements it
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -22,7 +22,7 @@ claims: []
 
 created: "2026-10-06"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   `aircraft-source` already moved out of `features/` and into the code it
