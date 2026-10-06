@@ -418,6 +418,7 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `OpenSkyStateRowConverter`  | [`Http/OpenSkyStateRowConverter.cs`](../Http/OpenSkyStateRowConverter.cs)                           | B-002                           |
 | `OpenSkyHttpApi`            | [`Http/OpenSkyHttpApi.cs`](../Http/OpenSkyHttpApi.cs)                                               | B-007                           |
 | `OpenSkyRegistration`       | [`Container/OpenSkyRegistration.cs`](../Container/OpenSkyRegistration.cs)                           | B-008                           |
+| `IAircraftSnapshotClient`   | [`IAircraftSnapshotClient.cs`](../IAircraftSnapshotClient.cs)                                       | B-015, what a strategy may hold |
 | `TransportVehicle`          | [`Model/TransportVehicle.cs`](../../../Model/TransportVehicle.cs)                                   | ADR-0005; B-037, the key's form |
 | `Aircraft`                  | [`Model/Aircraft.cs`](../../../Model/Aircraft.cs)                                                   | B-034 – B-036                   |
 | `GeoPosition`               | [`Model/GeoPosition.cs`](../../../Model/GeoPosition.cs)                                             | B-036                           |
@@ -667,6 +668,16 @@ B-038 – B-040 between them.
   disposed the outgoing source could not do. It also answers spike `0040`'s
   third question: the first subscription starts the first poll, and nothing
   else does.
+- **The strategy holds that poller as `IAircraftSnapshotClient`, not as the
+  class.** B-015 has every layer take its collaborators by constructor, and a
+  strategy taking a concrete client is the one place the chain stopped obeying
+  it — the client is the only collaborator here that performs I/O, so it is also
+  the only one a test has to stand in for. The interface declares `Poll()` and
+  nothing else: `Snapshots` and `UnreadableRows` are the client's own surface and
+  no strategy reads them. The cache and the mapper stay concrete on purpose and
+  are not the same case — B-030 forbids the cache a type of its own, and the
+  mapper is Mapperly's generated class, so an interface over either would be a
+  seam with one implementation and no substitution behind it.
 - **The `Switch` is DynamicData's, not Rx's**, because `using DynamicData` is in
   scope and the overload for a changeset stream wins. The difference is visible
   and wanted: the outgoing fleet leaves as removes rather than lingering beside
@@ -685,7 +696,11 @@ reaches the decorator through Akka's `IDependencyResolver`, which is spike
 actor's constructor that way, and an actor shaped like that has no static
 `Props` of its own. `TrackingRegistration.AddFleetTrackingActors` is public
 because the actor and the decorator are both internal — the head names the
-method and never either type.
+method and never either type. `SourceSwapActorTests` drives it through
+`Akka.TestKit`, which the test project takes for this and asserts two things of:
+that one message makes the named strategy live while a subscriber keeps the
+subscription it had, and that the actor replies with nothing — told, never
+asked.
 
 ## 8. Testing Strategy
 
@@ -869,7 +884,7 @@ is B-049 and the clause waiting on `0005`.
 | B-037    | `@B-037` | `AircraftSnapshotMapperTests.GivenAnUppercaseIcao24_WhenProjected_ThenTheKeyIsLowercase`; the seam-widening half is analyzer — `BoundaryAnalyzerTests.GivenAPerTypeSeamWithASourceDescribingMember_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                              | Verified |
 | B-038    | `@B-038` | `SwappingTrackerSourceTests.GivenTwoStrategies_WhenTheLiveOneIsSelected_ThenTheDecoratorChoosesAndNoResolverTypeExists`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Verified |
 | B-039    | `@B-039` | `SwappingTrackerSourceTests.GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Verified |
-| B-040    | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Verified |
+| B-040    | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped`, and at the strategy `AircraftTrackerSourceTests.GivenTheStrategy_WhenItIsSubscribedAndUnsubscribed_ThenThePollStartsAndStopsWithTheSubscription`                                                                                                                                                                                                                                                                                                                                                                                                                      | Verified |
 | B-041    | `@B-041` | the negative half is analyzer — `BoundaryAnalyzerTests.GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported`, which passes; the wrapping half is proven by `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction`, which constructs the tracker over the seam; the "what view models depend on" half needs a container-built view model and is owed by `fleet-dashboard` `0039` under that Feature's B-020, where `FleetViewModelTests.GivenAViewModelBuiltByTheContainer_WhenItsDependenciesAreRead_ThenTheyAreIFleetTrackerAndNothingBelowIt` names it (lesson 0011) | Missing  |
 | B-042    | `@B-042` | `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-043    | `@B-043` | `FleetTrackerTests.GivenAnInjectedClockAdvancedPastTheThreshold_WhenStalenessIsRead_ThenItDerivesFromLastContactAndNoAmbientClockIsRead`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |

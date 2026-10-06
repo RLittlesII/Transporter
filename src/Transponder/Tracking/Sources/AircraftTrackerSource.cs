@@ -23,7 +23,7 @@ internal sealed class AircraftTrackerSource : IAircraftTrackerSource
     /// <param name="snapshots">The plain keyed store the snapshot client writes each fetched set into.</param>
     /// <param name="mapper">The projection this strategy owns (B-034).</param>
     public AircraftTrackerSource(
-        AircraftSnapshotClient client,
+        IAircraftSnapshotClient client,
         SourceCache<AircraftSnapshot, string> snapshots,
         AircraftSnapshotMapper mapper)
     {
@@ -44,7 +44,7 @@ internal sealed class AircraftTrackerSource : IAircraftTrackerSource
                 .Transform(TransportVehicle (snapshot) => _mapper.Project(snapshot))
                 .ChangeKey(static vehicle => vehicle.Key));
 
-    private readonly AircraftSnapshotClient _client;
+    private readonly IAircraftSnapshotClient _client;
     private readonly SourceCache<AircraftSnapshot, string> _snapshots;
     private readonly AircraftSnapshotMapper _mapper;
 }

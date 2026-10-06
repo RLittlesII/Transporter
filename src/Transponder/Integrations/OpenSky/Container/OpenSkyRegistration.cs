@@ -76,6 +76,7 @@ public static class OpenSkyRegistration
         services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
         services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
         services.AddSingleton<AircraftSnapshotClient>();
+        services.AddSingleton<IAircraftSnapshotClient>(static provider => provider.GetRequiredService<AircraftSnapshotClient>());
 
         services.AddSingleton<AircraftSnapshotMapper>();
         services.AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>();

@@ -24,7 +24,7 @@ namespace Transponder.Integrations.OpenSky;
 /// Takes the contract and the cache by constructor and constructs neither (B-015). The box and the
 /// interval arrive as options rather than on the contract, which B-006 and B-024 both forbid.
 /// </remarks>
-internal sealed class AircraftSnapshotClient
+internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AircraftSnapshotClient"/> class.
@@ -63,10 +63,7 @@ internal sealed class AircraftSnapshotClient
     /// </summary>
     public int UnreadableRows { get; private set; }
 
-    /// <summary>
-    /// Starts polling, and keeps polling until the returned subscription is disposed.
-    /// </summary>
-    /// <returns>The subscription that stops the polling.</returns>
+    /// <inheritdoc/>
     /// <remarks>
     /// Where this is called from is not this client's business — the poller's hosting is § 5
     /// row 16's — and the thread is a stated choice rather than an ambient one: a poll runs on

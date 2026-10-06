@@ -61,6 +61,17 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — review of pull request #36 — the strategy holds its poller as
+    `IAircraftSnapshotClient` rather than as `AircraftSnapshotClient`, and the
+    two untested pieces are tested. The client is the only collaborator in this
+    item that performs I/O, so it is the one the inversion is worth and the one
+    a test must stand in for; the interface declares `Poll()` and nothing else.
+    The cache and the mapper stay concrete and are not the same case — B-030
+    forbids the cache a type of its own and the mapper is Mapperly's generated
+    class, so either interface would have one implementation and nothing to
+    substitute. `Akka.TestKit.Xunit2` is taken for `SourceSwapActorTests`;
+    rejected: leaving the actor untested because no claim names it, which the
+    pull request body had said out loud and the review did not accept."
   - "2026-10-06 — review of pull request #36 — the comments this item added are
     a maintenance burden and most of them go. Ten lines across seven files, one
     finding: prose restating the call below it, paragraph-length `<remarks>`,
