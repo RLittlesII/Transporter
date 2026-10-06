@@ -59,6 +59,25 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — review of pull request #39 — `IRecordingWriter.Write`
+    returns `Task` and the line is written in one call. A `void` member over a
+    file commits every caller to blocking a thread before any caller exists,
+    and the one production caller is a poll already inside an `async` method;
+    declaring it the other way costs nothing where there is nothing to await,
+    since `UnrecordedPayloads` returns a completed task. The whole-line write
+    came with it: six writes per line is a line another writer can split, which
+    no test could show. Neither rule was written anywhere —
+    `coding-conventions` banned a blocking wait on an asynchronous call and
+    said nothing about a signature that forces one — so § Design gained both
+    halves and lesson 0018 records it."
+  - "2026-10-06 — review of pull request #39 — the writer's tests build it
+    through a generated `RecordingWriterFixture` rather than by constructor
+    call, which `transponder-conventions` § testing already required in
+    writing. No new rule, only compliance — lesson 0017's shape. The generated
+    builder is `WithDestination`, not `WithWriter`: the naming rule as written
+    said \"after its parameter's type\", which holds for an interface and not
+    for a class, where it is the parameter's name. The reference is corrected
+    and now says to read the generated file rather than predict the name."
   - "2026-10-06 — implementer — the tap reads the response body as text and
     deserializes from that text, replacing `GetJsonAsync<T>` in
     `OpenSkyHttpApi.Read`. That is the only place B-002's verbatim is

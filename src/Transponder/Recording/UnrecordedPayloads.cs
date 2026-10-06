@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Transponder.Recording;
 
@@ -14,7 +15,9 @@ namespace Transponder.Recording;
 internal sealed class UnrecordedPayloads : IRecordingWriter
 {
     /// <inheritdoc/>
-    public void Write(DateTimeOffset receivedAt, string body)
-    {
-    }
+    /// <remarks>
+    /// Completed rather than asynchronous: there is no file, so there is nothing to await. The tap
+    /// still awaits it, which is what keeps the call site identical either way.
+    /// </remarks>
+    public Task Write(DateTimeOffset receivedAt, string body) => Task.CompletedTask;
 }

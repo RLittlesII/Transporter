@@ -10,6 +10,7 @@ using Transponder.Model;
 using Transponder.Recording;
 using Transponder.Tracking;
 using Transponder.Tracking.Sources;
+using Transponder.UnitTests.Recording;
 using Transponder.UnitTests.Tracking;
 
 namespace Transponder.UnitTests.Integrations.OpenSky;
@@ -31,11 +32,12 @@ public class RecordingTapTests
         http.ForCallsTo(OpenSkyTransport.TokenCalls).RespondWithJson(new { access_token = "token-one", expires_in = 60 });
         http.ForCallsTo(OpenSkyTransport.StatesCalls).RespondWith(OpenSkyPayloads.NoRows);
         using var destination = new StringWriter();
+        RecordingWriter recorder = new RecordingWriterFixture().WithDestination(destination);
         OpenSkyHttpApi sut = new OpenSkyHttpApiFixture()
             .WithCache(clients)
             .WithSource(OpenSkyTransport.Tokens(clients, scheduler, new RecordingLogger<OpenSkyTokenSource>()))
             .WithProvider(OpenSkyTransport.Schedulers(scheduler))
-            .WithWriter(new RecordingWriter(destination, new RecordingLogger<RecordingWriter>()));
+            .WithWriter(recorder);
 
         // When
         await ((IOpenSkyApi) sut).GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
@@ -62,11 +64,12 @@ public class RecordingTapTests
         http.ForCallsTo(OpenSkyTransport.TokenCalls).RespondWithJson(new { access_token = "token-one", expires_in = 60 });
         http.ForCallsTo(OpenSkyTransport.StatesCalls).RespondWith(OpenSkyPayloads.NoRows);
         using var destination = new StringWriter();
+        RecordingWriter recorder = new RecordingWriterFixture().WithDestination(destination);
         OpenSkyHttpApi sut = new OpenSkyHttpApiFixture()
             .WithCache(clients)
             .WithSource(OpenSkyTransport.Tokens(clients, scheduler, new RecordingLogger<OpenSkyTokenSource>()))
             .WithProvider(OpenSkyTransport.Schedulers(scheduler))
-            .WithWriter(new RecordingWriter(destination, new RecordingLogger<RecordingWriter>()));
+            .WithWriter(recorder);
 
         // When
         await ((IOpenSkyApi) sut).GetStates(29.4, -95.9, 30.2, -94.8, true, CancellationToken.None);
@@ -96,9 +99,10 @@ public class RecordingTapTests
     {
         // Given
         using var destination = new StringWriter();
+        RecordingWriter recorder = new RecordingWriterFixture().WithDestination(destination);
 
         // When
-        var recorded = await Fleet(new RecordingWriter(destination, new RecordingLogger<RecordingWriter>()));
+        var recorded = await Fleet(recorder);
         var unrecorded = await Fleet(new UnrecordedPayloads());
 
         // Then

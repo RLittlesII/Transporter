@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Transponder.Recording;
 
@@ -23,9 +24,18 @@ internal interface IRecordingWriter
     /// <paramref name="body"/> (ADR-0004 § "Consequences").
     /// </param>
     /// <param name="body">The payload, exactly as the provider sent it.</param>
+    /// <returns>The running write. Asynchronous because a recording is a file.</returns>
     /// <remarks>
-    /// Never throws. Recording is observationally transparent (B-004), and a write that failed
-    /// loudly would make the fleet's behaviour depend on whether a disk had room.
+    /// <para>
+    /// Never faults. Recording is observationally transparent (B-004), and a write that failed
+    /// loudly would make the fleet's behaviour depend on whether a disk had room — so a failure is
+    /// logged and the returned task completes.
+    /// </para>
+    /// <para>
+    /// One payload per call and the caller is serial. A recording is a line-oriented file, so two
+    /// writes in flight at once could interleave and produce a line that is neither payload; the
+    /// one caller is a poll loop that awaits each line before fetching again.
+    /// </para>
     /// </remarks>
-    void Write(DateTimeOffset receivedAt, string body);
+    Task Write(DateTimeOffset receivedAt, string body);
 }

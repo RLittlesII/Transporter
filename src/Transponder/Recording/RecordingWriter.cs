@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Transponder.Recording;
@@ -29,7 +30,7 @@ internal sealed class RecordingWriter : IRecordingWriter
     /// Initializes a new instance of the <see cref="RecordingWriter"/> class.
     /// </summary>
     /// <param name="destination">The open writer each line is appended to.</param>
-    /// <param name="logger">Where a failed write is recorded, since it is never thrown.</param>
+    /// <param name="logger">Where a failed write is recorded, since it never reaches the caller.</param>
     public RecordingWriter(TextWriter destination, ILogger<RecordingWriter> logger)
     {
         _destination = destination;
@@ -42,17 +43,23 @@ internal sealed class RecordingWriter : IRecordingWriter
     /// <inheritdoc/>
     /// <remarks>
     /// <para>
+    /// The line is composed first and written in one call, rather than a call per field. A
+    /// recording is line-oriented, so a second write arriving between two of them would produce a
+    /// line that is neither payload — and the whole-line write is what makes that impossible
+    /// rather than merely unlikely.
+    /// </para>
+    /// <para>
     /// Flushed per line, because a recorder is stopped with a keystroke and what was already
     /// written has to be usable without a clean close (ADR-0004 § "Decision drivers"). The cost is
     /// one flush per poll, which at a fifteen-second interval is nothing.
     /// </para>
     /// <para>
-    /// Every failure is caught and logged rather than thrown. B-004 makes recording
-    /// observationally transparent, and an exception leaving here would reach the poll loop and
-    /// change what the fleet sees — which is the one thing a tap may not do.
+    /// Every failure is caught and logged rather than left on the task. B-004 makes recording
+    /// observationally transparent, and a faulted task awaited by the poll loop would change what
+    /// the fleet sees — which is the one thing a tap may not do.
     /// </para>
     /// </remarks>
-    public void Write(DateTimeOffset receivedAt, string body)
+    public async Task Write(DateTimeOffset receivedAt, string body)
     {
         try
         {
@@ -69,13 +76,8 @@ internal sealed class RecordingWriter : IRecordingWriter
 
             var instant = receivedAt.ToUniversalTime().ToString(InstantFormat, CultureInfo.InvariantCulture);
 
-            _destination.Write("{\"receivedAt\":\"");
-            _destination.Write(instant);
-            _destination.Write("\",\"body\":");
-            _destination.Write(body);
-            _destination.Write('}');
-            _destination.Write('\n');
-            _destination.Flush();
+            await _destination.WriteAsync($"{{\"receivedAt\":\"{instant}\",\"body\":{body}}}\n").ConfigureAwait(false);
+            await _destination.FlushAsync().ConfigureAwait(false);
         }
         catch (Exception failure)
         {

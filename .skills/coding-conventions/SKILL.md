@@ -45,6 +45,16 @@ and wins where they differ.
   vocabulary. The seam earns the pattern; naming a pattern never earns the seam.
 - Speculative extensibility is a cost paid now for a requirement that may never
   arrive. A member nothing overrides and a layer nothing varies are both it.
+- **A member that touches a file, a socket or a database is asynchronous, and
+  its seam says so.** The decision is the interface's, not the
+  implementation's: a synchronous signature over real input or output forces
+  every implementation to block a thread, and the caller that is already
+  asynchronous cannot tell that it is. Declaring it the other way costs nothing
+  where there is nothing to await — a null object returns a completed task.
+- **A record written a field at a time is a record another writer can split.**
+  Compose the whole line, row or message and write it in one call. Two writes
+  in flight interleaving is the kind of defect that appears under load, in a
+  file nobody reads until the demo, and never in a test.
 
 ## Naming and layout
 

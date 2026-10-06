@@ -173,7 +173,7 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
 
         var body = await response.GetStringAsync();
 
-        _recorder.Write(_schedulers.BackgroundThread.Now, body);
+        await _recorder.Write(_schedulers.BackgroundThread.Now, body);
 
         return JsonSerializer.Deserialize<OpenSkyStatesResponse>(body)
                ?? throw new FormatException("OpenSky answered 2xx with a body that is not a states payload.");
