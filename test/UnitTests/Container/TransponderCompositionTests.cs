@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Transponder.Container;
 using Transponder.Integrations.OpenSky;
 using Transponder.Tracking;
+using Transponder.Tracking.Sources;
 
 namespace Transponder.UnitTests.Container;
 
@@ -75,5 +76,47 @@ public class TransponderCompositionTests
 
         // Then
         first.Should().BeSameAs(second, "the pipeline is assembled once for the application");
+    }
+
+    /// <summary>
+    /// B-052. A chain that compiles and a chain that runs are the same thing only if something
+    /// builds it: the tracker resolves with every dependency satisfied, and what it is handed is the
+    /// decorator rather than a strategy. The second clause is the one that catches ADR-0011's
+    /// remaining trap — a strategy registered as <see cref="ITrackerSource"/> reaches consumers in
+    /// place of the selector, and the swap then silently does nothing.
+    /// </summary>
+    [Fact]
+    public void GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator()
+    {
+        // Given
+        using var host = Application();
+
+        // When
+        var tracker = host.Services.GetRequiredService<IFleetTracker>();
+        var source = host.Services.GetRequiredService<ITrackerSource>();
+
+        // Then
+        tracker.Should().NotBeNull("every dependency below it is registered");
+        source.Should().BeOfType<SwappingTrackerSource>("a consumer resolving the seam gets the selector");
+    }
+
+    /// <summary>The application's own composition, over settings that carry no credential.</summary>
+    /// <returns>The host, which the caller disposes.</returns>
+    private static IHost Application()
+    {
+        var settings = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{OpenSkyOptions.Section}:{nameof(OpenSkyOptions.BaseUrl)}"] = OpenSkyOptions.DefaultBaseUrl,
+                [$"{OpenSkyOptions.Section}:Box:LatitudeMinimum"] = "28.8",
+                [$"{OpenSkyOptions.Section}:Box:LongitudeMinimum"] = "-96.0",
+                [$"{OpenSkyOptions.Section}:Box:LatitudeMaximum"] = "30.4",
+                [$"{OpenSkyOptions.Section}:Box:LongitudeMaximum"] = "-94.2",
+            })
+            .Build();
+
+        return new HostBuilder()
+            .ConfigureServices(services => services.AddTransponder(settings, ImmediateScheduler.Instance))
+            .Build();
     }
 }

@@ -1,10 +1,13 @@
 using AwesomeAssertions;
 using DynamicData;
+using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Integrations.OpenSky;
+using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Model;
 using Transponder.Tracking;
 using Transponder.Tracking.Sources;
+using Transponder.UnitTests.Integrations.OpenSky;
 using Transponder.UnitTests.Integrations.OpenSky.Fixtures;
 
 namespace Transponder.UnitTests.Tracking;
@@ -96,11 +99,17 @@ public class AircraftTrackerSourceTests
 }
 
 /// <summary>Builds the strategy, so a constructor change edits this and not every test.</summary>
+/// <remarks>
+/// The default client polls on a <see cref="Microsoft.Reactive.Testing.TestScheduler"/> nothing here
+/// advances, so a test that only reads the projection never reaches the network: the subscription
+/// starts the poll (B-040) and the poll's first tick never comes.
+/// </remarks>
 [AutoFixture(typeof(AircraftTrackerSource))]
 internal partial class AircraftTrackerSourceFixture
 {
     public AircraftTrackerSourceFixture()
     {
+        WithClient(new AircraftSnapshotClientFixture().WithApi(Substitute.For<IOpenSkyApi>()));
         WithSnapshots(new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
         WithMapper(new AircraftSnapshotMapper());
     }
