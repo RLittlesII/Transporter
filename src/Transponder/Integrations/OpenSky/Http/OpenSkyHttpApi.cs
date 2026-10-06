@@ -1,12 +1,15 @@
 using System;
 using System.Net;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.Logging;
+using Rocket.Surgery.Airframe;
 using Transponder.Integrations.OpenSky.Authentication;
 using Transponder.Integrations.OpenSky.Contracts;
+using Transponder.Recording;
 
 namespace Transponder.Integrations.OpenSky.Http.Api;
 
@@ -21,11 +24,28 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
     /// </summary>
     /// <param name="clients">The Flurl client cache this transport asks for its named client.</param>
     /// <param name="tokens">The one place a bearer token is obtained and held.</param>
+    /// <param name="recorder">
+    /// Where a payload is recorded, before anything parses it. Unconditional: when nothing is
+    /// being recorded the container resolves a writer that keeps nothing, so there is no branch
+    /// here that could behave differently with recording on (B-004).
+    /// </param>
+    /// <param name="schedulers">
+    /// Where the arrival instant is read from. A recorded line's <c>receivedAt</c> is a clock
+    /// read, and the one clock this repository allows reading is an injected one
+    /// (<c>test-from-scenarios</c> § "Time is injected, always").
+    /// </param>
     /// <param name="logger">Where the remaining credit is written, at debug (B-027).</param>
-    public OpenSkyHttpApi(IFlurlClientCache clients, IOpenSkyTokenSource tokens, ILogger<OpenSkyHttpApi> logger)
+    public OpenSkyHttpApi(
+        IFlurlClientCache clients,
+        IOpenSkyTokenSource tokens,
+        IRecordingWriter recorder,
+        ISchedulerProvider schedulers,
+        ILogger<OpenSkyHttpApi> logger)
     {
         _clients = clients;
         _tokens = tokens;
+        _recorder = recorder;
+        _schedulers = schedulers;
         _logger = logger;
     }
 
@@ -118,9 +138,24 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
     /// an exception because nothing allowed it.
     /// </exception>
     /// <remarks>
+    /// <para>
     /// <c>X-Rate-Limit-Remaining</c> is written at debug on every poll (B-027): the header is the
     /// only place a burn rate is visible before it bites, and any call style that keeps the body
     /// and throws the response away loses it (§ 4 row 9).
+    /// </para>
+    /// <para>
+    /// The body is read as text and deserialized from that text rather than straight off the
+    /// response, because this is where the recording tap goes and `replay-source` B-002 requires
+    /// the recorded line to hold what the provider sent. An envelope that has been through this
+    /// reader and back is this repository's reading of the payload, so a tap any higher — a
+    /// decorator over the contract, for instance — can satisfy B-001's "beside the instant it
+    /// arrived" and not B-002's "verbatim".
+    /// </para>
+    /// <para>
+    /// The throttle is inspected before the body is read: a <c>429</c> carries no payload, so
+    /// reading one would spend an allocation to find out what the status already said, and
+    /// recording it would put a non-payload in the recording.
+    /// </para>
     /// </remarks>
     private async Task<OpenSkyStatesResponse> Read(IFlurlResponse response)
     {
@@ -131,12 +166,22 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
         }
 
         // B-028.
-        return response.StatusCode == (int) HttpStatusCode.TooManyRequests
-            ? throw new OpenSkyThrottledException(RetryAfter(response))
-            : await response.GetJsonAsync<OpenSkyStatesResponse>();
+        if (response.StatusCode == (int) HttpStatusCode.TooManyRequests)
+        {
+            throw new OpenSkyThrottledException(RetryAfter(response));
+        }
+
+        var body = await response.GetStringAsync();
+
+        await _recorder.Write(_schedulers.BackgroundThread.Now, body);
+
+        return JsonSerializer.Deserialize<OpenSkyStatesResponse>(body)
+               ?? throw new FormatException("OpenSky answered 2xx with a body that is not a states payload.");
     }
 
     private readonly IFlurlClientCache _clients;
     private readonly IOpenSkyTokenSource _tokens;
+    private readonly IRecordingWriter _recorder;
+    private readonly ISchedulerProvider _schedulers;
     private readonly ILogger<OpenSkyHttpApi> _logger;
 }

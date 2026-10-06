@@ -39,11 +39,20 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   clock — is built by its own fixture and handed in whole, so a test advances the
   real type rather than arranging a substitute's members. Substitute an interface
   the application has no implementation of; build the one it does.
-- **A generated fixture names each builder method after its parameter's _type_**,
-  not the parameter: `IObservedClockWriter` becomes `WithWriter`,
-  `ISchedulerProvider` becomes `WithProvider`. Two parameters of one type
-  therefore collide, and that type's fixture is hand-written over
-  `AutoFixtureBase<T>` instead, saying so in its remarks.
+- **A generated fixture names each builder method after its parameter's _type_
+  where that type is an interface**, not after the parameter:
+  `IObservedClockWriter` becomes `WithWriter`, `ISchedulerProvider` becomes
+  `WithProvider`. Two interface parameters of one type therefore collide, and
+  that type's fixture is hand-written over `AutoFixtureBase<T>` instead, saying
+  so in its remarks.
+- **Where the parameter's type is a class, the builder is named after the
+  _parameter_.** `TextWriter destination` becomes `WithDestination`, and
+  `SourceCache<AircraftSnapshot, string> snapshots` becomes `WithSnapshots`.
+  The two halves of this rule are easy to merge into one wrong one, so read the
+  generated file rather than predicting the name: build with
+  `-p:EmitCompilerGeneratedFiles=true` and look under
+  `test/UnitTests/obj/Debug/<tfm>/generated/`. A `./build.sh` clears that
+  directory, so emit it from `dotnet build` on the test project.
 - **A test that stands up a host stands up the application's own composition.**
   One registration extension takes configuration and does the whole wiring; a
   test calls that and varies configuration. A test that assembles the same graph
