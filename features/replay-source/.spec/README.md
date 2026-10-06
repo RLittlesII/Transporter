@@ -40,7 +40,7 @@ renumbered into the groups they belong to — ids here are permanent; and
 
 Claim ids are per-Feature, per spec-and-traceability § "Claims and
 traceability". `B-001` here and `B-001` in
-[`aircraft-source`](../../aircraft-source/.spec/README.md) are different
+[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md) are different
 claims: an `.issue/` item names its spec, and its `claims:` ids resolve
 against that spec.
 

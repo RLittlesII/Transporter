@@ -35,7 +35,7 @@ Three things were supposed to catch that, and each had been let go for a reason
 that was true on its own.
 
 **B-004 is the registration claim**, and its § 9 row reads `Missing`, routed to
-[`0044`](../../features/fleet-dashboard/.issue/0044-page-level-claim-proof.yml)
+[`0044`](../../src/Transponder/Features/Fleet/.issue/0044-page-level-claim-proof.yml)
 because `test/UnitTests` is `net10.0` and `src/Gui` is a pair of Apple-only MAUI
 heads. The reason the claim could not be proved is the same reason the defect
 could not be seen: **the registration list lived where nothing executes.**

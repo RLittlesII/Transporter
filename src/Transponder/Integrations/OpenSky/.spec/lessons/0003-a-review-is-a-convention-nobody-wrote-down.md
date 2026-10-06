@@ -73,12 +73,12 @@ the item delivers is proven by the test § 9 names, under the same name.
 
 ## Process delta
 
-[`transponder-conventions`](../../../../.skills/transponder-conventions/references/testing.md)
+[`transponder-conventions`](../../../../../../.skills/transponder-conventions/references/testing.md)
 § testing now carries all twelve as rules, in the place a test writer reads
 before writing rather than after. The ones that generalise past this repository —
 a test reads no files, and a test stands up the application's own composition —
 are written there rather than in
-[`test-from-scenarios`](../../../../.skills/test-from-scenarios/SKILL.md) only
+[`test-from-scenarios`](../../../../../../.skills/test-from-scenarios/SKILL.md) only
 because the companion is where this project's test stack already lives.
 
 ## Claim

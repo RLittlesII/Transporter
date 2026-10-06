@@ -64,13 +64,13 @@ here. § 4 row 19, § 6's row, § 8's DI-seam finding, § 9's counts and
 
 It crosses into `boundary-analyzer`: B-012 is Withdrawn there, `TRN0018` is
 retired from the analyzer and from its § 7 mapping and code-fix tables, and
-[ADR-0006](../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
+[ADR-0006](../../../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
 is amended from eighteen assigned rules to seventeen. The id stays in
 `AnalyzerReleases.Unshipped.md` so nothing reuses it.
 
 ## Process delta
 
-[`spec-and-traceability`](../../../../.skills/spec-and-traceability/SKILL.md)
+[`spec-and-traceability`](../../../../../../.skills/spec-and-traceability/SKILL.md)
 carries the rule this lesson produced: a constraint imported from outside the
 repository is recorded with what it costs here and who accepted that cost, or it
 is a decision and gets a decision record. A § 4 row whose Source names only an

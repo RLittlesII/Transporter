@@ -1,0 +1,66 @@
+id: "0020"
+type: task
+title: Stand up the analyzer project the compiler loads, and the build gate
+
+status: done
+
+priority: high
+risk: 3
+rank: 96
+
+parent: "0019"
+children: []
+
+depends_on: []
+blocks:
+  - "0021"
+spikes: []
+
+spec: src/Transponder.Analyzers/.spec/README.md
+
+claims:
+  - B-014
+  - B-015
+  - B-017
+
+created: "2026-10-04"
+updated: "2026-10-05"
+closed: "2026-10-05"
+
+summary: |
+  The project every later child is written into: src/Transponder.Analyzers,
+  targeting what csc will load, referenced by the projects it analyzes as an
+  analyzer and not as an assembly, with its Roslyn packages added to
+  Directory.Packages.props and referenced nowhere else.
+
+  A reference shape that compiles and analyzes nothing is this item's whole
+  hazard: CS8032 — "an instance of analyzer X cannot be created" — is a
+  *warning*, and this repository watched a version bump leave every RSA rule
+  inactive with a green build on 2026-10-04. The load is therefore proven by a
+  rule that fires rather than by the build going green, and that rule is
+  TRN0001, which 0021 lands immediately after this item.
+
+  B-017 is proven the same way: seed a violation, run ./build.sh as the
+  pull-request workflow runs it, and watch the build fail at the line. Nothing
+  about that is assertable in xUnit without asserting the harness instead.
+
+acceptance_criteria:
+  - "B-014 — an analyzer reference with no assembly reference; the diagnostics
+    are reported during compilation and no analyzer assembly reaches the
+    application's output."
+  - "B-015 — the Roslyn packages sit on the analyzer project alone, and no
+    application or test file names a type from it."
+  - "B-017 — a seeded violation fails ./build.sh, naming the TRN diagnostic and
+    the line, with no separate lint step invoked."
+  - "§ 9 carries a row for each id above. All three are Review rows: they are
+    facts about the build graph, and § 8's coverage row says why a test over a
+    project file would assert the file rather than the claim."
+
+decisions: []
+
+out_of_scope:
+  - "The descriptor conventions and the first rule — B-001 – B-008, B-013,
+    B-016, B-018, B-019 and TRN0001 on 0021, which is what proves this item's
+    reference shape actually loaded."
+  - "Any of the eighteen rules themselves — 0022, 0023 and 0024 by family."
+  - "Analyzing the .build project — § 5 row 7."

@@ -8,7 +8,7 @@ type: adr
        - .spec/adr/ at the repository root, for a CROSS-CUTTING decision that
          binds every Feature — a library, a transport, a layout rule. Numbered
          repo-wide, starting at 0001.
-       - features/<feature-slug>/.spec/adr/, for a decision scoped to that one
+       - <home>/.spec/adr/, for a decision scoped to that one
          Feature. Numbered per Feature, starting at 0001.
      Pick by blast radius, not by who happened to make it.
 

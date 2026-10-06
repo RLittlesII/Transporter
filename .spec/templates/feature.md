@@ -5,7 +5,9 @@ type: spec
 spec_status: draft
 ---
 
-<!-- Copy this file to features/<feature-slug>/.spec/README.md and fill it in.
+<!-- Copy this file to <home>/.spec/README.md and fill it in, where <home> is
+     the directory holding the code that implements the Feature —
+     features/<feature-slug>/ until that code exists.
 
      THIS FILE COMES FIRST. A Feature specification stands on its own: it needs
      no work item to exist, because it is the agreement that work items are

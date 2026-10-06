@@ -1,0 +1,165 @@
+id: "0030"
+type: feature
+title: Filter, sort, group, count, mark and bind one collection of vehicles
+
+status: ready-for-implementation
+
+priority: high
+value: 5
+risk: 3
+rank: 96
+
+parent: null
+children:
+  - "0031"
+  - "0032"
+  - "0033"
+  - "0034"
+
+depends_on: []
+blocks:
+  - "0035"
+spikes: []
+
+spec: src/Transponder/Tracking/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+  - B-021
+  - B-022
+  - B-023
+  - B-024
+  - B-025
+  - B-026
+  - B-027
+  - B-028
+
+created: "2026-10-05"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  As a line-of-business .NET developer whose data lives behind REST endpoints
+  I want one collection of tracked vehicles that filters, sorts, groups, counts
+  and marks itself downstream of the tracker seam so that I can see that
+  nothing after the snapshot-to-changeset step is special, and lift the whole
+  pipeline into an application of my own.
+
+  `aircraft-source` built the step into the pipeline and stopped there on
+  purpose: its § 5 row 1 excludes the operators and says building them is the
+  next feature, and its B-042 claims only that `IFleetTracker` **owns** a
+  pipeline. Ownership of nothing survives any swap, so the closing act's claim
+  is vacuous until this Feature exists.
+
+  The children are slices of this item rather than work beside it, which is why
+  it carries all twenty-eight claims.
+
+  Every § 11 question is answered as of 2026-10-05, the architecture review
+  included (ADR-0009, ADR-0010). What holds this at `ready-for-architecture` is
+  § 12: §§ 6-7 are 🟡 and now describe the pre-pivot shape, so the `implementer`
+  rewrites § 7 and `spec-reviewer` signs the rows off before any child starts.
+
+acceptance_criteria:
+  - "B-001 – B-005 — the spine: built once, one collection, no imperative
+    edit, disposal, the injected scheduler."
+  - "B-006 – B-008 — filtering from an observable predicate."
+  - "B-009 – B-011 — sorting from an observable comparer, ties on the key."
+  - "B-012 – B-015 — grouping, the abstract grouping key, and the counts."
+  - "B-016 – B-019 — a silent vehicle is marked and kept, at a configurable
+    five minutes, against the observed clock."
+  - "B-020 – B-022 — the source description, and the swap that edits nothing."
+  - "B-023, B-024 — what nothing here may name, and what no test may reach."
+  - "B-025 – B-027 — a notice per changeset that changed something, paced by
+    whoever is watching, and silence reported once rather than inferred."
+  - "B-028 — the stages are shared: one connection to the seam however many
+    subscribers, and teardown when the last one unsubscribes."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-05 — the person — the pipeline and the dashboard are two Features,
+    not one. This item is the pipeline, provable with no UI at all; the MAUI
+    surfaces, the view models and the composition of search text into a
+    predicate are `fleet-dashboard`'s, routed by § 5 rows 1 and 4. Rejected: a
+    single cache-to-screen Feature, whose § 9 could not go Verified until the
+    UI existed and which would have needed a decomposition pass later."
+  - "2026-10-05 — the person — the map view is excluded rather than deferred to
+    a named Feature (§ 5 row 3). It is optional in README.md and binds the same
+    one collection B-002 requires, so nothing here forecloses it."
+  - "2026-10-05 — the person — the abstract grouping key ADR-0005 item 2
+    requires, and the source-supplied column description `maui-ui` § \"The swap
+    test\" assumes, are claimed here (B-013, B-020) rather than added to
+    `aircraft-source` as a spec delta. The pipeline is what needs them, and the
+    claim belongs with the need. The cost is recorded in § Scoring against
+    `0032`: the member lands in a file `aircraft-source` owns."
+  - "2026-10-05 — the person — every interface and record declared in § 7 is
+    provisional and goes back to the architect: the declarations make § 3
+    falsifiable, and the shape is not agreed. § 11 row 4 carries the agenda —
+    two kinds of member on `IFleetTracker`, `IFleetQuery` as a four-observable
+    bag shaped by its consumer, the `StaleVehicle` wrapper against B-002's one
+    collection, widening an interface `aircraft-source` published, a UI-shaped
+    description under `Tracking/`, and who disposes a container singleton. No
+    claim, scenario or § 9 row names a type, so the review can replace every
+    declaration without touching one. `0031` stays at
+    `ready-for-architecture` for it rather than discovering the six one at a
+    time."
+  - "2026-10-05 — the person — no `AutoRefresh` stage in this pipeline
+    (`decisions/0001`, § 11 row 1 closed). The projection replaces a vehicle
+    rather than mutating one, so the operator has no subject; staleness
+    re-evaluates on the clock's observable (B-018) and README.md's operator
+    table now says where `AutoRefresh` would apply. Rejected: mutating in place
+    to earn the demo beat, and deferring the operator to an unchosen closing
+    act."
+  - "2026-10-05 — the person — the poll interval is not a live input
+    (`decisions/0002`, § 11 row 5 closed, § 5 row 8). Pacing a notice costs
+    nothing; polling faster spends credits from a daily 4,000. B-026's notice
+    interval stays live."
+  - "2026-10-05 — the person — the pipeline publishes changesets and a consumer
+    binds them (ADR-0009, § 11 rows 2 and 4 closed). Asked which way to split
+    `IFleetTracker`'s mixed members, the person pivoted: an object owning a
+    `ReadOnlyObservableCollection` has already decided its consumer has a UI,
+    and `Bind` is the part of the chain the consumer owns. The operators stay in
+    the pipeline, the stages are shared by DynamicData's cache-aware
+    `RefCount()` rather than Rx's `Publish().RefCount()` pair (new claim
+    B-028), the four inputs become methods on the tracker that tick subjects it
+    owns and seeds with the claimed defaults, and `IFleetQuery` is
+    deleted, `StaleVehicle` stays the published element with B-002 amended to
+    say so, the summary stays on the tracker, the description stays under
+    `Tracking/Fleet/`, the notice rate cap stays in the pipeline, and the
+    tracker is a container singleton. B-005 was amended in the same pass: it had
+    required the opposite of `mvvm` § \"Projecting state back\"."
+  - "2026-10-05 — the person — the observed clock's ticks arrive on a third
+    read-side seam, `IObservedClockTicks` (ADR-0010), rather than by widening
+    the `IObservedClock` `aircraft-source` published. ADR-0007 stands
+    unamended."
+  - "2026-10-05 — the person — `FleetColumn.Value` stays a display-formatted
+    `string` (§ 11 row 3 closed). B-020 unchanged; a canonical value plus a
+    formatter was rejected as a member per column and a generic column type no
+    need asks for. No `decisions/` record: it shapes code, not the demo."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The MAUI surfaces and the view models (§ 5 row 1) — `fleet-dashboard`."
+  - "`ExpireAfter` and removal on silence (§ 5 row 2) — the closing act's
+    source decides it the other way."
+  - "The swap decorator itself (§ 5 row 5) — `aircraft-source` `0006`."
+  - "A live poll interval and its credit cost on screen (§ 5 row 8) — the poll
+    stays `aircraft-source`'s startup option."

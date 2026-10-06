@@ -21,7 +21,7 @@ differ.
 
 - **Read the specification for what you are touching**:
   [`README.md`](../../README.md) project-wide, and
-  `features/<slug>/.spec/README.md` where a Feature covers it.
+  the `.spec/README.md` beside the code where a Feature covers it.
 - **Read the lessons**: [`.spec/lessons/`](../../.spec/lessons/) repository-wide,
   and a Feature's own `.spec/lessons/`.
 - Code graph, when one exists: `graphify query` / `graphify explain`

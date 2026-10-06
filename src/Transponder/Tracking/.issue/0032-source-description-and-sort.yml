@@ -1,0 +1,97 @@
+id: "0032"
+type: task
+title: Describe a source's columns, comparers and grouping keys, and sort by them
+
+status: done
+
+priority: high
+value: 4
+risk: 3
+rank: 81
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0031"
+blocks:
+  - "0033"
+spikes: []
+
+spec: src/Transponder/Tracking/.spec/README.md
+
+claims:
+  - B-009
+  - B-010
+  - B-011
+  - B-013
+  - B-020
+  - B-021
+  - B-022
+
+created: "2026-10-05"
+updated: "2026-10-06"
+closed: "2026-10-06"
+
+summary: |
+  The source description is what replaces the downcast ADR-0005 item 6 forbids:
+  a column is a display name plus a selector over the abstract vehicle, a
+  comparer comes from the description rather than from a view, and the grouping
+  keys a source offers are its own. Sorting is claimed here with them, because
+  a comparer and a grouping key are the same mechanism read two ways.
+
+  `TransportVehicle` gains the `abstract` grouping key ADR-0005 item 2 requires
+  and `Aircraft` answers it with its origin country (B-013).
+
+  Runs before `0033`: the grouping that item applies is chosen from the
+  description this one introduces.
+
+acceptance_criteria:
+  - "B-009 — a new comparer reorders the same instances; nothing is re-fetched
+    and no stage is rebuilt (claim amended 2026-10-06)."
+  - "B-010 — every comparer reads base members only."
+  - "B-011 — ties break on the key, so two sorts of an unchanged fleet agree."
+  - "B-013 — the grouping answer is `abstract` on the base; `Aircraft` answers
+    with its origin country. A source that answers none does not compile."
+  - "B-020 — the description names the columns, comparers and groupings."
+  - "B-021 — a swap swaps the description and edits no stage, comparer,
+    predicate or key."
+  - "B-022 — no cast, type test or switch on a concrete vehicle. Analyzer rule."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-06 — the person — the tracker publishes the comparer and the
+    consumer sorts as it binds, rather than a sort stage inside the chain
+    (ADR-0009 decision 2, amended while that record is still `proposed`). A stage
+    could not be seen from outside: DynamicData's `Sort` produces an
+    `ISortedChangeSet`, the `Transform` that derives the mark returns a plain
+    changeset, and the order was gone before anything was published — the
+    pipeline would have sorted where no consumer could honour it. `SortAndBind`
+    is also what DynamicData 9 recommends. Rejected: publishing
+    `ISortedChangeSet` from the tracker, which widens `Fleet`'s type and makes
+    every consumer's `Bind` index-sensitive for a demo with one grid."
+  - "2026-10-06 — implementer — B-009's last clause was amended, because the
+    library contradicted it: `SortAndBind` raises one `Reset` on a comparer
+    change whatever the reset threshold, so \"SHALL NOT clear, refill\" read at
+    the bound collection would have failed a pipeline that did nothing wrong. The
+    claim now says the same instances are reordered with nothing re-fetched and no
+    stage rebuilt, which is what `FleetSortTests` asserts. Rejected: holding the
+    row unprovable, and taking the `ISortedChangeSet` route the decision above
+    turned down."
+  - "2026-10-06 — implementer — `GroupBy` and the groupings' application are not
+    here, only the groupings the description offers (B-020). The grouping stage,
+    the counts and `Groups` are `0033`'s, which this item unblocks."
+  - "2026-10-06 — test-writer — B-022 is a performed review, not a diagnostic.
+    Reporting a cast on a concrete vehicle needs the analyzer's layer map widened
+    past `Features` and `Gui`, which is the same widening B-023 needs and is
+    `boundary-analyzer`'s claim to make. § 8's rule count is corrected to one
+    outstanding, B-008's, with `0033`."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Applying the grouping and deriving the counts (B-012, B-014, B-015) —
+    `0033`."
+  - "The grid's headers and the dropdown that chooses a grouping (§ 5 row 1) —
+    `fleet-dashboard`."
+  - "A second grouping level, grouped aggregates beyond count, and user-defined
+    columns (§ 5 row 7)."

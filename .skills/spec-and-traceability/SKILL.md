@@ -207,7 +207,7 @@ Two signals, both cheap to check:
 
 The question to ask is not whether the rule is good. It is whether anyone here
 chose it, and what it costs
-([lesson 0002](../../features/aircraft-source/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md)).
+([lesson 0002](../../src/Transponder/Integrations/OpenSky/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md)).
 
 ## Numbers from independent sequences collide
 

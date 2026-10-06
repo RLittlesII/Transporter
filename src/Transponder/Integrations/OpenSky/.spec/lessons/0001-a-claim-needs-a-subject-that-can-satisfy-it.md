@@ -18,7 +18,7 @@ header — while B-006 forbids a credential on the contract, so the client could
 not hold the token either. The poll diagram put all three in the transport and
 disagreed with § 3 in writing. B-028 was worse: the sentence forbade an
 exception outright, its scenario forbade one only at the subscriber, and
-[ADR-0008](../../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md)
+[ADR-0008](../../../../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md)
 makes the contract throw, so the transport as built satisfied the scenario and
 contradicted the claim. The item that carries all three, `0004`, could not
 start.

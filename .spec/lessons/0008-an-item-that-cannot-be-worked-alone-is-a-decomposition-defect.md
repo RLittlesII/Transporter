@@ -11,7 +11,7 @@ type: lesson
 
 ## Symptom
 
-Review of pull request #6, on `features/boundary-analyzer/.issue/0019`:
+Review of pull request #6, on `src/Transponder.Analyzers/.issue/0019`:
 
 > The items got moved to in-progress at once. This seems like this should be the
 > exception not the rule. That we should define the items in a way that we can

@@ -225,7 +225,7 @@ public class BoundaryCodeFixTests
         return (await (changed ?? action.TargetDocument).GetTextAsync()).ToString();
     }
 
-    private const string SpecificationPath = "features/boundary-analyzer/.spec/README.md";
+    private const string SpecificationPath = "src/Transponder.Analyzers/.spec/README.md";
 
     private static readonly string Specification = SpecificationTables.Read(SpecificationPath);
 }

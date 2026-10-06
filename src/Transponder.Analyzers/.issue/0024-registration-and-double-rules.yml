@@ -1,0 +1,81 @@
+id: "0024"
+type: task
+title: Report a registration or a double at the call that writes it
+
+status: done
+
+priority: high
+risk: 4
+rank: 88
+
+parent: "0019"
+children: []
+
+depends_on:
+  - "0021"
+blocks: []
+spikes: []
+
+spec: src/Transponder.Analyzers/.spec/README.md
+
+claims:
+  - B-011
+  - B-012
+  - B-020
+
+created: "2026-10-04"
+updated: "2026-10-05"
+closed: "2026-10-05"
+
+summary: |
+  TRN0015 – TRN0018, the four rules whose subject is a call rather than a type:
+  no implementation type resolvable from outside the integration and one alias
+  per constructed chain, the cache as a plain keyed store rather than a type of
+  its own, one cache per client at the application's lifetime, and — the
+  mocking-framework half of aircraft-source B-010 — the contract's double not
+  produced by a mocking framework.
+
+  All four are read at the call site, because that is where the answer is. A
+  lifetime and an alias are arguments to a registration, and an implementation
+  type's own declaration is unchanged and legal in every case the rule has to
+  report. Reporting on the type would put the diagnostic on a line nobody can
+  fix.
+
+  The most brittle family of the three. A registration is an extension-method
+  call whose shape varies — a generic argument or a typeof, a lambda factory or
+  a type, a lifetime in the method name or in a parameter — and a rule keyed to
+  one spelling misses the others while the aircraft-source § 9 row still flips
+  to Verified. Enumerate the spellings this repository actually uses, in
+  src/Gui/Container, and report an unrecognized one rather than passing it.
+
+acceptance_criteria:
+  - "B-020 — the fixes land in src/Transponder.CodeFixes, a project of their own:
+    a CodeFixProvider needs Microsoft.CodeAnalysis.Workspaces and an analyzer must
+    not carry it into the compiler's load path (source-generators § Project
+    Structure). TRN0017 ship a code fix with the rule, and § 7 records why the
+    rest of this item's rules have none. TRN0017 rewrites the cache registration to the application lifetime — one call,
+    one argument. TRN0015 and TRN0016 need an alias that may not exist yet and
+    TRN0018 needs a type written, so § 7 records why they have none."
+  - "B-011 — a forbidden registration is reported at the registration call, not
+    on the registered type's declaration."
+  - "B-012 — a double obtained from a mocking framework is reported at that
+    call, and the hand-written fake is not reported."
+  - "§ 9 carries a row naming a test for each id above."
+  - "Each of the four claims is proven by the test aircraft-source § 9 names for
+    it, under that name (B-016); B-010's other half stays an xUnit test over the
+    fake, as that matrix records."
+  - "A registration spelling the rule does not recognize is reported rather than
+    treated as compliant."
+
+decisions: []
+
+  - "2026-10-05 — implementer — B-011, B-012 and B-020 are `Verified`, and
+    B-016 with them: the cite check it names could not pass until the eighteenth
+    test name existed, and this item wrote the last four. The status is set here
+    rather than after the merge, per lesson 0010."
+out_of_scope:
+  - "Reference rules — 0022. Declaration rules — 0023."
+  - "The descriptor conventions — 0021, which this item depends on."
+  - "Whether a mocking framework may stand in at this seam at all —
+    aircraft-source § 11 row 4 is open, and this rule enforces the claim as it
+    currently stands rather than pre-empting the answer."

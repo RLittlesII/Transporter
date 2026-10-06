@@ -15,7 +15,7 @@ named and shaped. This skill holds only what is specific to testing
 `Rocket.Surgery.Extensions.Testing.SourceGenerators` compiles source text, runs
 analyzers, code fixes and refactorings over it, and hands back the diagnostics.
 Airframe tests the `RSA` rules this repository already runs with it, and
-`features/boundary-analyzer/.spec/README.md` B-015 is why the test project is
+`src/Transponder.Analyzers/.spec/README.md` B-015 is why the test project is
 the only one that references the analyzer as an assembly.
 
 ## The builder

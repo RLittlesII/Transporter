@@ -1,0 +1,106 @@
+id: "0023"
+type: task
+title: Report a declaration that is the wrong shape, on the declaration
+
+status: done
+
+priority: high
+risk: 3
+rank: 91
+
+parent: "0019"
+children: []
+
+depends_on:
+  - "0021"
+blocks: []
+spikes: []
+
+spec: src/Transponder.Analyzers/.spec/README.md
+
+claims:
+  - B-010
+  - B-020
+
+created: "2026-10-04"
+updated: "2026-10-05"
+closed: "2026-10-05"
+
+summary: |
+  TRN0008 – TRN0014, the seven rules that read what is in front of them: the
+  envelope keeping the provider's positional shape, the contract's one method per
+  endpoint with the cancellation token last, the types a contract declaration may
+  not name, the one implementation per transport and what it must look like, the
+  snapshot carrying nothing derived, the per-type seam not widened with
+  source-describing members, and the contract carrying no version suffix and no
+  marker above it.
+
+  Each is reported on the declaration that is wrong rather than at a call site
+  that uses it, which is what makes the message actionable: the fix is on the
+  line the diagnostic lands on.
+
+  The hazard is partial reading. aircraft-source B-007 is four conditions in one
+  sentence — one production class per transport, internal, sealed, explicit
+  interface implementation on every method — and a rule that checks three of them
+  reports Verified for the fourth. The same shape is in B-005 (one method per
+  endpoint, Task<T>, token last) and B-048 (no suffix, and no marker above it).
+  A claim with an "and" in it needs a case per clause.
+
+acceptance_criteria:
+  - "B-020 — the fixes land in src/Transponder.CodeFixes, a project of their own:
+    a CodeFixProvider needs Microsoft.CodeAnalysis.Workspaces and an analyzer must
+    not carry it into the compiler's load path (source-generators § Project
+    Structure). TRN0009 and TRN0011 ship a code fix with the rule, and § 7 records why the
+    rest of this item's rules have none. TRN0009 moves the CancellationToken to last; TRN0011 adds the internal and
+    sealed the claim names and converts a public endpoint method to an explicit
+    implementation. The other five declaration rules are satisfied by removing or
+    renaming a member, which is destructive or changes a public surface, so § 7
+    records why they have none."
+  - "B-010 — a forbidden declaration shape is reported on that declaration, not
+    at a call site that reads it."
+  - "§ 9 carries a row naming a test for B-010."
+  - "Every clause of every multi-part claim this item carries a rule for has a
+    case of its own; a rule satisfying three clauses of four does not report the
+    fourth as met."
+  - "Each of the seven claims is proven by the test aircraft-source § 9 names
+    for it, under that name (B-016)."
+
+decisions:
+  - "2026-10-05 — implementer — `src/Transponder.CodeFixes` takes no
+    `ProjectReference` to `Transponder.Analyzers`, so the `TRN` ids are literals
+    in both projects. Both assemblies sit in the compiler's analyzer load path
+    from different output directories, and a reference between them is resolved
+    by the host rather than by the build — the shape `CS8032` reports by
+    silently not loading the analyzer at all. `BoundaryCodeFixTests` holds the
+    two id lists in step, so the duplication is checked. Rejected: referencing
+    the analyzer and widening `Diagnostics` with `InternalsVisibleTo`, which
+    buys one shared constant at the cost of the load path."
+  - "2026-10-05 — implementer — `Layers` gained `IsEnvelope`, `IsPositionalRow`
+    and `IsPerTypeSeam`, matched by name suffix as `IsSnapshot` and `IsClient`
+    already are. The envelope and the row are both classes in `Contracts`, and
+    no structural test separates them: an indexer makes a type positional in the
+    same way a property makes it named. adr/0002 already took namespace over
+    attribute, and this is the same trade one level down."
+  - "2026-10-05 — implementer — a fix test reads its result by applying the
+    `CodeAction` itself rather than off `ResolvedCodeFixTestResult.Changes`. With
+    three `TRN0011` diagnostics on one document all three `Changes` reported the
+    same edit — `RocketSurgeonsGuild/Airframe#359`, which the harness skill
+    already records for code actions and which turns out to reach `Changes` too.
+    Recorded in `analyzer-testing` so the next fix test does not pay for it."
+  - "2026-10-05 — implementer — a seeded violation proves a rule in a real build
+    only when the seed compiles. Reordering `IOpenSkyApi`'s parameters reported
+    `CS0535` and `CS0539` and no `TRN0009`: an analyzer reports nothing while a
+    declaration error stands. Reordering the implementation to match produced
+    `error TRN0009` on the declaration, which is the proof § 9's Review rows ask
+    for."
+  - "2026-10-05 — implementer — set `done` after pull request #13 had already
+    merged, which is the drift lesson 0010 is about: the rule put `done` after
+    the merge, and nothing is present then. From now a delivering pull request
+    carries the status itself."
+
+out_of_scope:
+  - "Reference rules — 0022. Call-site rules — 0024."
+  - "The descriptor conventions — 0021, which this item depends on."
+  - "aircraft-source B-048's versioned layer, which the claim defers until the
+    provider declares a version — the rule reports the suffix and the marker,
+    and invents nothing about the layer that does not exist."

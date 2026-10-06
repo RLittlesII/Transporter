@@ -16,7 +16,7 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   comment on the method, where a reader meets them before the body and a
   renamed claim is a cite that can be followed. A paragraph of prose above
   `// Given` is the same text in the worse place
-  ([lesson 0003](../../../features/aircraft-source/.spec/lessons/0003-a-review-is-a-convention-nobody-wrote-down.md)).
+  ([lesson 0003](../../../src/Transponder/Integrations/OpenSky/.spec/lessons/0003-a-review-is-a-convention-nobody-wrote-down.md)).
 - **AwesomeAssertions** for assertions, **NSubstitute** for test doubles,
   **`Rocket.Surgery.Extensions.Testing.AutoFixtures`** for building the system
   under test, `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything

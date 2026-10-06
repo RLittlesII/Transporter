@@ -1,0 +1,126 @@
+id: "0036"
+type: task
+title: Build the fleet page in C# markup and bind the tracker's collection
+
+status: done
+
+priority: high
+value: 5
+risk: 3
+rank: 116
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0032"
+blocks:
+  - "0037"
+  - "0038"
+  - "0039"
+  - "0041"
+  - "0044"
+spikes: []
+
+spec: src/Transponder/Features/Fleet/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+
+created: "2026-10-05"
+updated: "2026-10-06"
+closed: "2026-10-06"
+
+summary: |
+  One page in C# markup carrying the five surfaces, binding the collection its
+  view model materialises from the fleet stream `IFleetTracker` publishes, with
+  its columns built from the live source's description. ADR-0009 moved that
+  boundary on 2026-10-05: the pipeline exposes no bound collection, so the
+  `ObserveOn(UserInterfaceThread)`, the `Bind` and the disposal of that one
+  subscription are this item's (B-005). The template's `MainPage.xaml`, its code-behind and
+  `DemoViewModel` go as this item replaces them (B-002) — a removal without a
+  replacement would leave the application with no page, which is why it is not
+  an item of its own.
+
+  Runs after `fleet-pipeline` `0032`, the first item with a description to build
+  columns from.
+
+  Two claims here are proven by a recorded review rather than a run (§ 8):
+  B-001 and B-002, both by reading the project. B-003, B-004 and B-006 are
+  built here and proved by `0044` — the page is not what this repository tests,
+  and B-006's review needs a feed nothing has wired yet.
+
+acceptance_criteria:
+  - "B-001 — the page carries the grid, the search and filter controls, the
+    grouping selection, the summary and the detail pane. Review."
+  - "B-002 — C# markup only; the template's page, code-behind and demo view
+    model are gone, and startup registers none of them. Review."
+  - "B-003 — a page takes its view model by constructor and resolves nothing.
+    Built here; proved by `0044`."
+  - "B-004 — registration through the user-interface builder block only. Built
+    here; proved by `0044`."
+  - "B-005 — the grid binds the tracker's own collection, not a copy."
+  - "B-006 — one vehicle changing updates one row. The hazard is an item
+    template that re-creates its children and flickers only once the feed is
+    real. Built here; its review needs a running feed and is `0044`'s."
+  - "B-007 — columns from the description, none compiled into the markup. The
+    hazard is columns built once from the first description, which looks right
+    until a swap."
+  - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule, a
+    performed review or item `0044` for each id above."
+
+decisions:
+  - "2026-10-05 — the person — the view model binds the pipeline's stream rather
+    than re-exposing a collection the tracker owns (ADR-0009). B-005 and B-009
+    are amended for it; § 7's member table and diagrams still describe the old
+    seam and are the `implementer`'s to move before this item starts."
+  - "2026-10-06 — the person — all of `Features/Demo/` goes under B-002,
+    `ClickActor` with it. The repository keeps no worked actor example and
+    `AddAkkaHost` registers none until a source actor exists; `akka-actor` is
+    the rule's home, and a page nobody opens is the worse cost. Closes
+    `fleet-dashboard` § 11 row 2."
+  - "2026-10-06 — the person — spike `0040` leaves `spikes`. What it still has
+    open is actor wiring and who starts the first poll, and no claim B-001 –
+    B-007 is about either: ADR-0009 and § 4 row 13 settled the tracker as a
+    container singleton, and B-004's registration is the user-interface builder
+    block this repository already has. The same move `fleet-pipeline` `0031`
+    made, for the same reason."
+  - "2026-10-06 — the person — B-003 and B-004 are built here and proved by
+    `0044`. § 9 named `FleetPageTests` and `ContainerTests`, and neither can
+    exist: `test/UnitTests` is `net10.0` and references `Transponder` only,
+    while the page and the builder block live in `src/Gui`, whose heads are
+    Apple-only and out of Linux CI's scope (§ 4 rows 4 – 5). The MAUI page is
+    not what this repository tests, so the mechanism is deferred rather than
+    invented inside an implementation item."
+  - "2026-10-06 — the person, in review of pull request #31 — a view subscribes
+    through the generated `Events()` observable and disposes it with its
+    handler, never with `+=`; a subscription is kept with `.DisposeWith`. Both
+    are now rules in `maui-ui` and `mvvm` and an entry in § 10, because neither
+    was written down and the page was the first file to need either."
+  - "2026-10-06 — the person, in review of pull request #31 — whether the sort
+    belongs to the tracker at all is spike `0046`, filed rather than settled
+    here: `SortAndBind` runs in the consumer, nothing downstream of the tracker
+    reads `Order`, and reversing ADR-0009 decision 2 is an amendment rather
+    than a refactor."
+  - "2026-10-06 — the person — B-006's § 9 row moves to `0044` as well. Watching
+    one vehicle change needs a running feed, and no `ITrackerSource` is
+    registered in `MauiProgram` while the replay source is unbuilt; a review
+    whose subject the repository does not contain belongs to the item that
+    builds it (lesson 0011)."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "How B-003, B-004 and B-006 are proved — `0044`. This item builds what each
+    of them constrains."
+  - "The search, filter, sort and grouping inputs (B-009 – B-012) — `0037`.
+    This item builds the controls; what they publish is that item's."
+  - "The stale mark, the detail pane and the summary's projection (B-008,
+    B-013 – B-015, B-019) — `0038`."
+  - "The swap control and the view-model boundaries (B-016 – B-018, B-020 –
+    B-022) — `0039`."
