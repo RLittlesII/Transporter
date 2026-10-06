@@ -234,6 +234,45 @@ internal static class BoundaryTestData
         """;
 
     // lang=csharp
+    internal const string TrackerSeam = """
+        namespace Transponder.Tracking;
+
+        public interface IFleetTracker
+        {
+            TrackedVehicle Published { get; }
+
+            FleetSourceDescription Description { get; }
+        }
+
+        public sealed class TrackedVehicle
+        {
+            public string Key { get; set; } = string.Empty;
+        }
+
+        public sealed class FleetSourceDescription
+        {
+            public FleetColumn[] Columns { get; set; } = [];
+        }
+
+        public sealed class FleetColumn
+        {
+            public string Name { get; set; } = string.Empty;
+        }
+        """;
+
+    // lang=csharp
+    internal const string ViewModelNamingWhatTheSeamPublishes = """
+        using Transponder.Tracking;
+
+        namespace Transponder.Features.Fleet.ViewModels;
+
+        public class FleetViewModel
+        {
+            public string Read(TrackedVehicle tracked, FleetColumn column) => tracked.Key + column.Name;
+        }
+        """;
+
+    // lang=csharp
     internal const string ViewModelNamingAStrategy = """
         using Transponder.Tracking;
 

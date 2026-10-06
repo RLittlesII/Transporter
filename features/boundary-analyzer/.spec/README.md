@@ -141,25 +141,25 @@ the claim's text lives in
 [`aircraft-source`](../../aircraft-source/.spec/README.md) § 3 and the test
 that proves it in that specification's § 9, so neither is copied here.
 
-| Diagnostic | Enforces                | What it examines                                                                                         |
-| ---------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `TRN0001`  | `aircraft-source` B-004 | Every reference to the positional row from outside the integration                                       |
-| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the two types allowed to hold them                   |
-| `TRN0003`  | `aircraft-source` B-046 | Every reference to a snapshot, against the client, its cache and the projection                          |
-| `TRN0004`  | `aircraft-source` B-047 | References from below `IFleetTracker` to a contract, client, cache, snapshot or concrete source          |
-| `TRN0005`  | `aircraft-source` B-032 | References to a domain type from the cache                                                               |
-| `TRN0006`  | `aircraft-source` B-041 | References from a view model to a strategy, a client, a cache or the decorator                           |
-| `TRN0007`  | `aircraft-source` B-044 | Imperative mutation of a bound collection                                                                |
-| `TRN0008`  | `aircraft-source` B-002 | The envelope's members                                                                                   |
-| `TRN0009`  | `aircraft-source` B-005 | The contract's method signatures                                                                         |
-| `TRN0010`  | `aircraft-source` B-006 | The types the contract's declarations name                                                               |
-| `TRN0011`  | `aircraft-source` B-007 | Implementations of the contract: count per transport, accessibility, sealedness, explicit implementation |
-| `TRN0012`  | `aircraft-source` B-014 | The snapshot's members                                                                                   |
-| `TRN0013`  | `aircraft-source` B-037 | The per-type tracker source interface's members                                                          |
-| `TRN0014`  | `aircraft-source` B-048 | The contract's name and any interface above it                                                           |
-| `TRN0015`  | `aircraft-source` B-008 | Registration and resolution call sites naming an implementation type                                     |
-| `TRN0016`  | `aircraft-source` B-030 | The cache's declaration and the type it is registered as                                                 |
-| `TRN0017`  | `aircraft-source` B-031 | The cache's registration: lifetime, and one per client                                                   |
+| Diagnostic | Enforces                | What it examines                                                                                                                   |
+| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `TRN0001`  | `aircraft-source` B-004 | Every reference to the positional row from outside the integration                                                                 |
+| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the two types allowed to hold them                                             |
+| `TRN0003`  | `aircraft-source` B-046 | Every reference to a snapshot, against the client, its cache and the projection                                                    |
+| `TRN0004`  | `aircraft-source` B-047 | References from below `IFleetTracker` to a contract, client, cache, snapshot or concrete source, excluding what the seam publishes |
+| `TRN0005`  | `aircraft-source` B-032 | References to a domain type from the cache                                                                                         |
+| `TRN0006`  | `aircraft-source` B-041 | References from a view model to a strategy, a client, a cache or the decorator, excluding what the seam publishes                  |
+| `TRN0007`  | `aircraft-source` B-044 | Imperative mutation of a bound collection                                                                                          |
+| `TRN0008`  | `aircraft-source` B-002 | The envelope's members                                                                                                             |
+| `TRN0009`  | `aircraft-source` B-005 | The contract's method signatures                                                                                                   |
+| `TRN0010`  | `aircraft-source` B-006 | The types the contract's declarations name                                                                                         |
+| `TRN0011`  | `aircraft-source` B-007 | Implementations of the contract: count per transport, accessibility, sealedness, explicit implementation                           |
+| `TRN0012`  | `aircraft-source` B-014 | The snapshot's members                                                                                                             |
+| `TRN0013`  | `aircraft-source` B-037 | The per-type tracker source interface's members                                                                                    |
+| `TRN0014`  | `aircraft-source` B-048 | The contract's name and any interface above it                                                                                     |
+| `TRN0015`  | `aircraft-source` B-008 | Registration and resolution call sites naming an implementation type                                                               |
+| `TRN0016`  | `aircraft-source` B-030 | The cache's declaration and the type it is registered as                                                                           |
+| `TRN0017`  | `aircraft-source` B-031 | The cache's registration: lifetime, and one per client                                                                             |
 
 **What a fix can do, and where it cannot**
 
@@ -427,8 +427,22 @@ _is_ the cache, and the writer above a cache never is. No claim changed and no
 holding its cache, reported as nothing. Found by the first item to register a
 client, which is the first moment the false positive could exist.
 
-No Feature-scoped lesson of its own. Three repository-wide lessons bear on this
-document:
+**Delta, 2026-10-06 — `TRN0004` and `TRN0006` exempt what the seam publishes.**
+Trigger: the first view model `fleet-dashboard` added did not compile, because
+both rules read "a non-interface type under `Transponder.Tracking`" as a source
+internal and [ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)
+put the published element and the description in that namespace. The rules now
+read the seam — `IFleetTracker`'s members, and the types those carry — rather
+than the namespace, so a member added to the interface carries its types across
+with it. No claim changed: `aircraft-source` B-041 and `fleet-dashboard` B-020
+never forbade the published element, and the strategy, the client, the cache and
+the decorator are reported exactly as before
+([lesson 0001](lessons/0001-a-rule-that-reads-a-namespace.md), item
+[`0045`](../.issue/0045-published-types-reported-as-internals.yml)).
+
+One Feature-scoped lesson,
+[lesson 0001](lessons/0001-a-rule-that-reads-a-namespace.md). Three
+repository-wide lessons bear on this document:
 [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
 which is why § 3 carries no build state and § 9 is the only store for one;
 [lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md),

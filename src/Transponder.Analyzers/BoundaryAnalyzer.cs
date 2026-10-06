@@ -31,24 +31,31 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        // Three actions, because the claims are about three different things: a name (B-009), a
-        // call (B-044) and a declaration (B-010). RSA1007 reports every registration with an
-        // empty symbol name, as RSA2011 did in Airframe#403.
+        // The seam is read once per compilation rather than per node: what it publishes decides
+        // whether a concrete tracking type is an internal at all. RSA1007 reports every
+        // registration with an empty symbol name, as RSA2011 did in Airframe#403.
 #pragma warning disable RSA1007
-        context.RegisterSyntaxNodeAction(AnalyzeTypeMention, SyntaxKind.IdentifierName, SyntaxKind.GenericName);
-        context.RegisterSyntaxNodeAction(AnalyzeCollectionMutation, SyntaxKind.InvocationExpression);
-        context.RegisterSyntaxNodeAction(
-            AnalyzeTypeDeclaration,
-            SyntaxKind.InterfaceDeclaration,
-            SyntaxKind.ClassDeclaration,
-            SyntaxKind.RecordDeclaration,
-            SyntaxKind.RecordStructDeclaration,
-            SyntaxKind.StructDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeCall, SyntaxKind.InvocationExpression);
+        context.RegisterCompilationStartAction(static start =>
+        {
+            var published = Layers.PublishedByTheSeam(start.Compilation);
+
+            // Three actions, because the claims are about three different things: a name (B-009), a
+            // call (B-044) and a declaration (B-010).
+            start.RegisterSyntaxNodeAction(context => AnalyzeTypeMention(context, published), SyntaxKind.IdentifierName, SyntaxKind.GenericName);
+            start.RegisterSyntaxNodeAction(AnalyzeCollectionMutation, SyntaxKind.InvocationExpression);
+            start.RegisterSyntaxNodeAction(
+                AnalyzeTypeDeclaration,
+                SyntaxKind.InterfaceDeclaration,
+                SyntaxKind.ClassDeclaration,
+                SyntaxKind.RecordDeclaration,
+                SyntaxKind.RecordStructDeclaration,
+                SyntaxKind.StructDeclaration);
+            start.RegisterSyntaxNodeAction(AnalyzeCall, SyntaxKind.InvocationExpression);
+        });
 #pragma warning restore RSA1007
     }
 
-    private static void AnalyzeTypeMention(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeTypeMention(SyntaxNodeAnalysisContext context, ImmutableHashSet<INamedTypeSymbol> published)
     {
         // `var` resolves to the inferred type without naming it; reporting on it would double up
         // on the `new`.
@@ -81,7 +88,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         {
             ReportSnapshotMention(context, named, enclosing);
         }
-        else if (Layers.IsClient(named) || Layers.IsContract(named) || Layers.IsConcreteTracking(named))
+        else if (Layers.IsClient(named) || Layers.IsContract(named) || (Layers.IsConcreteTracking(named) && !published.Contains(named)))
         {
             ReportSourceInternalsMention(context, named, enclosing);
         }
