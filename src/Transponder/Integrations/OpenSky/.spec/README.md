@@ -425,6 +425,10 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `IAircraftTrackerSource`    | [`Tracking/Sources/IAircraftTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/IAircraftTrackerSource.cs)              | B-037, the seam's width         |
 | `AircraftTrackerSource`     | [`Tracking/Sources/AircraftTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/AircraftTrackerSource.cs)                | B-033, B-034                    |
 | `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../src/Transponder/Tracking/Sources/AircraftSnapshotMapper.cs)              | B-034 – B-037, B-046            |
+| `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../src/Transponder/Tracking/IFleetTracker.cs)                                                | B-041, B-051                    |
+| `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../src/Transponder/Tracking/FleetTracker.cs)                                                  | B-042, B-043, B-051             |
+| `StaleVehicle`              | [`Tracking/StaleVehicle.cs`](../../../src/Transponder/Tracking/StaleVehicle.cs)                                                  | B-051, where the mark lives     |
+| `TrackingRegistration`      | [`Tracking/Container/TrackingRegistration.cs`](../../../src/Transponder/Tracking/Container/TrackingRegistration.cs)              | B-052                           |
 
 `IOpenSkyApi` carries no suffix, which is B-048 visible in the identifier. Not
 `IOpenSkyApiContract`: "contract" is the pattern's word for the role, not part
@@ -550,13 +554,13 @@ Where the rest of it goes, following `transponder-conventions`
 § "Project structure":
 
 ```
-src/Transponder/Tracking/                        IFleetTracker, FleetTracker, SwappingTrackerSource
+src/Transponder/Tracking/                        SwappingTrackerSource
 ```
 
 The block holds only what is still unbuilt, and shrinks as the table above
 grows; `Contracts/`, `Container/`, `Model/`, `Scheduling/`, `Tracking/Sources/`
-and the provider's own root have left it entirely. What is left is `0006`'s
-decorator and `0007`'s tracker.
+and the provider's own root have left it entirely, and `0007`'s tracker has
+joined them. What is left is `0006`'s decorator.
 
 The cache gets no type of its own. A `SourceCache` of `AircraftSnapshot` keyed
 by `string`, registered with the application's lifetime, **is** B-030's plain
@@ -573,6 +577,60 @@ to `IObservedClockWriter` as the set is applied**, in the same method that
 writes the cache, so the value never touches the snapshot, the cache or the
 seam. The clock itself is registered alongside the chain and injected into
 `FleetTracker` as `IObservedClock`.
+
+**The tracker, built**
+
+`0007` landed `IFleetTracker`, `FleetTracker`, `StaleVehicle` and
+`TrackingRegistration`. Four things about the shape, because the claims leave
+each of them open.
+
+**It publishes a stream and owns no collection.**
+[ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)
+decided that after this section was written: `Fleet` is an
+`IObservable<IChangeSet<StaleVehicle, string>>`, shared by DynamicData's own
+cache-aware `RefCount()`, and `Bind` plus the marshal to a user-interface
+scheduler are the consumer's. B-044 is then true by construction — there is no
+bound collection here to edit imperatively — and `fleet-pipeline` B-002 and
+B-005 carry the obligation.
+
+**B-042's clause naming binding is stale, and this is not the section that can
+fix it.** It claims `IFleetTracker` owns "filtering, sorting, grouping,
+aggregates, property-change refresh, expiry **and binding**", and ADR-0009 moved
+the last of those to the consumer. Everything else in the claim holds: the chain
+is assembled in the constructor, a swap happens below the seam, and nothing is
+rebuilt for one. The amendment is `spec-author`'s, raised here rather than taken
+here.
+
+**The mark is derived onto the element, never stored on the vehicle.**
+`StaleVehicle` carries the vehicle and the flag, so a consumer reads staleness
+off the row it already has, and `domain-model` § "Never add" keeps the flag off
+`Aircraft`. `TransportVehicle.IsStale(asOf, threshold)` computes it against the
+injected `IObservedClock` — B-043, and no `DateTime.UtcNow` anywhere in the
+chain.
+
+**The threshold is a value the tracker holds, and changing it re-marks the
+fleet.** `StaleAfter(TimeSpan)` ticks a `BehaviorSubject<TimeSpan>` seeded at
+`FleetTracker.DefaultStaleAfter`, five minutes, so B-051's default lives in the
+thing that claims it. That subject is also the `Transform` stage's force
+trigger, so a new threshold re-derives every mark without rebuilding a stage —
+the operator's `IObservable<Unit>` overload exists for exactly this.
+
+What this leaves for `fleet-pipeline`: a mark is re-derived when a changeset
+arrives or when the threshold changes, and **not** when the clock advances on its
+own. A vehicle that goes silent while nothing else moves stays unmarked until the
+next changeset. That is `fleet-pipeline` B-018 and its `IObservedClockTicks` seam
+(ADR-0010); this Feature claims none of it, because B-051 is about what happens
+to a stale vehicle rather than about what notices one.
+
+`TrackingRegistration.AddFleetTracking()` registers the tracker as a container
+singleton (ADR-0009 decision 7). It is a separate call from `AddOpenSky` because
+the tracker is no provider's: an application calls both, and B-052's chain is
+what the two together resolve. `AddOpenSky` gained the one line that makes that
+chain resolvable — the aircraft strategy registered as `ITrackerSource` itself,
+which is both what the tracker takes and the inner registration `0006`'s
+decorator wraps (ADR-0003). Until `0006` lands, `ITrackerSource` resolves to the
+strategy directly, so B-052's "every decorator applied" half is not yet true of
+anything.
 
 ## 8. Testing Strategy
 

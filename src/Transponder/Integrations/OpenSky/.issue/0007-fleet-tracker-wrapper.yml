@@ -2,7 +2,7 @@ id: "0007"
 type: task
 title: Wrap ITrackerSource in IFleetTracker and give it the clock
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 risk: 3
@@ -66,6 +66,26 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-05 — implementer — the tracker is registered by its own call,
+    `TrackingRegistration.AddFleetTracking()`, as a container singleton
+    (ADR-0009 decision 7), and `AddOpenSky` gained one line registering the
+    aircraft strategy as `ITrackerSource` itself. The tracker belongs to no
+    provider, so putting it in `AddOpenSky` would make a second provider's
+    registration carry it; and the seam registration is the inner one
+    `0006`'s decorator wraps, which ADR-0003 already decided. Rejected: the
+    tracking layer naming the aircraft strategy, which would couple the
+    provider-agnostic registration to one strategy."
+  - "2026-10-05 — implementer — B-042's clause naming `binding` is stale after
+    ADR-0009 moved `Bind` to the consumer, and the amendment is `spec-author`'s.
+    Raised in § 7 rather than taken: the rest of the claim holds, and an
+    implementation pull request editing § 3 to match its code is the failure
+    the role split exists to prevent."
+  - "2026-10-05 — implementer — the stale mark is re-derived when a changeset
+    arrives and when the threshold changes, and not when the clock advances on
+    its own. A vehicle that goes silent while nothing else moves therefore stays
+    unmarked until the next changeset. That re-evaluation is `fleet-pipeline`
+    B-018 over `IObservedClockTicks` (ADR-0010); B-051 is about what happens to a
+    stale vehicle, not about what notices one."
   - "2026-10-04 — the person — B-052 is added to § 3 and assigned here: the
     container the application constructs resolves `IFleetTracker` with every
     dependency satisfied and every decorator applied. It lands on this item
