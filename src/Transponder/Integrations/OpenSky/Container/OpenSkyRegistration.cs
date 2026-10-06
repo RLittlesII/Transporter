@@ -1,16 +1,20 @@
 using System;
+using System.Globalization;
+using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using DynamicData;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
 using Transponder.Integrations.OpenSky.Authentication;
 using Transponder.Integrations.OpenSky.Configuration;
 using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Http.Api;
+using Transponder.Recording;
 using Transponder.Scheduling;
 using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
@@ -63,6 +67,7 @@ public static class OpenSkyRegistration
             .Add(OpenSkyTokenSource.ClientName, OpenSkyTokenSource.TokenUrl));
 
         services.TryAddSchedulers();
+        services.AddRecording(configuration);
 
         // One clock object behind two interfaces, registered once and aliased to each: the write side reaches
         // the integration and the read side reaches the tracker, so which one a constructor names is what
@@ -90,6 +95,53 @@ public static class OpenSkyRegistration
             static provider => provider.GetRequiredService<BehaviorSubject<FleetSourceDescription>>());
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers what records a payload: the options, and either a writer over a file or the one that
+    /// keeps nothing.
+    /// </summary>
+    /// <param name="services">The collection to register into.</param>
+    /// <param name="configuration">Where <c>Recording:Enabled</c> and <c>Recording:Root</c> are read from.</param>
+    /// <remarks>
+    /// <para>
+    /// Always registers an <see cref="IRecordingWriter"/>, so the transport's tap is one
+    /// unconditional call and recording cannot change the shape of the code that runs
+    /// (B-004). What configuration decides is which implementation answers, not whether the call
+    /// happens.
+    /// </para>
+    /// <para>
+    /// The file is opened by the factory on first resolve rather than here, so a host that never
+    /// polls never creates one, and the name is ADR-0004's:
+    /// <c>&lt;source&gt;-&lt;utc-instant&gt;.ndjson</c>, one file per run. Opening it is this
+    /// registration's job and not the writer's, the same split <c>adr/0001</c> item 5 makes for the
+    /// reader.
+    /// </para>
+    /// <para>
+    /// An append handle, not a truncating one: a run that is restarted inside the same second must
+    /// not silently erase the recording it is about to extend.
+    /// </para>
+    /// </remarks>
+    private static void AddRecording(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<RecordingOptions>().Bind(configuration.GetSection(RecordingOptions.Section));
+
+        services.AddSingleton<IRecordingWriter>(static provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<RecordingOptions>>().Value;
+
+            if (!options.Enabled)
+            {
+                return new UnrecordedPayloads();
+            }
+
+            Directory.CreateDirectory(options.Root);
+
+            var name = $"aircraft-{DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ", CultureInfo.InvariantCulture)}.ndjson";
+            var destination = new StreamWriter(Path.Combine(options.Root, name), append: true);
+
+            return new RecordingWriter(destination, provider.GetRequiredService<ILogger<RecordingWriter>>());
+        });
     }
 
     /// <summary>

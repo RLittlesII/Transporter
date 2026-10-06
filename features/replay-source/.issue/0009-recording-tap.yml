@@ -58,7 +58,53 @@ acceptance_criteria:
     unscrubbed."
   - "§ 9 carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-06 — implementer — the tap reads the response body as text and
+    deserializes from that text, replacing `GetJsonAsync<T>` in
+    `OpenSkyHttpApi.Read`. That is the only place B-002's verbatim is
+    obtainable; above it the payload has already been through a reader. The
+    cost is one string per poll with recording off as well as on, which is
+    accepted because the alternative — a second read path used only while
+    recording — is a branch B-004 would then have to be proven across."
+  - "2026-10-06 — implementer — `IRecordingWriter` is always injected and a
+    null object, `UnrecordedPayloads`, answers when recording is off. B-004 is
+    then true by construction: there is no branch in the transport that could
+    behave differently with recording on, and the only difference between the
+    two runs is which implementation the container resolved."
+  - "2026-10-06 — implementer — ADR-0004's one-line-per-payload and B-002's
+    verbatim cannot both hold for a payload containing a line break. Verbatim
+    wins and the broken shape is logged: B-002 forbids omitting or reshaping a
+    payload outright, where the line shape is a `proposed` record's. Rejected:
+    minifying the body, which parses what the record says is unparsed and
+    would turn `1250.0` into `1250` — \"verbatim\" made untrue in a way no test
+    would catch. Recorded as a spec delta in § 10; ADR-0004 should say `body`
+    must be newline-free, and amending it is not this item's."
+  - "2026-10-06 — implementer — `receivedAt` comes from
+    `ISchedulerProvider.BackgroundThread.Now`, so the one clock read the
+    recorder needs is an injected one. It is deliberately **not**
+    `IObservedClock`: that carries the provider's reported time, and ADR-0004
+    § \"Consequences\" names confusing the two as the hazard the format's two
+    timestamps create."
+  - "2026-10-06 — implementer — the recordings root lives on this item's
+    `RecordingOptions` rather than on `0012`'s `ReplayOptions`, which § 7 had
+    declared it on. `adr/0001` item 2 requires a rehearsal to write and a
+    replay to read the same place, and two types each carrying a root is two
+    places for one answer. § 7 is amended, and `0012` reads the root from
+    here."
+  - "2026-10-06 — implementer — B-004 is proven through the fleet rather than
+    at the envelope. The first test compared the envelope the transport
+    returned and argued the fleet follows deterministically; the claim names
+    the changesets reaching the fleet, and `test-from-scenarios`
+    § \"A claim proven only against an inner method\" is explicit that an outer
+    boundary needs a test through it. The test now runs the real transport,
+    client, cache and projection and compares what the fleet was told, with a
+    count assertion so two empty lists cannot pass as equivalent."
+  - "2026-10-06 — implementer — production now parses JSON itself, which chore
+    `0029` anticipated: `IJson`'s own remarks name the replay recorder as the
+    expected second boundary and say the interface moves out of the test
+    project when one appears. It is not moved here — `0029` is the item for it,
+    and the transport reads with `JsonSerializerOptions.Default`, which is
+    exactly what `IJson` uses, so the two cannot disagree in the meantime."
 
 out_of_scope:
   - "Performing the recording (§ 5 row 3) — a rehearsal task in README
