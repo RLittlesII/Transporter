@@ -66,18 +66,18 @@ Feature is cited it is written with its Feature's name.
 | B-003 | Every change to that collection SHALL arrive through the pipeline; no code SHALL add to, remove from, clear or reorder it imperatively.                                                                                                                                                                                                                                            | `aircraft-source` B-044; dynamic-data-pipeline § "Never add"                  |
 | B-004 | Disposing the tracker SHALL complete every stream it publishes and dispose everything it created; while nothing is subscribed the tracker SHALL hold no subscription of its own. A source swap SHALL dispose nothing the pipeline needs and leak nothing it replaced.                                                                                                              | dynamic-data-pipeline § "Keep the pipeline the thing that does the work"      |
 | B-005 | Every scheduler the pipeline uses SHALL be one it was given, and it SHALL NOT read `CurrentThreadScheduler`, `TaskPoolScheduler` or any other ambient scheduler inline; it SHALL NOT marshal to a user-interface thread on a consumer's behalf, because that is the consumer's boundary.                                                                                           | ADR-0009; mvvm § "Projecting state back"; `SchedulerProvider` remarks         |
-| B-006 | Filtering SHALL be driven by an observable predicate over `TransportVehicle`: a new predicate value SHALL re-evaluate the existing items and SHALL NOT re-subscribe to the source or refetch anything.                                                                                                                                                                             | dynamic-data-pipeline § "The spine"; README.md § "DynamicData operators"      |
-| B-007 | Before any predicate arrives, every vehicle the source reports SHALL be visible; an absent filter SHALL NOT be an empty fleet.                                                                                                                                                                                                                                                     | Decided call — an empty grid at startup reads as a broken feed                |
+| B-006 | Filtering SHALL be driven by a predicate value the caller hands the tracker: a new predicate SHALL re-evaluate the existing items and SHALL NOT re-subscribe to the source or refetch anything.                                                                                                                                                                                    | dynamic-data-pipeline § "The spine"; README.md § "DynamicData operators"      |
+| B-007 | Before any caller sets a predicate, every vehicle the source reports SHALL be visible; the tracker SHALL hold that default itself rather than waiting for one, and an absent filter SHALL NOT be an empty fleet.                                                                                                                                                                   | Decided call — an empty grid at startup reads as a broken feed                |
 | B-008 | No filter SHALL be applied by enumerating or editing the bound collection, and none SHALL be re-evaluated by a UI event handler.                                                                                                                                                                                                                                                   | maui-ui § "The UI reads; it never drives"                                     |
-| B-009 | Sorting SHALL be driven by an observable comparer: a new comparer SHALL reorder the existing items in place, and SHALL NOT clear, refill or rebuild the collection.                                                                                                                                                                                                                | dynamic-data-pipeline § "The spine"; maui-ui § "The UI reads"                 |
+| B-009 | Sorting SHALL be driven by a comparer value the caller hands the tracker: a new comparer SHALL reorder the existing items in place, and SHALL NOT clear, refill or rebuild the collection.                                                                                                                                                                                         | dynamic-data-pipeline § "The spine"; maui-ui § "The UI reads"                 |
 | B-010 | Every comparer SHALL come from the live source's description (B-020) and SHALL compare using members of `TransportVehicle` only.                                                                                                                                                                                                                                                   | maui-ui § "The swap test"; ADR-0005 item 6                                    |
 | B-011 | A comparer SHALL break ties on `Key`, so the order is total and two sorts of an unchanged fleet produce the same sequence.                                                                                                                                                                                                                                                         | Decided call — rows swapping places on an unchanged fleet reads as churn      |
-| B-012 | Grouping SHALL be driven by an observable grouping key chosen from the description, and changing it SHALL regroup the existing items without rebuilding the pipeline.                                                                                                                                                                                                              | README.md § "UI features"; dynamic-data-pipeline § "The spine"                |
+| B-012 | Grouping SHALL be driven by a grouping chosen from the description and handed to the tracker, and changing it SHALL regroup the existing items without rebuilding the pipeline.                                                                                                                                                                                                    | README.md § "UI features"; dynamic-data-pipeline § "The spine"                |
 | B-013 | `TransportVehicle` SHALL declare the grouping answer as an `abstract` member, so a new source cannot inherit one; `Aircraft` SHALL answer with its origin country.                                                                                                                                                                                                                 | ADR-0005 item 2; README.md § "DynamicData operators"                          |
 | B-014 | Each group SHALL carry its count of vehicles and its count of stale vehicles, derived from the same stream, and neither SHALL be computed by enumerating a collection bound from it.                                                                                                                                                                                               | README.md § "UI features"; dynamic-data-pipeline § "The spine"                |
 | B-015 | A fleet-wide summary — vehicles tracked, vehicles stale, groups present — SHALL derive from the same stream as the collection and SHALL update as the collection does.                                                                                                                                                                                                             | README.md § "UI features"                                                     |
 | B-016 | A vehicle silent for longer than the threshold SHALL be reported as stale **and SHALL remain in the fleet**, keyed and present in any collection bound from it.                                                                                                                                                                                                                    | README.md § "UI features"; dynamic-data-pipeline § "Staleness and expiry"     |
-| B-017 | The staleness threshold SHALL be configurable and SHALL default to five minutes.                                                                                                                                                                                                                                                                                                   | README.md § "UI features"                                                     |
+| B-017 | The staleness threshold SHALL be settable on the tracker and SHALL default to five minutes, held by the tracker rather than supplied by a caller at construction.                                                                                                                                                                                                                  | README.md § "UI features"                                                     |
 | B-018 | Staleness SHALL be measured against the observed clock, SHALL NOT read `DateTime.UtcNow` or `DateTimeOffset.Now` inline, and SHALL be re-evaluated when the observed instant advances — so a vehicle becomes stale with no new data arriving for it.                                                                                                                               | `aircraft-source` B-043 and B-003; ADR-0007; ADR-0010                         |
 | B-019 | No vehicle SHALL be removed from the fleet because it stopped reporting, and `ExpireAfter` SHALL NOT appear in this pipeline.                                                                                                                                                                                                                                                      | README.md § "DynamicData operators"; see § 5 row 2                            |
 | B-020 | The live source SHALL supply a description naming the columns, comparers and grouping keys available for it; each column SHALL be a display name plus a selector over `TransportVehicle`.                                                                                                                                                                                          | maui-ui § "The swap test"; ADR-0005 item 6                                    |
@@ -109,6 +109,7 @@ Feature is cited it is written with its Feature's name.
 | 11  | The pipeline publishes changeset streams and owns no bound collection ([ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)).        | ADR-0009; mvvm § "Projecting state back"                                                  | `Bind` and `ObserveOn(UserInterfaceThread)` are the consumer's, which is what B-002 and B-005 now say. A stage that needs a materialised collection to work has found a design problem: every stage here operates on a changeset.                                                                                                                                         |
 | 12  | The stages are shared by DynamicData's cache-aware `RefCount()` — not Rx's `Publish().RefCount()` pair.                                                                   | ADR-0009; DynamicData 9.4.33 `ObservableCacheEx.RefCount`                                 | One upstream subscription, an internal cache created on the first subscriber and disposed when the last unsubscribes. B-028 is provable by subscribing twice and counting connections to the seam. A consumer joining while another is bound reads the current fleet from that cache; the first one to arrive after every consumer has gone waits for the next changeset. |
 | 13  | The tracker is a container singleton, disposed by the container; the view model disposes only its own `Bind` subscription.                                                | ADR-0009; item [`0040`](../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml) | B-004 is proved in a unit test that constructs the tracker directly, so no container stands between the claim and the assertion. How an actor above the seam gets its collaborators, and who starts the first poll, stays `0040`'s.                                                                                                                                       |
+| 14  | The four inputs are methods on the tracker, each ticking a `BehaviorSubject<T>` it owns and seeded with the claimed default.                                              | ADR-0009                                                                                  | B-007 and B-017's defaults are the pipeline's to keep, not a caller's to remember with `StartWith`. A test calls a method rather than constructing four subjects, and a view model sets a value from a property setter without owning any Rx. B-003 still holds because a method hands a value to a stage and touches no collection (§ 7).                                |
 
 ## 5. Out of Scope
 
@@ -135,7 +136,7 @@ Feature is cited it is written with its Feature's name.
 | A silent vehicle is marked, not removed, at a configurable five minutes | Business       | § 2 need 4 and README.md § "UI features". The threshold is a product number; what reads it is technical. B-016, B-017.                                                                                                |
 | One collection, materialised by whoever binds, never rebuilt on a swap  | Both           | Business, because § 2 need 5 is the closing act's claim; technical, because the mechanism is subscription lifetime and disposal. B-001 – B-004.                                                                       |
 | A column, comparer and grouping key come from the source                | Both           | Business: a second source must not mean editing the grid (§ 2 need 3). Technical: the description is what replaces the downcast ADR-0005 item 6 forbids. B-020 – B-022.                                               |
-| Filtering and sorting take observable inputs                            | Technical      | The user-visible behavior is the dashboard's; what the pipeline owes it is re-evaluation without a rebuild. B-006, B-009.                                                                                             |
+| Filtering and sorting take values through the tracker's methods         | Technical      | The user-visible behavior is the dashboard's; what the pipeline owes it is re-evaluation without a rebuild. B-006, B-009.                                                                                             |
 | Counts per group and for the fleet                                      | Business       | § 2 need 1 — the summary row is part of what the audience is shown. Derivation from the same stream is the technical half. B-014, B-015.                                                                              |
 | Staleness is measured against the observed clock                        | Technical      | The business statement is row 1 above. That the instant comes from the provider rather than the wall clock is ADR-0007's, and under replay it is the difference between a loaded fleet and a fleet that is all stale. |
 | The boundaries                                                          | Technical      | B-022 – B-024 constrain what may name what. No business statement is served by them directly; the swap they protect is § 2 need 5's.                                                                                  |
@@ -155,7 +156,7 @@ notices. It binds nothing and holds no collection
 ([ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)),
 and nothing else in the application subscribes to the seam.
 
-The constructor is the whole input surface, so it is worth reading as one thing:
+The constructor takes only collaborators, and the inputs are methods:
 
 ```csharp
 public FleetTracker(
@@ -163,19 +164,51 @@ public FleetTracker(
     IObservedClock clock,
     IObservedClockTicks ticks,
     ISchedulerProvider schedulers,
-    IObservable<FleetSourceDescription> description,
-    IObservable<Func<TransportVehicle, bool>> predicate,
-    IObservable<IComparer<TransportVehicle>> comparer,
-    IObservable<FleetGrouping> grouping,
-    IObservable<TimeSpan> staleThreshold)
+    IObservable<FleetSourceDescription> description)
+
+/// <summary>Shows only the vehicles the predicate matches (B-006).</summary>
+public void Filter(Func<TransportVehicle, bool> predicate);
+
+/// <summary>Orders the fleet by a comparer from the description (B-009, B-010).</summary>
+public void SortBy(IComparer<TransportVehicle> comparer);
+
+/// <summary>Regroups the fleet under one of the description's groupings (B-012).</summary>
+public void GroupBy(FleetGrouping grouping);
+
+/// <summary>Sets how long a vehicle may be silent before it is marked (B-017).</summary>
+public void StaleAfter(TimeSpan threshold);
 ```
 
-Nine parameters and no settable member, which is B-003 as a shape: there is no
-way to drive the tracker imperatively because there is nothing to drive. Each
-input has a starting value the pipeline does not wait for — a predicate matching
-everything (B-007), the description's first comparer, its first grouping, and
-five minutes (B-017) — applied with `StartWith` at the stage that reads it rather
-than demanded of the caller.
+Behind each method is a `BehaviorSubject<T>` the tracker owns, seeded with the
+default the specification names: a predicate matching everything (B-007), the
+description's first comparer and first grouping, and five minutes (B-017). Each
+stage of the chain reads its subject, so a method call is a value arriving at a
+stage and nothing more.
+
+**Why the methods rather than four observable parameters**, which is what an
+earlier draft of ADR-0009 decided and what the § 11 row 4 review first replaced
+`IFleetQuery` with:
+
+- **The defaults live where the claims are.** B-007 and B-017 are the pipeline's
+  promises, and with observables passed in they were kept by every caller
+  remembering `StartWith`. A caller that forgot produced an empty grid at
+  startup — the exact failure B-007 exists to forbid — and no test of the
+  pipeline could catch it.
+- **A caller does not have to own Rx to drive it.** A view model sets a value
+  from a property setter; a test calls `Filter(v => v.IsAirborne)` instead of
+  constructing four subjects and remembering which one feeds which stage.
+- **The seam stops being shaped by its consumer**, which was concern 2's actual
+  complaint. Four parameters answered it by moving the shape into a constructor;
+  a method surface answers it by naming each input as an operation the pipeline
+  offers.
+
+**These methods set values; they never touch the collection.** That is the line
+B-003 draws, and it is worth stating because the shape no longer makes it
+obvious: an earlier draft had no settable member at all and could say "there is
+nothing to drive". Now there is. What makes B-003 hold is that no method adds,
+removes, clears or reorders anything — each one hands a value to a stage and the
+pipeline re-derives, which is also why B-006, B-009 and B-012 claim the
+re-evaluation rather than the call.
 
 The stages are shared with DynamicData's `RefCount()` — **not** Rx's
 `Publish().RefCount()` pair. The library's own is cache-aware: one upstream
@@ -282,15 +315,15 @@ interrupting someone for is a judgement, and it is made in
 ```mermaid
 flowchart LR
     src["ITrackerSource.Connect()<br/>IChangeSet&lt;TransportVehicle, string&gt;"] --> filter
-    predicate(["IObservable&lt;predicate&gt;<br/>a constructor parameter"]) --> filter
+    predicate(["Filter(predicate)<br/>a subject the tracker owns"]) --> filter
     filter["Filter"] --> sort
-    comparer(["IObservable&lt;IComparer&gt;<br/>from the description"]) --> sort
+    comparer(["SortBy(comparer)<br/>chosen from the description"]) --> sort
     sort["Sort"] --> stale
     clock(["IObservedClockTicks.Instant<br/>+ threshold"]) --> stale
     stale["mark stale"] --> share["RefCount()"]
     share --> fleet[["Fleet<br/>IObservable&lt;IChangeSet&lt;StaleVehicle, string&gt;&gt;"]]
     share --> group["Group"]
-    grouping(["IObservable&lt;FleetGrouping&gt;"]) --> group
+    grouping(["GroupBy(grouping)"]) --> group
     group --> groups[["Groups"]]
     group --> summary[["Summary"]]
     fleet -.->|"ObserveOn(UI) + Bind"| vm(["a consumer's own collection<br/>fleet-dashboard"])
@@ -354,14 +387,28 @@ public interface IFleetTracker : IDisposable
     /// <summary>Notices, paced by the caller (B-025 – B-027).</summary>
     /// <param name="minimumInterval">The least time between notices; a new value takes effect without rebuilding anything.</param>
     IObservable<FleetNotice> Notices(IObservable<TimeSpan> minimumInterval);
+
+    /// <summary>Shows only the vehicles the predicate matches (B-006).</summary>
+    void Filter(Func<TransportVehicle, bool> predicate);
+
+    /// <summary>Orders the fleet by a comparer from the description (B-009).</summary>
+    void SortBy(IComparer<TransportVehicle> comparer);
+
+    /// <summary>Regroups the fleet under one of the description's groupings (B-012).</summary>
+    void GroupBy(FleetGrouping grouping);
+
+    /// <summary>Sets how long a vehicle may be silent before it is marked (B-017).</summary>
+    void StaleAfter(TimeSpan threshold);
 }
 ```
 
-Every member is a stream, so no member of this interface is UI-affine and a
-consumer need not know which thread it is on to read one. **There is no
-`IFleetQuery`**: an earlier draft declared one, and the review deleted it — the
-four inputs are constructor parameters (above), because a seam shaped by its only
-implementer is the pipeline's input pointing at its consumer.
+Every member that publishes is a stream, so nothing on this interface is
+UI-affine and a consumer need not know which thread it is on to read one. The
+four inputs are methods, each taking the value itself: the tracker owns the
+subject behind each and the default it starts at (above). **There is no
+`IFleetQuery`** — an earlier draft declared one and the § 11 row 4 review deleted
+it, because a seam shaped by its only implementer is the pipeline's input
+pointing at its consumer.
 
 One new interface, beside the two `aircraft-source` published rather than
 widening either (§ 4 row 3, ADR-0010):
@@ -422,7 +469,7 @@ lands (`transponder-conventions` § "Declarations in § 7").
 
 | Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                              | Recommendation                                                                                                                                                                                                                                                                            |
 | ------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DI seams           | Pass          | The tracker takes the seam, the clock and its ticks, the scheduler provider, the description and the four input observables by constructor and constructs none of them. A test drives the whole pipeline with a `SourceCache<TransportVehicle, string>` it owns and four subjects, binding the fleet stream itself, with no provider, no HTTP and no UI anywhere in the arrangement. | —                                                                                                                                                                                                                                                                                         |
+| DI seams           | Pass          | The tracker takes the seam, the clock and its ticks, the scheduler provider and the description by constructor and constructs none of them; the four inputs are method calls, so a test drives the pipeline with a `SourceCache<TransportVehicle, string>` it owns and four calls, binding the fleet stream itself, with no provider, no HTTP and no UI anywhere in the arrangement. | —                                                                                                                                                                                                                                                                                         |
 | Behavior isolation | Pass          | Each stage is observable at its own output: the collection for filter, sort and staleness, `Groups` for grouping, `Summary` for the aggregates. A failing assertion names a stage.                                                                                                                                                                                                   | —                                                                                                                                                                                                                                                                                         |
 | Coverage potential | **Qualified** | Twenty-three claims are about a value or a sequence the code produces and are ordinary xUnit tests. Five are structural — B-003, B-008, B-022, B-023 and B-005's "SHALL NOT read inline" half — and a test cannot prove the absence of a line anywhere in an assembly.                                                                                                               | The analyzer already carries this class of rule for `aircraft-source` ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). Five rules are added to it, which is `0031`'s and `0032`'s work, not a new mechanism. **B-024 is not one of them** — see below. |
 | Fixtures           | Pass          | Every vehicle is a synthetic `Aircraft` built in the test — invented `icao24` values, callsigns and countries — and a changeset is produced by writing to a cache the test holds. No JSON and no provider shape appear in this Feature's tests at all, which is B-023 showing up as an arrangement that cannot name a snapshot.                                                      | —                                                                                                                                                                                                                                                                                         |
@@ -542,10 +589,13 @@ records the clock seam. The seven concerns, and what each is now:
    and moving the operators into the view model as well, which would have sent
    B-006 – B-015 to `fleet-dashboard` and made § 1's "one readable place" false.
 
-2. **`IFleetQuery` is a bag of four unrelated observables** — **deleted.** The
-   predicate, comparer, grouping and threshold arrive as four
-   `IObservable<T>` constructor parameters. The seam was shaped by its only
-   implementer, a view model, which is an input seam pointing the wrong way.
+2. **`IFleetQuery` is a bag of four unrelated observables** — **deleted, and
+   replaced twice.** The review first made the four inputs `IObservable<T>`
+   constructor parameters; the person then replaced those with **four methods on
+   the tracker**, each ticking a `BehaviorSubject<T>` the tracker owns and seeds
+   with the claimed default (§ 7, § 4 row 14). Both answer the segregation
+   complaint; the methods also put B-007's and B-017's defaults inside the thing
+   that claims them, instead of relying on every caller to `StartWith`.
    Rejected: one `FleetQuery` value republished whole, which re-pushes the
    comparer on every keystroke and needs `DistinctUntilChanged` per stage; and
    four single-member interfaces, four types for four observables one class
@@ -620,6 +670,22 @@ scenarios, every `@B-00n` tagged exactly once, ids contiguous and unduplicated,
 credential, token or live-provider reach. Both new ADRs follow
 [`adr.md`](../../../.spec/templates/adr.md) with a rejected alternative each;
 ADR-0007 is unamended; no accepted record was edited; the swap test holds.
+
+**Re-reviewed the same day, after the input surface changed.** The person
+replaced the four `IObservable<T>` constructor parameters with four methods on
+the tracker, each ticking a `BehaviorSubject<T>` it owns and seeds. That is a
+change to what §§ 3 and 7 promise, so the rows above were re-earned rather than
+carried over: B-006, B-007, B-009, B-012 and B-017 are reworded, § 7 writes the
+method surface out, § 4 gains row 14, ADR-0009's decision 4 records both forms
+and why the second replaced the first, and five scenarios now name the call
+rather than an arriving value. Integrity re-checked after the edits.
+
+The one thing the new shape costs is worth naming in the sign-off: the tracker
+now has settable state, so B-003's line is no longer implied by the shape — "no
+settable member, nothing to drive" was the old argument — and § 7 states it
+instead. A method hands a value to a stage; nothing adds, removes, clears or
+reorders a collection. B-006, B-009 and B-012 claim the re-evaluation, not the
+call, which is what keeps them falsifiable.
 
 Three findings were raised and all three are closed in the same pass:
 
@@ -722,7 +788,7 @@ already inherits through another.
 | 2026-10-05 | `0032` | value | The swap the closing act rests on is this item's: a column, comparer or grouping key compiled into a view is the swap failing quietly (§ 2 need 3).                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | 2026-10-05 | `0032` | risk  | Adding an `abstract` member to `TransportVehicle` breaks every subclass by design (B-013) — the point is that it does not compile — but it also lands in a file `aircraft-source` owns, so it needs that Feature's reader. A sortable column whose comparer reads a member the base does not carry is the other hazard, and it presents as a cast someone adds to make it build.                                                                                                                                                                                          |
 | 2026-10-05 | `0033` | value | The search box and the dropdowns are what the audience watches, and §2 need 2 is the pattern they came to replace.                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 2026-10-05 | `0033` | risk  | Lowest here: the stages are ordinary operators with observable inputs, and the one trap — an empty predicate reading as an empty fleet (B-007) — is a claim precisely because it is the easy mistake.                                                                                                                                                                                                                                                                                                                                                                     |
+| 2026-10-05 | `0033` | risk  | Lowest here: the stages are ordinary operators reading subjects the tracker owns, and the one trap — an empty predicate reading as an empty fleet (B-007) — is a claim precisely because it is the easy mistake.                                                                                                                                                                                                                                                                                                                                                          |
 | 2026-10-05 | `0033` | risk  | 2 to 3, on taking B-025 – B-027. Two of the three hazards are silent: a rate cap applied per subscription rather than per subscriber swallows one consumer's notices into another's window, which reads as "the banner is just slow"; and a quiet notice raised on every clock tick past the threshold, rather than once, turns a stopped feed into a stream of identical interruptions. Aim a test at two subscribers at two intervals, and at advancing the clock twice past the threshold.                                                                             |
 | 2026-10-05 | `0033` | value | 4, unchanged. The notice is the visible sign that the feed is alive, which is § 2 need 1's whole point, but it is an addition to this item's existing outcome rather than a new one.                                                                                                                                                                                                                                                                                                                                                                                      |
 | 2026-10-05 | `0034` | value | § 2 need 4 and a visible demo beat: a feed that stops is what a stale mark exists to show.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |

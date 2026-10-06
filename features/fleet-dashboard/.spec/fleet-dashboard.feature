@@ -34,10 +34,10 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And no column was compiled into the markup
 
   @B-009
-  Scenario: Typing and choosing a filter publish one predicate
+  Scenario: Typing and choosing a filter hand the tracker one predicate
     Given a dashboard bound to a fleet of six aircraft
      When the search text becomes "FLT04" and the on-ground filter is chosen
-     Then one predicate is published to the pipeline
+     Then the tracker was asked to filter by one composed predicate
       And the view model enumerated no collection and edited none
 
   @B-010

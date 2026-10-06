@@ -31,11 +31,11 @@ updated: "2026-10-05"
 closed: null
 
 summary: |
-  `FleetViewModel` publishes the four observables `fleet-pipeline` is
-  constructed with — the four things the pipeline reacts to are four things the
-  user changes. It implements no interface to do it: ADR-0009 deleted
-  `IFleetQuery` and made them constructor parameters the composition root
-  supplies. Search text and
+  `FleetViewModel` drives `fleet-pipeline` through the four methods the tracker
+  exposes — `Filter`, `SortBy`, `GroupBy`, `StaleAfter` — because the four things
+  the pipeline reacts to are four things the user changes. It implements no
+  interface and constructs no observable to do it: ADR-0009 deleted `IFleetQuery`
+  and the tracker owns the subject behind each method and its default. Search text and
   the filter selection compose into one predicate; a header choice publishes the
   description's comparer and a second choice its reverse; the grouping selection
   publishes one of the description's groupings.

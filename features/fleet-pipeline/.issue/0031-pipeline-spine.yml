@@ -48,6 +48,11 @@ summary: |
   the user-interface scheduler belong to `fleet-dashboard`'s view models. A test
   here binds a collection itself to observe the stream.
 
+  The four inputs are **methods** — `Filter`, `SortBy`, `GroupBy`, `StaleAfter`
+  — each ticking a `BehaviorSubject<T>` this item creates and seeds with the
+  claimed default, so B-007's "everything visible" and B-017's five minutes are
+  kept here rather than by every caller's `StartWith`.
+
   Both boundary claims land here because a boundary cannot be asserted before
   one side of it exists, and this item is the first code downstream of the seam.
 

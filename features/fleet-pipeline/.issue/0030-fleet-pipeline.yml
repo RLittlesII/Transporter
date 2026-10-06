@@ -139,7 +139,8 @@ decisions:
     and `Bind` is the part of the chain the consumer owns. The operators stay in
     the pipeline, the stages are shared by DynamicData's cache-aware
     `RefCount()` rather than Rx's `Publish().RefCount()` pair (new claim
-    B-028), the four inputs become constructor parameters and `IFleetQuery` is
+    B-028), the four inputs become methods on the tracker that tick subjects it
+    owns and seeds with the claimed defaults, and `IFleetQuery` is
     deleted, `StaleVehicle` stays the published element with B-002 amended to
     say so, the summary stays on the tracker, the description stays under
     `Tracking/Fleet/`, the notice rate cap stays in the pipeline, and the

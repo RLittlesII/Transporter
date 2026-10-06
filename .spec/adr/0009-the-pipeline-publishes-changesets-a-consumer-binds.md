@@ -56,6 +56,7 @@ different mechanism here: there is one `Bind`, and it is the consumer's.
 | The pipeline publishes changesets and the consumer binds **(chosen)** | Every member of the pipeline's surface is an observable. The operators — filter, sort, stale mark, group, aggregates — stay in the pipeline, which ends one operator short of `Bind`. | —                                                                                                                                                                                                                                                                                              |
 | The pipeline owns the bound collections, as § 7 first declared        | One `Bind`, in the pipeline, and a consumer binds the property with no Rx at all.                                                                                                     | Puts UI-affine state behind a seam that also publishes streams, which is concern 1; contradicts `mvvm`'s marshalling rule; and decides for every future consumer that a `ReadOnlyObservableCollection` is the shape it wants — a background consumer, a test, or an export has no use for one. |
 | Split the interface by thread affinity, keeping the collections       | Two interfaces: the bound collections on one, the streams on the other, so the type states the affinity.                                                                              | Answers the symptom and keeps the cause. The pipeline still owns a collection it cannot know anyone wants, and two registrations now describe one object.                                                                                                                                      |
+| Four `IObservable<T>` constructor parameters for the inputs           | The inputs arrive as streams the consumer publishes and the constructor takes, with no interface between.                                                                             | Replaced by the methods above while this record was still `proposed`: it leaves B-007's and B-017's defaults to each caller's `StartWith`, and makes every caller — including every test — construct subjects to say "filter by this".                                                         |
 | Move the operators into the view model too                            | The tracker publishes the seam's changesets; the view model filters, sorts, groups, counts and binds, so the audience reads the whole chain where they would write it.                | The operator claims (B-006 – B-015) would move to `fleet-dashboard`, § 1's "assembled in one readable place" would be false, and no stage would be provable without a view model. Rejected explicitly when the pivot's scope was put as a question.                                            |
 
 ## Decision
@@ -79,11 +80,24 @@ different mechanism here: there is one `Bind`, and it is the consumer's.
    current fleet from that cache** rather than only subsequent changes. Rx's
    pair would have given it the latter, which is the difference that decides
    this.
-4. **The inputs arrive as constructor parameters**, not through a seam the
-   consumer implements: the predicate, the comparer, the grouping and the stale
-   threshold are four `IObservable<T>` parameters. The `IFleetQuery` interface
-   § 7 declared is deleted — it was shaped by its only implementer, a view
-   model, which is the input seam pointing the wrong way.
+4. **The inputs are methods on the tracker**, not a seam the consumer
+   implements and not observables it has to construct: `Filter(predicate)`,
+   `SortBy(comparer)`, `GroupBy(grouping)` and `StaleAfter(threshold)`, each
+   ticking a `BehaviorSubject<T>` the tracker owns and seeds with the default the
+   specification claims. The `IFleetQuery` interface § 7 declared is deleted — it
+   was shaped by its only implementer, a view model, which is the input seam
+   pointing at its consumer.
+
+    This replaced an earlier form of the same decision, recorded here rather than
+    rewritten away: the inputs were first made four `IObservable<T>` constructor
+    parameters. Both remove the seam, but the parameters left `fleet-pipeline`
+    B-007 ("every vehicle visible before a predicate arrives") and B-017 ("five
+    minutes") to be kept by whatever `StartWith` each caller remembered — a
+    promise made by the pipeline and discharged by its consumers, where a
+    forgotten seed is an empty grid at startup and no test of the pipeline can
+    see it. Methods put the defaults inside the thing that claims them, and let a
+    caller drive the pipeline without owning any Rx.
+
 5. **`Bind` and the marshal are the consumer's.** A view model calls
    `ObserveOn(ISchedulerProvider.UserInterfaceThread)` then `Bind`, and disposes
    that one subscription with itself. The pipeline reads no ambient scheduler and
@@ -99,6 +113,11 @@ different mechanism here: there is one `Bind`, and it is the consumer's.
 
 ## Consequences
 
+- The input surface is discoverable from the type: four methods naming four
+  operations, each with the claim it serves in its summary. The cost is that the
+  tracker now has settable state where an earlier draft had none, so
+  `fleet-pipeline` B-003's line — a method hands a value to a stage and touches
+  no collection — has to be stated rather than implied by the shape.
 - A consumer that is not a UI — a test, an export, a future headless mode —
   consumes the pipeline without materialising a collection it does not want.
   Every pipeline stage stays provable with no view model.

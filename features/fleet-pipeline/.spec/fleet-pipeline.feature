@@ -37,21 +37,22 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   Scenario: A new predicate re-filters what is already there
     Given a bound fleet of five aircraft, two of them on the ground
       And every row is visible
-     When a predicate selecting only airborne aircraft arrives
+     When the tracker is asked to filter to airborne aircraft only
      Then three rows are visible
       And the two filtered out are still in the source
       And the seam was not re-subscribed and nothing was refetched
 
   @B-007
-  Scenario: Before any predicate arrives, everything is visible
-    Given a fleet tracker that has received no predicate
+  Scenario: Before anyone sets a predicate, everything is visible
+    Given a fleet tracker nobody has asked to filter
      When six vehicles are reported
      Then six rows are visible
+      And the tracker supplied that default itself
 
   @B-009
   Scenario: A new comparer reorders the rows in place
     Given a bound fleet of three aircraft sorted by callsign
-     When a comparer ordering by barometric altitude arrives
+     When the tracker is asked to sort by barometric altitude
      Then the rows are in altitude order
       And the collection was not cleared and not refilled
       And each row is the same instance it was before
@@ -82,7 +83,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   Scenario: Changing the grouping reforms the groups
     Given a bound fleet of six aircraft grouped by origin country
       And there are three groups
-     When a grouping by category arrives
+     When the tracker is asked to group by category
      Then the groups reform under the new key
       And no pipeline stage is rebuilt
       And the collection's rows are unchanged
@@ -155,7 +156,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
 
   @B-017
   Scenario: The threshold defaults to five minutes
-    Given a fleet tracker configured with no threshold
+    Given a fleet tracker nobody has given a threshold
       And an aircraft that last reported four minutes before the observed instant
      When the fleet is read
      Then the aircraft is not stale
