@@ -573,16 +573,72 @@ member tables are what still has to move, and that is the `implementer`'s, with
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status                                                               |
+| -------- | ----------- | -------------------------------------------------------------------- |
+| §§ 1-5   | spec-author | 🔴 Blocked — B-028 and B-027 cannot both hold. See finding 1 below.  |
+| §§ 6-7   | implementer | 🔴 Blocked — § 7 does not say where the notice derivation attaches.  |
+| §§ 8-9   | test-writer | 🟡 Draft — B-028's named test asserts the teardown finding 1 denies. |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
-is [the template's § 12](../../../.spec/templates/feature.md). Every row here is
-🟡, so no item below moves to `in-progress` yet
+is [the template's § 12](../../../.spec/templates/feature.md). No row here is
+🟢, so no item below moves to `in-progress`
 (`transponder-conventions` § "The rules that bind every change").
+
+**Review of 2026-10-05, after ADR-0009 and ADR-0010.** The mechanical checks
+pass: 28 claims, 28 § 9 rows, 29 scenarios, every `@B-00n` tagged exactly once,
+ids contiguous and unduplicated, every claim carried by exactly one child item.
+Three findings, the first of them blocking.
+
+**Finding 1 — B-028's teardown and B-027's quiet notice contradict each other,
+and ADR-0009 states both.** B-028 says the stages tear down when the last
+subscriber unsubscribes, and that no second subscriber causes a second
+connection to the seam. B-027 says the tracker publishes a quiet notice when no
+changeset has arrived for longer than the threshold — which requires something
+to be timing changeset arrivals. That timer has to attach somewhere, and both
+places are already forbidden:
+
+- **On the shared chain**, held by the tracker: the reference count never
+  reaches zero, so the teardown B-028 claims never happens and the chain runs
+  with nobody watching — which is the behaviour ADR-0009 rejected
+  `AsObservableCache()` for.
+- **On `ITrackerSource.Connect()` separately**: a second connection to the seam,
+  which is B-028's first clause.
+
+ADR-0009's own consequences carry both halves, two bullets apart: "the chain
+still stops when nothing at all is watching", then "the tracker holds the
+staleness tick and quiet-notice subscriptions, which exist whether or not anyone
+is bound." The second sentence is the one that cannot be true as written.
+
+The remedy is a decision, not a wording fix, and it belongs to the person with
+`spec-author` and the `implementer` applying it. Named, not chosen here:
+derive the notices lazily inside `Notices(…)`, so no tracker-held subscription
+exists and silence is reported only while someone is listening — B-027's "the
+tracker SHALL publish" then needs rewording and nothing else moves; or accept a
+tracker-held subscription, in which case B-028's teardown clause is withdrawn
+and ADR-0009's rejection of `AsObservableCache()` is moot, because the chain is
+live from construction either way.
+
+**Finding 2 — B-002 obliges a consumer this Feature excludes.** It says "a
+consumer SHALL materialise exactly one collection from it", while § 5 row 9 puts
+the `Bind` and the collection it produces in `fleet-dashboard`, whose B-005
+already claims exactly that. A claim that two Features both own has no single
+§ 9 row that proves it. The pipeline's own half — publishes a stream, owns no
+bound collection, no second store of tracked items downstream — is what belongs
+here; `spec-author`'s to tighten.
+
+**Finding 3 — B-014 still says "the bound collection".** B-016 and B-019 were
+reworded for the pivot and this one was not, so it names a collection this
+Feature no longer has. Same fix as those two: "any collection bound from it".
+Not blocking; it reads as intended.
+
+**Not findings, checked and clean:** no credential, token or live-provider reach
+anywhere in the diff; both ADRs follow
+[`adr.md`](../../../.spec/templates/adr.md) and carry considered options with a
+rejected alternative each; ADR-0007 is unamended; no accepted ADR was edited;
+every record is a decision or an ADR by the template's own test, with no process
+rule filed as either; no role wrote outside its sections in this pass; and the
+swap test holds — flipping planes to ships swaps the description, and no claim,
+scenario or § 7 member names a concrete vehicle outside the detail pane.
 
 ## Decisions
 

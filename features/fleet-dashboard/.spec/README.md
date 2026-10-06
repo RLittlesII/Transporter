@@ -454,15 +454,33 @@ None yet — nothing is built, so no bug has been closed here.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status                                                                    |
+| -------- | ----------- | ------------------------------------------------------------------------- |
+| §§ 1-5   | spec-author | 🔴 Blocked — the `@B-005` scenario asserts disposal B-005 does not state. |
+| §§ 6-7   | implementer | 🟡 Draft — § 7 is rewritten for ADR-0009; it waits on `fleet-pipeline`'s. |
+| §§ 8-9   | test-writer | 🟡 Draft                                                                  |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
-is [the template's § 12](../../../.spec/templates/feature.md). Every row here is
-🟡, so no item below moves to `in-progress` yet.
+is [the template's § 12](../../../.spec/templates/feature.md). No row here is
+🟢, so no item below moves to `in-progress`.
+
+**Review of 2026-10-05, after ADR-0009.** Mechanically clean: 27 claims, 27 § 9
+rows, 27 scenarios, every `@B-00n` tagged once, and no claim naming a type. One
+finding.
+
+**The `@B-005` scenario asserts something B-005 does not claim.** Its last step
+— "disposing the view model disposes that subscription and nothing of the
+tracker's" — is the right behaviour and now the most load-bearing one this
+Feature has: ADR-0009 moved the `Bind` here, so a disposal bug freezes a view's
+rows while the fleet keeps running, and nothing else in the application would
+report it. A scenario may only prove its claim, so either B-005 gains the
+disposal clause or the step comes out. The first is correct; it is
+`spec-author`'s to write, and the claim is the one that should carry it.
+
+§§ 6-7 stay 🟡 rather than 🟢 for a reason outside this Feature: `fleet-pipeline`
+§ 12 is blocked on whether the tracker holds a subscription of its own, and the
+answer changes what this Feature's view models can assume about a stream that
+may or may not be live before they subscribe.
 
 ## Decisions
 
