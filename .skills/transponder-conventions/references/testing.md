@@ -48,7 +48,12 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   One registration extension takes configuration and does the whole wiring; a
   test calls that and varies configuration. A test that assembles the same graph
   by hand is a second composition to keep in step, and the first production
-  scenario it misses passes.
+  scenario it misses passes. **The host is built in the test body** — the
+  `HostBuilder`, the configuration handed to it and the registration call are
+  the `// Given`, never a private `Host()` or `Settings()`. The arrangement
+  rule is about arrangement, not only about doubles: a helper may build one
+  domain value a case needs, and the thing under arrangement is not one
+  ([lesson 0015](../../../.spec/lessons/0015-a-helper-that-builds-the-arrangement-is-the-arrangement.md)).
 - **A system under test is built by a generated fixture, never by a
   constructor call in the test.** Declare
   `[AutoFixture(typeof(T))] internal partial class TFixture;` beside the tests

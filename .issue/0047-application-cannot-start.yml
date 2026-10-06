@@ -91,6 +91,14 @@ decisions:
     The reading was not wrong about the spike — it was wrong that `Missing` rows
     cost nothing while the thing they describe is the application's startup."
 
+  - "2026-10-06 — the person, in review of pull request #32 — the composition
+    test's host and its configuration are built in the test body, and what varies
+    comes from `[ClassData]`: `WindowServiceCases` is one row per service the
+    first window needs resolved. Lesson 0013's rule already said this and was
+    read as being about doubles only, so lesson 0015 records the repeat and
+    `transponder-conventions` references/testing.md now says the host is stood
+    up in the `// Given`."
+
 out_of_scope:
   - "Who owns the composition root, the tracker's lifetime and who starts the
     first poll — spike `0040`, whose three questions this item answers none of."
