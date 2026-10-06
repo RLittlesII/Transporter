@@ -97,7 +97,7 @@ public class FleetPage : ContentPage
                 new Entry { Placeholder = "Search", WidthRequest = 240 }.Bind(
                     Entry.TextProperty,
                     static (FleetViewModel model) => model.SearchText,
-                    static (model, text) => model.SearchText = text),
+                    static (model, text) => model.SearchText = text ?? string.Empty),
                 new Picker { Title = "Filter", ItemDisplayBinding = new Binding(nameof(FleetFilterChoice.Name)) }
                     .Bind(Picker.ItemsSourceProperty, static (FleetViewModel model) => model.Filters),
                 new Picker { Title = "Group by", ItemDisplayBinding = new Binding(nameof(FleetGrouping.Name)) }
