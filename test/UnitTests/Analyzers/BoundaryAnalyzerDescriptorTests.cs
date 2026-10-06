@@ -236,7 +236,7 @@ public class BoundaryAnalyzerDescriptorTests
 
     private const string SpecificationPath = "features/boundary-analyzer/.spec/README.md";
 
-    private const string AircraftSpecificationPath = "features/aircraft-source/.spec/README.md";
+    private const string AircraftSpecificationPath = "src/Transponder/Integrations/OpenSky/.spec/README.md";
 
     private static readonly string Specification = SpecificationTables.Read(SpecificationPath);
 
