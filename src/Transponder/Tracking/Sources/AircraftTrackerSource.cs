@@ -19,7 +19,7 @@ namespace Transponder.Tracking.Sources;
 internal sealed class AircraftTrackerSource : IAircraftTrackerSource
 {
     /// <summary>Initializes a new instance of the <see cref="AircraftTrackerSource"/> class.</summary>
-    /// <param name="client">The poller this strategy's subscription owns (B-040).</param>
+    /// <param name="client">The poller this strategy's subscription owns.</param>
     /// <param name="snapshots">The plain keyed store the snapshot client writes each fetched set into.</param>
     /// <param name="mapper">The projection this strategy owns (B-034).</param>
     public AircraftTrackerSource(
@@ -34,17 +34,8 @@ internal sealed class AircraftTrackerSource : IAircraftTrackerSource
 
     /// <inheritdoc/>
     /// <remarks>
-    /// <para>
-    /// The subscription owns the poll (B-040): the first subscriber starts it and the last one to
-    /// leave stops it, so a strategy the decorator switches away from stops spending credits because
-    /// its subscription is gone, and switching back starts it again. Nothing has to remember to
-    /// dispose anything, and no strategy is left unusable by having been swapped away.
-    /// </para>
-    /// <para>
-    /// The stream is re-keyed on the vehicle's own key rather than on the cache's, because the cache
-    /// is keyed on <c>icao24</c> as the wire spelled it and the projection lowercases it: leaving the
-    /// two different is the split into two entries B-037 exists to prevent.
-    /// </para>
+    /// The subscription owns the poll, and the stream is re-keyed on the vehicle's key rather than
+    /// on the cache's, which is keyed on <c>icao24</c> as the wire spelled it.
     /// </remarks>
     public IObservable<IChangeSet<TransportVehicle, string>> Connect() =>
         Observable.Using(

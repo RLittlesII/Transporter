@@ -24,9 +24,7 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMarkup()
 
-            // The system is where time and failure live. One actor so far: the swap, which is told
-            // rather than asked (0006, fleet-dashboard B-016). Which types it reaches is Transponder's
-            // to say, because the actor and the decorator it is handed are both internal there.
+            // Which actors exist is Transponder's to say: they and what they are handed are internal there.
             .AddAkkaHost(
                 "Transponder",
                 static (system, registry, resolver) => registry.AddFleetTrackingActors(system, resolver))

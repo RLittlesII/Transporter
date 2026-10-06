@@ -2,13 +2,7 @@ using System;
 
 namespace Transponder.Tracking.Sources;
 
-/// <summary>
-/// Told to <see cref="SourceSwapActor"/> to make one strategy live (`fleet-dashboard` B-016).
-/// </summary>
-/// <remarks>
-/// Carries the per-type seam as a <see cref="Type"/> rather than a kind or a name, because a
-/// message cannot carry a type parameter and B-037 forbids putting either on the seam.
-/// </remarks>
+/// <summary>Told to <see cref="SourceSwapActor"/> to make one strategy live.</summary>
 internal sealed class SwapSource
 {
     private SwapSource(Type strategy) => Strategy = strategy;

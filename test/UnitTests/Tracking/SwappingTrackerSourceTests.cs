@@ -106,10 +106,7 @@ public class SwappingTrackerSourceTests
 
     /// <summary>Every member in the production assembly that would answer which source is live.</summary>
     /// <returns>The offending methods, which is the empty set.</returns>
-    /// <remarks>
-    /// Compiler-generated types are excluded because a registration lambda returning the seam is one:
-    /// the claim is about a type a caller could ask, not about how the container was told.
-    /// </remarks>
+    /// <remarks>Compiler-generated types are excluded: a registration lambda returning the seam is one.</remarks>
     private static IEnumerable<string> Resolvers() =>
         typeof(ITrackerSource).Assembly.GetTypes()
             .Where(static type => !Attribute.IsDefined(type, typeof(CompilerGeneratedAttribute)))
@@ -118,19 +115,16 @@ public class SwappingTrackerSourceTests
             .Select(static method => $"{method.DeclaringType!.Name}.{method.Name}");
 }
 
-/// <summary>A per-type seam, so the decorator can be told a strategy the way a real one names one.</summary>
+/// <summary>A per-type seam, the way a real strategy is named.</summary>
 internal interface IFirstTrackerSource : ITrackerSourceStrategy;
 
-/// <summary>The second per-type seam, which is what makes this a choice rather than a default.</summary>
+/// <summary>The second per-type seam, which makes selection a choice rather than a default.</summary>
 internal interface ISecondTrackerSource : ITrackerSourceStrategy;
 
-/// <summary>
-/// A strategy whose <c>Connect</c> owns a resource, which is the shape B-040 turns on: the real
-/// one's resource is a poller and this one's is a counter.
-/// </summary>
+/// <summary>A strategy whose <c>Connect</c> owns a resource; the real one's is a poller.</summary>
 internal abstract class StubTrackerSource : ITrackerSourceStrategy
 {
-    /// <summary>Gets how many times a subscription started this strategy's resource.</summary>
+    /// <summary>Gets how many times a subscription started the resource.</summary>
     public int Started { get; private set; }
 
     /// <summary>Gets how many times a subscription ending stopped it.</summary>

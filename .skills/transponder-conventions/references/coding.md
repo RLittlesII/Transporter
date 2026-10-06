@@ -39,6 +39,24 @@ it. The traps:
   line, says a _why_, and is never a paragraph. Reasoning belongs in the
   specification, an ADR or a lesson — those are linkable; a comment restating one
   drifts from it. Cite instead of explaining.
+- **A comment is a maintenance burden, and the default is not to write one.**
+  Two shapes are the ones reviews keep catching, and both are deletions rather
+  than rewrites:
+    - **Prose that restates the line below it.** A sentence above
+      `AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>()` saying the
+      strategy is registered behind its seam says what the call says. If an
+      analyzer covers the rule, or should, the comment is the wrong place for
+      it ([`0051`](../../../.issue/0051-verbose-comment-diagnostic.yml) is the
+      analyzer; [`0050`](../../../.issue/0050-scrub-comment-maintenance-burden.yml)
+      is the scrub).
+    - **A claim or record identifier inside comment prose.** A sentence
+      carrying `(B-034, ADR-0002 item 6)` puts a reference in a second place,
+      where no traceability matrix reads it and nothing fails when the claim is
+      renumbered or withdrawn. A bare citation on a line that would be wrong
+      without it is the form that survives; the paragraph around it is not.
+
+    The test before writing one: delete it, and name what a reader loses. Nothing
+    loses means it was never a comment.
 
 ## Project structure
 

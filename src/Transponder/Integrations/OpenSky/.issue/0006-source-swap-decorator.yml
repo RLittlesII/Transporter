@@ -61,6 +61,17 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — review of pull request #36 — the comments this item added are
+    a maintenance burden and most of them go. Ten lines across seven files, one
+    finding: prose restating the call below it, paragraph-length `<remarks>`,
+    and claim or record identifiers inside a sentence. The convention was
+    already written — `transponder-conventions` § \"The rules that bind every
+    change\" — and nothing executes it, which is lesson 0017. Scrubbed here;
+    `0050` scrubs the rest of the repository and `0051` is the diagnostic that
+    would have caught it. The identifier half of `0051` is left
+    `ready-for-architecture` because the reviewer raised it as a suspicion, and
+    a bare citation on a line that would be wrong without one is the form that
+    should survive."
   - "2026-10-06 — `0006` — the `.Switch()` in the decorator resolves to
     **DynamicData's** changeset operator rather than Rx's, because `using
     DynamicData` is in scope. The difference showed up in the B-039 test's first

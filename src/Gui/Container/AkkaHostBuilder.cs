@@ -20,8 +20,6 @@ public class AkkaHostBuilder
         return this;
     }
 
-    // The overload an actor with a container-resolved collaborator needs: the resolver is how a
-    // dependency the service collection owns reaches a constructor Akka calls (spike 0040).
     public AkkaHostBuilder AddAkka(string actorSystem, Action<ActorSystem, IActorRegistry, IDependencyResolver> actorStarter)
     {
         _mauiAppBuilder.Services.AddAkkaMaui(actorSystem, akkaConfigurationBuilder =>
