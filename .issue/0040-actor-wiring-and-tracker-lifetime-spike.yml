@@ -75,7 +75,32 @@ acceptance_criteria:
   - "`0031` and `0036` have the spike removed from their `spikes` once the
     finding is recorded."
 
-decisions: []
+decisions:
+  - "2026-10-06 — `0006` — question 1 is answered in passing, and the answer is
+    Akka.Hosting's dependency resolver. `AddAkkaHost` gained an overload taking
+    `Action<ActorSystem, IActorRegistry, IDependencyResolver>`, and
+    `TrackingRegistration.AddFleetTrackingActors` calls
+    `resolver.Props<SourceSwapActor>()` — so the actor's constructor is resolved
+    from the container like any other type, and an actor with a
+    container-resolved collaborator has no static `Props` of its own.
+    `akka-actor` § \"The shape\" and § \"Registration and consumption\" carry
+    the rule. Rejected: a `Props` factory closing over the provider, which is a
+    second place the dependencies are written down; and resolving the actor
+    itself from the container, which puts the actor's lifetime in two owners.
+    Where the actor and its collaborator are internal, the library exposes the
+    registration and the head names only that."
+  - "2026-10-06 — `0006` — question 3 is answered for the live source: the first
+    subscription starts the first poll. `AircraftTrackerSource.Connect()` wraps
+    the projection in `Observable.Using(() => client.Poll(), …)`, so nothing
+    polls until something subscribes and the poll stops with the subscription —
+    which is also how `aircraft-source` B-040 is satisfied. Rejected: a hosted
+    service or an actor starting the poll at composition, which spends credits
+    behind a window nobody has opened. What is still this spike's is the
+    user-visible half — what a page shows between construction and the first
+    report — which is `fleet-dashboard` § 11 row 3."
+  - "2026-10-06 — `0006` — question 2 is untouched and this spike stays open for
+    it. Its finding, and the amendments its acceptance criteria name, are still
+    owed."
 
 out_of_scope:
   - "Whether a view model reaches the tracker through an actor — already

@@ -423,9 +423,13 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `GeoPosition`               | [`Model/GeoPosition.cs`](../../../Model/GeoPosition.cs)                                             | B-036                           |
 | `PositionSource`            | [`Model/PositionSource.cs`](../../../Model/PositionSource.cs)                                       | B-036, the enum's absence       |
 | `ITrackerSource`            | [`Tracking/ITrackerSource.cs`](../../../Tracking/ITrackerSource.cs)                                 | B-033, B-049                    |
+| `ITrackerSourceStrategy`    | [`Tracking/ITrackerSourceStrategy.cs`](../../../Tracking/ITrackerSourceStrategy.cs)                 | B-038, the registration's shape |
 | `IAircraftTrackerSource`    | [`Tracking/Sources/IAircraftTrackerSource.cs`](../../../Tracking/Sources/IAircraftTrackerSource.cs) | B-037, the seam's width         |
 | `AircraftTrackerSource`     | [`Tracking/Sources/AircraftTrackerSource.cs`](../../../Tracking/Sources/AircraftTrackerSource.cs)   | B-033, B-034                    |
 | `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../Tracking/Sources/AircraftSnapshotMapper.cs) | B-034 – B-037, B-046            |
+| `SwappingTrackerSource`     | [`Tracking/Sources/SwappingTrackerSource.cs`](../../../Tracking/Sources/SwappingTrackerSource.cs)   | B-038 – B-040                   |
+| `SourceSwapActor`           | [`Tracking/Sources/SourceSwapActor.cs`](../../../Tracking/Sources/SourceSwapActor.cs)               | `fleet-dashboard` B-016's half  |
+| `SwapSource`                | [`Tracking/Sources/SwapSource.cs`](../../../Tracking/Sources/SwapSource.cs)                         | B-037, how a strategy is named  |
 | `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../Tracking/IFleetTracker.cs)                                   | B-041, B-051                    |
 | `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051             |
 | `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives     |
@@ -551,17 +555,14 @@ stated rather than discovered later: `Transponder.csproj` gains
 `InternalsVisibleTo("Transponder.UnitTests")`, and `transponder-conventions`
 § `test-from-scenarios` now carries that as the convention.
 
-Where the rest of it goes, following `transponder-conventions`
-§ "Project structure":
+Where the rest of it goes follows `transponder-conventions`
+§ "Project structure".
 
-```
-src/Transponder/Tracking/                        SwappingTrackerSource
-```
-
-The block holds only what is still unbuilt, and shrinks as the table above
-grows; `Contracts/`, `Container/`, `Model/`, `Scheduling/`, `Tracking/Sources/`
-and the provider's own root have left it entirely, and `0007`'s tracker has
-joined them. What is left is `0006`'s decorator.
+The block that held what was still unbuilt is empty, and the table above holds
+every type this Feature names: `Contracts/`, `Container/`, `Model/`,
+`Scheduling/`, `Tracking/`, `Tracking/Sources/` and the provider's own root have
+left it entirely — `0007`'s tracker on 2026-10-06 and `0006`'s decorator with
+the same day's second item.
 
 The cache gets no type of its own. A `SourceCache` of `AircraftSnapshot` keyed
 by `string`, registered with the application's lifetime, **is** B-030's plain
@@ -626,23 +627,65 @@ next changeset. That is `fleet-pipeline` B-018 and its `IObservedClockTicks` sea
 (ADR-0010); this Feature claims none of it, because B-051 is about what happens
 to a stale vehicle rather than about what notices one.
 
-`TrackingRegistration.AddFleetTracking()` registers the tracker as a container
-singleton (ADR-0009 decision 7). It is a separate call from `AddOpenSky` because
-the tracker is no provider's: an application calls both, and B-052's chain is
-what the two together resolve. `AddOpenSky` gained the one line that makes that
-chain resolvable — the aircraft strategy registered as `ITrackerSource` itself,
-which is what the tracker takes. Until `0006` lands, `ITrackerSource` resolves
-to the strategy directly, so B-052's "every decorator applied" half is not yet
-true of anything.
+`TrackingRegistration.AddFleetTracking()` registers the swap decorator and the
+tracker over it, both as container singletons (ADR-0009 decision 7). It is a
+separate call from `AddOpenSky` because neither is a provider's: an application
+calls both, and B-052's chain is what the two together resolve. `AddOpenSky`
+carries one line per strategy and nothing else of the swap's —
+`AddSingleton<ITrackerSourceStrategy>(p => p.GetRequiredService<IAircraftTrackerSource>())`
+— so adding the vessel feed is a line beside it and no edit here, in the
+decorator, or in anything the decorator is registered by.
 
-**That line is `0006`'s to replace, not to wrap.**
+**The decorator is the only registration of `ITrackerSource`.**
 [ADR-0011](../../../../../.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md)
 supersedes ADR-0003 on 2026-10-06, after `0049` ran the library it had named: a
 decorator registered over the strategies is one decorator **per** strategy
-registration. So the strategy registers as `ITrackerSourceStrategy` instead, the
-decorator becomes the one registration of `ITrackerSource`, and the container's
-own enumerable is what hands it the set — which is also how a second strategy
-reaches it without a line of this Feature's being edited.
+registration. So the strategy registers as `ITrackerSourceStrategy`, the
+decorator is what consumers resolve, and the container's own enumerable is what
+hands it the set. Nothing in it is order-sensitive — the enumerable is resolved
+when the seam is, so the two registration calls may run in either order. What
+replaces the retired hazard is narrower and visible: a strategy registered as
+`ITrackerSource` rather than as `ITrackerSourceStrategy` reaches consumers in
+place of the selector and the swap silently does nothing, which is the second
+clause B-052's composition test asserts.
+
+**The swap, as it happens.** `SwappingTrackerSource.Connect()` is
+`_selected.Select(source => source.Connect()).Switch()` over a
+`BehaviorSubject<ITrackerSource>` seeded with the first registered strategy, and
+`Select<TStrategy>()` ticks that subject. Three things follow, and they are
+B-038 – B-040 between them.
+
+- **The decorator is told, never asked.** `Select` is a method on the class, not
+  on a seam anyone resolves; only `SourceSwapActor` calls it. So there is no
+  strategy-resolver type, which is B-038's second clause, and the B-038 test
+  walks the assembly for a member returning `ITrackerSource` and finds none.
+- **The poll belongs to the subscription, not to the decorator.**
+  `AircraftTrackerSource.Connect()` wraps the projection in
+  `Observable.Using(() => client.Poll(), …)`, so the first subscriber starts the
+  poll and `Switch` dropping that subscription stops it — B-040 by construction.
+  Swapping back subscribes again and polls again, which a decorator that
+  disposed the outgoing source could not do. It also answers spike `0040`'s
+  third question: the first subscription starts the first poll, and nothing
+  else does.
+- **The `Switch` is DynamicData's, not Rx's**, because `using DynamicData` is in
+  scope and the overload for a changeset stream wins. The difference is visible
+  and wanted: the outgoing fleet leaves as removes rather than lingering beside
+  the incoming one. B-039 is not harmed by that — the removes are ordinary
+  changes, indistinguishable from those aircraft leaving the box — and § 10
+  carries the delta, because `hot-swap-source` had said nothing is cleared on a
+  swap.
+
+**What the actor is for, and what it is not.** `SourceSwapActor` takes the
+decorator and does one thing with a `SwapSource` message: `source.Select(…)`.
+It is an actor rather than an observable value because a swap is an effect
+(`fleet-dashboard` B-016), and it is this item's rather than `0039`'s per that
+Feature's § 4 row 6 — the control and the busy indicator are `0039`'s. It
+reaches the decorator through Akka's `IDependencyResolver`, which is spike
+`0040`'s first question answered: a container-owned collaborator reaches an
+actor's constructor that way, and an actor shaped like that has no static
+`Props` of its own. `TrackingRegistration.AddFleetTrackingActors` is public
+because the actor and the decorator are both internal — the head names the
+method and never either type.
 
 ## 8. Testing Strategy
 
@@ -720,16 +763,18 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and five of the fifty-one rows read `Missing`.**
-Forty-six are `Verified`, and they arrived three different ways.
-Twenty-nine came from
+**This is the gate, and one of the fifty-one rows reads `Missing`.**
+Fifty are `Verified`, and they arrived three different ways.
+Thirty-three came from
 items: `0002` built the contract, its envelope, the positional row's converter
 and the HTTP transport, `0003` the snapshot and its
 cache, `0004` the snapshot client, the token source, the observed clock and
-the options, `0005` the seam, the domain model and the projection, and `0007`
-the tracker's pipeline, its clock and its stale mark — the tests
+the options, `0005` the seam, the domain model and the projection, `0007`
+the tracker's pipeline, its clock and its stale mark, and `0006` the swap
+decorator, the poll the subscription owns and the chain the container
+resolves — the tests
 this section names against B-001, B-003, B-011 – B-013,
-B-015 – B-029, B-033 – B-037, B-042, B-043, B-050 and B-051 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
+B-015 – B-029, B-033 – B-040, B-042, B-043, B-050 – B-052 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
 second contract interface would have to be and B-049 what a push provider's
 strategy may not be given, so for each there is no value to compute and
 no declaration to analyze, and the row records what was looked at and when it is
@@ -746,21 +791,24 @@ Withdrawn (§ 4 row 18), so it has no row here, and the analyzer's eighteenth
 rule retired with it — ADR-0006 § "What the analyzer carries" records the
 amendment.
 
-Every other row names what will prove its claim and records that it does not. A
-row's Status becomes `Verified` when **every** mechanism it names passes in a
-run, which is why a row naming a passing test and an unbuilt half still reads
-`Missing`. **Two rows are now that shape**: B-041's analyzer half is built and
-the half that says `IFleetTracker` wraps `ITrackerSource` cannot be reached until
-a view model exists to read its dependencies from, and B-052's container resolves
-the tracker but not yet through a decorator, because `0006` has not built one.
-`0007` landed the other three rows it owns — B-042, B-043 and B-051 read
-`Verified` against `FleetTrackerTests`. The remaining three wait on
-`0006`: B-038 – B-040.
+The one row that still names what will prove its claim and records that it does
+not is B-041. A row's Status becomes `Verified` when **every** mechanism it
+names passes in a run, which is why a row naming a passing test and an unbuilt
+half still reads `Missing`: B-041's analyzer half is built and the half that
+says what view models depend on cannot be reached until a view model exists to
+read its dependencies from. **B-052 left that shape on 2026-10-06**, when `0006`
+built the decorator its second clause names — the composition test now resolves
+`IFleetTracker` from the application's own graph and asserts the seam resolves
+to `SwappingTrackerSource` rather than to a strategy. `0007` landed the three
+rows it owns — B-042, B-043 and B-051 read `Verified` against
+`FleetTrackerTests` — and `0006` landed B-038 – B-040 against
+`SwappingTrackerSourceTests`.
 
-**Those two rows are what keeps `0007` open**, and both are blocked on something
-outside it rather than on work it skipped: a view model is `fleet-dashboard`'s
-and the decorator is `0006`'s. The item stays `in-review` until each has a
-subject.
+**That one row keeps the Feature open rather than any item.** `0007` closed on
+2026-10-06 on the five claims it proved, and B-041's remaining half left with it
+to `fleet-dashboard` `0039`, which builds the first container-constructed view
+model — a row whose subject the repository does not contain belongs to the item
+that builds the subject (lesson 0011).
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Ten claims carry two
@@ -819,9 +867,9 @@ is B-049 and the clause waiting on `0005`.
 | B-035    | `@B-035` | `AircraftSnapshotMapperTests.GivenMetresMetresPerSecondAndDegrees_WhenProjected_ThenEachReachesTheVehicleUnconverted`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-036    | `@B-036` | `AircraftSnapshotMapperTests.GivenAnAbsentAltitudeAndAnAbsentPosition_WhenProjected_ThenNeitherBecomesZeroAndBothAltitudesSurvive`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Verified |
 | B-037    | `@B-037` | `AircraftSnapshotMapperTests.GivenAnUppercaseIcao24_WhenProjected_ThenTheKeyIsLowercase`; the seam-widening half is analyzer — `BoundaryAnalyzerTests.GivenAPerTypeSeamWithASourceDescribingMember_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                              | Verified |
-| B-038    | `@B-038` | `SwappingTrackerSourceTests.GivenTwoStrategies_WhenTheLiveOneIsSelected_ThenTheDecoratorChoosesAndNoResolverTypeExists`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Missing  |
-| B-039    | `@B-039` | `SwappingTrackerSourceTests.GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
-| B-040    | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Missing  |
+| B-038    | `@B-038` | `SwappingTrackerSourceTests.GivenTwoStrategies_WhenTheLiveOneIsSelected_ThenTheDecoratorChoosesAndNoResolverTypeExists`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Verified |
+| B-039    | `@B-039` | `SwappingTrackerSourceTests.GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Verified |
+| B-040    | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Verified |
 | B-041    | `@B-041` | the negative half is analyzer — `BoundaryAnalyzerTests.GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported`, which passes; the wrapping half is proven by `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction`, which constructs the tracker over the seam; the "what view models depend on" half needs a container-built view model and is owed by `fleet-dashboard` `0039` under that Feature's B-020, where `FleetViewModelTests.GivenAViewModelBuiltByTheContainer_WhenItsDependenciesAreRead_ThenTheyAreIFleetTrackerAndNothingBelowIt` names it (lesson 0011) | Missing  |
 | B-042    | `@B-042` | `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-043    | `@B-043` | `FleetTrackerTests.GivenAnInjectedClockAdvancedPastTheThreshold_WhenStalenessIsRead_ThenItDerivesFromLastContactAndNoAmbientClockIsRead`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
@@ -833,14 +881,14 @@ is B-049 and the clause waiting on `0005`.
 | B-049    | `@B-049` | **Review**, done on `0005` — `src/Transponder/Integrations/` holds one provider and one `Contracts/` folder, over the one request/response provider; no socket provider exists and no contract was invented for one; and `grep -rn ITrackerSource src` returns two declarations, `Tracking/ITrackerSource.cs` and the empty `IAircraftTrackerSource` deriving from it, with no type above either. Re-done by the Feature that adds a push provider.                                                                                                                                                                                                            | Verified |
 | B-050    | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Verified |
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
-| B-052    | `@B-052` | `TransponderContainerTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator` — owed by `0006`, which builds the decorator the second clause names                                                                                                                                                                                                                                                                                                                                                                                                                                       | Missing  |
+| B-052    | `@B-052` | `TransponderCompositionTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 
 Fifty-one rows, fifty-one live claims, each appearing once — B-010 is Withdrawn
 and has none. A scenario existing is not coverage; this section is the only place
-a claim's build state is written, and eight of its rows still say the claim is
-not proven. None of the eight waits on a mechanism any more: the analyzer is
-complete, so every row left waits on `0006` or `0007` writing the code its test
-names. The Feature cannot reach `done` until they do.
+a claim's build state is written, and one of its rows still says the claim is
+not proven. It does not wait on a mechanism: the analyzer is complete, and
+B-041's remaining half waits on `fleet-dashboard` `0039` building the view model
+whose dependencies it is about. The Feature cannot reach `done` until it does.
 
 ## 10. Lessons / Spec Deltas
 
@@ -941,6 +989,26 @@ the answer was a citation of `transponder-conventions` § `coding` — which now
 says so in a sentence that covers the tracker rather than only the model and the
 strategies. No claim, scenario or § 9 row named the type, so none changed, and
 § 12 keeps its 🟢 rows.
+
+**Delta, 2026-10-06 — a swap removes the outgoing fleet, and the skill that said
+otherwise is corrected.** Trigger: `0006`'s first run of the B-039 test, which
+expected two changesets and saw three — an `Add`, a `Remove` of the same key,
+then the incoming `Add`. `SwappingTrackerSource.Connect()` composes
+`.Switch()` with `using DynamicData` in scope, so the overload that wins is
+DynamicData's changeset `Switch` rather than Rx's, and that one replaces the
+previous source's contents instead of leaving them in the consumer's cache. The
+behaviour is the wanted one — the alternative is aircraft lingering among ships,
+which `hot-swap-source` itself lists as a failure mode — so the code is
+unchanged and the record is what moves: `hot-swap-source` § "There is a gap" had
+said nothing is cleared on a swap, and it now says what actually clears. No
+claim changes. B-039 is about a consumer being unable to tell a swap happened,
+and a vehicle leaving is an ordinary change indistinguishable from that aircraft
+leaving the bounding box; the `@B-039` scenario's "nothing in the stream reveals
+that a swap occurred" is satisfied by a stream carrying no marker, no completion
+and no error, which is what the test asserts. § 7 states the operator and why,
+so the next reader does not have to re-run it
+([lesson 0016](../../../../../.spec/lessons/0016-an-untested-assumption-is-not-a-decision.md)
+is the rule this follows).
 
 Seven repository-wide lessons also bear on this document. [Lesson 0002](../../../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
 is why § 3 keeps no build state that § 9 owns, and why a § 9 row reads
@@ -1184,8 +1252,10 @@ has since landed**, taking seventeen more rows to `Verified` and the eighteenth
 — B-010 — out of the matrix altogether. What remains between this
 Feature and `done` was its own fourteen `Missing` rows. **`0005` has since
 landed too**, taking six more to `Verified` — the seam, the domain model and the
-projection, and B-049's review with them — so eight rows remain, which are the
-items `0006` and `0007` and nothing else.
+projection, and B-049's review with them. **`0007` and `0006` have since landed
+as well**: between them B-038 – B-040, B-042, B-043, B-051 and B-052 moved to
+`Verified`, and the one row left is B-041's view-model half, which is
+`fleet-dashboard` `0039`'s.
 
 **ADR-0008 has since replaced the contract's return shape.** Those two answers
 are the two re-scores below; nothing else about the design moved with either.
