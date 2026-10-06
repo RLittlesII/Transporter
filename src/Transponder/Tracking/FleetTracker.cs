@@ -1,9 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData;
+using LanguageExt;
 using Transponder.Model;
+using Transponder.Tracking.Fleet;
+using Unit = System.Reactive.Unit;
 
 namespace Transponder.Tracking;
 
@@ -20,13 +25,23 @@ internal sealed class FleetTracker : IFleetTracker
     /// <summary>Initializes a new instance of the <see cref="FleetTracker"/> class.</summary>
     /// <param name="source">The seam every strategy and the swap decorator adhere to (B-041).</param>
     /// <param name="clock">The observed instant staleness is measured against (B-043, ADR-0007).</param>
-    public FleetTracker(ITrackerSource source, IObservedClock clock)
+    /// <param name="description">What the live source offers a view, republished on a swap (fleet-pipeline B-020, B-021).</param>
+    public FleetTracker(ITrackerSource source, IObservedClock clock, IObservable<FleetSourceDescription> description)
     {
         _clock = clock;
         Fleet = source.Connect()
             .Filter(_predicate)
             .Transform(Mark, _staleAfter.Select(static _ => Unit.Default))
             .RefCount()
+            .TakeUntil(_shutdown);
+        Description = description
+            .Replay(1)
+            .RefCount()
+            .TakeUntil(_shutdown);
+        Order = _sortBy
+            .CombineLatest(Description, static (chosen, offered) => chosen.IfNone(() => FirstSortable(offered)))
+            .Select(static comparer => (IComparer<TrackedVehicle>) new FleetOrder(comparer))
+            .DistinctUntilChanged()
             .TakeUntil(_shutdown);
     }
 
@@ -40,7 +55,16 @@ internal sealed class FleetTracker : IFleetTracker
     public IObservable<IChangeSet<TrackedVehicle, string>> Fleet { get; }
 
     /// <inheritdoc/>
+    public IObservable<FleetSourceDescription> Description { get; }
+
+    /// <inheritdoc/>
+    public IObservable<IComparer<TrackedVehicle>> Order { get; }
+
+    /// <inheritdoc/>
     public void Filter(Func<TransportVehicle, bool> predicate) => _predicate.OnNext(predicate);
+
+    /// <inheritdoc/>
+    public void SortBy(IComparer<TransportVehicle> comparer) => _sortBy.OnNext(Option<IComparer<TransportVehicle>>.Some(comparer));
 
     /// <inheritdoc/>
     public void StaleAfter(TimeSpan threshold) => _staleAfter.OnNext(threshold);
@@ -60,7 +84,17 @@ internal sealed class FleetTracker : IFleetTracker
         _shutdown.Dispose();
         _staleAfter.Dispose();
         _predicate.Dispose();
+        _sortBy.Dispose();
     }
+
+    /// <summary>The order until a caller chooses one: the description's first sortable column (fleet-pipeline B-009).</summary>
+    /// <param name="offered">What the live source offers.</param>
+    /// <returns>That column's comparer, or the key's order when the source offers none.</returns>
+    private static IComparer<TransportVehicle> FirstSortable(FleetSourceDescription offered) =>
+        offered.Columns
+            .Select(static column => column.Comparer)
+            .Somes()
+            .FirstOrDefault(ByKey);
 
     /// <summary>Derives the stale mark, never storing it and never reading an ambient clock (B-043).</summary>
     /// <param name="vehicle">The vehicle the seam reported.</param>
@@ -68,8 +102,46 @@ internal sealed class FleetTracker : IFleetTracker
     private TrackedVehicle Mark(TransportVehicle vehicle) =>
         new() { Vehicle = vehicle, IsStale = vehicle.IsStale(_clock.Current, _staleAfter.Value) };
 
+    /// <summary>The chosen comparer, read off the published element, with the key as the tie-break (fleet-pipeline B-011).</summary>
+    /// <param name="comparer">The order the description offered, over the abstract vehicle (B-010).</param>
+    /// <remarks>
+    /// Total by construction: two vehicles a column cannot separate are separated by their keys, so
+    /// two sorts of an unchanged fleet produce the same sequence and no row swaps places on a poll
+    /// that changed nothing.
+    /// </remarks>
+    private sealed class FleetOrder(IComparer<TransportVehicle> comparer) : IComparer<TrackedVehicle>
+    {
+        /// <inheritdoc/>
+        public int Compare(TrackedVehicle? left, TrackedVehicle? right)
+        {
+            if (ReferenceEquals(left, right))
+            {
+                return 0;
+            }
+
+            if (left is null)
+            {
+                return -1;
+            }
+
+            if (right is null)
+            {
+                return 1;
+            }
+
+            var byColumn = comparer.Compare(left.Vehicle, right.Vehicle);
+
+            return byColumn != 0 ? byColumn : ByKey.Compare(left.Vehicle, right.Vehicle);
+        }
+    }
+
+    /// <summary>The order every comparer falls back to, and the tie-break every one of them gets (fleet-pipeline B-011).</summary>
+    private static readonly IComparer<TransportVehicle> ByKey =
+        Comparer<TransportVehicle>.Create(static (left, right) => string.CompareOrdinal(left.Key, right.Key));
+
     private readonly IObservedClock _clock;
     private readonly BehaviorSubject<Func<TransportVehicle, bool>> _predicate = new(DefaultPredicate);
+    private readonly BehaviorSubject<Option<IComparer<TransportVehicle>>> _sortBy = new(Option<IComparer<TransportVehicle>>.None);
     private readonly BehaviorSubject<TimeSpan> _staleAfter = new(DefaultStaleAfter);
     private readonly Subject<Unit> _shutdown = new();
     private bool _disposed;

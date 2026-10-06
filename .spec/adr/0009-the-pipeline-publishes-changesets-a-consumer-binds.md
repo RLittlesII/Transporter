@@ -66,9 +66,25 @@ different mechanism here: there is one `Bind`, and it is the consumer's.
 1. **The fleet and the groups are changeset streams.** The bound element of the
    fleet stream carries the vehicle **and** its derived stale mark, so a
    consumer binds one collection and reads the mark off the row it already has.
-2. **The operators stay in the pipeline.** Filter, sort, the stale mark, group
-   and the aggregates are assembled once, in the tracker's constructor, from
+2. **The operators stay in the pipeline.** Filter, the stale mark, group and
+   the aggregates are assembled once, in the tracker's constructor, from
    observable inputs. The pipeline stops one operator short of `Bind`.
+
+    **Sorting is the exception, decided 2026-10-06 while this record is still
+    `proposed`** (the person, on `0032`): the tracker owns the comparer and
+    publishes it, and the sort itself happens in the consumer's
+    `SortAndBind`. A sort stage inside the chain cannot be seen from outside it —
+    DynamicData's `Sort` produces an `ISortedChangeSet`, the `Transform` that
+    derives the stale mark returns a plain changeset, and the order is gone by the
+    time the stream is published. So the pipeline would have sorted and no
+    consumer could have honoured it. `SortAndBind` is also what DynamicData 9
+    recommends for a bound collection. `SortBy(comparer)` stays on the tracker,
+    one comparer is published for every consumer, and `fleet-pipeline` B-009 is
+    unchanged — it claims that a new comparer reorders in place, which is what the
+    consumer's bind now does. Rejected: publishing `ISortedChangeSet` from the
+    tracker, which widens `Fleet`'s type and makes every consumer's `Bind`
+    index-sensitive for a demo where one consumer sorts.
+
 3. **The chain is shared** by DynamicData's own `RefCount()` — the changeset
    operator, not Rx's `Publish().RefCount()` pair. Its documented behaviour is
    "cache-aware equivalent of `Publish().RefCount()`": an internal cache is
@@ -125,6 +141,12 @@ different mechanism here: there is one `Bind`, and it is the consumer's.
   view model boundary, and the bullet that assumed the pipeline owns the
   collection now says the view model creates it by binding and holds no second
   one.
+- The comparer is part of the published surface: `Order` is an
+  `IObservable<IComparer<TrackedVehicle>>`, adapted from the description's
+  comparer over `TransportVehicle` with `fleet-pipeline` B-011's key tie-break
+  appended, so a consumer cannot bind an unstable order by forgetting it.
+  `fleet-dashboard` § 7 owes the `SortAndBind` call that uses it; its B-005 and
+  B-012 are unchanged, since neither named the operator.
 - `fleet-pipeline` B-002 and B-005 are amended, and a new claim covers the
   shared chain. `fleet-dashboard` B-005 changes from "bind the collection the
   tracker exposes" to "bind the stream and own the collection".

@@ -122,7 +122,7 @@ public class AircraftSnapshotMapperTests
         var unnamed = sut.Project(unknown);
 
         // Then
-        Some(named.PositionSource, Model.PositionSource.Mlat);
+        Some(named.PositionSource, Transponder.Model.PositionSource.Mlat);
         None(unnamed.PositionSource);
     }
 
