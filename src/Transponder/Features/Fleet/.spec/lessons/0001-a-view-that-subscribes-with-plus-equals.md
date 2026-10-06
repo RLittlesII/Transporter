@@ -46,7 +46,7 @@ goes, and `mvvm` § "Projecting state back" spells the disposal as
 
 ## Skill
 
-[`maui-ui`](../../../../.skills/maui-ui/SKILL.md) § "The UI reads; it never
+[`maui-ui`](../../../../../../.skills/maui-ui/SKILL.md) § "The UI reads; it never
 drives" and its `Never add` list: no `+=` in a view, and a subscription ends
-with the handler. [`mvvm`](../../../../.skills/mvvm/SKILL.md) § "Projecting
+with the handler. [`mvvm`](../../../../../../.skills/mvvm/SKILL.md) § "Projecting
 state back": `.DisposeWith(…)` is how a subscription is kept.

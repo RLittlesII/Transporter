@@ -30,7 +30,7 @@ summary: |
   nothing: `test/UnitTests` held no `.cs` file.
 
   Item 0002 changed that. Seven tests now exist, five § 9 rows of
-  features/aircraft-source read `Verified` because they pass, and the build
+  src/Transponder/Integrations/OpenSky read `Verified` because they pass, and the build
   that is supposed to be the gate would report success with every one of them
   failing. That is the shape lesson 0002 is about — a gate reporting a pass
   that nothing verified — and it gets worse with every test the remaining

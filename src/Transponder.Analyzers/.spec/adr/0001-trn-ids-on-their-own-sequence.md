@@ -22,8 +22,8 @@ The numbering is not a detail, because of what a claim id is here.
 [`spec-and-traceability`](../../../../.skills/spec-and-traceability/SKILL.md)
 § "Claims and traceability" scopes claim ids to one specification: every
 specification numbers from `B-001`, so
-[`aircraft-source`](../../../aircraft-source/.spec/README.md) `B-004` and
-[`replay-source`](../../../replay-source/.spec/README.md) `B-004` are different
+[`aircraft-source`](../../../Transponder/Integrations/OpenSky/.spec/README.md) `B-004` and
+[`replay-source`](../../../../features/replay-source/.spec/README.md) `B-004` are different
 claims and neither is renumbered for the other. What identifies a claim is the
 pair — the specification and the id.
 

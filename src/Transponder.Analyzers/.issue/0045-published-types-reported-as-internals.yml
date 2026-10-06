@@ -16,7 +16,7 @@ depends_on: []
 blocks: []
 spikes: []
 
-spec: features/boundary-analyzer/.spec/README.md
+spec: src/Transponder.Analyzers/.spec/README.md
 
 claims: []
 
@@ -50,7 +50,7 @@ acceptance_criteria:
   - "A view model naming a strategy, a client, a cache or the decorator is
     still reported — the existing `TRN0006` test is unchanged and passes."
   - "The analyzer reads the seam once per compilation, not once per node."
-  - "`features/boundary-analyzer/.spec/README.md` § 7 says what `TRN0006` and
+  - "`src/Transponder.Analyzers/.spec/README.md` § 7 says what `TRN0006` and
     `TRN0004` exempt, and a lesson records why the rule drifted."
 
 decisions:

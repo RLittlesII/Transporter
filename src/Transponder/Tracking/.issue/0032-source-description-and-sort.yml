@@ -18,7 +18,7 @@ blocks:
   - "0033"
 spikes: []
 
-spec: features/fleet-pipeline/.spec/README.md
+spec: src/Transponder/Tracking/.spec/README.md
 
 claims:
   - B-009

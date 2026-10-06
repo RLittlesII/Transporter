@@ -19,7 +19,7 @@ blocks:
   - "0011"
 spikes: []
 
-spec: features/aircraft-source/.spec/README.md
+spec: src/Transponder/Integrations/OpenSky/.spec/README.md
 
 claims:
   - B-033

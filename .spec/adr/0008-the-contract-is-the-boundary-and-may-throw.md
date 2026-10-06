@@ -14,7 +14,7 @@ type: adr
 between a provider and the domain and settles what each layer above it is for.
 It is silent on one thing: what the contract does when the call does not come
 back with a payload. Nothing else answered it either, so
-[`features/aircraft-source`](../../features/aircraft-source/.spec/README.md)
+[`src/Transponder/Integrations/OpenSky`](../../src/Transponder/Integrations/OpenSky/.spec/README.md)
 § 7 answered it per-Feature, returning
 `Either<OpenSkyThrottled, OpenSkyStatesResponse>` so that a throttle response
 arrived as a value.
@@ -107,7 +107,7 @@ side of that call.
   recording transport, the vessel feed if it ever grows one, and any provider
   added after the talk.
 - **One per-Feature answer is withdrawn.**
-  [`features/aircraft-source`](../../features/aircraft-source/.spec/README.md)
+  [`src/Transponder/Integrations/OpenSky`](../../src/Transponder/Integrations/OpenSky/.spec/README.md)
   § 7 chose the `Either`; it now cites this record instead. The claim that put
   the question on the table, B-028, bans an exception without saying where, and
   that wording is § 11 question 2's to settle.

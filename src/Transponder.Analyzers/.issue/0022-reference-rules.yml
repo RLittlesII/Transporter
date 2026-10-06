@@ -16,7 +16,7 @@ depends_on:
 blocks: []
 spikes: []
 
-spec: features/boundary-analyzer/.spec/README.md
+spec: src/Transponder.Analyzers/.spec/README.md
 
 claims:
   - B-009
@@ -41,7 +41,7 @@ summary: |
 
   § 11 row 1 is answered — a rule identifies a layer by its containing
   namespace, read against the layout transponder-conventions
-  references/coding.md § "Project structure" fixes, recorded as features/boundary-analyzer/.spec/adr/0002. The
+  references/coding.md § "Project structure" fixes, recorded as src/Transponder.Analyzers/.spec/adr/0002. The
   classification lives in Layers.cs, which 0021 lands, so these six rules read
   it rather than each deciding what a layer is.
 
@@ -67,7 +67,7 @@ acceptance_criteria:
 decisions:
   - "2026-10-04 — the person — layers are identified by namespace, not by a
     marker attribute or a project per layer. Recorded as
-    features/boundary-analyzer/.spec/adr/0002; it unblocked this item."
+    src/Transponder.Analyzers/.spec/adr/0002; it unblocked this item."
 
 out_of_scope:
   - "Declaration rules — 0023. Call-site rules — 0024."

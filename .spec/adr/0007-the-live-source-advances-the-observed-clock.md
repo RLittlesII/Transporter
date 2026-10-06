@@ -10,7 +10,7 @@ type: adr
 
 ## Context
 
-Two claims in [`features/aircraft-source`](../../features/aircraft-source/.spec/README.md)
+Two claims in [`src/Transponder/Integrations/OpenSky`](../../src/Transponder/Integrations/OpenSky/.spec/README.md)
 § 3 point at each other and meet nowhere. B-003 makes the provider's reported
 time the observed instant for everything downstream and bans a consumer from
 reading an ambient clock to supply one. B-043 puts the clock in `IFleetTracker`
@@ -77,7 +77,7 @@ internal interface IObservedClockWriter
 3. **The component that receives the envelope is the one that reports it**, so
    the value never travels through the snapshot, the cache, or the seam. Which
    component that is, for the aircraft chain, is
-   [`features/aircraft-source`](../../features/aircraft-source/.spec/README.md)
+   [`src/Transponder/Integrations/OpenSky`](../../src/Transponder/Integrations/OpenSky/.spec/README.md)
    § 7's to name.
 4. **Before any source has reported, `Current` is `DateTimeOffset.MinValue`.**
    Nothing is stale against it, which is the right answer when nothing has been
@@ -99,7 +99,7 @@ internal interface IObservedClockWriter
 - **Replay needs no second mechanism.** A recorded envelope carries the instant
   it was recorded with, and the same call reports it, which is what makes
   substitution at the contract transparent all the way to staleness.
-- **`features/aircraft-source` `0007` is unblocked** — B-043's clock now has a
+- **`src/Transponder/Integrations/OpenSky` `0007` is unblocked** — B-043's clock now has a
   type to be injected with, and its § 11 question is answered by this record.
 - **A test of anything time-derived observes an instant first.** That is the
   injected-clock discipline

@@ -57,7 +57,7 @@ the difference between a scoped conversion and an unscoped one.
 
 ## Process delta
 
-[`mapping`](../../../../.skills/mapping/SKILL.md) § "Conversions are explicit,
+[`mapping`](../../../../../../.skills/mapping/SKILL.md) § "Conversions are explicit,
 never implicit" now says that a named conversion whose type pair is not unique
 on the source is scoped out of the default mappings, and that the generated
 output is read once per mapper rather than trusted because the build is green.

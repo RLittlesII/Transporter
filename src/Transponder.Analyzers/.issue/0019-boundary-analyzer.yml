@@ -21,7 +21,7 @@ depends_on: []
 blocks: []
 spikes: []
 
-spec: features/boundary-analyzer/.spec/README.md
+spec: src/Transponder.Analyzers/.spec/README.md
 
 claims:
   - B-001
@@ -61,9 +61,9 @@ summary: |
   groups — reference rules over method bodies, declaration rules, and call-site
   rules. Five children; it holds no work of its own.
 
-  Claim ids here resolve against features/boundary-analyzer/.spec/README.md.
+  Claim ids here resolve against src/Transponder.Analyzers/.spec/README.md.
   The eighteen claims the analyzer enforces belong to
-  features/aircraft-source/.spec/README.md and are NOT listed in any
+  src/Transponder/Integrations/OpenSky/.spec/README.md and are NOT listed in any
   `claims:` in this Feature — that specification's § 9 owns their coverage, and
   B-019 forbids the second store.
 
@@ -80,7 +80,7 @@ decisions:
     written before any of it. The 'by whom' half of aircraft-source § 11 row 3;
     the 'when' half stays open there and as § 11 row 4 here."
   - "2026-10-04 — the person — diagnostics carry the TRN prefix. The numbering
-    that followed is features/boundary-analyzer/.spec/adr/0001: TRN ids run on
+    that followed is src/Transponder.Analyzers/.spec/adr/0001: TRN ids run on
     their own sequence and encode no claim number, because a claim id is only
     unique inside one specification."
   - "2026-10-04 — spec-author — cut into five children on what a rule has to

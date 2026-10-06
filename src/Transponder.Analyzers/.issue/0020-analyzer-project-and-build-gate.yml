@@ -16,7 +16,7 @@ blocks:
   - "0021"
 spikes: []
 
-spec: features/boundary-analyzer/.spec/README.md
+spec: src/Transponder.Analyzers/.spec/README.md
 
 claims:
   - B-014

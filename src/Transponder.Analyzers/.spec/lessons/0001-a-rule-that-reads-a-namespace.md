@@ -42,7 +42,7 @@ was invisible until a Feature downstream of the tracker existed to trip it.
 
 ## Spec delta
 
-`features/boundary-analyzer/.spec/README.md` § 7's diagnostic table says what
+`src/Transponder.Analyzers/.spec/README.md` § 7's diagnostic table says what
 `TRN0004` and `TRN0006` exempt: the types `IFleetTracker` publishes, and the
 types those carry. No claim changed — the rule now reports what its claim
 always said, and the exemption is read from the seam rather than listed, so a

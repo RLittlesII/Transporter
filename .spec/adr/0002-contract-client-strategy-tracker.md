@@ -170,7 +170,7 @@ in the client, because positional arrays are not something Mapperly can map;
 Behavioral detail — index-by-index reading, callsign trimming, squawk as a
 string, absent versus unknown category, token refresh, retry-after handling —
 is **not** in this record. Those are claims, in § 3 of
-[`features/aircraft-source/.spec/README.md`](../../features/aircraft-source/.spec/README.md)
+[`src/Transponder/Integrations/OpenSky/.spec/README.md`](../../src/Transponder/Integrations/OpenSky/.spec/README.md)
 (B-001 – B-052).
 
 ## Consequences

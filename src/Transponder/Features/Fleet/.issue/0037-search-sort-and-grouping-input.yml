@@ -18,7 +18,7 @@ depends_on:
 blocks: []
 spikes: []
 
-spec: features/fleet-dashboard/.spec/README.md
+spec: src/Transponder/Features/Fleet/.spec/README.md
 
 claims:
   - B-009

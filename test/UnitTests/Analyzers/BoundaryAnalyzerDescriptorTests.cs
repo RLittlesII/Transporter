@@ -12,7 +12,6 @@ public class BoundaryAnalyzerDescriptorTests
     // type from its constructor parameters, and an analyzer has none — nothing to arrange, nothing
     // for a constructor change to ripple through. Declaring a fixture for it would add a file that
     // holds nothing.
-
     [Fact]
     public void GivenTheSupportedDiagnostics_WhenEachIsMappedToAClaim_ThenTheMappingIsOneToOne()
     {
@@ -158,6 +157,7 @@ public class BoundaryAnalyzerDescriptorTests
     {
         // Given
         var sut = new BoundaryAnalyzer();
+
         // The Enforces cell is what makes a row the mapping table's: § 7 also carries a table of
         // which diagnostics can have a code fix, and its rows open with a TRN id too.
         var rows = SpecificationTables.Rows(Specification, @"^\|\s*`TRN\d{4}`\s*\|\s*`?aircraft-source`? B-\d{3}");
@@ -233,8 +233,7 @@ public class BoundaryAnalyzerDescriptorTests
             .Where(cells => takeTest(cells[2]))
             .Select(static cells => cells[0]);
 
-
-    private const string SpecificationPath = "features/boundary-analyzer/.spec/README.md";
+    private const string SpecificationPath = "src/Transponder.Analyzers/.spec/README.md";
 
     private const string AircraftSpecificationPath = "src/Transponder/Integrations/OpenSky/.spec/README.md";
 
