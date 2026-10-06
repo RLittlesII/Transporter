@@ -24,6 +24,7 @@ internal sealed class FleetTracker : IFleetTracker
     {
         _clock = clock;
         Fleet = source.Connect()
+            .Filter(_predicate)
             .Transform(Mark, _staleAfter.Select(static _ => Unit.Default))
             .RefCount()
             .TakeUntil(_shutdown);
@@ -32,19 +33,33 @@ internal sealed class FleetTracker : IFleetTracker
     /// <summary>How long a vehicle may be silent before it is marked, until a caller says otherwise (B-051).</summary>
     internal static readonly TimeSpan DefaultStaleAfter = TimeSpan.FromMinutes(5);
 
+    /// <summary>What is visible until a caller narrows it: everything (fleet-pipeline B-007).</summary>
+    internal static readonly Func<TransportVehicle, bool> DefaultPredicate = static _ => true;
+
     /// <inheritdoc/>
     public IObservable<IChangeSet<TrackedVehicle, string>> Fleet { get; }
+
+    /// <inheritdoc/>
+    public void Filter(Func<TransportVehicle, bool> predicate) => _predicate.OnNext(predicate);
 
     /// <inheritdoc/>
     public void StaleAfter(TimeSpan threshold) => _staleAfter.OnNext(threshold);
 
     /// <inheritdoc/>
+    /// <remarks>Idempotent: a container disposing a singleton twice is not an error (fleet-pipeline B-004).</remarks>
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
         _shutdown.OnNext(Unit.Default);
         _shutdown.OnCompleted();
         _shutdown.Dispose();
         _staleAfter.Dispose();
+        _predicate.Dispose();
     }
 
     /// <summary>Derives the stale mark, never storing it and never reading an ambient clock (B-043).</summary>
@@ -54,6 +69,8 @@ internal sealed class FleetTracker : IFleetTracker
         new() { Vehicle = vehicle, IsStale = vehicle.IsStale(_clock.Current, _staleAfter.Value) };
 
     private readonly IObservedClock _clock;
+    private readonly BehaviorSubject<Func<TransportVehicle, bool>> _predicate = new(DefaultPredicate);
     private readonly BehaviorSubject<TimeSpan> _staleAfter = new(DefaultStaleAfter);
     private readonly Subject<Unit> _shutdown = new();
+    private bool _disposed;
 }
