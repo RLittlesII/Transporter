@@ -251,22 +251,26 @@ The page and the view models are classes rather than interfaces — nothing
 substitutes a view, and a view model is substituted in a test by construction
 rather than through a seam.
 
-| Type              | File                                                                                                                              | Claims it makes visible |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `MauiProgram`     | [`src/Gui/MauiProgram.cs`](../../../src/Gui/MauiProgram.cs)                                                                       | B-002, B-004            |
-| `MainPage` (XAML) | [`src/Gui/MainPage.xaml`](../../../src/Gui/MainPage.xaml)                                                                         | B-002 — removed by it   |
-| `DemoViewModel`   | [`src/Transponder/Features/Demo/ViewModels/DemoViewModel.cs`](../../../src/Transponder/Features/Demo/ViewModels/DemoViewModel.cs) | B-002 — removed by it   |
+| Type                | File                                                                                                                                  | Claims it makes visible |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `MauiProgram`       | [`src/Gui/MauiProgram.cs`](../../../src/Gui/MauiProgram.cs)                                                                           | B-002, B-004            |
+| `FleetPage`         | [`src/Gui/Views/FleetPage.cs`](../../../src/Gui/Views/FleetPage.cs)                                                                   | B-001 – B-003, B-007    |
+| `FleetViewModel`    | [`src/Transponder/Features/Fleet/ViewModels/FleetViewModel.cs`](../../../src/Transponder/Features/Fleet/ViewModels/FleetViewModel.cs) | B-005, B-007            |
+| `FleetFilterChoice` | [`src/Transponder/Features/Fleet/FleetFilterChoice.cs`](../../../src/Transponder/Features/Fleet/FleetFilterChoice.cs)                 | B-009                   |
+
+`MainPage.xaml`, its code-behind and all of `src/Transponder/Features/Demo/` were
+deleted by `0036` on 2026-10-06, `ClickActor` included, so no row names them: the
+removal is B-002's and the files are gone.
 
 Where the new code goes, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Gui/Views/                        FleetPage, the grid, filter, summary and detail markup
-src/Transponder/Features/Fleet/       FleetViewModel, FleetDetailViewModel, FleetSummaryViewModel, FleetFilterChoice
+src/Transponder/Features/Fleet/ViewModels/   FleetDetailViewModel, FleetSummaryViewModel, FleetBannerViewModel
 ```
 
-`src/Transponder/Features/Demo/` leaves entirely under B-002: the actor stays
-only if something still sends to it, and nothing will.
+The folders the table above names already exist; what is left to build is the
+three view models `0038`, `0039` and `0041` own, beside the one `0036` wrote.
 
 **How the tracker reaches a view model**
 
@@ -411,44 +415,43 @@ diagnostics are what execute.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and all twenty-seven rows read `Missing`.** Nothing here is
-built, and nothing can be until `fleet-pipeline` exposes a tracker to bind.
-Two rows name a review rather than a test, because what is on a screen is
-not something this repository executes or analyzes (§ 8); they are `Missing`
-until someone performs them and records what they looked at. Three more —
-B-003, B-004 and B-006 — name [`0044`](../.issue/0044-page-level-claim-proof.yml)
-rather than a mechanism: `0036` builds what each of them constrains, and what
-proves a page in a repository with no UI test runner is that item's to decide.
+**This is the gate, and twenty-three of twenty-seven rows read `Missing`.**
+`0036` landed the page, the view model and the two tests on 2026-10-06, and
+performed the two reviews it owed. The rest waits on the items that build its
+subject. Three rows — B-003, B-004 and B-006 — name
+[`0044`](../.issue/0044-page-level-claim-proof.yml) rather than a mechanism:
+`0036` builds what each of them constrains, and what proves a page in a
+repository with no UI test runner is that item's to decide.
 
-| Claim ID | Scenario | Test                                                                                                                                                                       | Status  |
-| -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| B-001    | `@B-001` | review — the page carries all five surfaces; re-done by any change to `FleetPage`'s layout                                                                                 | Missing |
-| B-002    | `@B-002` | review — no `.xaml` remains under `src/Gui` but the template's shell, and `MauiProgram` registers neither removed type; re-done by any new page                            | Missing |
-| B-003    | `@B-003` | [`0044`](../.issue/0044-page-level-claim-proof.yml) — the page is in `src/Gui`, which no test project here can reference                                                   | Missing |
-| B-004    | `@B-004` | [`0044`](../.issue/0044-page-level-claim-proof.yml) — the builder block is in `src/Gui`, for the same reason                                                               | Missing |
-| B-005    | `@B-005` | `FleetViewModelTests.GivenATrackerPublishingAFleet_WhenTheViewModelIsConstructed_ThenItBindsTheStreamIntoItsOneCollection`                                                 | Missing |
-| B-006    | `@B-006` | [`0044`](../.issue/0044-page-level-claim-proof.yml) — the review needs a running feed, and nothing registers an `ITrackerSource` yet                                       | Missing |
-| B-007    | `@B-007` | `FleetViewModelTests.GivenADescription_WhenTheColumnsAreRead_ThenTheyAreTheDescriptionsInItsOrder`                                                                         | Missing |
-| B-008    | `@B-008` | `FleetViewModelTests.GivenAStaleVehicle_WhenItsRowIsProjected_ThenItIsMarkedAndStillInTheFleet`                                                                            | Missing |
-| B-009    | `@B-009` | `FleetViewModelTests.GivenSearchTextAndAFilter_WhenTheyChange_ThenOnePredicateReachesTheTrackerAndNoCollectionIsEnumerated`                                                | Missing |
-| B-010    | `@B-010` | `FleetSearchTests.GivenSearchText_WhenItIsMatched_ThenMatchingIsCaseInsensitiveTrimmedAndEmptyMatchesEverything`                                                           | Missing |
-| B-011    | `@B-011` | `FleetSearchTests.GivenASearchAndAFilter_WhenEitherIsCleared_ThenTheOtherStillApplies`                                                                                     | Missing |
-| B-012    | `@B-012` | `FleetViewModelTests.GivenAColumnChosenTwiceAndAGroupingChosen_WhenTheTrackerIsRecorded_ThenItReceivedTheComparerItsReverseAndTheGrouping`                                 | Missing |
-| B-013    | `@B-013` | `FleetDetailViewModelTests.GivenASelectedAircraft_WhenItsRowsAreRead_ThenTheyIncludeFieldsOnlyAnAircraftReports`                                                           | Missing |
-| B-014    | `@B-014` | `FleetDetailViewModelTests.GivenASelectionThatLeavesTheFleet_WhenTheSelectionIsRead_ThenItIsAbsentAndThePaneIsEmpty`                                                       | Missing |
-| B-015    | `@B-015` | `FleetSummaryViewModelTests.GivenTheTrackersSummary_WhenItChanges_ThenTheProjectedCountsFollowItAndNothingIsRecomputed`                                                    | Missing |
-| B-016    | `@B-016` | `FleetViewModelTests.GivenTheSwapCommand_WhenItIsInvoked_ThenTheActorIsToldAndTheBusyIndicatorCoversIt`                                                                    | Missing |
-| B-017    | `@B-017` | analyzer — a view or view model holding an `HttpClient`, timer, socket, cache write, blocking call or untimed `Ask` is reported                                            | Missing |
-| B-018    | `@B-018` | analyzer — filtering, sorting, grouping, expiry or staleness arithmetic in a view or view model is reported at the expression                                              | Missing |
-| B-019    | `@B-019` | `FleetDetailViewModelTests.GivenAnAltitudeInMetres_WhenItIsProjected_ThenTheConversionIsANamedMemberAndTheCanonicalValueIsUnchanged`                                       | Missing |
-| B-020    | `@B-020` | analyzer — `BoundaryAnalyzer`'s existing view-model rule, extended to the dashboard's types                                                                                | Missing |
-| B-021    | `@B-021` | `FleetViewModelTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsGroupingsAndFiltersChangeWithNoMarkupEdit`                                                        | Missing |
-| B-022    | `@B-022` | analyzer — a cast, `is` or `switch` on a vehicle subclass outside the detail pane is reported at the expression                                                            | Missing |
-| B-023    | `@B-023` | `FleetBannerViewModelTests.GivenANotice_WhenTheBannerIsProjected_ThenItShowsTheInstantAndTheCountsAndComputesNone`                                                         | Missing |
-| B-024    | `@B-024` | `FleetBannerViewModelTests.GivenNoNoticeArrives_WhenTheBannerIsRead_ThenItIsUnchanged`, plus a review that it overlays no row                                              | Missing |
-| B-025    | `@B-025` | `FleetBannerViewModelTests.GivenAnUpdatedAQuietAndAResumedNotice_WhenTheInterruptingOnesAreObserved_ThenOnlyTheQuietAndResumedAppear`, plus a review of the rendered toast | Missing |
-| B-026    | `@B-026` | `FleetBannerViewModelTests.GivenTwoIntervalsEditedWhileRunning_WhenNoticesArrive_ThenEachSurfaceIsPacedByItsOwn`                                                           | Missing |
-| B-027    | `@B-027` | analyzer — a toast, snackbar or alert type named in a view model is reported at the reference                                                                              | Missing |
+| Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                            | Status   |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| B-001    | `@B-001` | review, performed 2026-10-06 on `0036` — `FleetPage.cs` builds a four-row grid: the controls bar (`Entry`, two `Picker`s), the summary, the `CollectionView` bound to `Fleet`, and the detail pane. Re-done by any change to `FleetPage`'s layout                                                                               | Verified |
+| B-002    | `@B-002` | review, performed 2026-10-06 on `0036` — the `.xaml` left under `src/Gui` is the template's own `App`, `AppShell` and two resource dictionaries; `MainPage.xaml`, its code-behind and all of `Features/Demo/` are deleted, and `MauiProgram`'s only registrations are `FleetPage` and `FleetViewModel`. Re-done by any new page | Verified |
+| B-003    | `@B-003` | [`0044`](../.issue/0044-page-level-claim-proof.yml) — the page is in `src/Gui`, which no test project here can reference                                                                                                                                                                                                        | Missing  |
+| B-004    | `@B-004` | [`0044`](../.issue/0044-page-level-claim-proof.yml) — the builder block is in `src/Gui`, for the same reason                                                                                                                                                                                                                    | Missing  |
+| B-005    | `@B-005` | `FleetViewModelTests.GivenATrackerPublishingAFleet_WhenTheViewModelIsConstructed_ThenItBindsTheStreamIntoItsOneCollection`, and `GivenABoundViewModel_WhenItIsDisposed_ThenItsSubscriptionGoesAndTheTrackerIsNotDisposed` for the disposal clause                                                                               | Verified |
+| B-006    | `@B-006` | [`0044`](../.issue/0044-page-level-claim-proof.yml) — the review needs a running feed, and nothing registers an `ITrackerSource` yet                                                                                                                                                                                            | Missing  |
+| B-007    | `@B-007` | `FleetViewModelTests.GivenADescription_WhenTheColumnsAreRead_ThenTheyAreTheDescriptionsInItsOrder`                                                                                                                                                                                                                              | Verified |
+| B-008    | `@B-008` | `FleetViewModelTests.GivenAStaleVehicle_WhenItsRowIsProjected_ThenItIsMarkedAndStillInTheFleet`                                                                                                                                                                                                                                 | Missing  |
+| B-009    | `@B-009` | `FleetViewModelTests.GivenSearchTextAndAFilter_WhenTheyChange_ThenOnePredicateReachesTheTrackerAndNoCollectionIsEnumerated`                                                                                                                                                                                                     | Missing  |
+| B-010    | `@B-010` | `FleetSearchTests.GivenSearchText_WhenItIsMatched_ThenMatchingIsCaseInsensitiveTrimmedAndEmptyMatchesEverything`                                                                                                                                                                                                                | Missing  |
+| B-011    | `@B-011` | `FleetSearchTests.GivenASearchAndAFilter_WhenEitherIsCleared_ThenTheOtherStillApplies`                                                                                                                                                                                                                                          | Missing  |
+| B-012    | `@B-012` | `FleetViewModelTests.GivenAColumnChosenTwiceAndAGroupingChosen_WhenTheTrackerIsRecorded_ThenItReceivedTheComparerItsReverseAndTheGrouping`                                                                                                                                                                                      | Missing  |
+| B-013    | `@B-013` | `FleetDetailViewModelTests.GivenASelectedAircraft_WhenItsRowsAreRead_ThenTheyIncludeFieldsOnlyAnAircraftReports`                                                                                                                                                                                                                | Missing  |
+| B-014    | `@B-014` | `FleetDetailViewModelTests.GivenASelectionThatLeavesTheFleet_WhenTheSelectionIsRead_ThenItIsAbsentAndThePaneIsEmpty`                                                                                                                                                                                                            | Missing  |
+| B-015    | `@B-015` | `FleetSummaryViewModelTests.GivenTheTrackersSummary_WhenItChanges_ThenTheProjectedCountsFollowItAndNothingIsRecomputed`                                                                                                                                                                                                         | Missing  |
+| B-016    | `@B-016` | `FleetViewModelTests.GivenTheSwapCommand_WhenItIsInvoked_ThenTheActorIsToldAndTheBusyIndicatorCoversIt`                                                                                                                                                                                                                         | Missing  |
+| B-017    | `@B-017` | analyzer — a view or view model holding an `HttpClient`, timer, socket, cache write, blocking call or untimed `Ask` is reported                                                                                                                                                                                                 | Missing  |
+| B-018    | `@B-018` | analyzer — filtering, sorting, grouping, expiry or staleness arithmetic in a view or view model is reported at the expression                                                                                                                                                                                                   | Missing  |
+| B-019    | `@B-019` | `FleetDetailViewModelTests.GivenAnAltitudeInMetres_WhenItIsProjected_ThenTheConversionIsANamedMemberAndTheCanonicalValueIsUnchanged`                                                                                                                                                                                            | Missing  |
+| B-020    | `@B-020` | analyzer — `BoundaryAnalyzer`'s existing view-model rule, extended to the dashboard's types                                                                                                                                                                                                                                     | Missing  |
+| B-021    | `@B-021` | `FleetViewModelTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsGroupingsAndFiltersChangeWithNoMarkupEdit`                                                                                                                                                                                                             | Missing  |
+| B-022    | `@B-022` | analyzer — a cast, `is` or `switch` on a vehicle subclass outside the detail pane is reported at the expression                                                                                                                                                                                                                 | Missing  |
+| B-023    | `@B-023` | `FleetBannerViewModelTests.GivenANotice_WhenTheBannerIsProjected_ThenItShowsTheInstantAndTheCountsAndComputesNone`                                                                                                                                                                                                              | Missing  |
+| B-024    | `@B-024` | `FleetBannerViewModelTests.GivenNoNoticeArrives_WhenTheBannerIsRead_ThenItIsUnchanged`, plus a review that it overlays no row                                                                                                                                                                                                   | Missing  |
+| B-025    | `@B-025` | `FleetBannerViewModelTests.GivenAnUpdatedAQuietAndAResumedNotice_WhenTheInterruptingOnesAreObserved_ThenOnlyTheQuietAndResumedAppear`, plus a review of the rendered toast                                                                                                                                                      | Missing  |
+| B-026    | `@B-026` | `FleetBannerViewModelTests.GivenTwoIntervalsEditedWhileRunning_WhenNoticesArrive_ThenEachSurfaceIsPacedByItsOwn`                                                                                                                                                                                                                | Missing  |
+| B-027    | `@B-027` | analyzer — a toast, snackbar or alert type named in a view model is reported at the reference                                                                                                                                                                                                                                   | Missing  |
 
 ## 10. Lessons / Spec Deltas
 
@@ -566,4 +569,5 @@ decorator its control drives.
 | 2026-10-05 | `0039` | value | The closing act is performed with this control, in front of people (§ 2 need 5).                                                                                                                                                                                                                                                                    |
 | 2026-10-06 | `0044` | value | Three § 9 rows stay `Missing` without it, and a `Missing` row blocks ship. It proves rather than builds, so the demo gains no surface from it.                                                                                                                                                                                                      |
 | 2026-10-06 | `0044` | risk  | The mechanism is undecided and each option costs differently: a review is cheap and re-done by hand, an analyzer rule reaches a project `BoundaryAnalyzer` does not yet see, and a MAUI-head test project is one CI never runs. B-006 also waits on a feed nobody has wired.                                                                        |
+| 2026-10-06 | `0039` | risk  | Unchanged at 4, and for one reason fewer: `0036` deleted `DemoViewModel`, so the `Ask`-and-`.Result` pattern is no longer in the repository to be copied. The indicator that clears on the message rather than on the fleet is the whole of the risk now.                                                                                           |
 | 2026-10-05 | `0039` | risk  | Highest of the four. `DemoViewModel` is the existing example of exactly what B-017 forbids — an `Ask` continued with `.Result` — so the pattern is in the repository to be copied. And an indicator that clears on the message being sent rather than on the new fleet arriving shows an empty grid at the moment the audience is watching hardest. |

@@ -2,7 +2,7 @@ id: "0045"
 type: bug
 title: Stop reporting what the tracker publishes as a source internal
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -22,7 +22,7 @@ claims: []
 
 created: "2026-10-06"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   `TRN0006` and `TRN0004` fire on every type the tracker publishes, so no view

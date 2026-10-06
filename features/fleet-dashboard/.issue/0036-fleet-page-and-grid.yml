@@ -2,7 +2,7 @@ id: "0036"
 type: task
 title: Build the fleet page in C# markup and bind the tracker's collection
 
-status: in-progress
+status: done
 
 priority: high
 value: 5
@@ -35,7 +35,7 @@ claims:
 
 created: "2026-10-05"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   One page in C# markup carrying the five surfaces, binding the collection its

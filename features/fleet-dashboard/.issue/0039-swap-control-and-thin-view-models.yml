@@ -47,10 +47,10 @@ summary: |
   Runs after `0036`, and after `aircraft-source` `0006`, which is the decorator
   this control drives.
 
-  `DemoViewModel` is the existing example of exactly what B-017 forbids — an
-  `Ask` continued with `.Result` — so the pattern is in the repository to be
-  copied. `0036` removes it under B-002; this item is what makes its absence a
-  rule rather than a tidy-up.
+  `DemoViewModel` was the existing example of exactly what B-017 forbids — an
+  `Ask` continued with `.Result`. `0036` deleted it under B-002 on 2026-10-06, so
+  the pattern is no longer in the repository to be copied; this item is what
+  makes its absence a rule rather than a tidy-up.
 
 acceptance_criteria:
   - "B-016 — the actor is told, not asked, and the indicator clears when the
