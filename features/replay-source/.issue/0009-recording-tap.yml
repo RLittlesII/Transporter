@@ -2,7 +2,7 @@ id: "0009"
 type: task
 title: Record a live source's payloads verbatim without costing a request
 
-status: ready
+status: in-progress
 
 priority: high
 risk: 3
@@ -40,7 +40,13 @@ summary: |
   Raw rather than parsed is the whole point: a recording stays replayable after a
   converter fix (B-014, in 0010), which parsing at record time would foreclose.
 
-  Taps the aircraft snapshot client, so it runs after 0004.
+  **The tap sits below deserialization, not at the snapshot client.** This
+  summary said "taps the aircraft snapshot client" until § 7 was written: the
+  client is handed an `OpenSkyStatesResponse` that has already been through a
+  reader, and recording that is recording this repository's reading of the
+  payload rather than the payload. So the tap is in the OpenSky HTTP transport,
+  where the response body is still a string. Runs after 0004, which built that
+  transport and the client above it.
 
 acceptance_criteria:
   - "B-001, B-002 — the recorded line's format, and verbatim meaning verbatim."
