@@ -1,0 +1,68 @@
+id: "0048"
+type: chore
+title: Move each specification beside the code that implements it
+
+status: in-progress
+
+priority: medium
+value: 3
+risk: 2
+rank: 54
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  `aircraft-source` already moved out of `features/` and into the code it
+  specifies — `src/Transponder/Integrations/OpenSky/.spec/` with its
+  `.issue/` beside it ([1563e5b](https://github.com/RLittlesII/Transponder/commit/1563e5b)) —
+  but the move was made for one Feature and never became the rule. Three
+  specifications are still at the repository root in `features/`, and
+  `transponder-conventions` still teaches `features/<slug>/` as the home, so
+  the next specification lands in the place the last one was moved out of.
+
+  That commit also left its own references behind: `README.md`, eight root
+  `.spec/adr/` and `.spec/lessons/` records, the `item.yml` schema comment and
+  the four templates all still link `features/aircraft-source/...`, which
+  resolves to nothing.
+
+  Move the three specifications that have code to the code, repoint every
+  reference, and put the rule in the skill so the placement is a convention
+  rather than a one-off:
+
+  | specification     | home                                 |
+  | ----------------- | ------------------------------------ |
+  | boundary-analyzer | `src/Transponder.Analyzers/`         |
+  | fleet-pipeline    | `src/Transponder/Tracking/`          |
+  | fleet-dashboard   | `src/Transponder/Features/Fleet/`    |
+  | replay-source     | stays in `features/` — no code yet   |
+
+acceptance_criteria:
+  - "`boundary-analyzer`, `fleet-pipeline` and `fleet-dashboard` each carry their `.spec/` and `.issue/` beside the code they specify; `features/` holds `replay-source` alone."
+  - "No item is renumbered and no `depends_on`, `parent`, `claims` or id changes; every `spec:` field names the specification's new path."
+  - "No link resolves to nothing — including the `features/aircraft-source/...` links the earlier move left behind — and every relative link inside a moved file is re-depthed to its new level."
+  - "The analyzer tests' `SpecificationPath` constants name the new path, and the test suite passes."
+  - "The CI path filter excludes the relocated `.issue/` directories, regenerated from the `GitHubActions` attribute rather than hand-edited."
+  - "`transponder-conventions` teaches the new placement as the rule, and no skill or template still teaches `features/<slug>/` as the only home."
+
+decisions:
+  - "2026-10-06 — rlittlesii: `fleet-dashboard` goes to `src/Transponder/Features/Fleet/`, beside the view models. Rejected `src/Gui/` and `src/Gui/Views/`: the page there is the thin head, and the specification's subject is the view model layer."
+  - "2026-10-06 — rlittlesii: `replay-source` stays in `features/`. It has no implementation to sit beside, and inventing `Integrations/Replay/` to hold a specification would name a home before the code chooses one. It moves when it is built."
+  - "2026-10-06 — rlittlesii: the dangling `features/aircraft-source/...` links from 1563e5b are repaired here rather than left for a separate item. They are the same defect this work exists to stop repeating."
+
+out_of_scope:
+  - "Moving `replay-source`, per the decision above."
+  - "Any change to the content of a specification, a claim, or an item's delivery state. This moves files and repoints references."
+  - "Extracting the analyzer tests' spec path into a shared discovery helper. That is item 0042, which this work leaves for it — the constants are repointed, not redesigned."
