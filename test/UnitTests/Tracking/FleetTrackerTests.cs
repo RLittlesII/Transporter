@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -7,6 +8,8 @@ using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Model;
 using Transponder.Tracking;
+using Transponder.Tracking.Fleet;
+using Transponder.Tracking.Sources;
 
 namespace Transponder.UnitTests.Tracking;
 
@@ -29,7 +32,9 @@ public class FleetTrackerTests
     {
         // Given
         var live = new BehaviorSubject<SourceCache<TransportVehicle, string>>(Cache());
-        var source = Swapping(live);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(live.Select(static cache => cache.Connect()).Switch());
+        source.ClearReceivedCalls();
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         var fleet = sut.Fleet;
         var observed = new List<IChangeSet<TrackedVehicle, string>>();
@@ -61,7 +66,9 @@ public class FleetTrackerTests
         // Given
         var cache = Cache();
         var clock = new ObservedClock();
-        FleetTracker sut = new FleetTrackerFixture().WithSource(Over(cache)).WithClock(clock);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock);
         var observed = new List<IChangeSet<TrackedVehicle, string>>();
         using var subscription = sut.Fleet.Subscribe(observed.Add);
         cache.AddOrUpdate(Silent("a1b2c3"));
@@ -88,7 +95,9 @@ public class FleetTrackerTests
         var cache = Cache();
         var clock = new ObservedClock();
         ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromMinutes(6));
-        FleetTracker sut = new FleetTrackerFixture().WithSource(Over(cache)).WithClock(clock);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock);
         var observed = new List<IChangeSet<TrackedVehicle, string>>();
         using var subscription = sut.Fleet.Subscribe(observed.Add);
 
@@ -118,7 +127,9 @@ public class FleetTrackerTests
         var cache = Cache();
         var clock = new ObservedClock();
         ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromMinutes(6));
-        FleetTracker sut = new FleetTrackerFixture().WithSource(Over(cache)).WithClock(clock);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock);
         using var first = sut.Fleet.Bind(out var rows).Subscribe();
         using var second = sut.Fleet.Bind(out var others).Subscribe();
 
@@ -228,7 +239,9 @@ public class FleetTrackerTests
     {
         // Given
         var cache = Cache();
-        FleetTracker sut = new FleetTrackerFixture().WithSource(Over(cache));
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         var reader = 0;
         using var subscription = sut.Fleet.Subscribe(_ => reader = Environment.CurrentManagedThreadId);
 
@@ -240,33 +253,42 @@ public class FleetTrackerTests
         reader.Should().Be(Environment.CurrentManagedThreadId, "nothing marshals on a consumer's behalf; that boundary is the consumer's");
     }
 
+    /// <summary>
+    /// fleet-pipeline B-021. A swap replaces the description and nothing else: the columns and the
+    /// groupings change, the order follows the new description's first sortable column, and the seam
+    /// is still connected once — no stage, comparer, predicate or key was rebuilt for it. This is the
+    /// closing act's claim, and the way it fails quietly is a column compiled into a view, which no
+    /// second description can reach.
+    /// </summary>
+    [Fact]
+    public void GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt()
+    {
+        // Given
+        var cache = Cache();
+        var source = new CountingTrackerSource(cache);
+        var described = new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered);
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithObservable(described);
+        var offered = new List<FleetSourceDescription>();
+        var orders = new List<IComparer<TrackedVehicle>>();
+        using var descriptions = sut.Description.Subscribe(offered.Add);
+        using var ordering = sut.Order.Subscribe(orders.Add);
+        using var fleet = sut.Fleet.Subscribe();
+        cache.AddOrUpdate(Silent("a1b2c3"));
+
+        // When
+        described.OnNext(Vessels);
+
+        // Then
+        offered.Should().HaveCount(2);
+        offered[1].Columns.Select(static column => column.Name).Should().Equal(["Vessel"]);
+        offered[1].Groupings.Select(static grouping => grouping.Name).Should().Equal(["Flag"]);
+        orders.Should().HaveCount(2, "the order follows the description, because no caller had chosen a comparer");
+        source.Connections.Should().Be(1, "a swap of the description rebuilds no stage and reconnects nothing");
+    }
+
     /// <summary>A cache of domain vehicles, keyed the way the seam keys its changesets.</summary>
     /// <returns>A store a test edits to make the seam report.</returns>
     private static SourceCache<TransportVehicle, string> Cache() => new(static vehicle => vehicle.Key);
-
-    /// <summary>A seam over one store.</summary>
-    /// <param name="cache">The store the seam reports from.</param>
-    /// <returns>The substituted seam.</returns>
-    private static ITrackerSource Over(SourceCache<TransportVehicle, string> cache)
-    {
-        var source = Substitute.For<ITrackerSource>();
-        source.Connect().Returns(cache.Connect());
-        source.ClearReceivedCalls();
-
-        return source;
-    }
-
-    /// <summary>A seam whose live store changes, which is what a swap looks like from above it.</summary>
-    /// <param name="live">The store that is live, and every store that replaces it.</param>
-    /// <returns>The substituted seam.</returns>
-    private static ITrackerSource Swapping(IObservable<SourceCache<TransportVehicle, string>> live)
-    {
-        var source = Substitute.For<ITrackerSource>();
-        source.Connect().Returns(live.Select(static cache => cache.Connect()).Switch());
-        source.ClearReceivedCalls();
-
-        return source;
-    }
 
     /// <summary>An aircraft that has reported nothing since <see cref="LastContact"/>.</summary>
     /// <param name="key">The <c>icao24</c> in lowercase hex.</param>
@@ -284,6 +306,21 @@ public class FleetTrackerTests
             .Select(static change => change.Current.IsStale)
             .Last();
 
+    /// <summary>A second source's description, which is all a swap changes (B-021).</summary>
+    private static readonly FleetSourceDescription Vessels = new()
+    {
+        Columns =
+        [
+            new FleetColumn
+            {
+                Name = "Vessel",
+                Value = static vehicle => vehicle.Label,
+                Comparer = Comparer<TransportVehicle>.Create(static (left, right) => string.CompareOrdinal(left.Label, right.Label)),
+            },
+        ],
+        Groupings = [new FleetGrouping { Name = "Flag", Key = static vehicle => vehicle.GroupKey }],
+    };
+
     /// <summary>The instant every vehicle here was last heard from, and the only one the clock is told about.</summary>
     private static readonly DateTimeOffset LastContact = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
 }
@@ -296,6 +333,7 @@ internal partial class FleetTrackerFixture
     {
         WithSource(Substitute.For<ITrackerSource>());
         WithClock(new ObservedClock());
+        WithObservable(new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
     }
 }
 

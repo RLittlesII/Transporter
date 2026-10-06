@@ -51,11 +51,11 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
 
   @B-009
   Scenario: A new comparer reorders the rows in place
-    Given a bound fleet of three aircraft sorted by callsign
-     When the tracker is asked to sort by barometric altitude
-     Then the rows are in altitude order
-      And the collection was not cleared and not refilled
+    Given a bound fleet of aircraft sorted by callsign
+     When the tracker is asked to sort by origin country
+     Then the rows are in country order
       And each row is the same instance it was before
+      And nothing was re-fetched, no stage was rebuilt and the seam is connected once
 
   @B-011
   Scenario Outline: Ties break on the key, so two sorts agree

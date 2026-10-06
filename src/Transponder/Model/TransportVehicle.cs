@@ -37,6 +37,13 @@ public abstract class TransportVehicle
     /// <summary>Gets what the identity column shows for this item.</summary>
     public abstract string Label { get; }
 
+    /// <summary>Gets what a view groups this item by (fleet-pipeline B-013).</summary>
+    /// <remarks>
+    /// Abstract so a new source cannot inherit an answer (ADR-0005 item 2), and a string because a
+    /// grouping key is a label; which key is being asked for is the description's (B-020).
+    /// </remarks>
+    public abstract string GroupKey { get; }
+
     /// <summary>Answers whether this item has been silent longer than the threshold allows.</summary>
     /// <param name="asOf">The instant to measure against.</param>
     /// <param name="threshold">How long silence is tolerated.</param>

@@ -1,4 +1,6 @@
+using System;
 using System.Reactive.Concurrency;
+using System.Reactive.Subjects;
 using DynamicData;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +13,7 @@ using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Http.Api;
 using Transponder.Scheduling;
 using Transponder.Tracking;
+using Transponder.Tracking.Fleet;
 using Transponder.Tracking.Sources;
 
 namespace Transponder.Integrations.OpenSky.Container;
@@ -81,6 +84,14 @@ public static class OpenSkyRegistration
         // The strategy is also registered as the seam itself, which is the inner registration 0006's
         // decorator wraps and what the tracker resolves until it exists (ADR-0003, B-038).
         services.AddSingleton<ITrackerSource>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
+
+        // What the live source offers a view, as a value the swap replaces rather than a stage anyone
+        // rebuilds (fleet-pipeline B-020, B-021). A subject rather than Observable.Return so the
+        // stream does not complete the moment it is read; who pushes the next description when the
+        // source changes is 0006's and 0040's.
+        services.AddSingleton(static _ => new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
+        services.AddSingleton<IObservable<FleetSourceDescription>>(
+            static provider => provider.GetRequiredService<BehaviorSubject<FleetSourceDescription>>());
 
         return services;
     }

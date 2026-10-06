@@ -66,4 +66,8 @@ public sealed class Aircraft : TransportVehicle
     /// <inheritdoc/>
     /// <remarks>Derived, which is why B-014 keeps it off the snapshot.</remarks>
     public override string Label => Callsign.IfNone(Key);
+
+    /// <inheritdoc/>
+    /// <remarks>The origin country, which is never absent: the wire's value defaults to empty.</remarks>
+    public override string GroupKey => OriginCountry;
 }

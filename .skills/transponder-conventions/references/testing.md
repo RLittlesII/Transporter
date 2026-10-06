@@ -22,6 +22,18 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   under test, `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything
   HTTP ([`flurl-http-client`](../../flurl-http-client/SKILL.md) has the
   interception trap).
+- **A fake is configured in the test that uses it, never built in a private
+  helper.** `Substitute.For<T>()` and the `Returns` calls that arrange it belong
+  in the test body: a helper that hands back a configured double puts the
+  arrangement where the reader cannot see it, and makes one object the shared
+  setup of every test that calls it — the state sharing xUnit's per-test
+  construction exists to prevent. Nothing is shared the day the helper is
+  written; the pitfall is the second caller that needs it configured slightly
+  differently. **What varies comes from `[ClassData]` or `[MemberData]`** — a
+  `TheoryData<…>` subclass in a `*Cases.cs` file beside the tests, which is also
+  where the reason each case exists is written. A private helper may still build
+  **data** a case needs (a domain value, a cache the test writes to); it may not
+  build a double ([lesson 0013](../../../.spec/lessons/0013-a-fake-built-in-a-helper-hides-its-arrangement.md)).
 - **Everything a test injects comes from a fixture, not only the system under
   test.** A collaborator the application composes — the scheduler provider, the
   clock — is built by its own fixture and handed in whole, so a test advances the
