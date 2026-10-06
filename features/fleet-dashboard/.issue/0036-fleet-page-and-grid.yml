@@ -98,6 +98,16 @@ decisions:
     Apple-only and out of Linux CI's scope (§ 4 rows 4 – 5). The MAUI page is
     not what this repository tests, so the mechanism is deferred rather than
     invented inside an implementation item."
+  - "2026-10-06 — the person, in review of pull request #31 — a view subscribes
+    through the generated `Events()` observable and disposes it with its
+    handler, never with `+=`; a subscription is kept with `.DisposeWith`. Both
+    are now rules in `maui-ui` and `mvvm` and an entry in § 10, because neither
+    was written down and the page was the first file to need either."
+  - "2026-10-06 — the person, in review of pull request #31 — whether the sort
+    belongs to the tracker at all is spike `0046`, filed rather than settled
+    here: `SortAndBind` runs in the consumer, nothing downstream of the tracker
+    reads `Order`, and reversing ADR-0009 decision 2 is an amendment rather
+    than a refactor."
   - "2026-10-06 — the person — B-006's § 9 row moves to `0044` as well. Watching
     one vehicle change needs a running feed, and no `ITrackerSource` is
     registered in `MauiProgram` while the replay source is unbuilt; a review

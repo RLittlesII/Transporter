@@ -37,6 +37,14 @@ specification's to say, not this file's.
   rather than rebuilding a list in a handler.
 - Rows update **in place**. A list that re-creates its items on every snapshot
   flickers, and loses the point of binding a changeset at all.
+- **A view subscribes through an observable, never with `+=`.** Where a view
+  must react to a view-model property — rebuilding a column template from a new
+  description, say — take the generated `Events()` observable over
+  `PropertyChanged` (`ReactiveMarbles.ObservableEvents.SourceGenerator`),
+  `.DisposeWith` the page's own disposables, and dispose them when the page's
+  handler goes. A `+=` is never removed, so the handler holds the page for as
+  long as the view model lives; nothing fails and nothing reports it, which is
+  why it survives review unless the rule is written down.
 
 ## The swap test
 
@@ -76,4 +84,6 @@ is another reason to keep the view empty of logic.
 - A mutation of the cache from the UI.
 - A downcast or type check on the domain base outside the detail pane.
 - A view that must be edited to show a different source.
+- An event handler attached with `+=`, or a subscription in a view with nothing
+  that ends it.
 - Blocking in a binding or command path — no `.Result`, no `.Wait()`.

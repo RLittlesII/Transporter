@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using CommunityToolkit.Maui.Markup;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using ReactiveMarbles.ObservableEvents;
 using Transponder.Features.Fleet;
 using Transponder.Features.Fleet.ViewModels;
 using Transponder.Tracking;
@@ -47,18 +51,30 @@ public class FleetPage : ContentPage
             },
         };
 
-        Describe(viewModel.Columns);
-        viewModel.PropertyChanged += (_, arguments) =>
-        {
-            if (arguments.PropertyName == nameof(FleetViewModel.Columns))
-            {
-                Describe(viewModel.Columns);
-            }
-        };
+        viewModel
+            .Events()
+            .PropertyChanged
+            .Where(static arguments => arguments.PropertyName == nameof(FleetViewModel.Columns))
+            .Select(_ => viewModel.Columns)
+            .StartWith(viewModel.Columns)
+            .Subscribe(Describe)
+            .DisposeWith(_garbage);
     }
 
     /// <summary>Gets the view model this page was handed.</summary>
     public FleetViewModel ViewModel { get; }
+
+    /// <inheritdoc/>
+    /// <remarks>A null handler is the page being torn down, which is the only moment its subscription has to end.</remarks>
+    protected override void OnHandlerChanging(HandlerChangingEventArgs args)
+    {
+        base.OnHandlerChanging(args);
+
+        if (args.NewHandler is null)
+        {
+            _garbage.Dispose();
+        }
+    }
 
     /// <summary>The row the description draws: one label per column, in the order it published them (B-007).</summary>
     /// <param name="columns">The live source's columns.</param>
@@ -123,5 +139,6 @@ public class FleetPage : ContentPage
     /// <summary>Every cell is the same width, so the header labels line up with the row beneath them.</summary>
     private const double CellWidth = 140;
 
+    private readonly CompositeDisposable _garbage = [];
     private readonly CollectionView _fleet;
 }

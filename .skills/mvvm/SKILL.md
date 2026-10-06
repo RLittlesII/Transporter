@@ -95,7 +95,10 @@ observe it, so there is no continuation at all.
 ## Projecting state back
 
 - Subscribe to the domain's observable, project, assign through
-  `RaiseAndSetIfChanged`. One subscription per view model, disposed with it.
+  `RaiseAndSetIfChanged`. One subscription per view model, **kept with
+  `.DisposeWith(…)`** into the view model's own disposables, so the disposal is
+  stated at the subscription rather than remembered at the bottom of the
+  constructor.
 - **Marshal to the UI scheduler at the view model boundary**, not deep inside
   the pipeline, and take the scheduler by constructor so a test can substitute
   it.

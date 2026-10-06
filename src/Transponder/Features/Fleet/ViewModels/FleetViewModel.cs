@@ -25,19 +25,21 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// <param name="schedulers">Where the binding is marshalled, by constructor so a test advances it (B-005).</param>
     public FleetViewModel(IFleetTracker tracker, ISchedulerProvider schedulers)
     {
-        _garbage.Add(tracker
+        tracker
             .Fleet
             .ObserveOn(schedulers.UserInterfaceThread)
             .SortAndBind(out _fleet, tracker.Order)
-            .Subscribe());
-        _garbage.Add(tracker
+            .Subscribe()
+            .DisposeWith(_garbage);
+        tracker
             .Description
             .ObserveOn(schedulers.UserInterfaceThread)
             .Subscribe(description =>
             {
                 Columns = description.Columns;
                 Groupings = description.Groupings;
-            }));
+            })
+            .DisposeWith(_garbage);
     }
 
     /// <summary>Gets the collection the grid binds, materialised here and in no other place (B-005).</summary>
