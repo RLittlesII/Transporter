@@ -359,3 +359,7 @@ graphify-out/
 
 # Rehearsal recordings - operational data, scrub before reuse (ADR-0004)
 recordings/
+
+# dotnet format's report. Generated, and every entry carries the absolute
+# FilePath of the machine that produced it -- never commit it.
+/format.json
