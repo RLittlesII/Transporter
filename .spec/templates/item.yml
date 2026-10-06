@@ -1,7 +1,9 @@
 # WHICH .issue/ DIRECTORY:
-#   - features/<feature-slug>/.issue/<id>-<slug>.yml, beside the specification
-#     this item was cut from — a sibling of that Feature's .spec/. Every
-#     `type: feature` item, and any task, test or bug delivering its claims.
+#   - <home>/.issue/<id>-<slug>.yml, beside the specification this item was
+#     cut from — a sibling of that Feature's .spec/, where <home> is the
+#     directory holding the code that implements it (features/<slug>/ until
+#     code exists). Every `type: feature` item, and any task, test or bug
+#     delivering its claims.
 #   - .issue/<id>-<slug>.yml at the repository root, for an item that belongs
 #     to no Feature: a bug, spike or chore with `spec: null`. Same blast-radius
 #     split .spec/adr/ and .spec/lessons/ use.
@@ -68,7 +70,7 @@ spikes: [] # ids of investigations this waits on
 
 # REQUIRED for type: feature — the spec this item was cut from. null for a
 # bug, spike or chore, which may produce a spec delta later.
-spec: features/aircraft-source/.spec/README.md
+spec: src/Transponder/Integrations/OpenSky/.spec/README.md # <home>/.spec/README.md
 
 # The § 3 claims this item delivers — ids ONLY, never the claim text, or the
 # two records disagree. They already exist: the spec was written first.

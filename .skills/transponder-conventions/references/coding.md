@@ -6,8 +6,8 @@ Naming, layout, project structure, dependencies, generated files, comments.
 
 - Code graph, when one exists: `graphify query` / `graphify explain`
   (`AGENTS.md` § "Knowledge Graph Integration").
-- Specification: [`README.md`](../../../README.md) project-wide, and a Feature's
-  `features/<slug>/.spec/README.md` where one covers the subject.
+- Specification: [`README.md`](../../../README.md) project-wide, and the
+  `.spec/README.md` beside the code where a Feature covers the subject.
 - Lessons: [`.spec/lessons/`](../../../.spec/lessons/) repository-wide, and a
   Feature's own `.spec/lessons/`.
 

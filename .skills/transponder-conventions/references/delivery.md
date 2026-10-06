@@ -9,8 +9,9 @@ issue, and there are **no issues, labels or milestones** in this workflow. Code
 still pushes to GitHub, so branches, pull requests and CI stay. The schema and
 the status enum are below under `spec-and-traceability`.
 
-**An item sits beside the specification it was cut from**:
-`features/<slug>/.issue/`, a sibling of that Feature's `.spec/`. An item that
+**An item sits beside the specification it was cut from**: `<home>/.issue/`, a
+sibling of that Feature's `.spec/`, where `<home>` is the directory holding
+the code that implements the Feature — `specs` names each one. An item that
 belongs to no Feature — a bug, a spike, a chore — goes in the repository-root
 `.issue/`, the same blast-radius split `.spec/adr/` and `.spec/lessons/` use.
 **Ids stay repository-wide** from one `.issue/.sequence`, so a bare id in

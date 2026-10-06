@@ -5,7 +5,7 @@ type: decision
 ---
 
 <!-- Copy to
-     features/<feature-slug>/.spec/decisions/{{NNNN}}-{{decision-slug}}.md and
+     <home>/.spec/decisions/{{NNNN}}-{{decision-slug}}.md and
      add a row to the ## Decisions index of that Feature's README.md.
 
      A decisions/ record is a PRODUCT OR SCOPE call that was decided, reneged,

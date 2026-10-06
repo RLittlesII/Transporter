@@ -4,8 +4,9 @@ description: "{{one_line_summary}}"
 type: lesson
 ---
 
-<!-- Copy to features/<feature-slug>/.spec/lessons/{{NNNN}}-{{lesson-slug}}.md
-     and add a row to § 10 of that Feature's README.md.
+<!-- Copy to <home>/.spec/lessons/{{NNNN}}-{{lesson-slug}}.md, beside that
+     Feature's specification, and add a row to § 10 of that Feature's
+     README.md.
 
      A lesson that binds every Feature goes in the ROOT .spec/lessons/ instead,
      numbered repo-wide from 0001 — the same blast-radius split .spec/adr/ uses.

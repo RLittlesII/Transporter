@@ -4,17 +4,40 @@ Where every record lives, the templates, claim ids, the numbering schemes, and w
 
 ## Where things live
 
-| Path                                             | Holds                                                                                                                                     |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| [`README.md`](../../../README.md)                | the project-wide specification                                                                                                            |
-| `features/<slug>/.spec/README.md`                | one Feature's specification, twelve sections in order — permanent, never archived                                                         |
-| `features/<slug>/.spec/<slug>.feature`           | that Feature's scenarios                                                                                                                  |
-| `features/<slug>/.spec/{decisions,lessons,adr}/` | that Feature's own records                                                                                                                |
-| [`.spec/adr/`](../../../.spec/adr/)              | **cross-cutting** technical decisions, numbered repository-wide from `0001`                                                               |
-| [`.spec/lessons/`](../../../.spec/lessons/)      | **cross-cutting** lessons, numbered repository-wide from `0001`                                                                           |
-| [`.spec/templates/`](../../../.spec/templates/)  | the blanks                                                                                                                                |
-| `features/<slug>/.issue/<id>-<slug>.yml`         | one work item cut from that Feature's specification                                                                                       |
-| [`.issue/`](../../../.issue/)                    | **cross-cutting** work items — a bug, spike or chore with no specification; `.issue/.sequence` is the last id handed out, repository-wide |
+| Path                                            | Holds                                                                                                                                     |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [`README.md`](../../../README.md)               | the project-wide specification                                                                                                            |
+| `<home>/.spec/README.md`                        | one Feature's specification, twelve sections in order — permanent, never archived                                                         |
+| `<home>/.spec/<slug>.feature`                   | that Feature's scenarios                                                                                                                  |
+| `<home>/.spec/{decisions,lessons,adr}/`         | that Feature's own records                                                                                                                |
+| [`.spec/adr/`](../../../.spec/adr/)             | **cross-cutting** technical decisions, numbered repository-wide from `0001`                                                               |
+| [`.spec/lessons/`](../../../.spec/lessons/)     | **cross-cutting** lessons, numbered repository-wide from `0001`                                                                           |
+| [`.spec/templates/`](../../../.spec/templates/) | the blanks                                                                                                                                |
+| `<home>/.issue/<id>-<slug>.yml`                 | one work item cut from that Feature's specification                                                                                       |
+| [`.issue/`](../../../.issue/)                   | **cross-cutting** work items — a bug, spike or chore with no specification; `.issue/.sequence` is the last id handed out, repository-wide |
+
+**`<home>` is the directory holding the code that implements the Feature** —
+the project root where a Feature is a whole project, the feature or
+integration folder where it is part of one. A specification is read beside
+the code it governs, so a reader who opens the implementation finds the
+agreement without knowing the slug, and a rename of the code moves the
+specification with it.
+
+| Feature             | `<home>`                               |
+| ------------------- | -------------------------------------- |
+| `aircraft-source`   | `src/Transponder/Integrations/OpenSky` |
+| `boundary-analyzer` | `src/Transponder.Analyzers`            |
+| `fleet-pipeline`    | `src/Transponder/Tracking`             |
+| `fleet-dashboard`   | `src/Transponder/Features/Fleet`       |
+| `replay-source`     | `features/replay-source`               |
+
+**`features/<slug>/` is where a specification waits for its code**, and the
+only home a Feature with no implementation has — `replay-source` is there
+because nothing implements it yet. It is not a permanent address: the
+specification and its `.issue/` move to `<home>` in the change that builds
+the code, and the move repoints every reference to them, re-depthing the
+relative links inside the files that moved
+([lesson 0015](../../../.spec/lessons/0015-a-move-that-leaves-its-references-behind-is-half-a-move.md)).
 
 There is no epic directory: an epic is an item of `type: epic` whose `children`
 list the Features under it.
@@ -73,13 +96,13 @@ Claims carry a `B-` prefix and identify themselves. Nothing else here does:
 three schemes number from `0001` independently, and the per-Feature schemes
 start again in every Feature.
 
-| Written in full                                            | Scheme                              |
-| ---------------------------------------------------------- | ----------------------------------- |
-| `features/aircraft-source/.issue/0001-aircraft-source.yml` | work item, repository-wide sequence |
-| `ADR-0001`                                                 | root ADR, repository-wide           |
-| `lesson 0001`                                              | root lesson, repository-wide        |
-| `features/<slug>/.spec/decisions/0001`                     | that Feature's decisions            |
-| `features/<slug>/.spec/adr/0001`                           | that Feature's own ADRs             |
+| Written in full                                                        | Scheme                              |
+| ---------------------------------------------------------------------- | ----------------------------------- |
+| `src/Transponder/Integrations/OpenSky/.issue/0001-aircraft-source.yml` | work item, repository-wide sequence |
+| `ADR-0001`                                                             | root ADR, repository-wide           |
+| `lesson 0001`                                                          | root lesson, repository-wide        |
+| `<home>/.spec/decisions/0001`                                          | that Feature's decisions            |
+| `<home>/.spec/adr/0001`                                                | that Feature's own ADRs             |
 
 **In prose, write the scheme with the number.** A number may appear bare only
 where its field says what it is — `parent: "0001"` in an item, or a `## Tasks`
