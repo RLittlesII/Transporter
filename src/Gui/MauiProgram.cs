@@ -1,11 +1,11 @@
 using CommunityToolkit.Maui.Markup;
 using Gui.Container;
+using Gui.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
-using Transponder.Features.Demo.Actors;
-using Transponder.Features.Demo.ViewModels;
+using Transponder.Features.Fleet.ViewModels;
 
 namespace Gui;
 
@@ -17,8 +17,10 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMarkup()
-            .AddAkkaHost("Transponder", static (system, registry) => registry.Register<ClickActor>(system.ActorOf(ClickActor.Props)))
-            .AddUserInterface(static collection => collection.AddTransient<MainPage>().AddTransient<DemoViewModel>())
+
+            // No actor is started until the source wiring lands (spike 0040); the system is where time and failure will live.
+            .AddAkkaHost("Transponder", static (_, _) => { })
+            .AddUserInterface(static collection => collection.AddTransient<FleetPage>().AddTransient<FleetViewModel>())
             .ConfigureFonts(static fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
