@@ -6,7 +6,14 @@ type: adr
 
 # ADR-0011: The swap decorator selects among registered strategies
 
-**Status:** proposed
+**Status:** accepted
+
+**Accepted 2026-10-06, built by `0006`.** The registration, the decorator and
+the actor below are what landed, with one correction the build produced: the
+`.Switch()` in `Connect()` resolves to **DynamicData's** changeset operator
+rather than Rx's, so the outgoing fleet leaves the consumer's cache as removes
+instead of lingering beside the incoming one. That is the wanted behaviour and
+the walkthrough's step 3 is read with it.
 
 Supersedes [ADR-0003](0003-scrutor-for-decorator-registration.md), whose
 premise — that Scrutor's `Decorate<>` hands one decorator every prior

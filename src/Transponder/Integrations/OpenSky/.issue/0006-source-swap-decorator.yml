@@ -2,7 +2,7 @@ id: "0006"
 type: task
 title: Swap the live source behind a decorator over ITrackerSource
 
-status: ready-for-implementation
+status: done
 
 priority: high
 risk: 3
@@ -28,7 +28,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   A decorator registered as `ITrackerSource` picks which strategy is live at
@@ -61,6 +61,39 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — review of pull request #36 — the strategy holds its poller as
+    `IAircraftSnapshotClient` rather than as `AircraftSnapshotClient`, and the
+    two untested pieces are tested. The client is the only collaborator in this
+    item that performs I/O, so it is the one the inversion is worth and the one
+    a test must stand in for; the interface declares `Poll()` and nothing else.
+    The cache and the mapper stay concrete and are not the same case — B-030
+    forbids the cache a type of its own and the mapper is Mapperly's generated
+    class, so either interface would have one implementation and nothing to
+    substitute. `Akka.TestKit.Xunit2` is taken for `SourceSwapActorTests`;
+    rejected: leaving the actor untested because no claim names it, which the
+    pull request body had said out loud and the review did not accept."
+  - "2026-10-06 — review of pull request #36 — the comments this item added are
+    a maintenance burden and most of them go. Ten lines across seven files, one
+    finding: prose restating the call below it, paragraph-length `<remarks>`,
+    and claim or record identifiers inside a sentence. The convention was
+    already written — `transponder-conventions` § \"The rules that bind every
+    change\" — and nothing executes it, which is lesson 0017. Scrubbed here;
+    `0050` scrubs the rest of the repository and `0051` is the diagnostic that
+    would have caught it. The identifier half of `0051` is left
+    `ready-for-architecture` because the reviewer raised it as a suspicion, and
+    a bare citation on a line that would be wrong without one is the form that
+    should survive."
+  - "2026-10-06 — `0006` — the `.Switch()` in the decorator resolves to
+    **DynamicData's** changeset operator rather than Rx's, because `using
+    DynamicData` is in scope. The difference showed up in the B-039 test's first
+    run — three changesets rather than two, the extra one a remove of the
+    outgoing fleet. Kept, because the alternative leaves aircraft in the
+    collection among the ships, which `hot-swap-source` lists as a failure mode.
+    B-039 is unharmed: a vehicle leaving is an ordinary change, indistinguishable
+    from that aircraft leaving the box, and what the claim forbids is a marker, a
+    completion or an error, none of which the stream carries. The skill said
+    nothing is cleared on a swap and is corrected; `aircraft-source` § 7 and § 10
+    carry it so the next reader does not re-run it (lesson 0016's rule)."
   - "2026-10-06 — the person — the item was taken and put back the same day.
     Its first step ran ADR-0003's library against the registration shape the
     record described, and the record was wrong (`0049`, lesson 0016). No

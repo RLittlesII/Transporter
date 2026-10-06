@@ -461,4 +461,4 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      When the container is built and the fleet tracker is resolved
      Then it is returned with every dependency it needs already satisfied
       And the source behind it is the swap decorator rather than a strategy
-      And no registration was added after the decoration that should have preceded it
+      And no strategy is registered as the seam consumers resolve

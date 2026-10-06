@@ -1,5 +1,7 @@
+using System.Reactive.Disposables;
 using AwesomeAssertions;
 using DynamicData;
+using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Integrations.OpenSky;
 using Transponder.Model;
@@ -90,6 +92,37 @@ public class AircraftTrackerSourceTests
         observed.Should().ContainSingle();
     }
 
+    /// <summary>
+    /// B-040, at the strategy rather than at the decorator. The subscription owns the poll: it starts
+    /// on the first subscriber and stops when the last one leaves, which is what makes a swapped-away
+    /// source stop spending credits without anything remembering to dispose it. Subscribing a second
+    /// time polls again, so a strategy is not left unusable by having been swapped away.
+    /// </summary>
+    [Fact]
+    public void GivenTheStrategy_WhenItIsSubscribedAndUnsubscribed_ThenThePollStartsAndStopsWithTheSubscription()
+    {
+        // Given
+        var stopped = 0;
+        var client = Substitute.For<IAircraftSnapshotClient>();
+        client.Poll().Returns(_ => Disposable.Create(() => stopped++));
+        AircraftTrackerSource strategy = new AircraftTrackerSourceFixture().WithClient(client);
+        ITrackerSource sut = strategy;
+
+        // When
+        var beforeAnySubscription = (client.ReceivedCalls().Count(), stopped);
+        var subscription = sut.Connect().Subscribe();
+        var whileSubscribed = (client.ReceivedCalls().Count(), stopped);
+        subscription.Dispose();
+        var afterDisposal = (client.ReceivedCalls().Count(), stopped);
+        using var again = sut.Connect().Subscribe();
+
+        // Then
+        beforeAnySubscription.Should().Be((0, 0), "connecting a strategy nobody reads polls nothing");
+        whileSubscribed.Should().Be((1, 0));
+        afterDisposal.Should().Be((1, 1), "the poll stops with the subscription that started it");
+        client.ReceivedCalls().Should().HaveCount(2, "a second subscription polls again");
+    }
+
     /// <summary>A cache keyed the way the registration keys it.</summary>
     /// <returns>The cache a client writes into and the strategy reads from.</returns>
     private static SourceCache<AircraftSnapshot, string> Cache() => new(static snapshot => snapshot.Icao24);
@@ -101,6 +134,7 @@ internal partial class AircraftTrackerSourceFixture
 {
     public AircraftTrackerSourceFixture()
     {
+        WithClient(Substitute.For<IAircraftSnapshotClient>());
         WithSnapshots(new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
         WithMapper(new AircraftSnapshotMapper());
     }

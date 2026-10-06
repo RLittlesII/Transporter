@@ -24,9 +24,16 @@ The division matters more than the syntax:
 ## The shape
 
 - Derive from `ReceiveActor`; wire `Receive<TMessage>` in the constructor.
-- Expose **`public static Props Props { get; }`** built with a static lambda:
+- **An actor with no collaborators exposes
+  `public static Props Props { get; }`** built with a static lambda:
   `Props.Create(static () => new ThingActor())`. Callers use the property, not a
   `Props.Create` at the call site.
+- **An actor that takes a collaborator the container owns has no `Props` of its
+  own.** A static property cannot reach the service provider, and a `Props`
+  overload listing the dependencies is the same second place a registration
+  already is. Akka's `IDependencyResolver` builds it instead — the registration
+  takes `(system, registry, resolver)` and calls `resolver.Props<ThingActor>()`,
+  and the constructor is resolved from the container like any other.
 - Messages are `internal`, immutable, and declared beside the actor. A
   parameterless message gets a private constructor and a
   `static readonly Instance`, so there is one of it:
@@ -53,6 +60,15 @@ The division matters more than the syntax:
     ```csharp
     .AddAkkaHost("<name>", static (system, registry) =>
         registry.Register<ThingActor>(system.ActorOf(ThingActor.Props)))
+    ```
+
+    With a container-owned collaborator, take the resolver and let it build the
+    `Props`. Where the actor and its collaborator are internal to a library, the
+    library exposes the registration and the host names only that:
+
+    ```csharp
+    .AddAkkaHost("<name>", static (system, registry, resolver) =>
+        registry.AddThingActors(system, resolver))
     ```
 
 - View models take `IActorRegistry` and resolve from it. **Every `Ask<T>`

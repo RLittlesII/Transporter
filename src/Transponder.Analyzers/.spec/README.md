@@ -533,6 +533,16 @@ than a `decisions/` record.
 | [`0022`](../.issue/0022-reference-rules.yml)                 | B-009                                           |
 | [`0023`](../.issue/0023-declaration-rules.yml)               | B-010                                           |
 | [`0024`](../.issue/0024-registration-and-double-rules.yml)   | B-011, B-012 (Withdrawn)                        |
+| [`0051`](../.issue/0051-verbose-comment-diagnostic.yml)      | none yet — § 3 gains them when § 7 settles it   |
+
+`0051` is the one row whose Claims column is empty, and that is what
+`ready-for-architecture` means here: pull request #36's review asked for a
+diagnostic over verbose XML comments and raised a second, narrower question —
+whether a comment may carry a claim or record identifier at all — as a
+suspicion rather than a decision. § 7 answers it, § 3 gains a claim per rule,
+and only then is there anything to build
+([lesson 0017](../../../.spec/lessons/0017-a-written-convention-with-no-gate-is-a-preference.md)
+is why the rule needs a gate at all).
 
 Every claim is carried by exactly one child, and `0019` carries all of them
 because the children are slices of it. `0024` keeps B-012 after its withdrawal:

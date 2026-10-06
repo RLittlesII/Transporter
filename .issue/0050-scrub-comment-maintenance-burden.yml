@@ -1,0 +1,81 @@
+id: "0050"
+type: chore
+title: Scrub the codebase of comments that restate what the code and the records already say
+
+status: ready-for-implementation
+
+priority: medium
+value: 3
+risk: 1
+rank: 62
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  Review of pull request #36: "every change in this file is a maintenance
+  burden. It's either covered by analysis, or it should be. We shouldn't need
+  all the additional comments."
+
+  The convention already exists — `transponder-conventions` § "The rules that
+  bind every change" says a `<summary>` is one line, a `<remarks>` one sentence
+  for what the code cannot state, and an inline comment one line saying a _why_,
+  with reasoning cited rather than explained. `0006` broke it across nine files
+  and the review caught it there, which means the rest of the repository was
+  written under the same drift and nothing has read it back.
+
+  Two shapes are in scope, and both were named in that review.
+
+  **Prose that restates the code.** A comment above
+  `AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>()` explaining that
+  the strategy is registered behind its seam says what the line says.
+
+  **Claim and record identifiers inside comment prose.** A sentence carrying
+  `(B-034, ADR-0002 item 6)` puts a reference in a second place, where no
+  traceability matrix sees it and nothing fails when the claim is renumbered or
+  withdrawn. The reviewer was unsure whether a rule should ban identifiers in
+  comments outright — that question is `0051`'s, not this item's. Here the test
+  is narrower: a citation stays only where the comment would be wrong without
+  it, and the prose around it goes.
+
+  A chore rather than a refactor: no behaviour moves, no type is renamed, and
+  the diff is comments.
+
+acceptance_criteria:
+  - "Every `.cs` file under `src/` is read, and each comment either survives
+    because the code cannot state it or is deleted. The count of deletions is
+    reported in the pull request body, by file."
+  - "No `<remarks>` runs to more than one sentence, and no `<summary>` to more
+    than one line, outside a `<para>` block that a reader of the pull request
+    agrees earns itself."
+  - "`transponder-conventions` § `coding` carries the rule in its own words
+    rather than only in the `SKILL.md` summary, with the two shapes above as
+    its examples."
+  - "A lesson records how the convention was written down and still drifted, and
+    what the review looked for that no gate did."
+  - "No specification, ADR or lesson loses content. Reasoning deleted from a
+    comment is already in one of those or is moved into one before the comment
+    goes."
+
+decisions: []
+
+out_of_scope:
+  - "The analyzer that would catch this at build time — `0051`, which this item
+    does not wait on and which does not wait on this item."
+  - "Test method `<summary>` blocks that name the claim under test. That form is
+    the repository's and `test-from-scenarios` asks for it; what the review
+    objected to is production code."
+  - "Any behavioural change. A comment that turns out to be hiding a bug is a
+    separate item, filed when found."

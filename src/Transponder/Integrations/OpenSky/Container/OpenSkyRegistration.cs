@@ -76,20 +76,15 @@ public static class OpenSkyRegistration
         services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
         services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
         services.AddSingleton<AircraftSnapshotClient>();
+        services.AddSingleton<IAircraftSnapshotClient>(static provider => provider.GetRequiredService<AircraftSnapshotClient>());
 
-        // The strategy and its projection, registered behind the per-type seam so nothing resolves the
-        // class itself (B-033, B-034). The decorator that selects between strategies is 0006's.
         services.AddSingleton<AircraftSnapshotMapper>();
         services.AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>();
 
-        // The strategy is also registered as the seam itself, which is the inner registration 0006's
-        // decorator wraps and what the tracker resolves until it exists (ADR-0003, B-038).
-        services.AddSingleton<ITrackerSource>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
+        // Never as ITrackerSource: that reaches consumers in place of the selector (ADR-0011).
+        services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
 
-        // What the live source offers a view, as a value the swap replaces rather than a stage anyone
-        // rebuilds (fleet-pipeline B-020, B-021). A subject rather than Observable.Return so the
-        // stream does not complete the moment it is read; who pushes the next description when the
-        // source changes is 0006's and 0040's.
+        // A subject rather than Observable.Return, so the stream does not complete when it is read.
         services.AddSingleton(static _ => new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
         services.AddSingleton<IObservable<FleetSourceDescription>>(
             static provider => provider.GetRequiredService<BehaviorSubject<FleetSourceDescription>>());

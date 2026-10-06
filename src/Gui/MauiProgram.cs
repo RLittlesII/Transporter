@@ -10,6 +10,7 @@ using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
 using Microsoft.Maui.Storage;
 using Transponder.Container;
+using Transponder.Tracking.Container;
 
 namespace Gui;
 
@@ -23,8 +24,10 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMarkup()
 
-            // No actor is started until the source wiring lands (spike 0040); the system is where time and failure will live.
-            .AddAkkaHost("Transponder", static (_, _) => { })
+            // Which actors exist is Transponder's to say: they and what they are handed are internal there.
+            .AddAkkaHost(
+                "Transponder",
+                static (system, registry, resolver) => registry.AddFleetTrackingActors(system, resolver))
 
             // Everything but the page is composed in Transponder, where a test builds the same graph
             // (0047). The scheduler is the head's because only it knows the thread that owns the

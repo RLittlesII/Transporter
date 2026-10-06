@@ -57,10 +57,15 @@ internal sealed class SwappingTrackerSource : ITrackerSource
 
 ## There is a gap, and something must occupy it
 
-Nothing is cleared on a swap: the outgoing cache stops being read, and the
-incoming strategy's changeset replaces the collection. Between the two there is
-a gap of up to one poll interval before the incoming strategy has anything to
-emit.
+**No cache is cleared on a swap, but the consumer's collection is.** `Switch`
+over a changeset stream is DynamicData's operator, not Rx's — `using
+DynamicData` is what decides it — and that one emits a remove per item the
+outgoing source had before the incoming source's changes arrive. So the outgoing
+strategy's own cache is untouched and simply stops being read, while everything
+downstream of the seam sees the old fleet leave the way it would if those items
+had gone out of range. That is the wanted behaviour: the alternative, Rx's
+`Switch`, leaves aircraft in the collection among the ships. Between the removes
+and the first incoming change there is a gap of up to one poll interval.
 
 **What a viewer sees during that gap is a decision, recorded per source in the
 specification, not improvised in the code.** An unexplained empty view reads as
@@ -73,9 +78,14 @@ pipeline rebuild**.
 A swap is where leaks happen, and a leak looks like a bug in the reactive
 library rather than in the code that misused it.
 
-- **Stop the outgoing strategy's client.** A `Switch` drops the subscription,
-  but a poller that owns its own schedule keeps polling — and keeps spending the
-  provider's budget — unless it is stopped
+- **Give the subscription the poll, rather than giving the decorator a
+  disposal.** A strategy's `Connect()` starts its own poller and hands back the
+  thing that stops it — `Observable.Using(() => client.Poll(), …)` — so `Switch`
+  dropping the subscription stops the poll and subscribing again starts it. The
+  alternative, a decorator that disposes the outgoing source, leaves a
+  swapped-away singleton unusable and so needs a factory per strategy to swap
+  back at all. A poller that owns its own schedule and is not reachable from a
+  subscription keeps spending the provider's budget
   ([`akka-actor`](../akka-actor/SKILL.md)).
 - Close the outgoing socket, cancel its read loop, and do not let its reconnect
   logic race the new strategy by writing to its own cache behind the swap.
