@@ -5,9 +5,9 @@ title: Replay recorded provider payloads through the live seam
 status: ready-for-architecture
 
 priority: high
-value: 4
+value: 5
 risk: 4
-rank: 68
+rank: 88
 
 parent: null
 children:
@@ -53,7 +53,7 @@ claims:
   - B-027
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-06"
 closed: null
 
 summary: |
@@ -79,6 +79,13 @@ acceptance_criteria:
   - "§ 9 has no Missing row once every child is done."
 
 decisions:
+  - "2026-10-06 — the person — re-valued from 4 to 5, so `rank` is 88. `0036`
+    put a fleet page on the screen and `0047` made the application open it, and
+    what it opens onto is an empty grid: the live provider needs credentials no
+    developer's machine should be the only holder of, and
+    `transponder-conventions` § \"Verify and publish\" step 3 already says to
+    launch against a recorded or simulated source. Until this Feature lands,
+    that step has nothing behind it and no screen is ever looked at running."
   - "2026-10-04 — spec-author — cut into five children on component boundaries
     rather than on the spec's five claim groups. The groups split recording from
     playback from selection, but B-009, B-010 and B-013 belong with the
