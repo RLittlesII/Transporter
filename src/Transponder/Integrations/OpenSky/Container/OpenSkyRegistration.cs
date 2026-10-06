@@ -70,6 +70,7 @@ public static class OpenSkyRegistration
         services.AddSingleton<ObservedClock>();
         services.AddSingleton<IObservedClock>(static provider => provider.GetRequiredService<ObservedClock>());
         services.AddSingleton<IObservedClockWriter>(static provider => provider.GetRequiredService<ObservedClock>());
+        services.AddSingleton<IObservedClockTicks>(static provider => provider.GetRequiredService<ObservedClock>());
 
         services.AddSingleton<IOpenSkyTokenSource, OpenSkyTokenSource>();
         services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();

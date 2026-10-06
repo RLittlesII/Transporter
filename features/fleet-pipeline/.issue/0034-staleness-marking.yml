@@ -2,7 +2,7 @@ id: "0034"
 type: task
 title: Mark a vehicle that has gone silent against the observed clock, and keep it
 
-status: ready-for-implementation
+status: done
 
 priority: high
 value: 4
@@ -29,7 +29,7 @@ claims:
 
 created: "2026-10-05"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   A vehicle silent past the threshold is marked and stays in the collection; a
@@ -67,7 +67,24 @@ acceptance_criteria:
   - "B-019 — nothing is removed for going silent, and no expiry stage exists."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-06 — implementer — `ObservedClock` implements `IObservedClockTicks`
+    alongside the two interfaces it already had (ADR-0010), and the tracker takes
+    the third seam by constructor. `IObservedClock` and `IObservedClockWriter` are
+    untouched, so ADR-0007's read/write split stands unamended: a consumer holding
+    the ticks still cannot advance time. The instant is a `BehaviorSubject` seeded
+    at `DateTimeOffset.MinValue`, so a stage subscribing after startup reads the
+    instant in force rather than waiting for the next envelope. Rejected: a
+    pipeline that ticks itself on a scheduler, which ages a paused replay (ADR-0010)."
+  - "2026-10-06 — implementer — the `Transform` force trigger is the threshold
+    merged with every advance of the instant, which is the whole of B-018: a mark
+    is re-derived rather than a vehicle removed and re-added, which is also why
+    B-019 forbids `ExpireAfter`."
+  - "2026-10-06 — test-writer — B-019 carries a review beside its test. \"No
+    `ExpireAfter` anywhere\" is an absence no test reads; `grep` over `src/`
+    returns only the remark in `FleetTracker` saying why there is none. The
+    analyzer rule § 9 first named needs the layer map widened, which is
+    `boundary-analyzer`'s claim to make — the same answer B-022 and B-023 got."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

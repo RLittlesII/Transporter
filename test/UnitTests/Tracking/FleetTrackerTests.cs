@@ -332,7 +332,9 @@ internal partial class FleetTrackerFixture
     public FleetTrackerFixture()
     {
         WithSource(Substitute.For<ITrackerSource>());
-        WithClock(new ObservedClock());
+        var clock = new ObservedClock();
+        WithClock(clock);
+        WithTicks(clock);
         WithObservable(new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
     }
 }
