@@ -1,0 +1,104 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+## IMPORTANT: husky re-execs this whole file as `sh -e "$0" "$@"`
+## (.husky/_/husky.sh:24), so everything below runs under errexit. Each check
+## captures its own exit status behind an `if !` guard and the script decides at
+## the end, exactly as pre-commit does -- do not rewrite these into bare
+## invocations.
+##
+## Checks the SUBJECT of the message against the convention
+## `.skills/transponder-conventions/references/delivery.md` § "Commit and pull
+## request messages" writes down. Only what that document states is checked
+## here, and only on the subject: the body rules -- a paragraph per decision,
+## the item line, the verification paragraph, what is still not true -- are
+## about content a regular expression cannot read, and they are reviewed rather
+## than gated. "No emoji" is likewise unenforced: BSD grep has no -P, and the
+## character-class alternatives either miss most of the range or reject the § and
+## em dash that every specification cite in this repository uses.
+##
+## $1 is the path to the message file, which is the only argument git passes.
+message_file=$1
+subject=$(grep -v '^#' "$message_file" | sed '/./,$!d' | head -1)
+
+## Messages git composes itself, and the ones rebase consumes. A merge subject is
+## "Merge branch ...", a revert is `Revert "..."`, and fixup!/squash!/amend!
+## carry the subject of the commit they will be folded into. Rejecting any of
+## them would break `git merge`, `git revert` and every interactive rebase.
+case "$subject" in
+    "Merge "* | "Revert "* | "fixup!"* | "squash!"* | "amend!"*)
+        exit 0
+        ;;
+esac
+
+subject_status=0
+
+## type(scope)?!?: subject
+##
+## `feature` is spelled out, which is this repository's one departure from the
+## conventional-commits vocabulary -- every item commit on main reads
+## feature(0023), feature(0005). The scope is the four-digit item id and nothing
+## else, and it is absent when the commit belongs to no item: specification
+## authoring and a repository-wide chore both have none to cite. The `!` is
+## allowed for a breaking change because the standard uses it; nothing on main
+## carries one yet.
+##
+## Grouped alternation and + are ERE, so -E is required. The subject must start
+## lowercase, or with a digit, or with a backtick, which is how a subject naming
+## a type opens.
+if ! printf '%s' "$subject" | grep -Eq '^(feature|docs|chore|refactor|fix|test|build|ci|perf|style|revert)(\([0-9]{4}\))?!?: [a-z0-9`]'; then
+    subject_status=1
+    echo
+    echo "commit-msg: the subject does not match this repository's convention."
+    echo
+    echo "    $subject"
+    echo
+    echo "Shape:  <type>(<item id>): <what is now true>"
+    echo "Types:  feature docs chore refactor fix test build ci perf style revert"
+    echo "Scope:  the four-digit item id, and nothing else. Absent when there is no item."
+    echo "Case:   lowercase after the colon."
+    echo
+    echo "    feature(0007): wrap the tracker seam in IFleetTracker and give it the clock"
+    echo "    docs: specify the fleet pipeline downstream of the tracker seam"
+    echo
+    echo "Note feature, not feat. The rules are in"
+    echo ".skills/transponder-conventions/references/delivery.md."
+    echo
+    echo "Bypass with: git commit --no-verify"
+fi
+
+## A trailing period on the subject. Separate from the pattern above so the
+## message names the one thing that is wrong rather than printing the whole
+## shape again.
+period_status=0
+
+case "$subject" in
+    *.)
+        period_status=1
+        echo
+        echo "commit-msg: the subject ends in a period. Drop it."
+        echo
+        echo "    $subject"
+        echo
+        echo "Bypass with: git commit --no-verify"
+        ;;
+esac
+
+## Trailers nothing on main carries. A co-author line attributes the work to
+## whoever the tool named, and a generated-by line is noise in a history that is
+## read for its decisions.
+trailer_status=0
+
+if grep -Eiq '^(co-authored-by|signed-off-by):|generated (with|by) ' "$message_file"; then
+    trailer_status=1
+    echo
+    echo "commit-msg: the message carries a trailer this repository does not use."
+    echo
+    grep -Ein '^(co-authored-by|signed-off-by):|generated (with|by) ' "$message_file" | sed 's/^/    /'
+    echo
+    echo "Bypass with: git commit --no-verify"
+fi
+
+if [ "$subject_status" -ne 0 ] || [ "$period_status" -ne 0 ] || [ "$trailer_status" -ne 0 ]; then
+    exit 1
+fi

@@ -118,6 +118,19 @@ Delivers <id>            # or: Specifies features/<slug>; omitted when neither a
   what the ship gate therefore still blocks.
 - **No co-author trailer, no generated-by line, no emoji.** Nothing on `main`
   carries one.
+- **A `commit-msg` hook checks the subject**: the type vocabulary, the
+  four-digit scope, the lowercase start, a trailing period, and the two
+  trailers. It skips what git composes itself — a merge, a revert, and
+  `fixup!`/`squash!`/`amend!` — because rejecting those would break `git merge`,
+  `git revert` and every interactive rebase. It does **not** read the body: a
+  paragraph per decision, the item line and the verification paragraph are
+  content a pattern cannot judge, and they are reviewed rather than gated. Nor
+  does it check for emoji — BSD `grep` has no `-P`, and the character-class
+  alternatives reject the § and the em dash every specification cite here uses.
+  Replayed over `main`, it accepts 102 of 104 subjects; the two it rejects are
+  the bootstrap commits `nuke: build successful` and
+  `init: add initial transponder application`, whose types the convention no
+  longer uses.
 
 ## Verify and publish
 
