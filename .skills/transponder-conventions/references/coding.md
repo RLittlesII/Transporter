@@ -84,9 +84,8 @@ All versions live in
 
 ## Generated files and guards
 
-- [`format.json`](../../../format.json) and
-  [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) are generated.
-  **Never hand-edit either** — the next regeneration discards the edit. The
+- [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) is generated.
+  **Never hand-edit it** — the next regeneration discards the edit. The
   workflow is regenerated deliberately, because `AutoGenerate` is off:
 
     ```
@@ -98,6 +97,12 @@ All versions live in
     regeneration also rewrites, and why a negative-only path filter kills the
     workflow. Mapperly's mappers are generated too
     ([`mapping`](../../mapping/SKILL.md)).
+
+- `format.json` is `dotnet format`'s report. It is gitignored and **never
+  committed**: every entry carries the absolute `FilePath` of the machine that
+  produced it, so committing one publishes a developer's home directory layout
+  to a public repository. The same rule covers any tool report written to the
+  repository root.
 
 - `obj/` and `bin/` are build output and never appear in a diff.
 

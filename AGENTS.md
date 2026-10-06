@@ -57,9 +57,12 @@ and none of them changes:
 - **Integration code does not live under `Features/`.** A provider's contract,
   its implementation, and the client and cache above it belong to the provider,
   not to one feature.
-- **Never hand-edit a generated file** — `format.json` and the Nuke-generated
+- **Never hand-edit a generated file** — the Nuke-generated
   `.github/workflows/ci.yml`. The workflow is regenerated deliberately, never by
   a build.
+- **Never commit a generated report.** `format.json` is `dotnet format`'s report:
+  it is gitignored, because every entry carries the absolute `FilePath` of the
+  machine that produced it.
 - **Never pin a package version in a `.csproj`.** Versions are central.
 
 Which packages are referenced and which build targets exist is repository
