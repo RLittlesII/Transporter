@@ -1,8 +1,9 @@
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Reactive.Testing;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Http;
+using Transponder.Integrations.OpenSky.Authentication;
+using Transponder.Integrations.OpenSky.Configuration;
+using Transponder.Integrations.OpenSky.Http.Api;
 using Transponder.Scheduling;
 using Transponder.UnitTests.Scheduling;
 

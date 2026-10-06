@@ -1,4 +1,4 @@
-namespace Transponder.Integrations.OpenSky;
+namespace Transponder.Integrations.OpenSky.Model;
 
 /// <summary>
 /// The box a poll asks about. Four degrees of latitude and longitude, in the provider's own units

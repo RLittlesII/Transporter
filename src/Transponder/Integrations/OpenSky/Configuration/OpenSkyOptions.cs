@@ -1,4 +1,6 @@
 using System;
+using Transponder.Integrations.OpenSky.Configuration;
+using Transponder.Integrations.OpenSky.Model;
 
 namespace Transponder.Integrations.OpenSky;
 

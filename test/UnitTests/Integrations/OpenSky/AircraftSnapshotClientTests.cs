@@ -8,6 +8,7 @@ using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Integrations.OpenSky;
 using Transponder.Integrations.OpenSky.Contracts;
+using Transponder.Integrations.OpenSky.Model;
 using Transponder.Scheduling;
 using Transponder.Tracking;
 using Transponder.UnitTests.Scheduling;

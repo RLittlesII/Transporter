@@ -87,29 +87,56 @@ internal static class Layers
     internal static bool IsWireSurface(ISymbol symbol) =>
         ProviderOf(symbol) is { } provider && NamespaceOf(symbol) == $"{Integrations}.{provider}.Contracts";
 
-    /// <summary>Whether a symbol is a provider's transport — the class implementing its contract, and its converters.</summary>
+    /// <summary>Whether a symbol is a provider's transport — code in the <c>Http</c> namespace or under it, where implementations and converters live.</summary>
+    /// <remarks>Transport code is identified by namespace prefix (anywhere under .../Http) rather than by exact folder depth, so folder reorganization under the provider (adding subfolders like .../Http/Api) does not silently disable transport-specific rules.</remarks>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is transport code.</returns>
-    internal static bool IsTransport(ISymbol symbol) =>
-        ProviderOf(symbol) is { } provider && NamespaceOf(symbol) == $"{Integrations}.{provider}.Http";
+    internal static bool IsTransport(ISymbol symbol)
+    {
+        // Try the symbol as a type first (most common case: a method or property inside a transport type)
+        var type = EffectiveType(symbol);
+        if (type is not null && ProviderOf(type) is { } provider)
+        {
+            var typeNs = NamespaceOf(type);
+            if (typeNs.StartsWith($"{Integrations}.{provider}.Http", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
 
-    /// <summary>Whether a symbol sits directly under a provider's own namespace — the snapshot, the client that fills a cache from it, and the options and credentials the provider needs.</summary>
+        // For namespace symbols (rare case: GetEnclosingSymbol on a class-level declaration may return the namespace)
+        if (symbol is INamespaceSymbol ns && ProviderOf(symbol) is { } provider2)
+        {
+            var nsStr = ns.ToDisplayString();
+            if (nsStr.StartsWith($"{Integrations}.{provider2}.Http", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>Whether a symbol is a home for the snapshot and snapshot client — a location where they are allowed to reference contracts and other provider internals that are forbidden downstream.</summary>
+    /// <remarks>Identified by the containing type's name suffix (Snapshot/Client) rather than namespace, so folder reorganization under the provider does not disable role-specific rules. Used to allow a method inside the client to reference wire types and snapshots without triggering boundary violations.</remarks>
     /// <param name="symbol">The symbol to classify.</param>
-    /// <returns><see langword="true"/> when the symbol sits at the provider's root.</returns>
-    internal static bool IsProviderRoot(ISymbol symbol) =>
-        ProviderOf(symbol) is { } provider && NamespaceOf(symbol) == $"{Integrations}.{provider}";
+    /// <returns><see langword="true"/> when the symbol is inside a snapshot or client type.</returns>
+    internal static bool IsClientHome(ISymbol symbol) =>
+        EffectiveType(symbol) is { } type && IsClient(type);
 
-    /// <summary>Whether a symbol is a snapshot — a provider-root type carrying what the provider reported, which dies at its projection (<c>aircraft-source</c> B-046).</summary>
+    /// <summary>Whether a symbol is a snapshot — a type carrying what the provider reported, which dies at its projection (<c>aircraft-source</c> B-046).</summary>
+    /// <remarks>Identified by the provider and a "Snapshot" name suffix rather than by namespace, so folder reorganization under the provider does not silently disable snapshot-related rules.</remarks>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is a snapshot.</returns>
     internal static bool IsSnapshot(ISymbol symbol) =>
-        IsProviderRoot(symbol) && symbol.Name.EndsWith("Snapshot", StringComparison.Ordinal);
+        ProviderOf(symbol) is not null && symbol.Name.EndsWith("Snapshot", StringComparison.Ordinal);
 
-    /// <summary>Whether a symbol is a snapshot client — the provider-root type that fills a cache.</summary>
+    /// <summary>Whether a symbol is a snapshot client — a type that fills a cache with snapshots from the provider.</summary>
+    /// <remarks>Identified by the provider and a "Client" name suffix rather than by namespace, so folder reorganization under the provider does not silently disable client-related rules.</remarks>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is a client.</returns>
     internal static bool IsClient(ISymbol symbol) =>
-        IsProviderRoot(symbol) && symbol.Name.EndsWith("Client", StringComparison.Ordinal);
+        ProviderOf(symbol) is not null && symbol.Name.EndsWith("Client", StringComparison.Ordinal);
 
     /// <summary>Whether a symbol is a keyed reactive cache, by the names DynamicData gives them. Matched by name rather than by package so the analyzer takes no dependency the application takes.</summary>
     /// <param name="symbol">The symbol to classify.</param>
@@ -205,6 +232,13 @@ internal static class Layers
 
         return containing == layer || containing.StartsWith(layer + ".", StringComparison.Ordinal);
     }
+
+    /// <summary>Resolves the concrete type whose name and interfaces determine the symbol's role: the symbol itself if it is a type, or its containing type if it is a member.</summary>
+    /// <remarks>Used to allow role predicates (client, snapshot, transport) to work on method/property symbols by examining their containing type.</remarks>
+    /// <param name="symbol">The symbol to resolve.</param>
+    /// <returns>The concrete type to examine, or <see langword="null"/> when no type is available.</returns>
+    private static INamedTypeSymbol? EffectiveType(ISymbol symbol) =>
+        symbol as INamedTypeSymbol ?? symbol.ContainingType;
 
     private static bool IsException(INamedTypeSymbol type)
     {

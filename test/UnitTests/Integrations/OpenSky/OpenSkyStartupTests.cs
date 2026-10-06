@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Transponder.Integrations.OpenSky;
+using Transponder.Integrations.OpenSky.Configuration;
 using Transponder.Integrations.OpenSky.Container;
 
 namespace Transponder.UnitTests.Integrations.OpenSky;

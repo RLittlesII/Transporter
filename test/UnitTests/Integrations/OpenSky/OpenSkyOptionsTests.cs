@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Options;
 using Transponder.Integrations.OpenSky;
+using Transponder.Integrations.OpenSky.Configuration;
 
 namespace Transponder.UnitTests.Integrations.OpenSky;
 

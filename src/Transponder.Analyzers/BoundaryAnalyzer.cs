@@ -103,7 +103,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         }
 
         // B-045: inside, only the transport and the client. The contract declares the envelope.
-        if (Layers.IsTransport(enclosing) || Layers.IsProviderRoot(enclosing) || Layers.IsWireSurface(enclosing))
+        if (Layers.IsTransport(enclosing) || Layers.IsClientHome(enclosing) || Layers.IsWireSurface(enclosing))
         {
             return;
         }
@@ -114,7 +114,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
     private static void ReportSnapshotMention(SyntaxNodeAnalysisContext context, INamedTypeSymbol named, ISymbol enclosing)
     {
         // Client, cache, projection, composition root. Everything else is past the projection.
-        if (Layers.IsProviderRoot(enclosing) || Layers.IsTrackingLayer(enclosing) || Layers.IsCompositionRoot(enclosing))
+        if (Layers.IsClientHome(enclosing) || Layers.IsTrackingLayer(enclosing) || Layers.IsCompositionRoot(enclosing))
         {
             return;
         }

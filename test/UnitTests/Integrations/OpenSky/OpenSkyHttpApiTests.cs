@@ -9,8 +9,10 @@ using Microsoft.Reactive.Testing;
 using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Integrations.OpenSky;
+using Transponder.Integrations.OpenSky.Authentication;
 using Transponder.Integrations.OpenSky.Contracts;
-using Transponder.Integrations.OpenSky.Http;
+using Transponder.Integrations.OpenSky.Http.Api;
+using Transponder.Integrations.OpenSky.Model;
 using Transponder.Scheduling;
 using Transponder.UnitTests.Scheduling;
 
