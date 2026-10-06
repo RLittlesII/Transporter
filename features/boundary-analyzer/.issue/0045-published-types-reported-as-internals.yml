@@ -1,0 +1,66 @@
+id: "0045"
+type: bug
+title: Stop reporting what the tracker publishes as a source internal
+
+status: done
+
+priority: high
+value: 4
+risk: 2
+rank: 74
+
+parent: "0019"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: features/boundary-analyzer/.spec/README.md
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: "2026-10-06"
+
+summary: |
+  `TRN0006` and `TRN0004` fire on every type the tracker publishes, so no view
+  model and no page in `fleet-dashboard` compiles. Found while building `0036`:
+
+    error TRN0006: the view model 'Transponder.Features.Fleet.ViewModels.FleetViewModel'
+    names 'TrackedVehicle' (aircraft-source B-041)
+
+  `Layers.IsConcreteTracking` answers "any non-interface type under
+  `Transponder.Tracking`", which was true of that namespace when the rule was
+  written and stopped being true with [ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md):
+  the pipeline now publishes changesets a consumer binds, so `TrackedVehicle`,
+  `FleetSourceDescription`, `FleetColumn` and `FleetGrouping` cross the seam by
+  design. `aircraft-source` B-041 names a strategy, a client, a cache and a
+  decorator, and `fleet-dashboard` B-020 lists the forbidden set in full — the
+  published element is on neither list, so the analyzer reported something no
+  claim forbids.
+
+  The fix reads the seam instead of the namespace: `IFleetTracker`'s members,
+  and what those types carry, are published and are not internals. Everything
+  else under `Tracking/` is reported exactly as before.
+
+acceptance_criteria:
+  - "A view model naming the published element or the description compiles."
+  - "A view model naming a strategy, a client, a cache or the decorator is
+    still reported — the existing `TRN0006` test is unchanged and passes."
+  - "The analyzer reads the seam once per compilation, not once per node."
+  - "`features/boundary-analyzer/.spec/README.md` § 7 says what `TRN0006` and
+    `TRN0004` exempt, and a lesson records why the rule drifted."
+
+decisions:
+  - "2026-10-06 — the person — fix the rule in `0036`'s pull request rather than
+    in a boundary-analyzer pull request of its own. The dashboard cannot compile
+    without it, and a separate pull request would hold `0036` in-progress across
+    a round trip. Rejected: suppressing `TRN0006` in the dashboard, which would
+    silence the rule for every view model this Feature adds."
+
+out_of_scope:
+  - "Widening what a view model may name beyond what the seam publishes —
+    `aircraft-source` B-041 and `fleet-dashboard` B-020 are unchanged, and the
+    strategy, client, cache and decorator are still reported."

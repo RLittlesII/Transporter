@@ -252,6 +252,32 @@ public class BoundaryAnalyzerTests
             .Be("TRN0006");
     }
 
+    /// <summary>
+    /// B-041 names a strategy, a client, a cache and a decorator, and the published element is none
+    /// of them: the pipeline publishes changesets a consumer binds, so what the seam carries crosses
+    /// it by design (ADR-0009). Reporting it would make every view model in <c>fleet-dashboard</c>
+    /// uncompilable, which is what it did until the rule learned to read the seam.
+    /// </summary>
+    /// <returns>The running test.</returns>
+    [Fact]
+    public async Task GivenAViewModelNamingWhatTheSeamPublishes_WhenAnalyzed_ThenItIsNotReported()
+    {
+        // Given, When
+        var diagnostics = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Seam.cs", BoundaryTestData.TrackerSeam)
+            .AddSource("ViewModel.cs", BoundaryTestData.ViewModelNamingWhatTheSeamPublishes)
+            .GenerateAsync();
+
+        // Then
+        diagnostics.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("the element and the description are what the tracker publishes for a consumer to bind");
+    }
+
     [Fact]
     public async Task GivenCodeAddingToOrRemovingFromABoundCollection_WhenAnalyzed_ThenItIsReported()
     {

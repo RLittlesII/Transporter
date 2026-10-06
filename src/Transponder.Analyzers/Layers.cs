@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
 namespace Transponder.Analyzers;
@@ -32,6 +34,9 @@ internal static class Layers
 
     /// <summary>The last namespace segment of every composition root.</summary>
     internal const string Registration = "Container";
+
+    /// <summary>The seam every consumer depends on, and the one thing that says which tracking types are published.</summary>
+    internal const string Seam = "IFleetTracker";
 
     /// <summary>The provider whose integration a symbol was declared in, or <see langword="null"/> when it was not declared in one.</summary>
     /// <param name="symbol">The symbol to classify.</param>
@@ -171,6 +176,52 @@ internal static class Layers
     /// <returns><see langword="true"/> when the symbol belongs to the domain model.</returns>
     internal static bool IsDomain(ISymbol symbol) => In(symbol, Model);
 
+    /// <summary>The tracking types the seam publishes, read from <c>IFleetTracker</c> and from what its members carry.</summary>
+    /// <param name="compilation">The compilation to read the seam from.</param>
+    /// <returns>Every concrete tracking type a consumer can reach through the seam.</returns>
+    /// <remarks>
+    /// A published element is not a source internal however concrete it is: the pipeline publishes
+    /// changesets a consumer binds, so the element and the description cross the seam by design
+    /// (ADR-0009, fleet-dashboard B-005 and B-007).
+    /// </remarks>
+    internal static ImmutableHashSet<INamedTypeSymbol> PublishedByTheSeam(Compilation compilation)
+    {
+        var published = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+
+        if (compilation.GetTypeByMetadataName(Tracking + "." + Seam) is not { } seam)
+        {
+            return published.ToImmutable();
+        }
+
+        var pending = new Queue<ITypeSymbol>();
+        Carried(seam, pending);
+
+        while (pending.Count > 0)
+        {
+            switch (pending.Dequeue())
+            {
+                case IArrayTypeSymbol array:
+                    pending.Enqueue(array.ElementType);
+
+                    break;
+                case INamedTypeSymbol named:
+                    foreach (var argument in named.TypeArguments)
+                    {
+                        pending.Enqueue(argument);
+                    }
+
+                    if (IsConcreteTracking(named) && published.Add(named))
+                    {
+                        Carried(named, pending);
+                    }
+
+                    break;
+            }
+        }
+
+        return published.ToImmutable();
+    }
+
     /// <summary>Whether a symbol is a concrete per-type tracker source or the swapping decorator — a class in the tracking namespace, as opposed to the interface consumers depend on.</summary>
     /// <param name="symbol">The symbol to classify.</param>
     /// <returns><see langword="true"/> when the symbol is a concrete tracking type.</returns>
@@ -257,4 +308,30 @@ internal static class Layers
         symbol.ContainingNamespace is { IsGlobalNamespace: false } containing
             ? containing.ToDisplayString()
             : string.Empty;
+
+    /// <summary>Every type a type's properties and methods carry, so what a published type exposes is published too.</summary>
+    /// <param name="type">The type to read.</param>
+    /// <param name="pending">The types still to classify.</param>
+    private static void Carried(INamedTypeSymbol type, Queue<ITypeSymbol> pending)
+    {
+        foreach (var member in type.GetMembers())
+        {
+            switch (member)
+            {
+                case IPropertySymbol property:
+                    pending.Enqueue(property.Type);
+
+                    break;
+                case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
+                    pending.Enqueue(method.ReturnType);
+
+                    foreach (var parameter in method.Parameters)
+                    {
+                        pending.Enqueue(parameter.Type);
+                    }
+
+                    break;
+            }
+        }
+    }
 }

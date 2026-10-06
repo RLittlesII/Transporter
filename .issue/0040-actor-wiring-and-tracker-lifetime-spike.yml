@@ -21,7 +21,7 @@ spec: null
 claims: []
 
 created: "2026-10-05"
-updated: "2026-10-05"
+updated: "2026-10-06"
 closed: null
 
 summary: |
@@ -43,8 +43,10 @@ summary: |
   `Action<ActorSystem, IActorRegistry>` and hands the actor starter no
   `IServiceProvider` (`src/Gui/Container/AkkaHostBuilder.cs`), while every actor
   above the seam needs container-resolved collaborators — the client, the cache,
-  the clock writer, the options. `ClickActor` needs nothing, so the question has
-  never come up in this repository.
+  the clock writer, the options. `ClickActor` needed nothing, so the question
+  never came up — and `0036` deleted it with the rest of `Features/Demo/` on
+  2026-10-06, so the repository now has no actor at all and `AddAkkaHost` starts
+  none.
 
   Three questions to answer, with a recommendation and a rejected option each:
 

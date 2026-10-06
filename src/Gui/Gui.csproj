@@ -83,6 +83,7 @@
     <ItemGroup>
         <PackageReference Include="Akka.Hosting.Maui" />
         <PackageReference Include="CommunityToolkit.Maui.Markup" />
+        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Maui.Controls"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug"/>
     </ItemGroup>

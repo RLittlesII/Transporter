@@ -1,0 +1,65 @@
+id: "0046"
+type: spike
+title: Explore sorting chosen in the view rather than held by the tracker
+
+status: ready
+
+priority: medium
+value: 3
+risk: 2
+rank: 54
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+    Raised in review of `0036` (pull request #31), reading `FleetViewModel`'s
+    constructor: the tracker holds the chosen comparer in a subject and publishes
+    it back as `Order`, which the consumer feeds to `SortAndBind`. So a column
+    header tap travels into the pipeline and out again to reach the collection
+    bound beside the control that produced it.
+
+    The question is whether the sort belongs to the tracker at all. It is the one
+    pipeline input whose effect is entirely in the consumer: `SortAndBind` runs
+    where the rows are bound, nothing downstream of the tracker reads `Order`, and
+    a second consumer sorting differently is a feature rather than a conflict —
+    unlike the filter, whose effect is the changeset every consumer sees.
+
+    Cross-cutting, which is why it sits at the repository root: it touches
+    `fleet-pipeline` B-009 – B-011 and `SortBy`, `fleet-dashboard` B-012 and
+    `0037`'s input work, and `IFleetTracker`'s shape. ADR-0009 decision 2 and its
+    2026-10-06 amendment are what put `Order` on the interface, so reversing it is
+    an ADR amendment rather than a refactor.
+
+acceptance_criteria:
+    - "A written finding: the sort stays on the tracker, or the view model holds
+      the comparer and `SortBy` and `Order` leave `IFleetTracker` — with the
+      option rejected named."
+    - "The finding says what happens to a second consumer that wants its own
+      order, and to the description's comparers, under each option."
+    - "It lands as an ADR amendment where it changes the seam, and as a
+      `decisions/` row in both Features where it does not. Any throwaway code is
+      deleted."
+    - "`0037` is amended, or confirmed unchanged, before it starts: it is the
+      item that binds the header tap to whichever side ends up owning the sort."
+
+decisions: []
+
+out_of_scope:
+    - "The filter, the grouping and the staleness threshold — their effect is the
+      changeset every consumer sees, which is the argument for the tracker owning
+      them and is not reopened here."
+    - "Which comparers exist — the description publishes them either way
+      (`fleet-pipeline` B-020)."
