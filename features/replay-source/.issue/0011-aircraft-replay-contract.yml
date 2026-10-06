@@ -2,7 +2,7 @@ id: "0011"
 type: task
 title: Substitute aircraft replay at the API contract
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 risk: 3

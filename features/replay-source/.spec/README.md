@@ -522,27 +522,155 @@ it. Whether its wording should gain the clause out loud is `aircraft-source`'s
 
 <!-- Rules: ../../../.spec/templates/feature.md § 8 -->
 
-Unwritten. `test-writer` owes both the testability assessment and the scenario
-grouping. The hard constraint is already stated: playback spacing comes from an
-injected scheduler and a recorded instant, never the wall clock, so no test
-waits in real time.
+**Testability assessment**
 
-The scenarios themselves exist, in
-[`replay-source.feature`](replay-source.feature) beside this file, each tagged
-with the `@B-00n` it proves. Scenarios are documentation; the xUnit tests
-execute, and none has been written yet.
+Against § 7's design, not against the claims alone — the assessment of a shape
+nobody has committed to is worth nothing.
+
+| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Recommendation                                                                                                                                                                                                                                                                                     |
+| ------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DI seams           | Pass          | The substitution point is already an interface, and `adr/0001` item 5 hands the pacer an opened stream rather than a path — so the one component with time-base logic has no I/O to stub and a `MemoryStream` of synthetic lines reaches it whole. The replay chain is hand-constructed at registration, which is itself the seam a composition test uses.                                                                                                | —                                                                                                                                                                                                                                                                                                  |
+| Behavior isolation | **Qualified** | The cadence lives in the pacer, and the loop that calls it lives in `AircraftSnapshotClient`. B-007 is provable at the pacer in one statement, and a pacer that paces correctly proves nothing about an outer loop that adds its own interval on top — which is the failure § 7 rejected an option to avoid.                                                                                                                                              | B-007 takes two tests: one at the pacer for the spacing, one through the client for the zero interval. `test-from-scenarios` § "A claim proven only against an inner method" is the rule; § 9 gives B-007 one row and names both.                                                                  |
+| Coverage potential | **Qualified** | Twenty-two claims are about a value or an observable sequence and are ordinary tests. Five are not: B-005 is about what a captured recording contains, B-006 about what is committed, B-020 about what exists before a talk is given, and B-021 and half of B-022 about what types a component may introduce. This repository's answer to a structural claim is a compiler diagnostic, and the boundary analyzer carries no rule bearing on any of these. | Four are marked **Review** rather than given a test that reads a declaration ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)); B-022's other half is an ordinary composition test, so its row names both. B-005's review cannot be performed yet — see below. |
+| Fixtures           | **Qualified** | Every fixture is synthetic NDJSON: two or three lines as a `static readonly string`, in a `*Cases.cs` beside the tests, parsed the way production parses it. The hazard is specific to this Feature and stated as a claim: **a rehearsal recording is operational data and is never a fixture** (B-006), so the one artefact that would make these tests easy to write is the one thing they may not read.                                                | A torn line is a fixture whose last line is cut mid-token, not a file truncated by a test. Keep the loop cases short — three lines is enough for a boundary.                                                                                                                                       |
+| Determinism        | Pass          | Nothing here reads the wall clock. Spacing comes from recorded instants advanced on `ISchedulerProvider`, and staleness from the observed clock the replayed envelope writes — so a test advances time deliberately and a recording's whole span passes in microseconds. No test reaches a network, and B-011's own scenario is that none can.                                                                                                            | —                                                                                                                                                                                                                                                                                                  |
+
+**Two mechanisms, and which proves what**
+
+An **xUnit test** proves a value the code computes or a sequence it emits. A
+**review** proves a claim about something the repository does not contain — a
+captured recording, a file that must stay uncommitted, a type nobody may
+introduce — where there is no value to compute and no declaration worth
+asserting over. A review is a mechanism and it can be performed: it records what
+was looked at, on which item, and what change re-does it.
+
+There is no third mechanism here. The boundary analyzer
+([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md))
+carries no rule bearing on this Feature, and asking for one is
+`Transponder.Analyzers`' own Feature rather than a line in this section. A test
+over `typeof(...)` is not an option: it executes, so it looks like the first
+mechanism, and it asserts a declaration, so it does the second's job badly.
+
+**One review cannot be performed yet.** B-005 claims a stage recording spans at
+least the staleness threshold, and § 5 row 3 keeps capturing one out of scope —
+so there is nothing to look at. Its automated half arrives with B-026, whose
+startup check measures exactly that span; the row stays `Missing` and says so.
+
+**Two claims wait on another Feature.** B-019 and B-023 are about a vessel
+recording and a vessel strategy, and § 5 row 2 defers the feed. Their rows name
+what will prove them and record that the subject does not exist
+([lesson 0011](../../../.spec/lessons/0011-a-review-nobody-performed-is-not-a-review-nobody-can-perform.md)).
+
+**A finding for `spec-author`: B-011's test is a host test, and `0010` cannot
+write it.** B-011 — replay runs with no credential configured — is provable only
+against a composed host, and the composition that makes it true is § 11 row 4's
+registration split, which is `0012`'s. `0010` holds the claim and delivers
+nothing that can move its row. This is the shape
+[lesson 0011](../../../.spec/lessons/0011-a-review-nobody-performed-is-not-a-review-nobody-can-perform.md)
+names, and the remedy is a claim reassignment in § Tasks rather than a test
+`0010` cannot write — not this section's to make.
+
+**Scenarios**
+
+Twenty-seven scenarios in [`replay-source.feature`](replay-source.feature)
+beside this file, one per claim, each tagged with the `@B-00n` it proves.
+Scenarios are documentation; the xUnit tests are what execute, and none is
+written yet.
+
+- Happy path → B-001, B-003, B-004, B-007, B-009, B-011, B-013 – B-016, B-018,
+  B-019, B-022, B-023, B-025, B-027
+- Failure mode → B-008, B-010, B-012, B-017, B-026
+- Validation failure → B-005, B-006, B-020, B-021, B-024
+- Data-driven → B-002
+
+Four buckets and one claim in the last, which is the honest count rather than a
+spread: B-002 is the only claim whose proof is the same assertion over several
+payloads — empty, sparse, and ordinary. Four of the five validation-failure rows
+assert an absence rather than a behaviour, and they are exactly the four the next
+section marks Review; B-024 is the odd one, a registration a host test observes.
+
+**What the tests need before any of them can be written**
+
+Nothing central. The stack `transponder-conventions` mandates is already
+referenced, `Akka.TestKit.Xunit2` arrived with `0006`, and `test/UnitTests`
+already stands up the application's own composition in
+`TransponderCompositionTests` — which is the shape every host-level row below
+reuses rather than assembling a graph by hand.
+
+Two traps are worth carrying, because both cost a cycle in this Feature
+specifically:
+
+- **A generated fixture names a builder after its parameter's _type_**, so
+  `AircraftSnapshotClient`'s two `IOptions<OpenSkyOptions>`-shaped and
+  cache-shaped parameters collide the moment the replay chain hands it different
+  ones. That type's fixture is hand-written over `AutoFixtureBase<T>`, saying so
+  in its remarks.
+- **The arrangement is not a helper.** A synthetic recording is _data_ and may be
+  built by a private method; the stream handed to the pacer, the host, and the
+  configuration handed to the registration are the `// Given` and stay in the
+  test body ([lesson 0015](../../../.spec/lessons/0015-a-helper-that-builds-the-arrangement-is-the-arrangement.md)).
 
 ## 9. Traceability Matrix
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-Unwritten, and **this is the gate**. `test-writer` owes one row per § 3 claim,
-anchored to the scenario's `@B-00n` tag and naming the xUnit test that proves
-it. Until those rows exist no claim is covered, so the matrix stands `Missing`
-in its entirety and implementation does not start.
+**This is the gate, and all twenty-seven rows read `Missing`.** Nothing in this
+Feature is built: no recorder, no pacer, no replay contract, no registration, and
+no test. The rows below name what will prove each claim rather than leaving the
+section empty — which is the difference between a gate that says what is owed and
+one that says only that something is.
 
-A scenario existing is not coverage. This section is the only place a claim's
-build state is written, and a row here naming no test is what blocks ship.
+A row's Status becomes `Verified` when every mechanism it names passes in a run,
+and a review becomes `Verified` when it is performed and recorded. A scenario
+existing is never coverage; this section is the only place a claim's build state
+is written.
+
+Three kinds of entry appear in Test, and § 8 says which proves what. An **xUnit
+test** proves a value or a sequence. A **Review** proves a claim about something
+the repository does not contain, and B-005's cannot be performed until a
+recording exists. **Waiting** marks a row whose subject belongs to a Feature that
+has no specification yet — B-019 and B-023, the vessel half.
+
+The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
+retitled scenario does not silently orphan a row. Every claim carries exactly one
+scenario here, so no tag anchors two.
+
+| Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                        | Status  |
+| -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| B-001    | `@B-001` | `RecordingWriterTests.GivenAPayloadAndTheInstantItArrived_WhenTheLineIsWritten_ThenItHoldsBothInTheFormatADR0004Fixes` — `0009`                                                                                                                                                                                             | Missing |
+| B-002    | `@B-002` | `RecordingWriterTests.GivenAnEmptyASparseAndAnOrdinaryPayload_WhenEachIsRecorded_ThenTheLineHoldsTheProvidersBytesUnchanged`, over `RecordingWriterCases` — `0009`                                                                                                                                                          | Missing |
+| B-003    | `@B-003` | `RecordingTapTests.GivenRecordingIsOn_WhenAPollCompletes_ThenOnlyThePollsOwnRequestWasMade`, asserting the request Flurl's `HttpTest` saw rather than counting in the tap — `0009`                                                                                                                                          | Missing |
+| B-004    | `@B-004` | `RecordingTapTests.GivenOnePayloadReplayedWithRecordingOnAndOff_WhenTheFleetIsObserved_ThenTheChangesetsAreIdentical` — `0009`                                                                                                                                                                                              | Missing |
+| B-005    | `@B-005` | **Review**, and it cannot be performed yet: § 5 row 3 keeps capturing a recording out of scope, so there is nothing to look at. Performed against the recording taken for the talk, before the talk. Its automated half arrives with B-026, whose startup check measures exactly this span — `0009`                         | Missing |
+| B-006    | `@B-006` | **Review** — `recordings/` is git-ignored (ADR-0004), no committed file matches it, and no test in `test/UnitTests` reads a recording. Re-done by any change that commits a recording or points a test at one — `0009`                                                                                                      | Missing |
+| B-007    | `@B-007` | Two tests, per § 8's behaviour-isolation finding: `RecordingPacerTests.GivenThreePayloadsFifteenSecondsApart_WhenTheRecordingIsReplayed_ThenEachIsReleasedAtTheRecordedSpacing` for the spacing, and `ReplayCadenceTests.GivenTheLiveClientOverTheReplayContract_WhenPayloadsArrive_ThenNoIntervalOfItsOwnIsAdded` — `0010` | Missing |
+| B-008    | `@B-008` | `RecordingPacerTests.GivenTheRecordingIsReplayedPastItsEnd_WhenTheBoundaryIsCrossed_ThenTheFirstPayloadFollowsTheLastAndNoChangesetRemovesEveryAircraft` — `0010`                                                                                                                                                           | Missing |
+| B-009    | `@B-009` | `ReplayOpenSkyApiTests.GivenALineWhosePayloadReportsOneInstantAndArrivedAtAnother_WhenItIsReplayed_ThenTheReportedOneIsTheObservedInstant` — `0011`                                                                                                                                                                         | Missing |
+| B-010    | `@B-010` | `ReplayStalenessTests.GivenAnAircraftLastReportedSixMinutesBeforeTheRecordingEnds_WhenTheRecordingIsReplayed_ThenItIsMarkedStaleAtThatPointAndKept` — `0011`                                                                                                                                                                | Missing |
+| B-011    | `@B-011` | `ReplayCompositionTests.GivenNoCredentialConfiguredAndNoReachableProvider_WhenTheHostStartsAndReplayRuns_ThenTheFleetFillsAndNoRequestIsMade` — a host test over the registration split § 11 row 4 decided, so **`0012` builds what moves this row** while `0010` holds the claim (§ 8's finding for `spec-author`)         | Missing |
+| B-012    | `@B-012` | `RecordingPacerTests.GivenARecordingWhoseFinalLineIsCutMidToken_WhenItIsReplayed_ThenEveryCompleteLineIsReplayedAndTheStreamDoesNotFault` — `0010`                                                                                                                                                                          | Missing |
+| B-013    | `@B-013` | `ReplayOpenSkyApiTests.GivenAPayloadThatProducedAnAircraftLive_WhenTheSamePayloadIsReplayed_ThenTheAircraftIsIdenticalAndTheLiveProjectionBuiltIt` — `0011`                                                                                                                                                                 | Missing |
+| B-014    | `@B-014` | `ReplayOpenSkyApiTests.GivenARecordingTakenBeforeAConverterFix_WhenItIsReplayedAfterTheFix_ThenTheCorrectedValuesAreObservedWithNoRecapture` — `0010`                                                                                                                                                                       | Missing |
+| B-015    | `@B-015` | `ReplayCompositionTests.GivenBothSourcesRegistered_WhenReplayIsSelected_ThenItIsSelectedThroughTheOneDecoratorAndNothingElseSelectsIt` — `0012`                                                                                                                                                                             | Missing |
+| B-016    | `@B-016` | `ReplaySwapTests.GivenTheFleetIsObserved_WhenTheSourceSwapsToReplay_ThenNoMarkerCompletionOrErrorReachesTheSeam` — `0012`                                                                                                                                                                                                   | Missing |
+| B-017    | `@B-017` | `ReplaySwapTests.GivenALivePollerIsRunning_WhenReplayBecomesTheLiveSource_ThenTheOutgoingPollStops` — `0012`                                                                                                                                                                                                                | Missing |
+| B-018    | `@B-018` | `ReplaySwapTests.GivenAFilterASortAndAGroupInPlace_WhenTheSourceSwapsToReplay_ThenNoneIsRebuiltAndTheBindingSurvives` — `0012`                                                                                                                                                                                              | Missing |
+| B-019    | `@B-019` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselRecordingTests.GivenASequenceOfReceivedMessages_WhenEachIsRecorded_ThenThereIsOneLinePerMessageAndNoneIsBatched` — `0013`                                                                                                       | Missing |
+| B-020    | `@B-020` | **Review**, performed before the closing act is presented: a vessel recording is named in configuration and the startup report clears it. Re-done by the change that alters the closing act's source — `0013`                                                                                                               | Missing |
+| B-021    | `@B-021` | **Review** — no vehicle, record or snapshot type declared under the replay namespaces. Re-done by any change that adds a type there, and the reviewer's question is whether the type belongs to the recorded provider's Feature instead — `0013`                                                                            | Missing |
+| B-022    | `@B-022` | Both halves: `ReplayCompositionTests.GivenTheReplayChainIsRegistered_WhenItIsResolved_ThenTheClientIsTheLiveClassOverTheReplayContract` for what it reuses, and a **Review** that the replay namespaces declare no client, cache, converter or projection of their own — `0011`                                             | Missing |
+| B-023    | `@B-023` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselReplayTrackerSourceTests.GivenARecordingAndNoContractToStandInFor_WhenTheStrategyIsRegistered_ThenItReachesTheSeamLikeEveryOtherSource` — `0013`                                                                                | Missing |
+| B-024    | `@B-024` | `ReplayRegistrationTests.GivenAnAircraftRecordingNamedAndNoVesselOne_WhenTheHostStarts_ThenOnlyTheAircraftReplaySourceIsSelectableAndTheLiveSourceIsStillSelected` — `0012`                                                                                                                                                 | Missing |
+| B-025    | `@B-025` | `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` — `0012`                                                                                                                                                           | Missing |
+| B-026    | `@B-026` | `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` — `0012`                                                                                                                                                          | Missing |
+| B-027    | `@B-027` | `RecordingPacerTests.GivenSyntheticLinesInAMemoryStream_WhenThePacerIsDriven_ThenItReplaysThemWithNoFileSystemAndReadsNoConfiguration` — proven by a test that has no file system rather than by reading the constructor — `0010`                                                                                           | Missing |
+
+**What the matrix says about the items.** Every claim has a row and a named
+mechanism, so no item is waiting on this section. Four rows are blocked on
+something other than work: B-005 on a recording nobody has captured, B-019 and
+B-023 on a specification nobody has written, and B-011 on an item other than the
+one holding its claim. The remaining twenty-three move when their item builds and
+their test passes.
 
 ## 10. Lessons / Spec Deltas
 
@@ -550,9 +678,10 @@ build state is written, and a row here naming no test is what blocks ship.
 
 No Feature-scoped lesson yet. One repository-wide lesson bears on this
 document: [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
-which is why §§ 8 and 9 above say in words that they are unwritten rather than
-carrying a template row, and why § 3 no longer keeps a build state § 9 owns.
-§§ 6 and 7 said the same until the design pass wrote them.
+which is why § 3 keeps no build state § 9 owns, and why §§ 6 – 9 said in words
+that they were unwritten rather than carrying a template row until the design
+and coverage passes wrote them. All four are written now; a `Missing` row in
+§ 9 is the only place this Feature's build state is recorded.
 
 ## 11. Open Questions
 
