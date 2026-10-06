@@ -130,9 +130,10 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
   Scenario: The pipeline is built once and survives a swap
     Given a running application whose pipeline has been constructed
      When the live source is swapped
-     Then the filters, comparers, groups, aggregates and bindings are the same instances
+     Then the filters, comparers, groups and aggregates are the same instances
       And none of them was reconstructed
       And the fleet tracker is what owns them
+      And no binding is among them, because binding belongs to the consumer
 
   @B-024
   Scenario: The bounding box and the polling interval are given to the client

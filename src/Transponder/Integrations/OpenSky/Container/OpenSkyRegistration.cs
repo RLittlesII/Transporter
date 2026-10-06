@@ -78,6 +78,10 @@ public static class OpenSkyRegistration
         services.AddSingleton<AircraftSnapshotMapper>();
         services.AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>();
 
+        // The strategy is also registered as the seam itself, which is the inner registration 0006's
+        // decorator wraps and what the tracker resolves until it exists (ADR-0003, B-038).
+        services.AddSingleton<ITrackerSource>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
+
         return services;
     }
 

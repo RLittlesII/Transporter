@@ -222,32 +222,38 @@ The two additions this Feature makes to existing types, and the types it
 introduces. `TransportVehicle` and `Aircraft` exist; the member below is new on
 each (B-013).
 
-| Field                              | Type                                            | Notes                                                                                                                                                                                                  |
-| ---------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `TransportVehicle.GroupKey`        | `string`, `abstract`                            | The answer a view groups by, abstract so a new source cannot inherit one (ADR-0005 item 2, B-013). A string because a grouping key is a label, and the description names which key is being asked for. |
-| `Aircraft.GroupKey`                | `string`, `override`                            | The origin country. `OriginCountry` is already non-optional and defaults to empty, so the key is never absent.                                                                                         |
-| `FleetColumn.Name`                 | `string`                                        | What a header shows.                                                                                                                                                                                   |
-| `FleetColumn.Value`                | `Func<TransportVehicle, string>`                | The cell, already display-formatted. A selector rather than a member name, so no reflection and no cast (B-020, B-022).                                                                                |
-| `FleetColumn.Comparer`             | `Option<IComparer<TransportVehicle>>`           | Absent when the column is not sortable, which is a fact about the column rather than a null to remember (`language-ext-usage`).                                                                        |
-| `FleetGrouping.Name`               | `string`                                        | What the grouping dropdown shows — "Origin country", "Category".                                                                                                                                       |
-| `FleetGrouping.Key`                | `Func<TransportVehicle, string>`                | How the group is read. The default grouping's selector is `GroupKey`; a second grouping a source offers supplies its own.                                                                              |
-| `FleetSourceDescription.Columns`   | `IReadOnlyList<FleetColumn>`                    | In display order (B-020).                                                                                                                                                                              |
-| `FleetSourceDescription.Groupings` | `IReadOnlyList<FleetGrouping>`                  | What this source can be grouped by.                                                                                                                                                                    |
-| `FleetSummary.Tracked`             | `int`                                           | Vehicles in the fleet (B-015).                                                                                                                                                                         |
-| `FleetSummary.Stale`               | `int`                                           | How many of them are stale.                                                                                                                                                                            |
-| `FleetSummary.Groups`              | `int`                                           | Groups present under the current grouping.                                                                                                                                                             |
-| `FleetGroup.Key`                   | `string`                                        | The group's value.                                                                                                                                                                                     |
-| `FleetGroup.Count`                 | `int`                                           | Vehicles in the group (B-014).                                                                                                                                                                         |
-| `FleetGroup.StaleCount`            | `int`                                           | How many of them are stale (B-014). Derived from the same stream, never by enumerating anything bound.                                                                                                 |
-| `FleetGroup.Vehicles`              | `IObservable<IChangeSet<StaleVehicle, string>>` | The group's rows as a stream, so a consumer rendering one group binds it and one that needs only the counts does not. Not a second store of items (B-002, ADR-0009).                                   |
-| `StaleVehicle.Vehicle`             | `TransportVehicle`                              | What the published element carries: the vehicle and whether it is currently stale. The flag is **not** stored on the vehicle — `domain-model` § "Never add" forbids that, and the clock moves.         |
-| `StaleVehicle.IsStale`             | `bool`                                          | Derived at the moment the pipeline evaluated it, from `TransportVehicle.IsStale(asOf, threshold)` (B-016, B-018).                                                                                      |
-| `FleetNotice.Kind`                 | `FleetNoticeKind`                               | `Updated`, `Quiet` or `Resumed` (B-025, B-027). An enum rather than three types, because every consumer handles all three and a hierarchy would be matched on.                                         |
-| `FleetNotice.Instant`              | `DateTimeOffset`                                | The observed instant the notice reports, read from the clock (B-018). Never a wall-clock read.                                                                                                         |
-| `FleetNotice.Tracked`              | `int`                                           | Vehicles in the fleet when the notice was raised.                                                                                                                                                      |
-| `FleetNotice.Added`                | `int`                                           | Vehicles the changeset added (B-025).                                                                                                                                                                  |
-| `FleetNotice.Updated`              | `int`                                           | Vehicles it updated.                                                                                                                                                                                   |
-| `FleetNotice.Removed`              | `int`                                           | Vehicles it removed. `Added + Updated + Removed` is zero only for a `Quiet` or `Resumed` notice, because B-025 raises none for an empty changeset.                                                     |
+| Field                              | Type                                              | Notes                                                                                                                                                                                                  |
+| ---------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TransportVehicle.GroupKey`        | `string`, `abstract`                              | The answer a view groups by, abstract so a new source cannot inherit one (ADR-0005 item 2, B-013). A string because a grouping key is a label, and the description names which key is being asked for. |
+| `Aircraft.GroupKey`                | `string`, `override`                              | The origin country. `OriginCountry` is already non-optional and defaults to empty, so the key is never absent.                                                                                         |
+| `FleetColumn.Name`                 | `string`                                          | What a header shows.                                                                                                                                                                                   |
+| `FleetColumn.Value`                | `Func<TransportVehicle, string>`                  | The cell, already display-formatted. A selector rather than a member name, so no reflection and no cast (B-020, B-022).                                                                                |
+| `FleetColumn.Comparer`             | `Option<IComparer<TransportVehicle>>`             | Absent when the column is not sortable, which is a fact about the column rather than a null to remember (`language-ext-usage`).                                                                        |
+| `FleetGrouping.Name`               | `string`                                          | What the grouping dropdown shows — "Origin country", "Category".                                                                                                                                       |
+| `FleetGrouping.Key`                | `Func<TransportVehicle, string>`                  | How the group is read. The default grouping's selector is `GroupKey`; a second grouping a source offers supplies its own.                                                                              |
+| `FleetSourceDescription.Columns`   | `IReadOnlyList<FleetColumn>`                      | In display order (B-020).                                                                                                                                                                              |
+| `FleetSourceDescription.Groupings` | `IReadOnlyList<FleetGrouping>`                    | What this source can be grouped by.                                                                                                                                                                    |
+| `FleetSummary.Tracked`             | `int`                                             | Vehicles in the fleet (B-015).                                                                                                                                                                         |
+| `FleetSummary.Stale`               | `int`                                             | How many of them are stale.                                                                                                                                                                            |
+| `FleetSummary.Groups`              | `int`                                             | Groups present under the current grouping.                                                                                                                                                             |
+| `FleetGroup.Key`                   | `string`                                          | The group's value.                                                                                                                                                                                     |
+| `FleetGroup.Count`                 | `int`                                             | Vehicles in the group (B-014).                                                                                                                                                                         |
+| `FleetGroup.StaleCount`            | `int`                                             | How many of them are stale (B-014). Derived from the same stream, never by enumerating anything bound.                                                                                                 |
+| `FleetGroup.Vehicles`              | `IObservable<IChangeSet<TrackedVehicle, string>>` | The group's rows as a stream, so a consumer rendering one group binds it and one that needs only the counts does not. Not a second store of items (B-002, ADR-0009).                                   |
+| `TrackedVehicle.Vehicle`           | `TransportVehicle`                                | What the published element carries: the vehicle and whether it is currently stale. The flag is **not** stored on the vehicle — `domain-model` § "Never add" forbids that, and the clock moves.         |
+| `TrackedVehicle.IsStale`           | `bool`                                            | Derived at the moment the pipeline evaluated it, from `TransportVehicle.IsStale(asOf, threshold)` (B-016, B-018).                                                                                      |
+| `FleetNotice.Kind`                 | `FleetNoticeKind`                                 | `Updated`, `Quiet` or `Resumed` (B-025, B-027). An enum rather than three types, because every consumer handles all three and a hierarchy would be matched on.                                         |
+| `FleetNotice.Instant`              | `DateTimeOffset`                                  | The observed instant the notice reports, read from the clock (B-018). Never a wall-clock read.                                                                                                         |
+| `FleetNotice.Tracked`              | `int`                                             | Vehicles in the fleet when the notice was raised.                                                                                                                                                      |
+| `FleetNotice.Added`                | `int`                                             | Vehicles the changeset added (B-025).                                                                                                                                                                  |
+| `FleetNotice.Updated`              | `int`                                             | Vehicles it updated.                                                                                                                                                                                   |
+| `FleetNotice.Removed`              | `int`                                             | Vehicles it removed. `Added + Updated + Removed` is zero only for a `Quiet` or `Resumed` notice, because B-025 raises none for an empty changeset.                                                     |
+
+**The element is `TrackedVehicle`, renamed in review.** It was `StaleVehicle`
+until `0007`'s pull request, where the person asked why a type every instance of
+which is tracked is named for the state a few of them carry. The rows above and
+the interface below use the new name; § 11 row 4's record of the review that
+chose the wrapper keeps the old one, because that is what was decided that day.
 
 **The arrival notice**
 
@@ -321,7 +327,7 @@ flowchart LR
     sort["Sort"] --> stale
     clock(["IObservedClockTicks.Instant<br/>+ threshold"]) --> stale
     stale["mark stale"] --> share["RefCount()"]
-    share --> fleet[["Fleet<br/>IObservable&lt;IChangeSet&lt;StaleVehicle, string&gt;&gt;"]]
+    share --> fleet[["Fleet<br/>IObservable&lt;IChangeSet&lt;TrackedVehicle, string&gt;&gt;"]]
     share --> group["Group"]
     grouping(["GroupBy(grouping)"]) --> group
     group --> groups[["Groups"]]
@@ -373,7 +379,7 @@ not exist yet (`transponder-conventions` § "Declarations in § 7").
 public interface IFleetTracker : IDisposable
 {
     /// <summary>Gets the fleet, shared, for a consumer to bind (B-002, B-028).</summary>
-    IObservable<IChangeSet<StaleVehicle, string>> Fleet { get; }
+    IObservable<IChangeSet<TrackedVehicle, string>> Fleet { get; }
 
     /// <summary>Gets the current grouping's groups (B-012).</summary>
     IObservable<IChangeSet<FleetGroup, string>> Groups { get; }
@@ -436,7 +442,7 @@ Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, StaleVehicle
+src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle
 src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetSourceDescription, FleetGroup, FleetSummary, FleetNotice
 ```
 

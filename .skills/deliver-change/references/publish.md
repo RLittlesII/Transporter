@@ -44,7 +44,13 @@ numbers.
    generated file in the diff.
 3. **Commit the last unit** — imperative message, no co-author trailer — rebase
    onto the fresh trunk, and push. Never open a pull request from a branch
-   behind the trunk.
+   behind the trunk. A message's subject names what is now true rather than the
+   activity that made it so, and its body holds **what the diff cannot show**:
+   why each decision went that way, the option rejected, and **what is still not
+   true** — the coverage that is still missing, the half of a claim another item
+   owns, what the gate therefore still blocks. A message reporting only what it
+   achieved reads as a completion nobody granted. The companion holds the
+   project's type and scope spelling.
 4. **Open the pull request** with a squash-ready title, and move the item to
    in-review.
     - **Never merge directly, bypass protections, or enqueue explicitly.**
