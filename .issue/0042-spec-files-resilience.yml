@@ -1,4 +1,4 @@
-id: "0008"
+id: "0042"
 type: refactor
 title: Extract spec files from hardcoded paths to make tests resilient to reorganization
 
@@ -9,7 +9,7 @@ value: 2
 risk: 1
 rank: 50
 
-parent: "0001"
+parent: null
 children: []
 
 depends_on: []
