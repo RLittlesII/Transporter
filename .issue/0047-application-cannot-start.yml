@@ -1,0 +1,98 @@
+id: "0047"
+type: bug
+title: The application cannot start, because nothing registers the tracker or a source
+
+status: in-progress
+
+priority: high
+value: 5
+risk: 2
+rank: 94
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  Reported 2026-10-06, the day `0036` merged. The application dies building its
+  first window:
+
+      System.InvalidOperationException: Unable to resolve service for type
+      'Transponder.Tracking.IFleetTracker' while attempting to activate
+      'Transponder.Features.Fleet.ViewModels.FleetViewModel'.
+
+  `MauiProgram` registers `FleetPage` and `FleetViewModel` and nothing else.
+  `AddFleetTracking` and `AddOpenSky` exist, are public, and are called by
+  nobody; the head holds no `IConfiguration` to call the second one with. The
+  `AppShell`'s only content is the page, so the failure is the whole
+  application rather than one screen.
+
+  Two things let it ship. `fleet-dashboard` § 11 row 4 read "no claim B-001 –
+  B-007 is about registration or who polls first" — but B-004 is the
+  registration claim, its § 9 row is `Missing`, and `0044` holds it because
+  `src/Gui` is a MAUI head no test project here can reference. Nothing
+  executed over the head's registration list, so nothing could say it was
+  short.
+
+  The second is that `transponder-conventions` § "Verify and publish" step 3
+  says to launch against a recorded or simulated source, and this repository
+  has nothing to launch against: `replay-source` (`0008` – `0013`) is unbuilt,
+  and OpenSky wants credentials. A step with nothing behind it is a step that
+  gets skipped, which is why a person running the application found this and
+  the build did not.
+
+acceptance_criteria:
+  - "The application starts and shows the fleet page, with no exception,
+    against configuration carrying no credentials."
+  - "A test resolves `FleetViewModel` from the registrations the head calls, so
+    the next missing registration is a red test rather than a launch."
+  - "The user-interface scheduler the application binds on is the main thread's
+    and not `CurrentThreadScheduler`, so the first changeset to arrive does not
+    touch the collection off the thread that owns it."
+  - "The lesson is recorded, and the rule it produces lands in a skill."
+
+decisions:
+  - "2026-10-06 — the person — the head wires `AddOpenSky` and `AddFleetTracking`
+    itself, as the smallest change that starts the application. Rejected: one
+    `AddTransponder(IConfiguration)` composition in `Transponder` that a host
+    test resolves `FleetViewModel` from, which would have put the whole
+    composition under test. Who owns the composition root, the tracker's
+    lifetime and the first poll stays `0040`'s, and this item pre-empts none of
+    its three questions."
+  - "2026-10-06 — the person — configuration ships as a `MauiAsset` carrying the
+    base URL, the poll interval and the bounding box, and carries no
+    credentials: the application starts, the poll fails `401`, the grid stays
+    empty. Rejected: reading credentials from the environment over the asset,
+    which would make a developer's own machine the only place the application
+    behaves one way."
+  - "2026-10-06 — the person — an empty grid is all this item can show, which
+    makes recorded data the only thing that proves a screen works.
+    `replay-source` is not a convenience behind the live provider: it is what
+    `transponder-conventions` § \"Verify and publish\" step 3 already asks for,
+    and `0008` is re-valued on that reading."
+  - "2026-10-06 — this item — `0036`'s third decision is the one this reverses in
+    part. It dropped spike `0040` on the reading that no claim B-001 – B-007 is
+    about registration; B-004 is, and the registration it names was never made.
+    The reading was not wrong about the spike — it was wrong that `Missing` rows
+    cost nothing while the thing they describe is the application's startup."
+
+out_of_scope:
+  - "Who owns the composition root, the tracker's lifetime and who starts the
+    first poll — spike `0040`, whose three questions this item answers none of."
+  - "Supplying credentials, and where a developer keeps them — nothing here
+    reads one."
+  - "A feed to look at — `replay-source` `0008` - `0013` builds it, and the
+    first decision above is why that matters more than it did."
+  - "Proving B-003, B-004 and B-006 — `0044`. This item makes B-006's review
+    possible to perform later; it does not perform it."
