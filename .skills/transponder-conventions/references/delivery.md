@@ -72,6 +72,53 @@ belongs to no Feature — a bug, a spike, a chore — goes in the repository-roo
 - Report prefix: `[<id> · PR #<pr>]`, or `[<id>]` before the pull request
   exists; a specification uses the Feature slug in place of an id.
 
+## Commit and pull request messages
+
+What a message must contain is
+[`deliver-change`](../../deliver-change/references/publish.md) step 3. This is
+how it is spelled here.
+
+```
+<type>(<item id>): <what is now true>
+
+Delivers <id>            # or: Specifies features/<slug>; omitted when neither applies
+
+<a paragraph per decision>
+
+<how it was verified, and what is still not true>
+```
+
+- **`feature`, spelled out.** Every item commit on `main` reads
+  `feature(0023):`, `feature(0005):` — not `feat:`. `docs` is a specification,
+  an ADR, a lesson or an item edit; `chore` is the tracker, a hook or build
+  wiring; `refactor`, `fix` and `test` as usual.
+- **The scope is the item id and nothing else** — four digits, repository-wide,
+  so `feature(0007):` resolves from any Feature. A commit with no item carries
+  **no scope**: specification authoring has none to cite, and neither does a
+  repository-wide chore. That is why `docs: specify the fleet pipeline …` and
+  `feature(0005): project cached snapshots …` are both correct.
+- **The subject names the outcome, not the activity.** "report a declaration
+  that is the wrong shape, on the declaration" says what the build now does;
+  "add seven analyzer rules" says what the author did. Lowercase after the
+  colon, no trailing period.
+- **The pull request title is the trunk's commit subject**, because the squash
+  merge appends `(#N)` to it and discards the branch. So it follows every rule
+  above, and the branch's own subjects are read only in the squashed body.
+- **The body opens with the item line when there is an item** — `Delivers <id>`,
+  or `Specifies features/<slug>` when authoring a specification. Same line the
+  pull request body opens with, above. A repository-wide chore cites neither and
+  opens with its first paragraph: there is nothing for a reader to resolve.
+- **A decision is a paragraph, not a bullet.** It names the claim ids and the
+  sections it moves, and the option rejected where there was one — the same
+  content as the item's `decisions` row, which is what the squash commit is read
+  beside. Reserve a list for a set of independent mechanical edits; the file
+  list itself is in the diff.
+- **The last paragraph says how it was verified and what is still not true**:
+  which § 9 rows stay `Missing`, which half of a claim another item owns, and
+  what the ship gate therefore still blocks.
+- **No co-author trailer, no generated-by line, no emoji.** Nothing on `main`
+  carries one.
+
 ## Verify and publish
 
 Under the method skill's step numbers:
