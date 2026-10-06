@@ -33,13 +33,24 @@ another writer can split down the middle, and the whole-line write is what
 makes interleaving impossible rather than merely unlikely. Neither defect could
 show in a test: one needs a real file, the other needs two writers.
 
-**No rule in this repository said either thing.**
-[`coding-conventions`](../../.skills/coding-conventions/SKILL.md) banned "a
-blocking wait on an asynchronous call" and said nothing about a signature that
-forces one, and
-[`transponder-conventions`](../../.skills/transponder-conventions/references/coding.md)
+**No rule in this repository said either thing.** Three came close and none
+reached it. [`coding-conventions`](../../.skills/coding-conventions/SKILL.md)
+banned "a blocking wait on an asynchronous call" — but the block here was on a
+_synchronous_ API, with no asynchronous call to wait on, no `.Result` and no
+`.Wait()`. [`transponder-conventions`](../../.skills/transponder-conventions/references/coding.md)
 covered the `Async` suffix — how to name an asynchronous method — without
-saying when a method has to be one.
+saying when a method has to be one. And [`akka-actor`](../../.skills/akka-actor/SKILL.md)
+forbade blocking inside `Receive`, which is actor-scoped and again about
+sync-over-async.
+
+**No analyzer could have caught it either, and the reason is the abstraction.**
+`CA1849` reports synchronous I/O called from an asynchronous method, and the
+call site was `_recorder.Write(...)` through `IRecordingWriter` — so all the
+compiler could see was a `void` member on an interface. A sealed class calling
+`StreamWriter.Write` inside an `async` method is the shape a diagnostic can
+find; a seam that hides the file is not. `CA2007` was configured and had
+nothing to say, because the method had no `await` to carry a
+`ConfigureAwait`.
 
 ## Spec delta
 
