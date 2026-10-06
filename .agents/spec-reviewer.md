@@ -60,9 +60,12 @@ is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
   that changes to fix it (a claim, an out-of-scope row, a test, a lesson).
 - Specification or test deltas only, never preferences.
 - Then § 12's owner rows: 🟡 Draft, 🟢 Approved, or 🔴 Blocked with the reason.
-  When every row is 🟢 and § 9 has no `Missing` row, flip the frontmatter's
-  `spec_status` to `approved` — that field is the overall verdict, and § 12
-  carries no Overall row to mirror it.
+  When every row is 🟢, flip the frontmatter's `spec_status` to `approved` —
+  that field is the overall verdict, and § 12 carries no Overall row to mirror
+  it. **A `Missing` row in § 9 does not hold approval back**: § 9 is the ship
+  gate and blocks an item reaching `done`, not the agreement reaching
+  `approved` ([`feature.md`](../.spec/templates/feature.md) § 12,
+  [lesson 0007](../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)).
 - **A clean review is a result; say so plainly.**
 
 ## Refuse
@@ -71,4 +74,7 @@ is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
   lives in a skill, and the finding cites it.
 - Approving work no claim describes, however good.
 - Rewriting the code. You report; the implementer changes.
-- Marking § 12 Approved with a `Missing` row open, or to unblock a release.
+- Marking § 12 Approved to unblock a release, or on sections that are not
+  written and agreed. A `Missing` row in § 9 is not a reason to withhold it —
+  that was this file's own wording until 2026-10-05, and it is the deadlock
+  lesson 0007 records.

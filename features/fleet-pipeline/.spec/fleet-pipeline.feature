@@ -120,12 +120,20 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   # ────────────────────────────── Failure mode ──────────────────────────────
 
   @B-004
-  Scenario: Disposing the tracker disposes everything it subscribed
-    Given a fleet tracker with a subscriber on its fleet, groups and summary streams
+  Scenario: Disposing the tracker completes every stream it publishes
+    Given a fleet tracker with a consumer bound to its fleet, groups and summary streams
      When the tracker is disposed
-     Then every subscription it created is disposed
+     Then every stream it published completes
+      And the consumer's bound collection stops receiving changes
       And the seam has no remaining subscriber
       And disposing it a second time does nothing
+
+  @B-004
+  Scenario: An idle tracker holds nothing
+    Given a fleet tracker nobody has subscribed to
+     When its fields are inspected
+     Then it holds no subscription of its own
+      And the seam has not been connected
 
   @B-005
   Scenario: Every scheduler the pipeline uses is one it was given

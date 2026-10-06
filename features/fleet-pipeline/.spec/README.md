@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: draft
+spec_status: approved
 ---
 
 # Specification: Fleet pipeline
@@ -59,36 +59,36 @@ Claim ids are scoped to this specification. This Feature's `B-001` is not
 (`transponder-conventions` § "Claim ids are `B-00n`"). Where a claim of the other
 Feature is cited it is written with its Feature's name.
 
-| ID    | Claim                                                                                                                                                                                                                                                                                                                                                                          | Source                                                                        |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| B-001 | The pipeline SHALL be constructed once, from `ITrackerSource.Connect()`, and SHALL NOT be rebuilt, re-subscribed or re-bound because the live source changed.                                                                                                                                                                                                                  | dynamic-data-pipeline § "The spine"; `aircraft-source` B-042                  |
-| B-002 | The pipeline SHALL publish the fleet as a stream of changesets and SHALL NOT own a bound collection; a consumer SHALL materialise exactly one collection from it, whose element carries the vehicle and its derived stale mark, and no view, view model or tracker SHALL hold a second collection of tracked items.                                                            | ADR-0009; dynamic-data-pipeline § "Never add"; mvvm § "Projecting state back" |
-| B-003 | Every change to that collection SHALL arrive through the pipeline; no code SHALL add to, remove from, clear or reorder it imperatively.                                                                                                                                                                                                                                        | `aircraft-source` B-044; dynamic-data-pipeline § "Never add"                  |
-| B-004 | The pipeline SHALL dispose every subscription it creates when the tracker is disposed, and a source swap SHALL dispose nothing the pipeline needs and leak nothing it replaced.                                                                                                                                                                                                | dynamic-data-pipeline § "Keep the pipeline the thing that does the work"      |
-| B-005 | Every scheduler the pipeline uses SHALL be one it was given, and it SHALL NOT read `CurrentThreadScheduler`, `TaskPoolScheduler` or any other ambient scheduler inline; it SHALL NOT marshal to a user-interface thread on a consumer's behalf, because that is the consumer's boundary.                                                                                       | ADR-0009; mvvm § "Projecting state back"; `SchedulerProvider` remarks         |
-| B-006 | Filtering SHALL be driven by an observable predicate over `TransportVehicle`: a new predicate value SHALL re-evaluate the existing items and SHALL NOT re-subscribe to the source or refetch anything.                                                                                                                                                                         | dynamic-data-pipeline § "The spine"; README.md § "DynamicData operators"      |
-| B-007 | Before any predicate arrives, every vehicle the source reports SHALL be visible; an absent filter SHALL NOT be an empty fleet.                                                                                                                                                                                                                                                 | Decided call — an empty grid at startup reads as a broken feed                |
-| B-008 | No filter SHALL be applied by enumerating or editing the bound collection, and none SHALL be re-evaluated by a UI event handler.                                                                                                                                                                                                                                               | maui-ui § "The UI reads; it never drives"                                     |
-| B-009 | Sorting SHALL be driven by an observable comparer: a new comparer SHALL reorder the existing items in place, and SHALL NOT clear, refill or rebuild the collection.                                                                                                                                                                                                            | dynamic-data-pipeline § "The spine"; maui-ui § "The UI reads"                 |
-| B-010 | Every comparer SHALL come from the live source's description (B-020) and SHALL compare using members of `TransportVehicle` only.                                                                                                                                                                                                                                               | maui-ui § "The swap test"; ADR-0005 item 6                                    |
-| B-011 | A comparer SHALL break ties on `Key`, so the order is total and two sorts of an unchanged fleet produce the same sequence.                                                                                                                                                                                                                                                     | Decided call — rows swapping places on an unchanged fleet reads as churn      |
-| B-012 | Grouping SHALL be driven by an observable grouping key chosen from the description, and changing it SHALL regroup the existing items without rebuilding the pipeline.                                                                                                                                                                                                          | README.md § "UI features"; dynamic-data-pipeline § "The spine"                |
-| B-013 | `TransportVehicle` SHALL declare the grouping answer as an `abstract` member, so a new source cannot inherit one; `Aircraft` SHALL answer with its origin country.                                                                                                                                                                                                             | ADR-0005 item 2; README.md § "DynamicData operators"                          |
-| B-014 | Each group SHALL carry its count of vehicles and its count of stale vehicles, derived from the same stream, and neither SHALL be computed by enumerating the bound collection.                                                                                                                                                                                                 | README.md § "UI features"; dynamic-data-pipeline § "The spine"                |
-| B-015 | A fleet-wide summary — vehicles tracked, vehicles stale, groups present — SHALL derive from the same stream as the collection and SHALL update as the collection does.                                                                                                                                                                                                         | README.md § "UI features"                                                     |
-| B-016 | A vehicle silent for longer than the threshold SHALL be reported as stale **and SHALL remain in the fleet**, keyed and present in any collection bound from it.                                                                                                                                                                                                                | README.md § "UI features"; dynamic-data-pipeline § "Staleness and expiry"     |
-| B-017 | The staleness threshold SHALL be configurable and SHALL default to five minutes.                                                                                                                                                                                                                                                                                               | README.md § "UI features"                                                     |
-| B-018 | Staleness SHALL be measured against the observed clock, SHALL NOT read `DateTime.UtcNow` or `DateTimeOffset.Now` inline, and SHALL be re-evaluated when the observed instant advances — so a vehicle becomes stale with no new data arriving for it.                                                                                                                           | `aircraft-source` B-043 and B-003; ADR-0007; ADR-0010                         |
-| B-019 | No vehicle SHALL be removed from the fleet because it stopped reporting, and `ExpireAfter` SHALL NOT appear in this pipeline.                                                                                                                                                                                                                                                  | README.md § "DynamicData operators"; see § 5 row 2                            |
-| B-020 | The live source SHALL supply a description naming the columns, comparers and grouping keys available for it; each column SHALL be a display name plus a selector over `TransportVehicle`.                                                                                                                                                                                      | maui-ui § "The swap test"; ADR-0005 item 6                                    |
-| B-021 | Swapping the live source SHALL swap the description, and SHALL NOT require editing the pipeline, a comparer, a predicate or a grouping key.                                                                                                                                                                                                                                    | hot-swap-source; README.md § "Closing act"                                    |
-| B-022 | No column, comparer, predicate, grouping key or aggregate SHALL downcast, type-test or `switch` on a concrete `TransportVehicle` subclass.                                                                                                                                                                                                                                     | ADR-0005 item 6; domain-model § "Never add"                                   |
-| B-023 | Nothing in this Feature SHALL name an API contract, an API type, a client, a cache, a snapshot or a concrete `ITrackerSource`.                                                                                                                                                                                                                                                 | `aircraft-source` B-047; hot-swap-source                                      |
-| B-024 | Nothing in this Feature SHALL read a network, a file or a wall clock.                                                                                                                                                                                                                                                                                                          | dynamic-data-pipeline § "Testing"; see § 4 row 5                              |
-| B-025 | The tracker SHALL publish a notice each time a changeset arrives carrying at least one change, and the notice SHALL carry the observed instant and the counts — vehicles tracked, and vehicles added, updated and removed by that changeset. A changeset carrying no change SHALL produce no notice.                                                                           | Decided call 2026-10-05; see § 7 § "The arrival notice"                       |
-| B-026 | The notices SHALL be reachable as a stream paced by a caller-supplied minimum-interval observable, so two consumers SHALL be able to run at two different cadences at once and either SHALL be changeable while the application runs. An interval SHALL default to one second until a value arrives, and the most recent notice in a capped window SHALL be the one published. | Decided call 2026-10-05; see § 4 rows 8 and 10                                |
-| B-027 | The tracker SHALL publish a quiet notice when no changeset has arrived for longer than the staleness threshold, and a resumed notice on the next changeset after one, so silence is reported once rather than inferred from the absence of notices.                                                                                                                            | Decided call 2026-10-05; `aircraft-source` decision 0002 (the swap's own)     |
-| B-028 | The stages SHALL be shared: a second subscriber SHALL NOT cause a second connection to the seam, a second diff pass or a second evaluation of the filter, the sort or the stale mark, and the stages SHALL tear down when the last subscriber unsubscribes.                                                                                                                    | ADR-0009; dynamic-data-pipeline § "The spine"                                 |
+| ID    | Claim                                                                                                                                                                                                                                                                                                                                                                              | Source                                                                        |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| B-001 | The pipeline SHALL be constructed once, from `ITrackerSource.Connect()`, and SHALL NOT be rebuilt, re-subscribed or re-bound because the live source changed.                                                                                                                                                                                                                      | dynamic-data-pipeline § "The spine"; `aircraft-source` B-042                  |
+| B-002 | The pipeline SHALL publish the fleet as a stream of changesets whose element carries the vehicle and its derived stale mark, and SHALL NOT own a bound collection; no tracker, pipeline stage or aggregate SHALL hold a second store of tracked items. What a consumer does with the stream is `fleet-dashboard` B-005's (§ 5 row 9).                                              | ADR-0009; dynamic-data-pipeline § "Never add"; mvvm § "Projecting state back" |
+| B-003 | Every change to that collection SHALL arrive through the pipeline; no code SHALL add to, remove from, clear or reorder it imperatively.                                                                                                                                                                                                                                            | `aircraft-source` B-044; dynamic-data-pipeline § "Never add"                  |
+| B-004 | Disposing the tracker SHALL complete every stream it publishes and dispose everything it created; while nothing is subscribed the tracker SHALL hold no subscription of its own. A source swap SHALL dispose nothing the pipeline needs and leak nothing it replaced.                                                                                                              | dynamic-data-pipeline § "Keep the pipeline the thing that does the work"      |
+| B-005 | Every scheduler the pipeline uses SHALL be one it was given, and it SHALL NOT read `CurrentThreadScheduler`, `TaskPoolScheduler` or any other ambient scheduler inline; it SHALL NOT marshal to a user-interface thread on a consumer's behalf, because that is the consumer's boundary.                                                                                           | ADR-0009; mvvm § "Projecting state back"; `SchedulerProvider` remarks         |
+| B-006 | Filtering SHALL be driven by an observable predicate over `TransportVehicle`: a new predicate value SHALL re-evaluate the existing items and SHALL NOT re-subscribe to the source or refetch anything.                                                                                                                                                                             | dynamic-data-pipeline § "The spine"; README.md § "DynamicData operators"      |
+| B-007 | Before any predicate arrives, every vehicle the source reports SHALL be visible; an absent filter SHALL NOT be an empty fleet.                                                                                                                                                                                                                                                     | Decided call — an empty grid at startup reads as a broken feed                |
+| B-008 | No filter SHALL be applied by enumerating or editing the bound collection, and none SHALL be re-evaluated by a UI event handler.                                                                                                                                                                                                                                                   | maui-ui § "The UI reads; it never drives"                                     |
+| B-009 | Sorting SHALL be driven by an observable comparer: a new comparer SHALL reorder the existing items in place, and SHALL NOT clear, refill or rebuild the collection.                                                                                                                                                                                                                | dynamic-data-pipeline § "The spine"; maui-ui § "The UI reads"                 |
+| B-010 | Every comparer SHALL come from the live source's description (B-020) and SHALL compare using members of `TransportVehicle` only.                                                                                                                                                                                                                                                   | maui-ui § "The swap test"; ADR-0005 item 6                                    |
+| B-011 | A comparer SHALL break ties on `Key`, so the order is total and two sorts of an unchanged fleet produce the same sequence.                                                                                                                                                                                                                                                         | Decided call — rows swapping places on an unchanged fleet reads as churn      |
+| B-012 | Grouping SHALL be driven by an observable grouping key chosen from the description, and changing it SHALL regroup the existing items without rebuilding the pipeline.                                                                                                                                                                                                              | README.md § "UI features"; dynamic-data-pipeline § "The spine"                |
+| B-013 | `TransportVehicle` SHALL declare the grouping answer as an `abstract` member, so a new source cannot inherit one; `Aircraft` SHALL answer with its origin country.                                                                                                                                                                                                                 | ADR-0005 item 2; README.md § "DynamicData operators"                          |
+| B-014 | Each group SHALL carry its count of vehicles and its count of stale vehicles, derived from the same stream, and neither SHALL be computed by enumerating a collection bound from it.                                                                                                                                                                                               | README.md § "UI features"; dynamic-data-pipeline § "The spine"                |
+| B-015 | A fleet-wide summary — vehicles tracked, vehicles stale, groups present — SHALL derive from the same stream as the collection and SHALL update as the collection does.                                                                                                                                                                                                             | README.md § "UI features"                                                     |
+| B-016 | A vehicle silent for longer than the threshold SHALL be reported as stale **and SHALL remain in the fleet**, keyed and present in any collection bound from it.                                                                                                                                                                                                                    | README.md § "UI features"; dynamic-data-pipeline § "Staleness and expiry"     |
+| B-017 | The staleness threshold SHALL be configurable and SHALL default to five minutes.                                                                                                                                                                                                                                                                                                   | README.md § "UI features"                                                     |
+| B-018 | Staleness SHALL be measured against the observed clock, SHALL NOT read `DateTime.UtcNow` or `DateTimeOffset.Now` inline, and SHALL be re-evaluated when the observed instant advances — so a vehicle becomes stale with no new data arriving for it.                                                                                                                               | `aircraft-source` B-043 and B-003; ADR-0007; ADR-0010                         |
+| B-019 | No vehicle SHALL be removed from the fleet because it stopped reporting, and `ExpireAfter` SHALL NOT appear in this pipeline.                                                                                                                                                                                                                                                      | README.md § "DynamicData operators"; see § 5 row 2                            |
+| B-020 | The live source SHALL supply a description naming the columns, comparers and grouping keys available for it; each column SHALL be a display name plus a selector over `TransportVehicle`.                                                                                                                                                                                          | maui-ui § "The swap test"; ADR-0005 item 6                                    |
+| B-021 | Swapping the live source SHALL swap the description, and SHALL NOT require editing the pipeline, a comparer, a predicate or a grouping key.                                                                                                                                                                                                                                        | hot-swap-source; README.md § "Closing act"                                    |
+| B-022 | No column, comparer, predicate, grouping key or aggregate SHALL downcast, type-test or `switch` on a concrete `TransportVehicle` subclass.                                                                                                                                                                                                                                         | ADR-0005 item 6; domain-model § "Never add"                                   |
+| B-023 | Nothing in this Feature SHALL name an API contract, an API type, a client, a cache, a snapshot or a concrete `ITrackerSource`.                                                                                                                                                                                                                                                     | `aircraft-source` B-047; hot-swap-source                                      |
+| B-024 | Nothing in this Feature SHALL read a network, a file or a wall clock.                                                                                                                                                                                                                                                                                                              | dynamic-data-pipeline § "Testing"; see § 4 row 5                              |
+| B-025 | The tracker SHALL publish a notice each time a changeset arrives carrying at least one change, and the notice SHALL carry the observed instant and the counts — vehicles tracked, and vehicles added, updated and removed by that changeset. A changeset carrying no change SHALL produce no notice.                                                                               | Decided call 2026-10-05; see § 7 § "The arrival notice"                       |
+| B-026 | The notices SHALL be reachable as a stream paced by a caller-supplied minimum-interval observable, so two consumers SHALL be able to run at two different cadences at once and either SHALL be changeable while the application runs. An interval SHALL default to one second until a value arrives, and the most recent notice in a capped window SHALL be the one published.     | Decided call 2026-10-05; see § 4 rows 8 and 10                                |
+| B-027 | The notices stream SHALL report a quiet notice when no changeset has arrived for longer than the staleness threshold, and a resumed notice on the next changeset after one, so silence is reported once rather than inferred from the absence of notices. The arrival timer SHALL be built per subscription, so the tracker holds none and B-028's teardown is not defeated by it. | Decided call 2026-10-05; `aircraft-source` decision 0002 (the swap's own)     |
+| B-028 | The stages SHALL be shared: a second subscriber SHALL NOT cause a second connection to the seam, a second diff pass or a second evaluation of the filter, the sort or the stale mark, and the stages SHALL tear down when the last subscriber unsubscribes.                                                                                                                        | ADR-0009; dynamic-data-pipeline § "The spine"                                 |
 
 ## 4. Constraints
 
@@ -245,6 +245,32 @@ the pipeline, which is what keeps `fleet-dashboard` from implementing throttling
 twice and differently. That it is a method on an interface of properties is
 § 11 row 4 concern 7, and the review kept it: pacing is an operator with
 behaviour to test, not a projection a consumer shapes.
+
+**The derivation is per subscription, and the tracker holds none.** This is what
+the 2026-10-05 review forced (§ 12 finding 1): a quiet notice needs the gaps
+between arrivals timed, and a tracker-held timer would keep the shared chain's
+reference count above zero forever — defeating B-028's teardown and running the
+chain with nobody watching. So `Notices` builds its own pipeline per call, over
+the same shared stream:
+
+```csharp
+public IObservable<FleetNotice> Notices(IObservable<TimeSpan> minimumInterval) =>
+    Observable.Defer(() => _fleet
+        .WithArrivalInstants(_ticks)      // Updated, Quiet, Resumed
+        .SelectNotices(_staleThreshold)
+        .CapTo(minimumInterval))          // the rate cap, one implementation
+        .TakeUntil(_shutdown);
+```
+
+No field holds a subscription, so silence is reported while someone is listening
+and not otherwise — which is the whole of what is lost, and nobody was there to
+hear it.
+
+`_shutdown` is what makes `IDisposable` mean something once the tracker holds no
+subscriptions: `Dispose()` completes it, every published stream is
+`TakeUntil`-ed by it, and a bound consumer's collection stops receiving changes
+because its source completed. That is B-004 as amended — disposal is observable
+in the streams rather than in a list of handles.
 
 **A notice carries values, not presentation** (§ 4 row 9). No duration, no
 colour, no severity, no text. `Quiet` is a fact about the feed; that it is worth
@@ -422,10 +448,12 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — twenty-nine scenarios, each tagged with the `@B-00n` it proves.
+this file — thirty scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
-one that changed nothing raises none. § 9 still gives it one row, and the
+one that changed nothing raises none. B-004 carries two for the same reason
+after the 2026-10-05 review: disposal completes the published streams, and an
+idle tracker holds nothing at all. § 9 still gives it one row, and the
 row's tag anchors both.
 Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
@@ -452,7 +480,7 @@ code looks right.
 | B-001    | `@B-001` | `FleetTrackerTests.GivenAFleetTracker_WhenTheLiveSourceChanges_ThenTheCollectionIsNotRebuiltOrRebound`                                                                    | Missing |
 | B-002    | `@B-002` | `FleetTrackerTests.GivenTheFleetAndGroupStreams_WhenBoundByOneConsumer_ThenOneCollectionIsMaterialisedCarryingTheStaleMark`                                               | Missing |
 | B-003    | `@B-003` | analyzer — an imperative `Add`, `Remove` or `Clear` on a bound fleet collection is reported at the call                                                                   | Missing |
-| B-004    | `@B-004` | `FleetTrackerTests.GivenASubscribedPipeline_WhenTheTrackerIsDisposed_ThenEverySubscriptionIsDisposed`                                                                     | Missing |
+| B-004    | `@B-004` | `FleetTrackerTests.GivenABoundConsumer_WhenTheTrackerIsDisposed_ThenEveryPublishedStreamCompletesAndNothingRemainsSubscribedToTheSeam`                                    | Missing |
 | B-005    | `@B-005` | `FleetTrackerTests.GivenATestScheduler_WhenTheFleetChanges_ThenEveryScheduledWorkItemRanOnTheInjectedSchedulerAndNoneMarshalledForAConsumer`                              | Missing |
 | B-006    | `@B-006` | `FleetFilterTests.GivenABoundFleet_WhenANewPredicateArrives_ThenTheVisibleRowsChangeAndTheSourceIsNotResubscribed`                                                        | Missing |
 | B-007    | `@B-007` | `FleetFilterTests.GivenNoPredicateHasArrived_WhenVehiclesAreReported_ThenEveryVehicleIsVisible`                                                                           | Missing |
@@ -573,72 +601,59 @@ member tables are what still has to move, and that is the `implementer`'s, with
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status                                                               |
-| -------- | ----------- | -------------------------------------------------------------------- |
-| §§ 1-5   | spec-author | 🔴 Blocked — B-028 and B-027 cannot both hold. See finding 1 below.  |
-| §§ 6-7   | implementer | 🔴 Blocked — § 7 does not say where the notice derivation attaches.  |
-| §§ 8-9   | test-writer | 🟡 Draft — B-028's named test asserts the teardown finding 1 denies. |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
-is [the template's § 12](../../../.spec/templates/feature.md). No row here is
-🟢, so no item below moves to `in-progress`
-(`transponder-conventions` § "The rules that bind every change").
+is [the template's § 12](../../../.spec/templates/feature.md) and
+[lesson 0007](../../../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md):
+§ 9 is the ship gate and blocks an item reaching `done`, not the agreement
+reaching `approved`. All twenty-eight rows read `Missing`, and the sections are
+written and agreed, so the rows above are 🟢 and `spec_status` is `approved`.
 
-**Review of 2026-10-05, after ADR-0009 and ADR-0010.** The mechanical checks
-pass: 28 claims, 28 § 9 rows, 29 scenarios, every `@B-00n` tagged exactly once,
-ids contiguous and unduplicated, every claim carried by exactly one child item.
-Three findings, the first of them blocking.
+**Review of 2026-10-05.** Mechanically clean: 28 claims, 28 § 9 rows, 30
+scenarios, every `@B-00n` tagged exactly once, ids contiguous and unduplicated,
+§ 4/5/11 rows in order, every claim carried by exactly one child item. No
+credential, token or live-provider reach. Both new ADRs follow
+[`adr.md`](../../../.spec/templates/adr.md) with a rejected alternative each;
+ADR-0007 is unamended; no accepted record was edited; the swap test holds.
 
-**Finding 1 — B-028's teardown and B-027's quiet notice contradict each other,
-and ADR-0009 states both.** B-028 says the stages tear down when the last
-subscriber unsubscribes, and that no second subscriber causes a second
-connection to the seam. B-027 says the tracker publishes a quiet notice when no
-changeset has arrived for longer than the threshold — which requires something
-to be timing changeset arrivals. That timer has to attach somewhere, and both
-places are already forbidden:
+Three findings were raised and all three are closed in the same pass:
 
-- **On the shared chain**, held by the tracker: the reference count never
-  reaches zero, so the teardown B-028 claims never happens and the chain runs
-  with nobody watching — which is the behaviour ADR-0009 rejected
-  `AsObservableCache()` for.
-- **On `ITrackerSource.Connect()` separately**: a second connection to the seam,
-  which is B-028's first clause.
+1. **B-028's teardown against B-027's quiet notice — blocking, and resolved by
+   the person.** A quiet notice needs the gaps between arrivals timed, and a
+   tracker-held timer would hold the shared chain's reference count above zero
+   forever: B-028's teardown would never happen and the chain would run with
+   nobody watching, which is what ADR-0009 rejected `AsObservableCache()` for.
+   The alternative attachment — a second connection to the seam — is B-028's
+   first clause. **Resolved:** the notice derivation is built per `Notices(…)`
+   call (§ 7), the tracker holds no subscription, and silence is reported while
+   someone is listening and not otherwise. B-027 now claims it of the stream
+   rather than of the tracker; ADR-0009's contradictory consequence bullet is
+   corrected and says what the review found. **B-004 was amended as a knock-on:
+   with no handles to dispose, disposal is "every published stream completes",
+   which is observable, where "disposes every subscription it creates" had
+   become vacuously true.** Its scenario and § 9 test name follow, and it gains
+   a second scenario for the idle tracker — the state that would have hidden the
+   defect.
+2. **B-002 obliged a consumer this Feature excludes.** Tightened to the
+   pipeline's own half: it publishes the stream, owns no bound collection, and
+   holds no second store. What a consumer does with the stream is
+   `fleet-dashboard` B-005's, which already claimed it (§ 5 row 9).
+3. **B-014 still said "the bound collection"**, where B-016 and B-019 were
+   reworded for the pivot. Now "a collection bound from it".
 
-ADR-0009's own consequences carry both halves, two bullets apart: "the chain
-still stops when nothing at all is watching", then "the tracker holds the
-staleness tick and quiet-notice subscriptions, which exist whether or not anyone
-is bound." The second sentence is the one that cannot be true as written.
-
-The remedy is a decision, not a wording fix, and it belongs to the person with
-`spec-author` and the `implementer` applying it. Named, not chosen here:
-derive the notices lazily inside `Notices(…)`, so no tracker-held subscription
-exists and silence is reported only while someone is listening — B-027's "the
-tracker SHALL publish" then needs rewording and nothing else moves; or accept a
-tracker-held subscription, in which case B-028's teardown clause is withdrawn
-and ADR-0009's rejection of `AsObservableCache()` is moot, because the chain is
-live from construction either way.
-
-**Finding 2 — B-002 obliges a consumer this Feature excludes.** It says "a
-consumer SHALL materialise exactly one collection from it", while § 5 row 9 puts
-the `Bind` and the collection it produces in `fleet-dashboard`, whose B-005
-already claims exactly that. A claim that two Features both own has no single
-§ 9 row that proves it. The pipeline's own half — publishes a stream, owns no
-bound collection, no second store of tracked items downstream — is what belongs
-here; `spec-author`'s to tighten.
-
-**Finding 3 — B-014 still says "the bound collection".** B-016 and B-019 were
-reworded for the pivot and this one was not, so it names a collection this
-Feature no longer has. Same fix as those two: "any collection bound from it".
-Not blocking; it reads as intended.
-
-**Not findings, checked and clean:** no credential, token or live-provider reach
-anywhere in the diff; both ADRs follow
-[`adr.md`](../../../.spec/templates/adr.md) and carry considered options with a
-rejected alternative each; ADR-0007 is unamended; no accepted ADR was edited;
-every record is a decision or an ADR by the template's own test, with no process
-rule filed as either; no role wrote outside its sections in this pass; and the
-swap test holds — flipping planes to ships swaps the description, and no claim,
-scenario or § 7 member names a concrete vehicle outside the detail pane.
+**One finding outside this specification**, recorded here because this review is
+where it surfaced: [`.agents/spec-reviewer.md`](../../../.agents/spec-reviewer.md)
+told the reviewer to flip `spec_status` only "when every row is 🟢 **and § 9 has
+no `Missing` row**", which is exactly the gate lesson 0007 exists to forbid —
+approval waiting on coverage, coverage waiting on implementation, implementation
+waiting on approval. The role file is corrected to match the template and the
+lesson. Nothing on this Feature depended on the wrong reading, because the
+findings above would have blocked it anyway.
 
 ## Decisions
 

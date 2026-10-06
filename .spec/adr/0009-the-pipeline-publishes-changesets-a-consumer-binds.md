@@ -120,6 +120,18 @@ different mechanism here: there is one `Bind`, and it is the consumer's.
   — and it was not taken, because a chain running with nobody watching spends
   credits for nothing. If that empty grid shows up on stage, that is the thing to
   revisit.
-- `IFleetTracker : IDisposable` still means something after this record: the
-  tracker holds the staleness tick and quiet-notice subscriptions, which exist
-  whether or not anyone is bound.
+- **The tracker holds no subscription of its own.** An earlier draft of this
+  record said it held the staleness tick and quiet-notice subscriptions "whether
+  or not anyone is bound", which contradicted the bullet above it: such a
+  subscription keeps the reference count above zero, so the chain would never
+  stop and `AsObservableCache()` would have been the honest choice after all.
+  The 2026-10-05 specification review caught it before anything was built. The
+  staleness mark is a stage inside the shared chain, driven by the ticks seam,
+  and the notice derivation — including the timer that measures silence — is
+  built per `Notices(…)` call over the same shared stream. Silence is therefore
+  reported while someone is listening and not otherwise.
+- `IFleetTracker : IDisposable` still means something: `Dispose()` completes a
+  shutdown signal that every published stream is `TakeUntil`-ed by, so a bound
+  consumer's collection stops because its source completed. Disposal is
+  observable in the streams rather than in a list of handles, which is
+  `fleet-pipeline` B-004 as that review amended it.
