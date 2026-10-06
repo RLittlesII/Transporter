@@ -2,7 +2,7 @@ id: "0032"
 type: task
 title: Describe a source's columns, comparers and grouping keys, and sort by them
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 value: 4
@@ -30,7 +30,7 @@ claims:
   - B-022
 
 created: "2026-10-05"
-updated: "2026-10-05"
+updated: "2026-10-06"
 closed: null
 
 summary: |

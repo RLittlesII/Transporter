@@ -2,7 +2,7 @@ id: "0031"
 type: task
 title: Build the pipeline once from the seam and bind the one collection
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 value: 5
@@ -12,13 +12,11 @@ rank: 101
 parent: "0030"
 children: []
 
-depends_on:
-  - "0007"
+depends_on: []
 blocks:
   - "0032"
   - "0034"
-spikes:
-  - "0040"
+spikes: []
 
 spec: features/fleet-pipeline/.spec/README.md
 
@@ -33,15 +31,15 @@ claims:
   - B-028
 
 created: "2026-10-05"
-updated: "2026-10-05"
+updated: "2026-10-06"
 closed: null
 
 summary: |
   Assemble the pipeline in `FleetTracker`'s constructor, publish the fleet as a
   stream of changesets, share the stages, and dispose every subscription with
-  the tracker. Filtering and sorting are wired here as stages taking their
-  observable inputs as constructor parameters; what the comparers and grouping
-  keys are is `0032`'s.
+  the tracker. Filtering and sorting are wired here as stages reading the
+  subjects the four input methods tick (§ 4 row 14); what the comparers and
+  grouping keys are is `0032`'s.
 
   ADR-0009 moved the item's shape on 2026-10-05: no `ReadOnlyObservableCollection`
   is exposed, `IFleetQuery` is not declared, and the `Bind` plus the marshal to
@@ -87,6 +85,15 @@ decisions:
     four inputs are constructor parameters rather than an `IFleetQuery` the view
     model implements, and the tracker is a container singleton. `0040` still
     owns the actor wiring and who subscribes first."
+  - "2026-10-06 — the person — `0007` leaves `depends_on`. What this item needed
+    from it — `IFleetTracker` declared, holding the clock, publishing `Fleet` —
+    is on `main` at `be7b6ef`. `0007` itself stays open on two claims whose
+    subjects are downstream of this item (a view model and the swap decorator),
+    so waiting for its close would be waiting on work this item unblocks."
+  - "2026-10-06 — the person — `0040` leaves `spikes`. No claim here is about
+    registration or who starts the first poll: § 4 row 13 settled the singleton,
+    ADR-0009 decision 7 recorded it and `0007` registered it. The spike's open
+    questions are startup wiring, which `fleet-dashboard` `0036` still waits on."
   - "2026-10-05 — the person — the observed clock's ticks arrive on a third
     read-side seam, `IObservedClockTicks`, rather than by widening the
     `IObservedClock` `aircraft-source` published (ADR-0010). Lands in `0034`,
