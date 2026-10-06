@@ -18,17 +18,19 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   @B-001
   Scenario: The pipeline is built once and survives a change of live source
     Given a fleet tracker subscribed to the tracker seam
-      And the collection holds three vehicles
+      And a consumer bound to its fleet stream, holding three vehicles
      When the live source behind the seam is swapped for another
      Then the pipeline is not rebuilt
-      And the collection object the view holds is the same object
+      And the collection the consumer bound is not replaced
       And no stage re-subscribes to the seam
 
   @B-002
-  Scenario: There is one collection, and the groups are a projection of it
-    Given a fleet tracker whose collection holds four vehicles in two countries
-     When its collection and its groups are read
-     Then the groups carry the same vehicle instances the collection carries
+  Scenario: The pipeline publishes streams, and one consumer materialises one collection
+    Given a fleet tracker reporting four vehicles in two countries
+     When a consumer binds the fleet stream and the groups stream
+     Then the tracker exposes no collection of its own
+      And each bound row carries the vehicle and its stale mark
+      And the groups carry the same vehicle instances the fleet does
       And no second store of tracked items exists anywhere downstream of the seam
 
   @B-006
@@ -66,6 +68,15 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       | origin country    |
       | on ground         |
       | barometric altitude |
+
+  @B-028
+  Scenario: Two subscribers, one connection to the seam
+    Given a fleet tracker with no subscribers
+     When one consumer binds the fleet stream and a second subscribes to it
+     Then the seam was connected once
+      And the diff, the filter and the sort each ran once per changeset
+      And both subscribers saw the same changes
+      And the stages tear down when the last subscriber unsubscribes
 
   @B-012
   Scenario: Changing the grouping reforms the groups
@@ -110,19 +121,20 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
 
   @B-004
   Scenario: Disposing the tracker disposes everything it subscribed
-    Given a fleet tracker with a bound collection, groups and a summary
+    Given a fleet tracker with a subscriber on its fleet, groups and summary streams
      When the tracker is disposed
      Then every subscription it created is disposed
       And the seam has no remaining subscriber
       And disposing it a second time does nothing
 
   @B-005
-  Scenario: Changes a view observes arrive on the user interface thread
-    Given a fleet tracker built with one test scheduler in both scheduler positions
+  Scenario: Every scheduler the pipeline uses is one it was given
+    Given a fleet tracker built with one test scheduler in every scheduler position
       And a vehicle reported on the background thread
      When the scheduler is advanced
-     Then the collection's change was observed on the user interface thread
+     Then every work item the pipeline scheduled ran on the scheduler it was given
       And no stage read an ambient scheduler to get there
+      And no stage marshalled to a user interface thread for its consumer
 
   @B-016
   Scenario: A silent vehicle is marked and kept

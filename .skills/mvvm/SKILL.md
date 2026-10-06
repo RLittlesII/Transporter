@@ -99,9 +99,14 @@ observe it, so there is no continuation at all.
 - **Marshal to the UI scheduler at the view model boundary**, not deep inside
   the pipeline, and take the scheduler by constructor so a test can substitute
   it.
-- The view binds the pipeline's collection directly; the view model does not
-  copy it into a list of its own. Two collections of the same items is the bug
-  this rule prevents.
+- **The pipeline publishes an observable; the view model binds it.** A domain
+  object does not own a `ReadOnlyObservableCollection` — that type decides its
+  consumer has a UI. The view model calls `ObserveOn(UserInterfaceThread)` then
+  `Bind(out _rows)`, disposes that one subscription with itself, and exposes the
+  collection it produced. One `Bind` per collection, and no copy of a collection
+  anything else already holds: two collections of the same items is the bug this
+  rule prevents
+  ([ADR-0009](../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)).
 - A view model exposes the abstract domain type, not a subclass — the detail
   pane is the only exception ([`maui-ui`](../maui-ui/SKILL.md) "The swap test").
 

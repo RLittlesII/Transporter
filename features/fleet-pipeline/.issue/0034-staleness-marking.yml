@@ -6,8 +6,8 @@ status: ready-for-architecture
 
 priority: high
 value: 4
-risk: 4
-rank: 78
+risk: 3
+rank: 81
 
 parent: "0030"
 children: []
@@ -16,6 +16,7 @@ depends_on:
   - "0031"
 blocks:
   - "0033"
+  - "0038"
 spikes: []
 
 spec: features/fleet-pipeline/.spec/README.md
@@ -37,13 +38,19 @@ summary: |
 
   The mark is **derived, never stored** on the vehicle — `domain-model`
   § "Never add" forbids a stored flag, and the clock moves — so it is carried
-  beside the vehicle in what the pipeline binds (§ 7's `StaleVehicle`).
+  beside the vehicle in the element the pipeline publishes (`StaleVehicle`),
+  which a consumer binds — the pipeline exposes no collection of its own
+  (ADR-0009).
 
-  This item changes an interface another Feature delivered: `IObservedClock`
-  exposes `Current` and no observable (§ 4 row 3), so nothing can notice the
-  instant advancing, and B-018's second clause cannot be satisfied by reading
-  it. The read side gains `Instant`; `IObservedClockWriter` is untouched, so
-  ADR-0007 decision 1's separation holds.
+  This item adds a seam rather than widening one. `IObservedClock` exposes
+  `Current` and no observable (§ 4 row 3), so nothing can notice the instant
+  advancing and B-018's second clause cannot be satisfied by reading it.
+  ADR-0010 answers it with a third read-side interface,
+  `IObservedClockTicks`, carrying `Instant`: the two interfaces
+  `aircraft-source` published are untouched and ADR-0007 stands unamended. The
+  risk this item carried for editing another Feature's interface is lower for
+  it — a new interface breaks no implementer — while the two silent-wrong-answer
+  hazards below are unchanged.
 
   Runs after `0031`, and before `0033`, whose per-group stale count has nothing
   to count until a vehicle can be marked.
@@ -51,7 +58,8 @@ summary: |
 acceptance_criteria:
   - "B-016 — marked stale and still present, still keyed."
   - "B-017 — configurable, defaulting to five minutes."
-  - "B-018 — measured against `IObservedClock`, re-evaluated when the observed
+  - "B-018 — measured against the observed clock through `IObservedClockTicks`,
+    re-evaluated when the observed
     instant advances, and never from an inline `UtcNow`. Two hazards: an inline
     read passes every test written against a controlled clock and is wrong only
     under replay; staleness evaluated once on arrival leaves a silent fleet
