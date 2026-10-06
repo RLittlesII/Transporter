@@ -24,9 +24,10 @@ claims:
   - B-038
   - B-039
   - B-040
+  - B-052
 
 created: "2026-10-04"
-updated: "2026-10-05"
+updated: "2026-10-06"
 closed: null
 
 summary: |
@@ -50,9 +51,15 @@ acceptance_criteria:
   - "B-038 — the decorator registered as the seam, and no resolver type."
   - "B-039 — a swap unobservable from the stream."
   - "B-040 — the outgoing source is stopped, so it stops spending credits."
+  - "B-052 — the constructed container resolves `IFleetTracker` with every
+    dependency satisfied and this decorator applied. Taken from `0007`, which
+    could not prove it before the decorator existed."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — the person — B-052 moves here from `0007`. Its second clause
+    is \"every decorator applied\", so the claim is unprovable until this item
+    builds one; `0007` held a row nothing it delivered could move."
   - "2026-10-04 — spec-author — Scrutor rather than keyed services, per-type
     interfaces, or hand-written decoration. Recorded with its rejected options
     in ADR-0003."

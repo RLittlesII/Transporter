@@ -2,35 +2,32 @@ id: "0007"
 type: task
 title: Wrap ITrackerSource in IFleetTracker and give it the clock
 
-status: in-review
+status: done
 
 priority: high
 risk: 3
-rank: 96
+rank: 91
 
 parent: "0001"
 children: []
 
 depends_on:
   - "0005"
-blocks:
-  - "0031"
+blocks: []
 spikes: []
 
 spec: features/aircraft-source/.spec/README.md
 
 claims:
-  - B-041
   - B-042
   - B-043
   - B-044
   - B-047
   - B-051
-  - B-052
 
 created: "2026-10-04"
-updated: "2026-10-05"
-closed: null
+updated: "2026-10-06"
+closed: "2026-10-06"
 
 summary: |
   `IFleetTracker` wraps `ITrackerSource` and is the only thing view models
@@ -53,7 +50,6 @@ summary: |
   Runs after 0005, which declares the interface it wraps.
 
 acceptance_criteria:
-  - "B-041 — what view models may depend on."
   - "B-042 — pipeline ownership, built once. Ownership only; building the
     operators is the next feature (§ 5 row 1)."
   - "B-043 — the injected clock, and no inline `DateTime.UtcNow`."
@@ -61,11 +57,19 @@ acceptance_criteria:
   - "B-047 — what nothing downstream may reference. Falsifiable once the
     wrapper exists to be downstream of."
   - "B-051 — stale is marked and kept, never removed."
-  - "B-052 — the constructed container resolves the tracker with every
-    dependency satisfied and the decorator in place."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — the person — B-041 and B-052 leave this item, and it closes on
+    the five claims it proved. Both rows name a subject the repository does not
+    contain: B-041's remaining half needs a container-built view model, which is
+    `fleet-dashboard` `0039`'s under that Feature's B-020, and B-052 needs the
+    swap decorator, which is `0006`'s. Holding them here made the item's close
+    wait on work downstream of it — `0031` waited on this item, and a view model
+    binds what `0031` builds (lesson 0007's shape, lesson 0011's remedy). § 9
+    keeps both rows `Missing` in this Feature; what moved is which item owes
+    them. Rejected: a declaration-shape test over `IFleetTracker`'s constructor
+    to turn B-041 green here, which lesson 0006 already forbade."
   - "2026-10-06 — test-writer — three of this item's five xUnit rows are proven
     in this pull request after all, rather than deferred to a second one: asked
     where the tests were, the answer that the type had to exist first only
