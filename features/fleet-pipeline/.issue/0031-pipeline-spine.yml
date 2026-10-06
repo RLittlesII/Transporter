@@ -2,7 +2,7 @@ id: "0031"
 type: task
 title: Build the pipeline once from the seam and bind the one collection
 
-status: in-progress
+status: done
 
 priority: high
 value: 5
@@ -32,7 +32,7 @@ claims:
 
 created: "2026-10-05"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   Assemble the pipeline in `FleetTracker`'s constructor, publish the fleet as a
