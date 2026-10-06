@@ -40,8 +40,10 @@ summary: |
   run.
 
   B-006 is held for a second reason: watching one vehicle change needs a
-  running feed, and no `ITrackerSource` is registered in `MauiProgram` while
-  the replay source (`0008` – `0013`) is unbuilt.
+  running feed. `0047` registered the source on 2026-10-06, so the graph is
+  there; nothing starts a poll (spike `0040`) and there is nothing recorded to
+  play back (`0008` – `0013`), so a vehicle that changes is still something
+  this repository cannot show.
 
   So the mechanism is the question, and it is deferred here rather than
   invented inside an implementation item. Three options are on the table for

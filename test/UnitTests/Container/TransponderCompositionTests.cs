@@ -33,7 +33,7 @@ public class TransponderCompositionTests
     }
 
     /// <summary>
-    /// `fleet-pipeline` B-002 and § 4 row 13, read at the composition rather than at the type. A
+    /// `fleet-pipeline` § 4 row 13, read at the composition rather than at the type. A
     /// tracker built twice is two connections to the seam and two collections of the same vehicles,
     /// with no error to say which one a page is looking at.
     /// </summary>

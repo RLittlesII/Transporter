@@ -2,7 +2,7 @@ id: "0047"
 type: bug
 title: The application cannot start, because nothing registers the tracker or a source
 
-status: in-progress
+status: done
 
 priority: high
 value: 5
@@ -22,7 +22,7 @@ claims: []
 
 created: "2026-10-06"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   Reported 2026-10-06, the day `0036` merged. The application dies building its
@@ -63,13 +63,17 @@ acceptance_criteria:
   - "The lesson is recorded, and the rule it produces lands in a skill."
 
 decisions:
-  - "2026-10-06 — the person — the head wires `AddOpenSky` and `AddFleetTracking`
-    itself, as the smallest change that starts the application. Rejected: one
-    `AddTransponder(IConfiguration)` composition in `Transponder` that a host
-    test resolves `FleetViewModel` from, which would have put the whole
-    composition under test. Who owns the composition root, the tracker's
-    lifetime and the first poll stays `0040`'s, and this item pre-empts none of
-    its three questions."
+  - "2026-10-06 — the person — everything that can be composed outside the MAUI
+    head is composed outside it. `AddTransponder` in `src/Transponder/Container`
+    takes the configuration and the user-interface scheduler and registers the
+    integration, the tracker and the view models; the head keeps the asset it
+    reads the settings from, its pages, and the thread that owns its window.
+    Rejected: wiring `AddOpenSky` and `AddFleetTracking` into `MauiProgram` as
+    the smallest change — asked for first and withdrawn the same hour, because
+    it leaves the composition in the one project no test here can reference,
+    which is the whole of why this was invisible. Who owns the tracker\'s
+    lifetime and who starts the first poll are still `0040`\'s; this item
+    answers neither."
   - "2026-10-06 — the person — configuration ships as a `MauiAsset` carrying the
     base URL, the poll interval and the bounding box, and carries no
     credentials: the application starts, the poll fails `401`, the grid stays

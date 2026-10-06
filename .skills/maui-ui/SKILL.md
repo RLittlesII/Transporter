@@ -24,6 +24,13 @@ specification's to say, not this file's.
 - **Register pages and view models through the container's user-interface
   builder block**, not ad-hoc in the host's startup
   ([`transponder-conventions`](../transponder-conventions/SKILL.md)).
+- **The head registers only what is MAUI.** Everything else — the integration,
+  the pipeline, the view models, the schedulers — is composed in one method a
+  test can build a host from, and that test resolves the view model each page
+  takes. What stays in the head is the settings it reads, its pages, and the
+  thread that owns its window: no test project here can reference a MAUI head,
+  so a registration left there is one nothing runs over
+  ([lesson 0014](../../.spec/lessons/0014-a-composition-only-the-head-performs-is-one-nothing-proves.md)).
 
 ## The UI reads; it never drives
 
