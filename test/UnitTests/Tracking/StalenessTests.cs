@@ -25,14 +25,16 @@ public class StalenessTests
     public void GivenAVehicleSilentPastTheThreshold_WhenTheFleetIsRead_ThenItIsMarkedStaleAndStillPresent()
     {
         // Given
-        var cache = Cache();
+        var cache = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
         var clock = new ObservedClock();
-        var sut = Tracker(cache, clock);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock).WithTicks(clock);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
 
         // When
-        Observe(clock, LastContact + TimeSpan.FromMinutes(6));
-        cache.AddOrUpdate(Silent("a1b2c3"));
+        ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromMinutes(6));
+        cache.AddOrUpdate(new Aircraft("a1b2c3", LastContact));
 
         // Then
         rows.Should().ContainSingle().Which.IsStale.Should().BeTrue("six minutes of silence is past the five the tracker allows");
@@ -41,28 +43,30 @@ public class StalenessTests
 
     /// <summary>
     /// fleet-pipeline B-017. The threshold is the tracker's own five minutes until a caller says
-    /// otherwise: four minutes of silence is tolerated and six is not, with nothing configured. A
-    /// default held by each caller instead would make an unconfigured tracker mark everything or
-    /// nothing, and no test of the pipeline could catch it.
+    /// otherwise, and the cases bracket it: four minutes tolerated, five tolerated because the claim
+    /// is "longer than", six and an hour marked. A default held by each caller instead would make an
+    /// unconfigured tracker mark everything or nothing, and no test of the pipeline could catch it.
     /// </summary>
-    [Fact]
-    public void GivenNoConfiguredThreshold_WhenStalenessIsEvaluated_ThenItIsFiveMinutes()
+    /// <param name="silent">How many minutes the vehicle has been silent.</param>
+    /// <param name="marked">Whether the default threshold marks it.</param>
+    [Theory]
+    [ClassData(typeof(DefaultThresholdCases))]
+    public void GivenNoConfiguredThreshold_WhenStalenessIsEvaluated_ThenItIsFiveMinutes(int silent, bool marked)
     {
         // Given
-        var cache = Cache();
+        var cache = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
         var clock = new ObservedClock();
-        var sut = Tracker(cache, clock);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock).WithTicks(clock);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        Observe(clock, LastContact + TimeSpan.FromMinutes(4));
-        cache.AddOrUpdate(Silent("a1b2c3"));
+        cache.AddOrUpdate(new Aircraft("a1b2c3", LastContact));
 
         // When
-        var tolerated = rows.Single().IsStale;
-        Observe(clock, LastContact + TimeSpan.FromMinutes(6));
+        ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromMinutes(silent));
 
         // Then
-        tolerated.Should().BeFalse("four minutes is inside the default five");
-        rows.Single().IsStale.Should().BeTrue("six minutes is past it");
+        rows.Single().IsStale.Should().Be(marked);
     }
 
     /// <summary>
@@ -75,16 +79,18 @@ public class StalenessTests
     public void GivenNoNewDataForAVehicle_WhenTheObservedInstantAdvancesPastTheThreshold_ThenItBecomesStale()
     {
         // Given
-        var cache = Cache();
+        var cache = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
         var clock = new ObservedClock();
-        var sut = Tracker(cache, clock);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock).WithTicks(clock);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        Observe(clock, LastContact);
-        cache.AddOrUpdate(Silent("a1b2c3"));
+        ((IObservedClockWriter) clock).Observe(LastContact);
+        cache.AddOrUpdate(new Aircraft("a1b2c3", LastContact));
         rows.Single().IsStale.Should().BeFalse("the vehicle reported at the instant the clock observed");
 
         // When
-        Observe(clock, LastContact + TimeSpan.FromMinutes(6));
+        ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromMinutes(6));
 
         // Then
         rows.Single().IsStale.Should().BeTrue("no changeset arrived; the clock moved, and that is enough");
@@ -100,48 +106,23 @@ public class StalenessTests
     public void GivenAVehicleSilentForAnHour_WhenTheFleetIsRead_ThenNothingWasRemoved()
     {
         // Given
-        var cache = Cache();
+        var cache = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
         var clock = new ObservedClock();
-        var sut = Tracker(cache, clock);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock).WithTicks(clock);
         var observed = new List<IChangeSet<TrackedVehicle, string>>();
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe(observed.Add);
-        Observe(clock, LastContact);
-        cache.AddOrUpdate(Silent("a1b2c3"));
+        ((IObservedClockWriter) clock).Observe(LastContact);
+        cache.AddOrUpdate(new Aircraft("a1b2c3", LastContact));
 
         // When
-        Observe(clock, LastContact + TimeSpan.FromHours(1));
+        ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromHours(1));
 
         // Then
         rows.Should().ContainSingle().Which.IsStale.Should().BeTrue();
         observed.SelectMany(static changes => changes).Should().NotContain(static change => change.Reason == ChangeReason.Remove);
     }
-
-    /// <summary>A cache of domain vehicles, keyed the way the seam keys its changesets.</summary>
-    /// <returns>A store a test edits to make the seam report.</returns>
-    private static SourceCache<TransportVehicle, string> Cache() => new(static vehicle => vehicle.Key);
-
-    /// <summary>A tracker whose clock and whose ticks are the one clock object, as the container registers them.</summary>
-    /// <param name="cache">The store the seam reports from.</param>
-    /// <param name="clock">The clock the test advances.</param>
-    /// <returns>The system under test.</returns>
-    private static FleetTracker Tracker(SourceCache<TransportVehicle, string> cache, ObservedClock clock)
-    {
-        var source = Substitute.For<ITrackerSource>();
-        source.Connect().Returns(cache.Connect());
-
-        return new FleetTrackerFixture().WithSource(source).WithClock(clock).WithTicks(clock);
-    }
-
-    /// <summary>Reports an instant the way an envelope does, which is the only way time moves here.</summary>
-    /// <param name="clock">The clock to advance.</param>
-    /// <param name="instant">The instant the provider reported.</param>
-    private static void Observe(ObservedClock clock, DateTimeOffset instant) =>
-        ((IObservedClockWriter) clock).Observe(instant);
-
-    /// <summary>An aircraft that has reported nothing since <see cref="LastContact"/>.</summary>
-    /// <param name="key">The <c>icao24</c> in lowercase hex.</param>
-    /// <returns>The vehicle a test puts into the store.</returns>
-    private static TransportVehicle Silent(string key) => new Aircraft(key, LastContact);
 
     /// <summary>The instant every vehicle here was last heard from.</summary>
     private static readonly DateTimeOffset LastContact = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
