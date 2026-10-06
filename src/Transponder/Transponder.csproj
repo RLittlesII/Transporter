@@ -34,7 +34,6 @@
       <Content Include="**\.issue\*.yml" />
       <Content Include="**\.spec\*.feature" />
       <Content Include="**\.spec\**\*.md" />
-      <Content Include="**\.spec\README.md" />
     </ItemGroup>
 
 </Project>
