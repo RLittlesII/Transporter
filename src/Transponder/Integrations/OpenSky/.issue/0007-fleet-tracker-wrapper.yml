@@ -2,7 +2,7 @@ id: "0007"
 type: task
 title: Wrap ITrackerSource in IFleetTracker and give it the clock
 
-status: in-progress
+status: in-review
 
 priority: high
 risk: 3
@@ -66,6 +66,14 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-05 — implementer — this item is delivered in two pull requests and
+    the second one closes it. The production code landed first because the
+    documented order — test before implementation — could not run: a test must
+    name `IFleetTracker` and the type did not exist. So this pull request leaves
+    the item at `in-review` with its seven § 9 rows `Missing`, and
+    `test-writer`'s pull request writes `FleetTrackerTests`,
+    `TransponderContainerTests` and the rows, then flips `done` and `closed`.
+    B-052's decorator half additionally waits on `0006`."
   - "2026-10-05 — implementer — the tracker is registered by its own call,
     `TrackingRegistration.AddFleetTracking()`, as a container singleton
     (ADR-0009 decision 7), and `AddOpenSky` gained one line registering the
