@@ -1,0 +1,114 @@
+id: "0052"
+type: chore
+title: Generate a synthetic recording so the app runs with no provider account
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 2
+rank: 54
+
+parent: null
+children: []
+
+depends_on:
+  - "0009"
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  A seeded generator writes a synthetic aircraft recording into the configured
+  recordings root, in the format ADR-0004 fixes, so the replay path can be
+  developed and the application demonstrated before anyone holds an OpenSky
+  credential. Invoked deliberately — a build target or a small tool — never as
+  part of a build.
+
+  **It is not the simulated source.** That Feature generates movement live at
+  runtime with no recording and no file (`features/replay-source` § 5 row 1).
+  This writes a file once, offline, which the replay path then reads like any
+  other recording. Nothing about selection, pacing or the seam changes.
+
+  **It is not a rehearsal recording either**, so B-006 does not bear on it: the
+  callsigns, positions and identifiers are invented, which is what
+  `test-from-scenarios` § "Fixtures are synthetic" requires of anything
+  committed or reused. The generated file still lands under the git-ignored
+  `recordings/`, because that is where a recording is read from (B-025) and
+  because a multi-megabyte payload does not belong in history.
+
+  Runs after `0009`, and that is the whole reason for the dependency: `0009`
+  builds `RecordingWriter`, the one component that knows ADR-0004's line shape.
+  A generator that wrote its own lines would be a second writer of the format,
+  and the two would drift the first time the format moved.
+
+  What it does **not** unblock: nothing can read the file until `0010`, `0011`
+  and `0012` land, since the pacer, the replay contract and the registration
+  are all unbuilt. What it buys before then is realistic input for writing
+  those three, and the moment `0012` lands it buys a demo that needs no
+  provider account at all — which is `features/replay-source` B-011's own
+  scenario, and what makes `transponder-conventions` § "Verify and publish"
+  step 3 performable for the first time.
+
+  **One question is open, and it is the person's.** Where the generator lives,
+  and how it reaches an `internal` `RecordingWriter`. A Nuke target in `.build`
+  cannot see it without the build project referencing the application, which is
+  backwards. Recommended: a small console project under `tools/`, given
+  `InternalsVisibleTo`, invoked by a target that passes the seed and the output
+  path — one writer of the format, at the cost of one project and one
+  attribute. The alternative is a target that spells out ADR-0004's two fields
+  itself and accepts being the second writer. `nuke-build` owns whichever
+  target results.
+
+acceptance_criteria:
+  - "The generated file is read by the replay path with no special case: same
+    root resolution, same naming, same startup span check as a captured
+    recording. If replay needs to know a recording was generated, this item
+    has failed."
+  - "One writer of the format. The generator emits payloads and hands them to
+    `0009`'s `RecordingWriter`; it does not spell out a line itself."
+  - "The payload is the provider's wire shape — positional arrays of 17 or 18
+    elements, as README.md § \"Response shape\" indexes them — and not a
+    serialization of any internal record. `body` is what the provider would
+    have sent."
+  - "Deterministic: one seed, one byte-identical file, so two developers
+    reading the same grid are reading the same data."
+  - "Spans longer than the staleness threshold, with at least one aircraft that
+    stops being reported partway through, so staleness is reproducible from it
+    the way a stage recording must be."
+  - "Carries the hazards the live reader has claims about, since a sample that
+    only holds well-formed rows exercises none of them: an absent velocity and
+    an absent category against a present zero, an all-padding callsign, a
+    squawk with a leading zero, both the 17- and 18-element row lengths, one
+    row that cannot be read at all, and one poll reporting nothing."
+  - "`recordings/` stays git-ignored and no generated file is committed."
+  - "Invoked deliberately and never by `Default`: a build that writes into
+    `recordings/` would overwrite a real rehearsal capture."
+
+decisions:
+  - "2026-10-06 — the person — a seeded generator writing into `recordings/`,
+    rather than a sample recording committed under a second directory. The
+    committed file needs no tooling and is readable in a diff, and it costs a
+    multi-megabyte blob in history forever, a directory outside the recordings
+    root, and a copy step before anything can read it. Also rejected: shipping
+    both a generator and a short committed file for the format example — two
+    artefacts to keep in step where ADR-0004 already carries the example."
+
+out_of_scope:
+  - "The simulated source — `features/replay-source` § 5 row 1, its own
+    Feature. This item produces a file, not a live source."
+  - "Performing a real rehearsal recording — that Feature's § 5 row 3, an
+    operational task once credentials exist."
+  - "A scrubbing tool — that Feature's § 5 row 4. Nothing generated here needs
+    scrubbing, which is the point of generating it."
+  - "A vessel recording. The vessel feed is unspecified (that Feature's § 5
+    row 2), so there is no wire shape to generate."
+  - "Reading the file. The pacer is `0010`, the contract substitution `0011`,
+    and the registration that opens it `0012`."
