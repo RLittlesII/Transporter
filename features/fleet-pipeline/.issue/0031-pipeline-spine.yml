@@ -2,7 +2,7 @@ id: "0031"
 type: task
 title: Build the pipeline once from the seam and bind the one collection
 
-status: ready-for-implementation
+status: done
 
 priority: high
 value: 5
@@ -32,7 +32,7 @@ claims:
 
 created: "2026-10-05"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   Assemble the pipeline in `FleetTracker`'s constructor, publish the fleet as a
@@ -85,6 +85,25 @@ decisions:
     four inputs are constructor parameters rather than an `IFleetQuery` the view
     model implements, and the tracker is a container singleton. `0040` still
     owns the actor wiring and who subscribes first."
+  - "2026-10-06 — implementer — the spine was already half-built. `0007` landed
+    `FleetTracker` with the seam subscription, the stale mark, DynamicData's
+    cache-aware `RefCount()` and `TakeUntil(_shutdown)`, so this item added the
+    filter stage and its seeded subject, made `Dispose()` idempotent, and proved
+    the eight claims. `SortBy`, `GroupBy` and the description parameter § 7 writes
+    out are NOT added here: a comparer and a grouping come from
+    `FleetSourceDescription`, which `0032` introduces, and a subject cannot be
+    seeded with the description's first comparer before the description exists.
+    Rejected: taking `ISchedulerProvider` by constructor now, which no stage in
+    this slice uses — the first operator here to need a scheduler is `0033`'s rate
+    cap, and an unused dependency is not evidence for B-005."
+  - "2026-10-06 — test-writer — B-001 cites `aircraft-source` B-042's test rather
+    than adding a second one over the same chain: both claims assert a swap
+    rebuilds nothing, and the one test falsifies both (lesson 0006). B-023 and
+    B-024 are performed reviews, recorded in § 9 with what was looked at and what
+    re-does them. B-023 gets no analyzer rule here: `Layers.IsDownstream` covers
+    `Features` and `Gui` only, so reporting a reference out of `Tracking/` means
+    widening the analyzer's layer map under a new `TRN` id — `boundary-analyzer`'s
+    claim to make, not this Feature's to bolt on."
   - "2026-10-06 — the person — `0007` leaves `depends_on`. What this item needed
     from it — `IFleetTracker` declared, holding the clock, publishing `Fleet` —
     is on `main` at `be7b6ef`. `0007` itself stays open on two claims whose

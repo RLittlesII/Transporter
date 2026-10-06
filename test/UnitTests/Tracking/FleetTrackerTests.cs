@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AwesomeAssertions;
@@ -8,6 +9,11 @@ using Transponder.Model;
 using Transponder.Tracking;
 
 namespace Transponder.UnitTests.Tracking;
+
+// RSA1010 asks for ObserveOn before every Bind. These bind without one deliberately: the
+// pipeline marshals for nobody (fleet-pipeline B-005) and the user-interface scheduler belongs to
+// the consumer (§ 5 row 9). The consumer here is a test, which has no user-interface thread.
+#pragma warning disable RSA1010
 
 public class FleetTrackerTests
 {
@@ -99,6 +105,141 @@ public class FleetTrackerTests
         observed.SelectMany(static changes => changes).Should().NotContain(static change => change.Reason == ChangeReason.Remove);
     }
 
+    /// <summary>
+    /// fleet-pipeline B-002. The pipeline publishes a stream and owns no collection: two consumers
+    /// binding the same fleet each materialise their own, and every row carries the vehicle beside
+    /// the mark the pipeline derived for it. A tracker that held a bound collection and handed it
+    /// out would fail the last assertion, which is the shape ADR-0009 rejected.
+    /// </summary>
+    [Fact]
+    public void GivenTheFleetStream_WhenTwoConsumersEachBindIt_ThenEachMaterialisesItsOwnCollectionCarryingTheStaleMark()
+    {
+        // Given
+        var cache = Cache();
+        var clock = new ObservedClock();
+        ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromMinutes(6));
+        FleetTracker sut = new FleetTrackerFixture().WithSource(Over(cache)).WithClock(clock);
+        using var first = sut.Fleet.Bind(out var rows).Subscribe();
+        using var second = sut.Fleet.Bind(out var others).Subscribe();
+
+        // When
+        cache.AddOrUpdate(Silent("a1b2c3"));
+        cache.AddOrUpdate(new Aircraft("d4e5f6", LastContact + TimeSpan.FromMinutes(6)));
+
+        // Then
+        rows.Should().HaveCount(2).And.OnlyContain(static row => row.Vehicle != null);
+        rows.Single(static row => row.Vehicle.Key == "a1b2c3").IsStale.Should().BeTrue("it has been silent six minutes against a five-minute threshold");
+        rows.Single(static row => row.Vehicle.Key == "d4e5f6").IsStale.Should().BeFalse("it reported at the instant the clock observed");
+        others.Should().NotBeSameAs(rows, "the tracker owns no collection to hand out; each consumer materialises its own");
+        others.Should().BeEquivalentTo(rows, "both read the same shared stream");
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-028. One connection to the seam however many subscribers, the filter
+    /// evaluated once per changeset rather than once per reader, and the stages torn down when the
+    /// last subscriber leaves. A per-subscriber chain passes none of the three: it connects twice,
+    /// filters twice, and holds the seam while anyone has ever subscribed.
+    /// </summary>
+    [Fact]
+    public void GivenTwoSubscribers_WhenBothAreBound_ThenTheSeamIsConnectedOnceAndTheStagesStopWhenTheLastUnsubscribes()
+    {
+        // Given
+        var cache = Cache();
+        var source = new CountingTrackerSource(cache);
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source);
+        var evaluations = 0;
+        sut.Filter(_ =>
+        {
+            evaluations++;
+
+            return true;
+        });
+        var first = sut.Fleet.Subscribe();
+        var second = sut.Fleet.Subscribe();
+
+        // When
+        cache.AddOrUpdate(Silent("a1b2c3"));
+
+        // Then
+        source.Connections.Should().Be(1, "the stages are shared, so a second subscriber costs the seam nothing");
+        evaluations.Should().Be(1, "one changeset is filtered once however many consumers are reading it");
+        first.Dispose();
+        source.Disconnections.Should().Be(0, "one subscriber remains, so the chain is still live");
+        second.Dispose();
+        source.Disconnections.Should().Be(1, "the last subscriber leaving tears the stages down");
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-004. Disposal is observable in the streams rather than in a list of handles:
+    /// a bound consumer's subscription completes, the seam has no subscriber left, the collection it
+    /// bound stops changing, and a second disposal is not an error — a container disposing its
+    /// singleton twice must not throw.
+    /// </summary>
+    [Fact]
+    public void GivenABoundConsumer_WhenTheTrackerIsDisposed_ThenEveryPublishedStreamCompletesAndNothingRemainsSubscribedToTheSeam()
+    {
+        // Given
+        var cache = Cache();
+        var source = new CountingTrackerSource(cache);
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source);
+        var completed = false;
+        using var subscription = sut.Fleet.Bind(out var rows).Subscribe(static _ => { }, () => completed = true);
+        cache.AddOrUpdate(Silent("a1b2c3"));
+
+        // When
+        sut.Dispose();
+
+        // Then
+        completed.Should().BeTrue("the published stream completes, which is what a consumer can observe");
+        source.Disconnections.Should().Be(1, "nothing remains subscribed to the seam");
+        cache.AddOrUpdate(Silent("d4e5f6"));
+        rows.Should().ContainSingle().Which.Vehicle.Key.Should().Be("a1b2c3", "the bound collection stops receiving changes");
+        sut.Invoking(static tracker => tracker.Dispose()).Should().NotThrow("a second disposal does nothing");
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-004, the state that would hide the defect. Until someone subscribes the
+    /// tracker holds nothing: the seam is never connected, so an application that resolves the
+    /// singleton at startup and binds nothing yet spends no credits and keeps no chain alive.
+    /// </summary>
+    [Fact]
+    public void GivenATrackerNobodyHasSubscribedTo_WhenTheSeamReports_ThenItWasNeverConnected()
+    {
+        // Given
+        var cache = Cache();
+        var source = new CountingTrackerSource(cache);
+
+        // When
+        using FleetTracker sut = new FleetTrackerFixture().WithSource(source);
+        cache.AddOrUpdate(Silent("a1b2c3"));
+
+        // Then
+        source.Connections.Should().Be(0, "an idle tracker holds no subscription of its own");
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-005. No stage reads an ambient scheduler and none marshals for a consumer:
+    /// the change is delivered before the edit that caused it returns, on the thread that made it.
+    /// An <c>ObserveOn</c> or a <c>Throttle</c> anywhere in the chain reddens the first assertion,
+    /// which is the failure that only shows up once the grid is real.
+    /// </summary>
+    [Fact]
+    public void GivenNoSchedulerInTheArrangement_WhenTheFleetChanges_ThenTheChangeArrivesSynchronouslyOnTheThreadThatFedTheSeam()
+    {
+        // Given
+        var cache = Cache();
+        FleetTracker sut = new FleetTrackerFixture().WithSource(Over(cache));
+        var reader = 0;
+        using var subscription = sut.Fleet.Subscribe(_ => reader = Environment.CurrentManagedThreadId);
+
+        // When
+        cache.AddOrUpdate(Silent("a1b2c3"));
+
+        // Then
+        reader.Should().NotBe(0, "a stage that scheduled the delivery would not have run before the edit returned");
+        reader.Should().Be(Environment.CurrentManagedThreadId, "nothing marshals on a consumer's behalf; that boundary is the consumer's");
+    }
+
     /// <summary>A cache of domain vehicles, keyed the way the seam keys its changesets.</summary>
     /// <returns>A store a test edits to make the seam report.</returns>
     private static SourceCache<TransportVehicle, string> Cache() => new(static vehicle => vehicle.Key);
@@ -157,3 +298,30 @@ internal partial class FleetTrackerFixture
         WithClock(new ObservedClock());
     }
 }
+
+/// <summary>A seam that counts what the pipeline does to it, which is what B-004 and B-028 assert.</summary>
+/// <param name="cache">The store every connection reports from.</param>
+internal sealed class CountingTrackerSource(SourceCache<TransportVehicle, string> cache) : ITrackerSource
+{
+    /// <summary>Gets how many times something subscribed to this seam.</summary>
+    public int Connections { get; private set; }
+
+    /// <summary>Gets how many of those subscriptions have since been disposed.</summary>
+    public int Disconnections { get; private set; }
+
+    /// <inheritdoc/>
+    public IObservable<IChangeSet<TransportVehicle, string>> Connect() =>
+        Observable.Create<IChangeSet<TransportVehicle, string>>(observer =>
+        {
+            Connections++;
+            var subscription = cache.Connect().Subscribe(observer);
+
+            return Disposable.Create(() =>
+            {
+                Disconnections++;
+                subscription.Dispose();
+            });
+        });
+}
+
+#pragma warning restore RSA1010
