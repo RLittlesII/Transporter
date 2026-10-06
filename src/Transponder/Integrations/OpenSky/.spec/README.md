@@ -712,15 +712,16 @@ row 17.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and eight of the fifty-one rows read `Missing`.**
-Forty-three are `Verified`, and they arrived three different ways.
-Twenty-six came from
+**This is the gate, and five of the fifty-one rows read `Missing`.**
+Forty-six are `Verified`, and they arrived three different ways.
+Twenty-nine came from
 items: `0002` built the contract, its envelope, the positional row's converter
 and the HTTP transport, `0003` the snapshot and its
 cache, `0004` the snapshot client, the token source, the observed clock and
-the options, and `0005` the seam, the domain model and the projection — the tests
+the options, `0005` the seam, the domain model and the projection, and `0007`
+the tracker's pipeline, its clock and its stale mark — the tests
 this section names against B-001, B-003, B-011 – B-013,
-B-015 – B-029, B-033 – B-037 and B-050 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
+B-015 – B-029, B-033 – B-037, B-042, B-043, B-050 and B-051 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
 second contract interface would have to be and B-049 what a push provider's
 strategy may not be given, so for each there is no value to compute and
 no declaration to analyze, and the row records what was looked at and when it is
@@ -740,11 +741,18 @@ amendment.
 Every other row names what will prove its claim and records that it does not. A
 row's Status becomes `Verified` when **every** mechanism it names passes in a
 run, which is why a row naming a passing test and an unbuilt half still reads
-`Missing`. **One row is now that shape and nothing else**: B-041's analyzer half
-is built and the half that says `IFleetTracker` wraps `ITrackerSource` has no
-test yet. The remaining
-seven rows wait on the items that compute their values — B-038 – B-040 on
-`0006`, and B-042, B-043, B-051 and B-052 on `0007`.
+`Missing`. **Two rows are now that shape**: B-041's analyzer half is built and
+the half that says `IFleetTracker` wraps `ITrackerSource` cannot be reached until
+a view model exists to read its dependencies from, and B-052's container resolves
+the tracker but not yet through a decorator, because `0006` has not built one.
+`0007` landed the other three rows it owns — B-042, B-043 and B-051 read
+`Verified` against `FleetTrackerTests`. The remaining three wait on
+`0006`: B-038 – B-040.
+
+**Those two rows are what keeps `0007` open**, and both are blocked on something
+outside it rather than on work it skipped: a view model is `fleet-dashboard`'s
+and the decorator is `0006`'s. The item stays `in-review` until each has a
+subject.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Ten claims carry two
@@ -807,8 +815,8 @@ is B-049 and the clause waiting on `0005`.
 | B-039    | `@B-039` | `SwappingTrackerSourceTests.GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt`                                                                                                                                                                                                                                                                                                                                                       | Missing  |
 | B-040    | `@B-040` | `SwappingTrackerSourceTests.GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped`                                                                                                                                                                                                                                                                                                                                                             | Missing  |
 | B-041    | `@B-041` | the negative half is analyzer — `BoundaryAnalyzerTests.GivenAViewModelNamingAStrategyClientCacheOrDecorator_WhenAnalyzed_ThenItIsReported`, which passes; the wrapping half — `IFleetTracker` wraps `ITrackerSource` and is what a view model depends on — is `FleetTrackerTests.GivenAViewModelBuiltByTheContainer_WhenItsDependenciesAreRead_ThenTheyAreIFleetTrackerAndNothingBelowIt`                                                           | Missing  |
-| B-042    | `@B-042` | `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction`                                                                                                                                                                                                                                                                                                                                    | Missing  |
-| B-043    | `@B-043` | `FleetTrackerTests.GivenAnInjectedClockAdvancedPastTheThreshold_WhenStalenessIsRead_ThenItDerivesFromLastContactAndNoAmbientClockIsRead`                                                                                                                                                                                                                                                                                                            | Missing  |
+| B-042    | `@B-042` | `FleetTrackerTests.GivenASwapFollowedByASecondSwap_WhenEachCompletes_ThenThePipelineIsTheOneBuiltAtConstruction`                                                                                                                                                                                                                                                                                                                                    | Verified |
+| B-043    | `@B-043` | `FleetTrackerTests.GivenAnInjectedClockAdvancedPastTheThreshold_WhenStalenessIsRead_ThenItDerivesFromLastContactAndNoAmbientClockIsRead`                                                                                                                                                                                                                                                                                                            | Verified |
 | B-044    | `@B-044` | analyzer — `BoundaryAnalyzerTests.GivenCodeAddingToOrRemovingFromABoundCollection_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                    | Verified |
 | B-045    | `@B-045` | analyzer — `BoundaryAnalyzerTests.GivenATypeOtherThanTheContractImplementationOrClientNamingTheEnvelopeOrRow_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                         | Verified |
 | B-046    | `@B-046` | analyzer — `BoundaryAnalyzerTests.GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                 | Verified |
@@ -816,7 +824,7 @@ is B-049 and the clause waiting on `0005`.
 | B-048    | `@B-048` | analyzer — `BoundaryAnalyzerTests.GivenAContractCarryingAVersionSuffixOrAMarkerAboveIt_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-049    | `@B-049` | **Review**, done on `0005` — `src/Transponder/Integrations/` holds one provider and one `Contracts/` folder, over the one request/response provider; no socket provider exists and no contract was invented for one; and `grep -rn ITrackerSource src` returns two declarations, `Tracking/ITrackerSource.cs` and the empty `IAircraftTrackerSource` deriving from it, with no type above either. Re-done by the Feature that adds a push provider. | Verified |
 | B-050    | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault`                                                                                                                                                                                                                                                                                                                                  | Verified |
-| B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                               | Missing  |
+| B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-052    | `@B-052` | `TransponderContainerTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                 | Missing  |
 
 Fifty-one rows, fifty-one live claims, each appearing once — B-010 is Withdrawn

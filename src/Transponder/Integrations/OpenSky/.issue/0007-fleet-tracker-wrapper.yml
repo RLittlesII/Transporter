@@ -66,6 +66,18 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — test-writer — three of this item's five xUnit rows are proven
+    in this pull request after all, rather than deferred to a second one: asked
+    where the tests were, the answer that the type had to exist first only
+    covered the first commit. `FleetTrackerTests` carries B-042 (two swaps, one
+    connection to the seam, one stream), B-043 (the mark follows the injected
+    clock, and a vehicle silent since noon is not stale while that clock has
+    observed nothing — which a `DateTime.UtcNow` read could not pass) and B-051
+    (marked, kept, no `Remove`, five minutes by default and re-marked when the
+    threshold changes). Each was confirmed falsifiable by mutation: an ambient
+    clock reddens two of them, and a per-subscriber chain reddens the third.
+    B-041 and B-052 stay `Missing` — a view model is `fleet-dashboard`'s and the
+    decorator is `0006`'s — so the item stays `in-review`."
   - "2026-10-06 — the person — B-042's `and binding` clause moves to
     `fleet-dashboard` B-005 rather than being deleted. ADR-0009 gave the bind
     and the marshal to the consumer, and the dashboard's claim already requires
