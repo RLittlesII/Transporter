@@ -457,11 +457,15 @@ public interface IObservedClockTicks
 and a consumer holding a read side still cannot advance time (ADR-0007
 decision 1).
 
-| Type               | File                                                                                                | Claims it makes visible |
-| ------------------ | --------------------------------------------------------------------------------------------------- | ----------------------- |
-| `TransportVehicle` | [`src/Transponder/Model/TransportVehicle.cs`](../../../src/Transponder/Model/TransportVehicle.cs)   | B-013                   |
-| `Aircraft`         | [`src/Transponder/Model/Aircraft.cs`](../../../src/Transponder/Model/Aircraft.cs)                   | B-013                   |
-| `IObservedClock`   | [`src/Transponder/Tracking/IObservedClock.cs`](../../../src/Transponder/Tracking/IObservedClock.cs) | B-018                   |
+| Type                                                     | File                                                                                                                                    | Claims it makes visible                            |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `TransportVehicle`                                       | [`src/Transponder/Model/TransportVehicle.cs`](../../../src/Transponder/Model/TransportVehicle.cs)                                       | B-013                                              |
+| `Aircraft`                                               | [`src/Transponder/Model/Aircraft.cs`](../../../src/Transponder/Model/Aircraft.cs)                                                       | B-013                                              |
+| `IObservedClock`                                         | [`src/Transponder/Tracking/IObservedClock.cs`](../../../src/Transponder/Tracking/IObservedClock.cs)                                     | B-018                                              |
+| `IObservedClockTicks`                                    | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../../../src/Transponder/Tracking/IObservedClockTicks.cs)                           | B-018                                              |
+| `FleetColumn`, `FleetGrouping`, `FleetSourceDescription` | [`src/Transponder/Tracking/Fleet/`](../../../src/Transponder/Tracking/Fleet/)                                                           | B-020 – B-022                                      |
+| `AircraftFleetDescription`                               | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../../../src/Transponder/Tracking/Sources/AircraftFleetDescription.cs) | B-020, B-021                                       |
+| `TrackedVehicle`, `FleetTracker`                         | [`src/Transponder/Tracking/`](../../../src/Transponder/Tracking/)                                                                       | B-001 – B-005, B-009 – B-011, B-016 – B-019, B-028 |
 
 Where the new types go, following `transponder-conventions` § "Project
 structure":
@@ -537,6 +541,14 @@ diagnostic: both need the analyzer's layer map widened past `Features` and `Gui`
 so **one** of the five rules § 8 first counted is still outstanding — B-008's,
 with `0033`.
 
+**What `0034` proved, 2026-10-06.** B-016 – B-019. The one new mechanism is
+ADR-0010's third seam: `ObservedClock` now also implements `IObservedClockTicks`,
+the tracker takes it, and the `Transform`'s force trigger is the threshold merged
+with every advance of the instant — so silence alone re-derives a mark. B-018's
+test is the one that could not have passed before: it advances the clock and
+asserts the mark changed with no changeset arriving. B-019 carries a review beside
+its test, because "no `ExpireAfter` anywhere" is an absence a test cannot read.
+
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
 about which types may reference which is an analyzer diagnostic, and nothing is
@@ -565,14 +577,15 @@ what execute.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate. Fifteen of twenty-eight rows read `Verified` as of
+**This is the gate. Nineteen of twenty-eight rows read `Verified` as of
 2026-10-06**: the spine `0031` delivered B-001 – B-005, B-023, B-024 and B-028,
-and the description and the sort `0032` delivered B-009 – B-011, B-013 and
-B-020 – B-022. The other thirteen name the test or the diagnostic that will prove
-the claim and record that it does not yet. The named tests are the contract between this
+the description and the sort `0032` delivered B-009 – B-011, B-013 and
+B-020 – B-022, and staleness `0034` delivered B-016 – B-019. The other nine name
+the test or the diagnostic that will prove the claim and record that it does not
+yet — all nine are `0033`'s. The named tests are the contract between this
 section and the items in `## Tasks`; a row moves when a run, a build or a
-performed review makes it move, never because the code looks right. Three rows are
-reviews rather than runs (B-022 – B-024) and each records what was looked at and
+performed review makes it move, never because the code looks right. Four rows are
+reviews rather than runs, or carry one beside a test (B-019, B-022 – B-024) and each records what was looked at and
 what re-does it, the form
 [lesson 0011](../../../.spec/lessons/0011-a-review-nobody-performed-is-not-a-review-nobody-can-perform.md)
 asks for.
@@ -594,10 +607,10 @@ asks for.
 | B-013    | `@B-013` | `AircraftTests.GivenAnAircraft_WhenItsGroupKeyIsRead_ThenItIsTheOriginCountry`, and the compile error a source answering none is — `Barge` in `FleetSortTests` exists only because it answers both abstract members                                                                                                                                                                                                                                                     | Verified |
 | B-014    | `@B-014` | `FleetGroupTests.GivenAGroupWithOneSilentVehicle_WhenItsCountsAreRead_ThenTheyReportTwoTrackedAndOneStale`                                                                                                                                                                                                                                                                                                                                                              | Missing  |
 | B-015    | `@B-015` | `FleetSummaryTests.GivenAFleetThatChanges_WhenTheSummaryIsObserved_ThenEachChangeProducesTheNewCounts`                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
-| B-016    | `@B-016` | `StalenessTests.GivenAVehicleSilentPastTheThreshold_WhenTheFleetIsRead_ThenItIsMarkedStaleAndStillPresent`                                                                                                                                                                                                                                                                                                                                                              | Missing  |
-| B-017    | `@B-017` | `StalenessTests.GivenNoConfiguredThreshold_WhenStalenessIsEvaluated_ThenItIsFiveMinutes`                                                                                                                                                                                                                                                                                                                                                                                | Missing  |
-| B-018    | `@B-018` | `StalenessTests.GivenNoNewDataForAVehicle_WhenTheObservedInstantAdvancesPastTheThreshold_ThenItBecomesStale`                                                                                                                                                                                                                                                                                                                                                            | Missing  |
-| B-019    | `@B-019` | `StalenessTests.GivenAVehicleSilentForAnHour_WhenTheFleetIsRead_ThenNothingWasRemoved`, and the analyzer rule forbidding `ExpireAfter`                                                                                                                                                                                                                                                                                                                                  | Missing  |
+| B-016    | `@B-016` | `StalenessTests.GivenAVehicleSilentPastTheThreshold_WhenTheFleetIsRead_ThenItIsMarkedStaleAndStillPresent`                                                                                                                                                                                                                                                                                                                                                              | Verified |
+| B-017    | `@B-017` | `StalenessTests.GivenNoConfiguredThreshold_WhenStalenessIsEvaluated_ThenItIsFiveMinutes` — four minutes tolerated, six not, with nothing configured                                                                                                                                                                                                                                                                                                                     | Verified |
+| B-018    | `@B-018` | `StalenessTests.GivenNoNewDataForAVehicle_WhenTheObservedInstantAdvancesPastTheThreshold_ThenItBecomesStale` — the clock moves, no changeset arrives, the mark changes                                                                                                                                                                                                                                                                                                  | Verified |
+| B-019    | `@B-019` | `StalenessTests.GivenAVehicleSilentForAnHour_WhenTheFleetIsRead_ThenNothingWasRemoved`, and **review** on `0034` — `grep ExpireAfter` over `src/` returns only the remark in `FleetTracker` saying why there is none. Re-done by any new stage. The analyzer rule § 9 first named is `boundary-analyzer`'s to claim, like B-022's and B-023's                                                                                                                           | Verified |
 | B-020    | `@B-020` | `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsColumnsAreRead_ThenEachCarriesANameAndASelector`                                                                                                                                                                                                                                                                                                                                                        | Verified |
 | B-021    | `@B-021` | `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt`                                                                                                                                                                                                                                                                                                                                                   | Verified |
 | B-022    | `@B-022` | **Review**, done on `0032` — `grep` for `is Aircraft`, `as Aircraft` and `(Aircraft)` over `src/Transponder` and `src/Gui` returns nothing; the only production code naming the type constructs one, which is the projection, not a downcast. Re-done by any new consumer of the fleet, and by the detail pane when it lands. No analyzer rule yet: like B-023 it needs the analyzer's layer map widened, which is `boundary-analyzer`'s claim to make                  | Verified |

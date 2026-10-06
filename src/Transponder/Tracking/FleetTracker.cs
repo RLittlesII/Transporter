@@ -25,13 +25,18 @@ internal sealed class FleetTracker : IFleetTracker
     /// <summary>Initializes a new instance of the <see cref="FleetTracker"/> class.</summary>
     /// <param name="source">The seam every strategy and the swap decorator adhere to (B-041).</param>
     /// <param name="clock">The observed instant staleness is measured against (B-043, ADR-0007).</param>
+    /// <param name="ticks">Every advance of that instant, so silence alone can make a vehicle stale (fleet-pipeline B-018, ADR-0010).</param>
     /// <param name="description">What the live source offers a view, republished on a swap (fleet-pipeline B-020, B-021).</param>
-    public FleetTracker(ITrackerSource source, IObservedClock clock, IObservable<FleetSourceDescription> description)
+    public FleetTracker(
+        ITrackerSource source,
+        IObservedClock clock,
+        IObservedClockTicks ticks,
+        IObservable<FleetSourceDescription> description)
     {
         _clock = clock;
         Fleet = source.Connect()
             .Filter(_predicate)
-            .Transform(Mark, _staleAfter.Select(static _ => Unit.Default))
+            .Transform(Mark, Reevaluate(ticks))
             .RefCount()
             .TakeUntil(_shutdown);
         Description = description
@@ -95,6 +100,17 @@ internal sealed class FleetTracker : IFleetTracker
             .Select(static column => column.Comparer)
             .Somes()
             .FirstOrDefault(ByKey);
+
+    /// <summary>What makes the pipeline derive the mark again for vehicles nothing new arrived for.</summary>
+    /// <param name="ticks">The observed instant's advances.</param>
+    /// <returns>A trigger that fires on a new threshold and on every advance of the instant (fleet-pipeline B-017, B-018).</returns>
+    /// <remarks>
+    /// Re-deriving is the whole treatment: a vehicle goes stale because time moved, not because it
+    /// was removed and re-added, which is why B-019 forbids <c>ExpireAfter</c> here.
+    /// </remarks>
+    private IObservable<Unit> Reevaluate(IObservedClockTicks ticks) =>
+        _staleAfter.Select(static _ => Unit.Default)
+            .Merge(ticks.Instant.Select(static _ => Unit.Default));
 
     /// <summary>Derives the stale mark, never storing it and never reading an ambient clock (B-043).</summary>
     /// <param name="vehicle">The vehicle the seam reported.</param>
