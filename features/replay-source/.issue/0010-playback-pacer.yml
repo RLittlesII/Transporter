@@ -2,7 +2,7 @@ id: "0010"
 type: task
 title: Feed a recording back at its recorded cadence, looping, with no network
 
-status: ready-for-architecture
+status: ready
 
 priority: high
 risk: 3
@@ -28,7 +28,7 @@ claims:
   - B-027
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-06"
 closed: null
 
 summary: |

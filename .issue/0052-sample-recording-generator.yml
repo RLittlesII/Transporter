@@ -1,0 +1,144 @@
+id: "0052"
+type: chore
+title: Generate a synthetic recording so the app runs with no provider account
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 2
+rank: 54
+
+parent: null
+children: []
+
+depends_on:
+  - "0009"
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  A seeded generator writes a synthetic aircraft recording into the configured
+  recordings root, in the format ADR-0004 fixes, so the replay path can be
+  developed and the application demonstrated before anyone holds an OpenSky
+  credential. Invoked deliberately — a build target or a small tool — never as
+  part of a build.
+
+  **It is not the simulated source.** That Feature generates movement live at
+  runtime with no recording and no file (`features/replay-source` § 5 row 1).
+  This writes a file once, offline, which the replay path then reads like any
+  other recording. Nothing about selection, pacing or the seam changes.
+
+  **It is not a rehearsal recording either**, so B-006 does not bear on it: the
+  callsigns, positions and identifiers are invented, which is what
+  `test-from-scenarios` § "Fixtures are synthetic" requires of anything
+  committed or reused. The generated file still lands under the git-ignored
+  `recordings/`, because that is where a recording is read from (B-025) and
+  because a multi-megabyte payload does not belong in history.
+
+  Runs after `0009`, and that is the whole reason for the dependency: `0009`
+  builds `RecordingWriter`, the one component that knows ADR-0004's line shape.
+  A generator that wrote its own lines would be a second writer of the format,
+  and the two would drift the first time the format moved.
+
+  What it does **not** unblock: nothing can read the file until `0010`, `0011`
+  and `0012` land, since the pacer, the replay contract and the registration
+  are all unbuilt. What it buys before then is realistic input for writing
+  those three, and the moment `0012` lands it buys a demo that needs no
+  provider account at all — which is `features/replay-source` B-011's own
+  scenario, and what makes `transponder-conventions` § "Verify and publish"
+  step 3 performable for the first time.
+
+  Two homes, and the split is the point. `RecordingWriter` is `0009`'s and
+  lives in the application, in `src/Transponder/Recording` — it is how a live
+  rehearsal records, so it ships. The **synthetic payload generator** is dev
+  tooling and does not ship: it lives in its own console project,
+  `tools/Transponder.SampleRecording`, which references the application and is
+  named in one more `InternalsVisibleTo` beside the two
+  [`Transponder.csproj`](../src/Transponder/Transponder.csproj) already
+  carries. It builds wire-shaped payloads and hands each to `RecordingWriter`,
+  so the format still has exactly one writer and no invented data sits in the
+  product assembly.
+
+  A target invokes it with `dotnet run`, passing the seed and the output path.
+  It does **not** reference the project: a `.build` that depended on the
+  application could not compile while the application did not, so the one
+  command a person runs to find out what broke would be the command that
+  cannot run. `nuke-build` owns the target. `transponder-conventions`
+  § "Project layout" gains the `tools/` line, since the repository has had no
+  such directory.
+
+acceptance_criteria:
+  - "The generated file is read by the replay path with no special case: same
+    root resolution, same naming, same startup span check as a captured
+    recording. If replay needs to know a recording was generated, this item
+    has failed."
+  - "One writer of the format. The generator emits payloads and hands them to
+    `0009`'s `RecordingWriter`; it does not spell out a line itself."
+  - "No invented data in the product assembly. The generator is its own
+    project; `src/Transponder` gains the `InternalsVisibleTo` and nothing
+    else."
+  - "`.build` references no project of the application's. The target shells
+    `dotnet run`, so a build still runs when the application does not
+    compile."
+  - "The payload is the provider's wire shape — positional arrays of 17 or 18
+    elements, as README.md § \"Response shape\" indexes them — and not a
+    serialization of any internal record. `body` is what the provider would
+    have sent."
+  - "Deterministic: one seed, one byte-identical file, so two developers
+    reading the same grid are reading the same data."
+  - "Spans longer than the staleness threshold, with at least one aircraft that
+    stops being reported partway through, so staleness is reproducible from it
+    the way a stage recording must be."
+  - "Carries the hazards the live reader has claims about, since a sample that
+    only holds well-formed rows exercises none of them: an absent velocity and
+    an absent category against a present zero, an all-padding callsign, a
+    squawk with a leading zero, both the 17- and 18-element row lengths, one
+    row that cannot be read at all, and one poll reporting nothing."
+  - "`recordings/` stays git-ignored and no generated file is committed."
+  - "Invoked deliberately and never by `Default`: a build that writes into
+    `recordings/` would overwrite a real rehearsal capture."
+
+decisions:
+  - "2026-10-06 — the person — the generator is its own console project and
+    `RecordingWriter` stays in the application. The question as first filed was
+    wrong: it asked where the writer could live such that a build target could
+    see it, when the writer was never going anywhere — `0009` builds it in
+    `src/Transponder/Recording` because recording a live rehearsal is the
+    application's job. What is actually dev tooling is the synthetic payload
+    generator, and putting that in the product assembly would ship invented
+    callsigns and positions as dead code. So it gets
+    `tools/Transponder.SampleRecording`, one more `InternalsVisibleTo` beside
+    the two already there, and reaches `RecordingWriter` the same way the test
+    project reaches everything else. Rejected: letting `.build` reference the
+    application, which is lighter by one project and makes the build
+    uncompilable exactly when the application is — the one moment a person
+    needs it; and a target spelling out ADR-0004's two fields itself, which is
+    a second writer of the format."
+  - "2026-10-06 — the person — a seeded generator writing into `recordings/`,
+    rather than a sample recording committed under a second directory. The
+    committed file needs no tooling and is readable in a diff, and it costs a
+    multi-megabyte blob in history forever, a directory outside the recordings
+    root, and a copy step before anything can read it. Also rejected: shipping
+    both a generator and a short committed file for the format example — two
+    artefacts to keep in step where ADR-0004 already carries the example."
+
+out_of_scope:
+  - "The simulated source — `features/replay-source` § 5 row 1, its own
+    Feature. This item produces a file, not a live source."
+  - "Performing a real rehearsal recording — that Feature's § 5 row 3, an
+    operational task once credentials exist."
+  - "A scrubbing tool — that Feature's § 5 row 4. Nothing generated here needs
+    scrubbing, which is the point of generating it."
+  - "A vessel recording. The vessel feed is unspecified (that Feature's § 5
+    row 2), so there is no wire shape to generate."
+  - "Reading the file. The pacer is `0010`, the contract substitution `0011`,
+    and the registration that opens it `0012`."

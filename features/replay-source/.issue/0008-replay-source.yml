@@ -2,7 +2,7 @@ id: "0008"
 type: feature
 title: Replay recorded provider payloads through the live seam
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 value: 5
@@ -79,6 +79,19 @@ acceptance_criteria:
   - "§ 9 has no Missing row once every child is done."
 
 decisions:
+  - "2026-10-06 — test-writer — §§ 8 and 9 are written, so the specification is
+    complete and the statuses move: `0009` and `0010` to `ready` with every
+    dependency landed, `0011` and `0012` to `ready-for-implementation` behind
+    theirs, this item with them, and `0013` left `blocked` on the vessel
+    feed's unwritten specification. All twenty-seven § 9 rows read `Missing`
+    and each names what will prove its claim. Four are blocked on something
+    other than work: B-005 on a recording nobody has captured, B-019 and
+    B-023 on that unwritten specification, and B-011 on `0012` rather than on
+    `0010`, which holds the claim — a reassignment in § Tasks is the remedy
+    and `spec-author`'s to make. Four claims take a review rather than a test
+    (B-005, B-006, B-020, B-021): the repository answers a structural claim
+    with a compiler diagnostic, the boundary analyzer carries no rule bearing
+    on any of them, and a test over a declaration is lesson 0006's mistake."
   - "2026-10-06 — implementer — §§ 6 and 7 of the specification are written,
     covering every child including `0013`'s vessel half, which is designed and
     still unbuildable. Four calls the design makes and the records did not:

@@ -2,7 +2,7 @@ id: "0009"
 type: task
 title: Record a live source's payloads verbatim without costing a request
 
-status: ready-for-architecture
+status: ready
 
 priority: high
 risk: 3
@@ -27,7 +27,7 @@ claims:
   - B-006
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-06"
 closed: null
 
 summary: |
