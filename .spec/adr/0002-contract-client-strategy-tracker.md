@@ -222,11 +222,12 @@ is **not** in this record. Those are claims, in § 3 of
   A prescription that contradicts the specification it governs is worse than no
   prescription — the same reason [ADR-0001](0001-flurl-for-http.md) updated
   `README.md` rather than leaving a reversed plan standing as current.
-- **Two dependencies join the list**, neither yet in
-  `Directory.Packages.props`: DynamicData for the caches and the pipeline, and
-  Scrutor for the decorator's registration
-  ([ADR-0003](0003-scrutor-for-decorator-registration.md)). Each is added by the
-  first work item that needs it, not ahead of one.
+- **One dependency joins the list**, not yet in `Directory.Packages.props`:
+  DynamicData for the caches and the pipeline, added by the first work item that
+  needs it rather than ahead of one. The decorator's registration needs none —
+  [ADR-0003](0003-a-factory-registers-the-swap-decorator.md) is a factory over
+  the per-type seams, after the library this record expected to carry it turned
+  out to wrap one registration at a time.
 - **Strategies are not required to be the same shape, and that is the design
   working rather than fraying.** The vessel strategy has no contract layer,
   because a socket has no endpoint to declare, and no hand-written rows step,
@@ -240,8 +241,8 @@ is **not** in this record. Those are claims, in § 3 of
   contract — are settled above. The four that did not have since been answered
   and recorded: the bounding box and interval in the Feature's `decisions/0001`,
   what the audience sees on a swap in its `decisions/0002`, staleness as marked
-  and kept in claim B-051, and the decoration package in
-  [ADR-0003](0003-scrutor-for-decorator-registration.md). Where replay
+  and kept in claim B-051, and how the decorator is registered in
+  [ADR-0003](0003-a-factory-registers-the-swap-decorator.md). Where replay
   substitutes was asked and answered after that, and is settled in this record.
 - **`AGENTS.md` gains a rule rather than losing an argument.** It governs
   feature layout and said nothing about integrations, so there was no conflict

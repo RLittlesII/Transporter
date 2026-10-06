@@ -25,6 +25,13 @@ and wins where they differ.
   in tension, ask before proceeding — even under a "spike" or "just get it
   working" framing. Name the gap, the options, and your recommendation. Never
   resolve it by assumption or by picking the easiest option to build.
+- **Run the assumption a decision rests on, before building on it.** Where a
+  record relies on what a library, a container or a generator does, the first
+  step of the item that builds it is the smallest executable thing that tells
+  the relied-on behaviour apart from the assumed one — then the record names
+  that run, or says it has none. A wrong sentence about a dependency reaches
+  specifications, items and risk rows long before it reaches a compiler
+  ([lesson 0016](../../.spec/lessons/0016-an-untested-assumption-is-not-a-decision.md)).
 - **Specify first.** Say what is out of scope for the area you touched, not only
   what you built.
 

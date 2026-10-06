@@ -107,6 +107,6 @@ the tests that use them, per `test-from-scenarios` § "Fixtures are synthetic".
   B-003 exists to prevent, so the field's one job — pacing — is stated here and
   must be stated wherever the replay source reads it.
 - **Nothing is added to `Directory.Packages.props`**, so `README.md`
-  § "Technology Decisions" gains no line. Unlike
-  [ADR-0003](0003-scrutor-for-decorator-registration.md), this record costs the
-  talk no explaining.
+  § "Technology Decisions" gains no line. Like
+  [ADR-0003](0003-a-factory-registers-the-swap-decorator.md) as it now stands,
+  this record costs the talk no explaining.
