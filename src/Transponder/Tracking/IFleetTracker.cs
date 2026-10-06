@@ -13,7 +13,7 @@ namespace Transponder.Tracking;
 public interface IFleetTracker : IDisposable
 {
     /// <summary>Gets the fleet, each vehicle carrying its stale mark, shared between subscribers.</summary>
-    IObservable<IChangeSet<StaleVehicle, string>> Fleet { get; }
+    IObservable<IChangeSet<TrackedVehicle, string>> Fleet { get; }
 
     /// <summary>Sets how long a vehicle may be silent before it is marked stale (B-051).</summary>
     /// <param name="threshold">How long silence is tolerated; five minutes until this is called.</param>

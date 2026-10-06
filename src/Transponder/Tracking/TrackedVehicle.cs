@@ -10,9 +10,9 @@ namespace Transponder.Tracking;
 /// The mark is not stored on the vehicle, because <c>domain-model</c> § "Never add" forbids a
 /// derived member there and the clock moves under it.
 /// </remarks>
-public sealed record StaleVehicle
+public sealed record TrackedVehicle
 {
-    /// <summary>Gets the tracked vehicle, exactly as the seam reported it.</summary>
+    /// <summary>Gets the vehicle, exactly as the seam reported it.</summary>
     public required TransportVehicle Vehicle { get; init; }
 
     /// <summary>Gets a value indicating whether the vehicle was stale when the pipeline evaluated it.</summary>

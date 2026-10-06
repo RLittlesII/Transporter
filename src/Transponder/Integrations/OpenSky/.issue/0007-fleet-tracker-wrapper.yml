@@ -66,6 +66,20 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — the person — the published element is `TrackedVehicle`, not
+    `StaleVehicle`: almost no instance of it is stale, so the old name described
+    the minority (review of pull request 25, lesson 0012). Renamed in the code,
+    in this Feature's § 7 and in `fleet-pipeline` and `fleet-dashboard` § 7; the
+    old name stays in § 11 row 4's record of the review that chose the wrapper
+    and in `0030`'s decision rows, which are records of what was decided that
+    day. No claim, scenario or § 9 row named the type."
+  - "2026-10-06 — the person — the tracker stays under `Tracking/` rather than
+    moving to `Features/Tracking/` (same review). Two Features and the replay
+    source consume that layer, so filing it under one Feature makes the other
+    two reach into a sibling's folder — the reason integrations are not under
+    `Features/` either. `transponder-conventions` § `coding` already held the
+    rule for the model and the strategies and now covers the tracker, the clock
+    and the published element too."
   - "2026-10-05 — implementer — this item is delivered in two pull requests and
     the second one closes it. The production code landed first because the
     documented order — test before implementation — could not run: a test must

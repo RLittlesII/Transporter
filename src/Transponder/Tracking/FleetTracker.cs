@@ -33,7 +33,7 @@ internal sealed class FleetTracker : IFleetTracker
     internal static readonly TimeSpan DefaultStaleAfter = TimeSpan.FromMinutes(5);
 
     /// <inheritdoc/>
-    public IObservable<IChangeSet<StaleVehicle, string>> Fleet { get; }
+    public IObservable<IChangeSet<TrackedVehicle, string>> Fleet { get; }
 
     /// <inheritdoc/>
     public void StaleAfter(TimeSpan threshold) => _staleAfter.OnNext(threshold);
@@ -50,7 +50,7 @@ internal sealed class FleetTracker : IFleetTracker
     /// <summary>Derives the stale mark, never storing it and never reading an ambient clock (B-043).</summary>
     /// <param name="vehicle">The vehicle the seam reported.</param>
     /// <returns>The vehicle, kept rather than removed, carrying the mark (B-051).</returns>
-    private StaleVehicle Mark(TransportVehicle vehicle) =>
+    private TrackedVehicle Mark(TransportVehicle vehicle) =>
         new() { Vehicle = vehicle, IsStale = vehicle.IsStale(_clock.Current, _staleAfter.Value) };
 
     private readonly IObservedClock _clock;

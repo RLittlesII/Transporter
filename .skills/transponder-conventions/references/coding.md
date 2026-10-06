@@ -20,6 +20,10 @@ it. The traps:
 - **Interfaces** — `I`-prefixed. An abstract base class is not an interface and
   takes no prefix.
 - **Private fields** — `_camelCase`, at warning severity.
+- **A type is named for what every instance of it is**, not for the state some
+  of them carry. `TrackedVehicle` holds a vehicle and a derived stale mark;
+  `StaleVehicle` named it after the minority
+  ([lesson 0012](../../../.spec/lessons/0012-a-type-named-for-the-exception-describes-the-minority.md)).
 - **No `Async` suffix on a method.** The return type says whether it is
   asynchronous. This one catches everyone arriving from another .NET
   codebase: `Refresh()`, not `RefreshAsync()`.
@@ -60,6 +64,12 @@ it. The traps:
   not the provider's at all: they go under `src/Transponder/Model/` and
   `src/Transponder/Tracking/`, because they survive the provider being
   replaced.
+- **`Features/` holds view models and actors, and the layer below them is not a
+  Feature.** The domain model is `Model/`; the tracker seam, the pipeline over
+  it, the observed clock and the published element are `Tracking/`. Two Features
+  and the replay source all consume that layer, so filing it under one of them
+  would make the other two reach into a sibling Feature's folder — the same
+  reason integrations are not under `Features/` either.
 - Container wiring extends the existing builder blocks in `src/Gui/Container/`,
   which use C# `extension(MauiAppBuilder)` members, rather than piling
   registrations into [`MauiProgram`](../../../src/Gui/MauiProgram.cs).

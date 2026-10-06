@@ -38,7 +38,7 @@ summary: |
 
   The mark is **derived, never stored** on the vehicle — `domain-model`
   § "Never add" forbids a stored flag, and the clock moves — so it is carried
-  beside the vehicle in the element the pipeline publishes (`StaleVehicle`),
+  beside the vehicle in the element the pipeline publishes (`TrackedVehicle`),
   which a consumer binds — the pipeline exposes no collection of its own
   (ADR-0009).
 

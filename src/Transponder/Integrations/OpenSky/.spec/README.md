@@ -427,7 +427,7 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../src/Transponder/Tracking/Sources/AircraftSnapshotMapper.cs)              | B-034 – B-037, B-046            |
 | `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../src/Transponder/Tracking/IFleetTracker.cs)                                                | B-041, B-051                    |
 | `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../src/Transponder/Tracking/FleetTracker.cs)                                                  | B-042, B-043, B-051             |
-| `StaleVehicle`              | [`Tracking/StaleVehicle.cs`](../../../src/Transponder/Tracking/StaleVehicle.cs)                                                  | B-051, where the mark lives     |
+| `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../src/Transponder/Tracking/TrackedVehicle.cs)                                              | B-051, where the mark lives     |
 | `TrackingRegistration`      | [`Tracking/Container/TrackingRegistration.cs`](../../../src/Transponder/Tracking/Container/TrackingRegistration.cs)              | B-052                           |
 
 `IOpenSkyApi` carries no suffix, which is B-048 visible in the identifier. Not
@@ -580,14 +580,14 @@ seam. The clock itself is registered alongside the chain and injected into
 
 **The tracker, built**
 
-`0007` landed `IFleetTracker`, `FleetTracker`, `StaleVehicle` and
+`0007` landed `IFleetTracker`, `FleetTracker`, `TrackedVehicle` and
 `TrackingRegistration`. Four things about the shape, because the claims leave
 each of them open.
 
 **It publishes a stream and owns no collection.**
 [ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)
 decided that after this section was written: `Fleet` is an
-`IObservable<IChangeSet<StaleVehicle, string>>`, shared by DynamicData's own
+`IObservable<IChangeSet<TrackedVehicle, string>>`, shared by DynamicData's own
 cache-aware `RefCount()`, and `Bind` plus the marshal to a user-interface
 scheduler are the consumer's. B-044 is then true by construction — there is no
 bound collection here to edit imperatively — and `fleet-pipeline` B-002 and
@@ -602,7 +602,7 @@ rebuilt for one. The amendment is `spec-author`'s, raised here rather than taken
 here.
 
 **The mark is derived onto the element, never stored on the vehicle.**
-`StaleVehicle` carries the vehicle and the flag, so a consumer reads staleness
+`TrackedVehicle` carries the vehicle and the flag, so a consumer reads staleness
 off the row it already has, and `domain-model` § "Never add" keeps the flag off
 `Aircraft`. `TransportVehicle.IsStale(asOf, threshold)` computes it against the
 injected `IObservedClock` — B-043, and no `DateTime.UtcNow` anywhere in the
@@ -888,7 +888,22 @@ declares, so the row is `0005`'s. § 11 row 5 asked which of two bad options to
 take and the answer was neither; no row is waived and no status was added. One
 row moves to `Verified` and one changes items, so §§ 8, 9 and Tasks all say so.
 
-Six repository-wide lessons also bear on this document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
+**Delta, 2026-10-06 — the published element is renamed `TrackedVehicle`, and
+`Tracking/` stays where it is.** Trigger: `0007`'s pull request review. The
+person asked why the element was `Stale` rather than `Tracked`, and almost no
+instance of it is stale — it is the fleet's row, carrying one `bool` that is
+usually `false`. Renamed in the code, in this § 7, and in `fleet-pipeline` and
+`fleet-dashboard` § 7, with the old name kept in the two records of the review
+that chose the wrapper
+([lesson 0012](../../../.spec/lessons/0012-a-type-named-for-the-exception-describes-the-minority.md)).
+The same review asked whether `Tracking/` should be `Features/Tracking/`: it
+should not, because two Features and the replay source consume that layer, and
+the answer was a citation of `transponder-conventions` § `coding` — which now
+says so in a sentence that covers the tracker rather than only the model and the
+strategies. No claim, scenario or § 9 row named the type, so none changed, and
+§ 12 keeps its 🟢 rows.
+
+Seven repository-wide lessons also bear on this document. [Lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
 is why § 3 keeps no build state that § 9 owns, and why a § 9 row reads
 `Missing` until something proves it rather than inheriting the template's
 example `Verified`: a gate reporting a pass that nothing verified is the one
@@ -911,6 +926,11 @@ why a row naming two mechanisms reads `Missing` until both of them pass.
 is why § 8 no longer calls B-009 and B-049 rows whose status cannot move, and
 why a `Review` row says what was looked at and what re-does it: both reviews had
 been described as impossible and neither had been attempted.
+[Lesson 0012](../../../.spec/lessons/0012-a-type-named-for-the-exception-describes-the-minority.md)
+is `0007`'s review: the element the pipeline publishes was named after the state
+a few of its instances carry, and the name had passed an architecture review, an
+ADR, two Features' § 7 and an implementation without anyone asking what every
+instance of it is.
 
 ## 11. Open Questions
 
