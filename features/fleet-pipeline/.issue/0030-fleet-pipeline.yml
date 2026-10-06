@@ -70,10 +70,11 @@ summary: |
   is vacuous until this Feature exists.
 
   The children are slices of this item rather than work beside it, which is why
-  it carries all twenty-four claims.
+  it carries all twenty-seven claims.
 
-  § 12 is 🟡 on every row and § 11 holds three open questions, so this stays at
-  `ready-for-architecture` until the specification is signed.
+  § 12 is 🟡 on every row — its owner is `spec-reviewer` — and § 11 rows 2 and
+  4 are still open after rows 1, 3 and 5 were answered on 2026-10-05, so this
+  stays at `ready-for-architecture` until the architecture review lands.
 
 acceptance_criteria:
   - "B-001 – B-005 — the spine: built once, one collection, no imperative
@@ -116,6 +117,21 @@ decisions:
     declaration without touching one. `0031` stays at
     `ready-for-architecture` for it rather than discovering the six one at a
     time."
+  - "2026-10-05 — the person — no `AutoRefresh` stage in this pipeline
+    (`decisions/0001`, § 11 row 1 closed). The projection replaces a vehicle
+    rather than mutating one, so the operator has no subject; staleness
+    re-evaluates on the clock's observable (B-018) and README.md's operator
+    table now says where `AutoRefresh` would apply. Rejected: mutating in place
+    to earn the demo beat, and deferring the operator to an unchosen closing
+    act."
+  - "2026-10-05 — the person — the poll interval is not a live input
+    (`decisions/0002`, § 11 row 5 closed, § 5 row 8). Pacing a notice costs
+    nothing; polling faster spends credits from a daily 4,000. B-026's notice
+    interval stays live."
+  - "2026-10-05 — the person — `FleetColumn.Value` stays a display-formatted
+    `string` (§ 11 row 3 closed). B-020 unchanged; a canonical value plus a
+    formatter was rejected as a member per column and a generic column type no
+    need asks for. No `decisions/` record: it shapes code, not the demo."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
@@ -123,3 +139,5 @@ out_of_scope:
   - "`ExpireAfter` and removal on silence (§ 5 row 2) — the closing act's
     source decides it the other way."
   - "The swap decorator itself (§ 5 row 5) — `aircraft-source` `0006`."
+  - "A live poll interval and its credit cost on screen (§ 5 row 8) — the poll
+    stays `aircraft-source`'s startup option."
