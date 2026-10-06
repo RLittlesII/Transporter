@@ -117,23 +117,399 @@ against that spec.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 6 -->
 
-Unwritten. `implementer` owes it. The judgment it has to keep separate is the
-one § 1 turns on: a recording exists for a business reason — a venue network
-this demo does not control — and the technical shape that follows from it is a
-second contract implementation rather than a second client (§ 11 row 1). Those
-are two readings of one decision and should not be written as one.
+One row per concern, not per claim, with the claim ids each row answers for in
+its Notes — so coverage is read down the column rather than counted in rows,
+and no claim is copied here to drift from § 3. The rows follow § 3's six
+groups.
+
+The judgment this section exists to keep separate is the one § 1 turns on: a
+recording exists for a business reason — a venue network this demo does not
+control — and the technical shape that follows from it is a second contract
+implementation rather than a second client. Those are two readings of one
+decision, and the **Both** rows below are where they are written as two.
+
+The classifications are applied as
+[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+§ 6 applies them: **Business** where the shape could have gone either way
+technically and a product judgment picked it; **Technical** where a constraint
+or a skill decided it and no business party expressed a preference; **Both**
+where a technical shape was chosen for a reason § 1 states. This Feature has
+more **Both** rows than most, which is a finding rather than an accident —
+nearly every technical choice below is downstream of one sentence about a
+venue network.
+
+| Item                                                              | Classification | Notes                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A recording holds the provider's bytes, not our reading of them   | Both           | § 1 wants a fallback that outlives a converter fix, which is a business property stated as re-recording nobody has to do. Technically it puts the tap below deserialization, since an envelope that has been through a reader and back is no longer verbatim. B-001, B-002, B-014.             |
+| Recording taps traffic already paid for                           | Both           | § 4 row 10 is the business half — one day's credits, and a rehearsal must not spend the talk's. Technically the tap observes a response that was going to be fetched anyway and issues nothing of its own. B-003.                                                                              |
+| Recording changes nothing the fleet sees                          | Technical      | A tap that perturbs its subject is a second source wearing a tap's name. No product stake; the claim exists because the failure is invisible from downstream. B-004.                                                                                                                           |
+| A recording's usefulness is measured in minutes                   | Business       | The threshold is the talk's: staleness is part of the demo, so a recording too short to show it cannot rehearse the segment it exists for. No technical reading picks a length — § 4 row 11 supplies the number. B-005.                                                                        |
+| A rehearsal recording is operational data                         | Both           | Technically § 4 row 7 and a git-ignored directory. The business half is that a recording holds real callsigns and real positions and this repository is public. B-006.                                                                                                                         |
+| The cadence belongs to the recording, not to the poller           | Both           | § 1's claim is that nothing downstream can tell replay from live, and a recording played at a fixed interval is visibly not the feed it recorded. Technically it moves the wait into the replay transport and takes the live client's own interval to zero — "Where the cadence lives". B-007. |
+| The end of a recording is not the end of the feed                 | Both           | A talk runs longer than a rehearsal capture, which is why looping is claimed rather than left to the operator. The technical half is a rewind, and the hazard is the seam: a grid that empties at the loop boundary reads as the demo dying. B-008.                                            |
+| Two times on one line, one job each                               | Technical      | ADR-0004 put both on the line and § 4 row 3 says which does what. Nobody outside the code has a stake in it, and the whole risk is that a reader reaches for the nearer one. B-009, B-010.                                                                                                     |
+| Replay owes nothing to the network                                | Both           | § 1: the venue network is the failure being removed, so a fallback that needs the provider reachable removes nothing. Technically it means no socket, no credential, and no startup gate that demands one. B-011.                                                                              |
+| A torn last line costs the line                                   | Technical      | ADR-0004 § "Decision". A recorder stopped with a keystroke is the ordinary case rather than the exception, and the line-oriented format was chosen partly so the damage is bounded to one line. B-012.                                                                                         |
+| One projection, whatever fed it                                   | Technical      | `mapping` § "One mapper per boundary". A second converter for recorded payloads is the shape this Feature exists to avoid: it would make the observed instant something two implementations each have to keep honouring. B-013, B-022.                                                         |
+| One switch, and replay sits behind it like anything else          | Both           | § 1 names this as the second thing the Feature buys: replay _is_ the proof the pipeline does not care where data comes from, and that proof is false the moment a consumer can tell. ADR-0011 is the technical half. B-015, B-016.                                                             |
+| A swapped-out source stops spending                               | Both           | Credits again, and a poller still running behind a swapped-away source reads as a leak on a projector. The subscription owns the poll, so stopping it is the swap itself rather than a disposal this Feature performs. B-017.                                                                  |
+| The pipeline survives the swap                                    | Both           | § 1's closing act. Technically the decorator sits below everything that would be rebuilt, so this row is satisfied by where the seam is rather than by anything replay does. B-018.                                                                                                            |
+| Configuration names which recording; the selector names whether   | Both           | `adr/0001`. The business half earns the row: a presenter has exactly one control, and a configuration key that could also turn replay on would be a second control hiding in a file. B-024.                                                                                                    |
+| One root, so a rehearsal and the stage mean the same directory    | Technical      | `adr/0001` item 2 — resolution against a configured root rather than an absolute path in a settings file. No product judgment in it. B-025.                                                                                                                                                    |
+| A recording that cannot serve is a report, not a refusal to start | Business       | The departure from `aircraft-source`'s validator, and a product call: an absent credential stops the application because nothing works without it, where an unusable recording must not take the live demo down with it. The presenter learns at startup and still has a talk. B-026.          |
+| File resolution happens once, where the source is registered      | Technical      | `adr/0001` item 5. It keeps the component holding the time-base logic free of I/O, which is what lets a test drive it with synthetic lines and no file system. B-027.                                                                                                                          |
+| Both feeds record alike and substitute at different depths        | Technical      | § 4 row 5: a contract layer exists only where the provider is request/response shaped. The asymmetry follows from the providers rather than from a choice made here, and the symmetry that matters — both reach the seam — is untouched. B-019, B-023.                                         |
+| A recorded fallback exists before the closing act is presented    | Business       | README.md leaves the closing act optional; B-020 makes the fallback mandatory once it is on the agenda. That is a commitment about what gets presented rather than a technical property, which is why it belongs to the person running the talk.                                               |
+| Replay defines no type of its own                                 | Technical      | § 5 row 2 and `aircraft-source` § 5 row 3. Replay reproduces whatever the recorded provider's Feature defines; a replay-flavoured vehicle would be a second domain model to keep in step, and it would make B-016 false by construction. B-021.                                                |
 
 ## 7. Technical Design
 
 <!-- Rules: ../../../.spec/templates/feature.md § 7 -->
 
-Unwritten. The substitution point it would otherwise have had to settle is
-already answered — B-022, recorded repository-wide in [ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md)
-rather than here, because it binds any provider's contract and not this Feature
-alone. What is
-left for this section is the replay contract implementation's own shape: how a
-recording is opened and read, how the recorded spacing reaches an injected
-scheduler, and where § 11 row 3's configuration lands.
+Four records settle what this section would otherwise have had to, and it cites
+them rather than restating them: the substitution depth of each half in
+[ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md), the
+recording format in
+[ADR-0004](../../../.spec/adr/0004-ndjson-recording-format.md), what registers
+as what in
+[ADR-0011](../../../.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md),
+and which recording a run loads in
+[adr/0001](adr/0001-recording-selected-by-configuration.md). What is left is
+this Feature's own shape: where the tap sits, how a recording is opened, read
+and looped, which component owns the cadence, and how a second chain over the
+same classes is constructed and registered.
+
+**Domain model**
+
+**Not applicable — replay introduces no type of its own (B-021).** The vehicles
+a recording produces are the recorded provider's: `Aircraft` and its base are
+[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+§ 7's and [ADR-0005](../../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)'s,
+and `Vessel` is unspecified (§ 5 row 2). The only shapes below are transport
+and configuration ones, and none of them crosses the projection.
+
+**The recorded line**
+
+ADR-0004 fixes the line; what matters to every component here is that it
+carries two instants with one job each, and that mixing them is the failure
+B-009 and B-010 are separate claims about.
+
+| Field        | Type                       | Job                                                                                                                                                                              |
+| ------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `receivedAt` | ISO-8601 instant           | **Paces playback, and nothing else.** The gap between consecutive values is the only cadence replay has (B-007). It never reaches the observed clock and never leaves the pacer. |
+| `body`       | the provider's JSON, as-is | **Everything downstream.** Deserialized into the provider's own envelope type, whose own reported time becomes the observed instant (B-009) and so the staleness base (B-010).   |
+
+**What this Feature adds**
+
+Six components, none of which exists yet. The home each lands in is the
+implementer's to create, and the Feature's specification and `.issue/` move
+beside its code in the change that builds it (`transponder-conventions`
+§ "Where a specification lives",
+[lesson 0015](../../../.spec/lessons/0015-a-move-that-leaves-its-references-behind-is-half-a-move.md)).
+Two homes are in play — the recording spine serves both feeds, where the
+aircraft substitution is OpenSky's — so the move picks `src/Transponder/Recording`
+and the OpenSky half registers from the integration it substitutes inside.
+
+| Component                            | Proposed home                                 | Item   | Owns                                                                                                                                                                                                               |
+| ------------------------------------ | --------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `RecordingWriter`                    | `src/Transponder/Recording`                   | `0009` | Appends one NDJSON line per observed payload. Knows the format and nothing about who observed it. B-001, B-002.                                                                                                    |
+| The tap                              | `src/Transponder/Integrations/OpenSky/Http`   | `0009` | Hands the writer the response body before anything parses it, on traffic the live client already paid for. B-003, B-004.                                                                                           |
+| `RecordingPacer`                     | `src/Transponder/Recording`                   | `0010` | Reads an opened stream forward, discards a torn final line, rewinds at the end, and releases each payload when the recorded spacing says it is due. B-007, B-008, B-012, B-027.                                    |
+| `ReplayOpenSkyApi`                   | `src/Transponder/Integrations/OpenSky/Replay` | `0011` | `IOpenSkyApi` over a pacer. Deserializes `body` into the provider's envelope and returns it; ignores the box and the extended flag, because a recording was taken with the ones it was taken with. B-013, B-022.   |
+| `ReplayOptions` and its registration | `src/Transponder/Recording`                   | `0012` | One key per replay source, the recordings root, resolution to an opened stream, the startup report, and the construction of the second chain. B-024, B-025, B-026, and B-015 – B-018 by registering as a strategy. |
+| The vessel replay strategy           | with the vessel integration, once one exists  | `0013` | `ITrackerSourceStrategy` fed by a pacer directly, since there is no contract to stand in for. B-019 – B-021, B-023.                                                                                                |
+
+**Where the cadence lives**
+
+B-022 puts the live `AircraftSnapshotClient` over the replay contract, and that
+client already owns a loop: it fetches, then sleeps its configured interval on
+the injected scheduler. Left alone, a replayed payload would be spaced by the
+recorded gap **plus** that interval, and B-007 would be false by exactly the
+amount nobody notices on stage.
+
+**The cadence lives in the pacer, and the replay chain's client is given an
+interval of zero.** `GetStates` on the replay contract completes when the pacer
+says the next payload is due, so the only wait in the loop is the recorded one.
+The zero interval is not a global setting: the replay chain is hand-constructed
+at registration (below), so it is handed its own `OpenSkyOptions` instance and
+the live chain's is untouched.
+
+Two consequences are worth stating rather than discovering:
+
+- **A placeholder bounding box is configured on the replay chain's options.**
+  The client reads the box before calling the contract and throws without one,
+  and no request is made with it. An options value that exists only to satisfy a
+  check is a wart; it is preferred to relaxing the live client's guard, which
+  exists because a box nobody chose is a demo pointed at open ocean.
+- **Rejected: letting the pacer absorb the client's interval** by waiting the
+  recorded gap minus whatever already elapsed. It needs no second options
+  instance, and it is correct only while the live interval stays shorter than
+  the shortest recorded gap — fifteen seconds against a recording taken at
+  fifteen seconds. It fails by drifting, which is the failure mode this Feature
+  is least able to see.
+
+**A second chain over the same classes**
+
+B-022's "the same client class, not a second one" means a second _instance_,
+not a second registration of the same singleton. Three things follow, and all
+three are registration-time:
+
+- **The replay chain gets its own `SourceCache<AircraftSnapshot, string>`.**
+  Sharing the live cache would leave the outgoing feed's aircraft in the
+  collection under the incoming one, which is the failure mode `hot-swap-source`
+  lists and which B-016 forbids being visible.
+- **The replay chain gets its own per-type seam** — an empty interface beside
+  `IAircraftTrackerSource`, declaring nothing for the same reason that one does.
+  It is not decoration: `SwappingTrackerSource.Select(Type)` resolves a strategy
+  by `Single(type.IsInstanceOfType)`, so two instances of `AircraftTrackerSource`
+  with no seam to tell them apart make every swap throw.
+- **Registration is a method of its own**, taking configuration the way
+  `AddOpenSky` does, so an application and a test compose the same graph and
+  differ only in what configuration they supply (B-052's reading, applied here
+  before there is a second chain to get wrong).
+
+**Opening a recording, and looping it**
+
+Resolution happens once, where the source is registered: the configured name is
+combined with the configured root, the file is opened, and the pacer is handed
+the stream (B-025, B-027). The pacer reads forward, and at the end seeks to the
+beginning of the same stream rather than reopening it — so the stream must be
+seekable, which a `FileStream` is and which a test's `MemoryStream` is.
+
+Three rules at the boundary:
+
+- **Nothing is cleared on rewind.** The cache keeps what it holds and the first
+  payload is applied as an ordinary differential update, so the boundary emits
+  the changes between the last payload and the first and never a removal of
+  everything (B-008).
+- **The boundary's spacing is the recording's last gap.** There is no recorded
+  interval between the final line and the first, and inventing a fixed one is
+  what B-007 forbids; the most recent observed cadence is the honest stand-in.
+- **Time moves backwards at the boundary, and that is correct.**
+  `IObservedClockWriter.Observe` sets rather than taking the later of the two,
+  which [ADR-0007](../../../.spec/adr/0007-the-live-source-advances-the-observed-clock.md)
+  decided for exactly this case: a looping recording restarts its time base and
+  the fleet stops being stale, the same way it did when the recording began.
+
+A torn final line is discarded on read and the stream continues to the rewind
+(B-012). A line that is complete but unparseable is the same case — the
+recording is a log, not a contract, and one bad line costs one payload.
+
+**The tap sits below deserialization**
+
+B-002 requires the line to hold what the provider sent, which rules out
+recording a reconstructed envelope: `OpenSkyStatesResponse` round-tripped
+through a writer is this repository's reading of the payload, not the payload.
+The transport currently reads its body straight into the envelope type, so the
+tap belongs where the raw body still exists — in the HTTP pipeline beneath the
+contract, observing the response the live poll already made.
+
+Rejected: **a decorator over `IOpenSkyApi`**, which is the obvious shape and
+reaches only the deserialized envelope, so it can satisfy B-001's "beside the
+instant it arrived" and not B-002's "verbatim". The two claims are separate for
+this reason.
+
+The tap is scoped to the states endpoint. The token endpoint is on the same
+client cache and must never be recorded — a recording is shared and scrubbed by
+hand, and § 4 row 7 puts credentials outside what may be written at all.
+
+**Diagrams**
+
+The constructed chain, with the live one above and the replay one below.
+Dashed nodes are outside this Feature.
+
+```mermaid
+graph LR
+  sky(["OpenSky /states/all"])
+  file[("recordings/*.ndjson")]
+
+  subgraph contracts["Integrations/OpenSky/Contracts"]
+    api["IOpenSkyApi"]
+  end
+
+  subgraph live["the live chain"]
+    httpApi["OpenSkyHttpApi"]
+    tap["recording tap"]
+    liveClient["AircraftSnapshotClient"]
+    liveCache[("SourceCache, live")]
+    liveStrategy["AircraftTrackerSource<br/>IAircraftTrackerSource"]
+  end
+
+  subgraph replay["the replay chain"]
+    pacer["RecordingPacer"]
+    replayApi["ReplayOpenSkyApi"]
+    replayClient["AircraftSnapshotClient<br/>same class, interval zero"]
+    replayCache[("SourceCache, replay")]
+    replayStrategy["AircraftTrackerSource<br/>its own per-type seam"]
+  end
+
+  writer["RecordingWriter"]
+  decorator["SwappingTrackerSource"]
+  tracker["FleetTracker"]:::out
+  clock["ObservedClock"]
+
+  sky -->|"raw body"| tap
+  tap --> writer
+  writer --> file
+  tap --> httpApi
+  httpApi -.->|implements| api
+  replayApi -.->|implements| api
+  file -->|"opened once, at registration"| pacer
+  pacer -->|"body, when due"| replayApi
+  httpApi --> liveClient
+  replayApi --> replayClient
+  liveClient --> liveCache
+  replayClient --> replayCache
+  liveClient -->|"reported time"| clock
+  replayClient -->|"recorded reported time"| clock
+  liveCache --> liveStrategy
+  replayCache --> replayStrategy
+  liveStrategy -->|ITrackerSourceStrategy| decorator
+  replayStrategy -->|ITrackerSourceStrategy| decorator
+  decorator --> tracker
+
+  classDef out stroke-dasharray: 4 3
+```
+
+One replayed payload, and the loop boundary. This earns its place because it is
+where the two instants separate, and where the only wait in the loop is visible.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as AircraftSnapshotClient
+  participant A as ReplayOpenSkyApi
+  participant P as RecordingPacer
+  participant S as injected scheduler
+  participant K as SourceCache, replay
+  participant L as ObservedClock
+
+  C->>A: GetStates(box ignored, ct)
+  A->>P: next payload
+  P->>S: sleep receivedAt(n) − receivedAt(n−1)
+  S-->>P: due
+  P-->>A: body, verbatim
+  A->>A: deserialize into the provider's envelope
+  A-->>C: OpenSkyStatesResponse
+  C->>C: read rows by index, the live reader (B-013)
+  C->>K: EditDiff over the whole set
+  C->>L: Observe(body's own reported time) (B-009, B-010)
+  C->>S: sleep zero, so the recorded gap is the only wait
+
+  Note over P: end of the recording
+  P->>P: seek to zero, keep the cache as it is (B-008)
+  P->>S: sleep the recording's last gap
+```
+
+**Interface changes**
+
+Every file below is new, so the declarations are written out; each becomes a row
+in this table once its file exists (`transponder-conventions` § "Declarations in
+§ 7"). Accessibility follows the repository's rule — a type a consumer never
+names is `internal`, and the registration method is the only public surface.
+
+| Type | File | Claims it makes visible          |
+| ---- | ---- | -------------------------------- |
+| —    | —    | None yet; nothing here is built. |
+
+```csharp
+/// <summary>Releases a recording's payloads at the spacing they arrived with.</summary>
+internal interface IRecordingPacer
+{
+    /// <summary>Waits until the next payload is due, then answers it verbatim.</summary>
+    /// <param name="cancellationToken">Stops the wait.</param>
+    /// <returns>The payload as the provider sent it; the recording rewinds rather than ending.</returns>
+    Task<string> Next(CancellationToken cancellationToken);
+}
+
+/// <summary>Writes one NDJSON line per observed payload (ADR-0004).</summary>
+internal interface IRecordingWriter
+{
+    /// <summary>Records one payload beside the instant it arrived.</summary>
+    /// <param name="receivedAt">The arrival instant, which paces playback and nothing else.</param>
+    /// <param name="body">The payload, exactly as the provider sent it.</param>
+    void Write(DateTimeOffset receivedAt, string body);
+}
+
+/// <summary>Which recording each replay source reads, and where recordings live (adr/0001).</summary>
+internal sealed class ReplayOptions
+{
+    /// <summary>The configuration section this binds under.</summary>
+    internal const string Section = "Replay";
+
+    /// <summary>Gets or sets the directory recordings resolve against, relative to the running application.</summary>
+    public string Root { get; set; } = "recordings";
+
+    /// <summary>Gets or sets the aircraft recording's file name. Null until configuration names one, and no default is compiled in.</summary>
+    public string? Aircraft { get; set; }
+
+    /// <summary>Gets or sets the vessel recording's file name. Null until configuration names one.</summary>
+    public string? Vessels { get; set; }
+}
+
+/// <summary>The replay chain's seam, empty for the reason <see cref="IAircraftTrackerSource"/> is.</summary>
+internal interface IAircraftReplayTrackerSource : ITrackerSourceStrategy;
+```
+
+`ReplayOpenSkyApi` implements `IOpenSkyApi` explicitly, as `OpenSkyHttpApi`
+does, so the contract's members are reachable only through the contract. It
+introduces no envelope type and no row reader: the provider's own
+`OpenSkyStatesResponse` is deserialized with the converter already attached to
+`OpenSkyStateRow`, which is what keeps B-013's "no second converter" true in
+code rather than in prose.
+
+**The startup report**
+
+B-026 is a report, not a refusal. At startup each named recording is resolved
+and read far enough to answer three questions — does it exist, can it be read,
+does it span the staleness threshold — and each answer is logged naming the
+recording and the defect. A recording that fails any of them leaves its source
+unregistered, which is what B-024 already does for a source with no recording
+named: the control is absent rather than offering a wrong recording.
+
+This departs deliberately from
+[`OpenSkyConfigurationValidator`](../../../src/Transponder/Integrations/OpenSky/Configuration/OpenSkyConfigurationValidator.cs),
+which fails the host. An absent credential means nothing works; an unusable
+recording means the fallback is gone while the live demo is fine, and stopping
+the application for it would turn a degraded talk into no talk.
+
+**The vessel half**
+
+B-023 substitutes at the strategy: a vessel replay source implements
+`ITrackerSourceStrategy` directly and is fed by a pacer over the same format,
+because a push provider has no contract to stand in for (§ 4 row 5). It
+registers the same way, is selected the same way, and reaches the same seam —
+the asymmetry is the depth and nothing else.
+
+It is designed here and not built. `0013` waits on a specification rather than
+on an item: `Vessel`, its client, its cache and its tracker source are
+unspecified (§ 5 row 2), and what a vessel replay projects into cannot be
+written before they exist.
+
+**Decision required**
+
+> One question this section cannot settle, because it changes what the
+> application does rather than how this Feature is built.
+>
+> B-011 claims replay runs with no credential configured, and its scenario says
+> so outright. `AddOpenSky` registers the credentials with `ValidateOnStart`, so
+> an application that composes the OpenSky integration refuses to start without
+> them — which makes B-011 unprovable above the unit level and makes a
+> recordings-only laptop unable to run the demo at all.
+>
+> | Option | Summary                                                                                                                     | Tradeoff                                                                                                                                                                                                             |
+> | ------ | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | A.     | Credential validation fails the host only when a live source is registered; a replay-only composition starts without.       | Keeps B-011 true end to end. Weakens `aircraft-source` B-029's "the application fails at startup", which was chosen so a presenter learns before the stage — the learning moves to the startup report.               |
+> | B.     | Leave the gate as it is; B-011 is proven at the chain rather than at the host, and the stage always configures credentials. | No change to a claim already delivered, and the simplest thing to build. A venue with no network and a laptop with no secrets configured cannot start the application, which is the scenario the Feature exists for. |
+> | C.     | Split the composition: replay registers without `AddOpenSky`, constructing the contract-side chain itself.                  | Both claims hold untouched. It is a second composition of the same chain, which is what `AddOpenSky`'s own remarks argue against, and the first production scenario it drifts from will pass in a test.              |
+>
+> **Recommendation:** A. B-011's scenario is the Feature's reason for existing,
+> and option B answers it by narrowing the claim to something a unit test can
+> reach. The weakening of B-029 is real but small: the report that replaces it
+> runs at the same moment, in the same output, and names the same absence.
+>
+> **Awaiting:** the person. `0012` is where it lands, since that is where the
+> replay chain is registered.
 
 ## 8. Testing Strategy
 
@@ -167,24 +543,37 @@ build state is written, and a row here naming no test is what blocks ship.
 
 No Feature-scoped lesson yet. One repository-wide lesson bears on this
 document: [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
-which is why §§ 6-9 above say in words that they are unwritten rather than
+which is why §§ 8 and 9 above say in words that they are unwritten rather than
 carrying a template row, and why § 3 no longer keeps a build state § 9 owns.
+§§ 6 and 7 said the same until the design pass wrote them.
 
 ## 11. Open Questions
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-None. All three questions this specification opened have been answered and are
-recorded below rather than deleted — an answered question is a record of what
-was asked. A question arriving later is added here as a row — `#`, Question,
-Owner, Target date — rather than settled in conversation.
+One open, row 4, raised by the design pass. The three this specification opened
+first have been answered and are recorded below rather than deleted — an
+answered question is a record of what was asked.
+
+| #   | Question                                                                                                                                       | Owner      | Target date                  |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------------------------- |
+| 4   | Does credential validation still fail the host when only a replay source is registered? B-011 says it must not, and `AddOpenSky` says it does. | the person | before `0012` is implemented |
+
+Row 4's options and the recommendation are in § 7 § "Decision required", where
+the design that raised it is, rather than copied here.
 
 **Row 1 — answered: replay substitutes at the API contract, and selection stays
 at the seam.** A replay implementation of the provider's contract hands back
 recorded envelopes, and the live path's own snapshot client and cache are
 constructed over it — the same client class, not a second one. That whole chain
-registers as another `ITrackerSource`, so replay is a swap target like any live
-strategy and B-015 – B-018 hold as written. The claim is B-022.
+registers as another `ITrackerSourceStrategy`, so replay is a swap target like
+any live strategy and B-015 – B-018 hold as written. The claim is B-022.
+
+The seam it registers as was `ITrackerSource` when this row was first answered,
+and ADR-0011 changed it after `0049` ran ADR-0003's library: only the decorator
+registers as `ITrackerSource` now, and a strategy that did would reach consumers
+in place of the selector. § 4 row 12 carries the rule; the sentence above is
+corrected rather than left as the answer that was written.
 
 Two consequences worth keeping visible. **aircraft-source B-045 is not
 widened**: replay introduces no client, so the envelope and the positional row

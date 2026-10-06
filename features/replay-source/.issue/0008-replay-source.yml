@@ -79,6 +79,20 @@ acceptance_criteria:
   - "§ 9 has no Missing row once every child is done."
 
 decisions:
+  - "2026-10-06 — implementer — §§ 6 and 7 of the specification are written,
+    covering every child including `0013`'s vessel half, which is designed and
+    still unbuildable. Four calls the design makes and the records did not:
+    the cadence lives in the pacer and the replay chain's client is given an
+    interval of zero, because the live client's own loop would otherwise add
+    its interval to every recorded gap; the replay chain is a second instance
+    of the live classes with its own cache and its own per-type seam, because
+    `SwappingTrackerSource.Select` resolves a strategy by type and two
+    instances of one class cannot be told apart; the recording tap sits below
+    deserialization in the HTTP pipeline, because a decorator over
+    `IOpenSkyApi` sees a reconstructed envelope and B-002 says verbatim; and
+    B-026's report leaves a bad recording's source unregistered rather than
+    failing the host. Statuses do not move: § 9 is the gate and `test-writer`
+    owes §§ 8 and 9, which no part of this pass writes."
   - "2026-10-06 — the person — re-valued from 4 to 5, so `rank` is 88. `0036`
     put a fleet page on the screen and `0047` made the application open it, and
     what it opens onto is an empty grid: the live provider needs credentials no

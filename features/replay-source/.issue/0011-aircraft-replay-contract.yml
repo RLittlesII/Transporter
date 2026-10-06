@@ -27,14 +27,18 @@ claims:
   - B-022
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-06"
 closed: null
 
 summary: |
   A replay implementation of the OpenSky contract, handing back recorded
   envelopes from the pacer. The live path's own snapshot client, cache and
   projection are constructed over it unchanged — the same client class, not a
-  second one — and that whole chain registers as another `ITrackerSource`.
+  second one — and that whole chain registers as another
+  `ITrackerSourceStrategy`, which is where the selector finds it. It said
+  `ITrackerSource` until ADR-0011 superseded ADR-0003: a strategy registered
+  as the seam reaches consumers in place of the selector, so the swap does
+  nothing.
 
   This is the item the per-transport amendment to aircraft-source B-007 and
   B-008 exists for, and the reason it won: because a recording is the provider's
@@ -62,7 +66,15 @@ acceptance_criteria:
     implementation of that contract, one per transport."
   - "§ 9 carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-06 — implementer — the summary said this chain registers as
+    another `ITrackerSource`, which ADR-0011 forbids; corrected to
+    `ITrackerSourceStrategy`. § 11 row 1 of the specification carried the same
+    sentence and is corrected with it. Both predate `0049`, which ran ADR-0003's
+    library and found the registration shape the record described could not be
+    built. § 7 also narrows \"the same client class\" to a second *instance* of
+    it over its own cache — one shared cache would leave the outgoing feed's
+    aircraft under the incoming one."
 
 out_of_scope:
   - "Widening aircraft-source B-045 — settled the other way (§ 4 row 4)."

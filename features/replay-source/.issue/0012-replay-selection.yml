@@ -72,6 +72,15 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — implementer — § 7's open decision lands here, and it is the
+    person's: B-011 claims replay runs with no credential configured, while
+    `AddOpenSky` registers the credentials with `ValidateOnStart`, so an
+    application composing the OpenSky integration refuses to start without
+    them. A recordings-only laptop therefore cannot run the demo at all —
+    the scenario this Feature exists for. § 7 § \"Decision required\" names
+    three options and recommends making credential validation conditional on
+    a live source being registered; until it is answered, this item's
+    registration cannot be written to satisfy B-011 above the unit level."
   - "2026-10-06 — `0049` — risk lowered 4 to 3, and the rank with it. ADR-0003
     is superseded by ADR-0011 after the library it named was run: `Decorate<>`
     wraps one registration at a time, so the ordering hazard half of the stack
