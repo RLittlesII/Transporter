@@ -6,7 +6,6 @@ using LanguageExt;
 using NSubstitute;
 using Transponder.Model;
 using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
 using Transponder.Tracking.Sources;
 
 namespace Transponder.UnitTests.Tracking;
@@ -14,10 +13,11 @@ namespace Transponder.UnitTests.Tracking;
 public class FleetSortTests
 {
     /// <summary>
-    /// fleet-pipeline B-009. A comparer handed to the tracker reorders the rows a consumer already
-    /// holds: the same item instances in a new order, nothing re-fetched, no stage rebuilt and the
-    /// seam still connected once. A pipeline that rebuilt its chain for a new comparer would connect
-    /// again and project new instances, which is what the instance assertion catches.
+    /// fleet-pipeline B-009 and B-010. A comparer handed to the tracker reorders the rows a consumer
+    /// already holds — the same item instances in the order that column defines, with nothing
+    /// re-fetched, no stage rebuilt and the seam still connected once. Every sortable column the
+    /// description offers gets a case, and the two aircraft are built so no two columns agree, so a
+    /// comparer wired to the wrong column fails rather than passing by coincidence.
     /// </summary>
     /// <remarks>
     /// The bound collection raises one <c>Reset</c> for a comparer change, which is DynamicData's own
@@ -25,24 +25,26 @@ public class FleetSortTests
     /// test already held. B-009's wording was corrected on 2026-10-06 to claim what the pipeline owes
     /// rather than which notification the binding adapter picks.
     /// </remarks>
-    [Fact]
-    public void GivenABoundFleet_WhenANewComparerArrives_ThenTheRowsReorderWithoutBeingRefetchedOrRebuilt()
+    /// <param name="column">The description column whose comparer is applied.</param>
+    /// <param name="expected">The keys, in the order that column puts them, comma separated.</param>
+    [Theory]
+    [ClassData(typeof(SortedColumnCases))]
+    public void GivenABoundFleet_WhenANewComparerArrives_ThenTheRowsReorderWithoutBeingRefetchedOrRebuilt(string column, string expected)
     {
         // Given
-        var cache = Cache();
+        var cache = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
         var source = new CountingTrackerSource(cache);
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.SortAndBind(out var rows, sut.Order).Subscribe();
-        cache.AddOrUpdate(Aircraft("a1b2c3", "ALFA", "Mexico"));
-        cache.AddOrUpdate(Aircraft("d4e5f6", "ZULU", "Canada"));
-        rows.Select(static row => row.Vehicle.Key).Should().Equal(["a1b2c3", "d4e5f6"]);
+        cache.AddOrUpdate(new Aircraft("a1b2c3", LastContact) { Callsign = "ALFA", OriginCountry = "Mexico" });
+        cache.AddOrUpdate(new Aircraft("d4e5f6", LastContact.AddMinutes(1)) { Callsign = "ZULU", OriginCountry = "Canada" });
         var held = rows.ToList();
 
         // When
-        sut.SortBy(ByCountry);
+        sut.SortBy(Offered(column));
 
         // Then
-        rows.Select(static row => row.Vehicle.Key).Should().Equal(["d4e5f6", "a1b2c3"]);
+        rows.Select(static row => row.Vehicle.Key).Should().Equal(expected.Split(','));
         rows.Should().HaveCount(2, "nothing was added or dropped by the sort");
         rows.Should().OnlyContain(
             row => held.Any(instance => ReferenceEquals(instance, row)),
@@ -54,7 +56,7 @@ public class FleetSortTests
     /// fleet-pipeline B-010. Every comparer the description offers compares members the abstract
     /// vehicle carries, so handing it a vehicle of another source's type orders it rather than
     /// throwing. A comparer that reached for an <c>Aircraft</c> member — the downcast ADR-0005 item 6
-    /// forbids and the description exists to replace — would throw on the vessel below.
+    /// forbids and the description exists to replace — would throw on the barges below.
     /// </summary>
     [Fact]
     public void GivenEveryComparerInTheDescription_WhenEachIsApplied_ThenItReadsOnlyBaseMembers()
@@ -84,61 +86,35 @@ public class FleetSortTests
     public void GivenTwoVehiclesThatCompareEqual_WhenSortedTwice_ThenBothSortsOrderThemByKey()
     {
         // Given
-        var cache = Cache();
-        FleetTracker sut = Tracker(cache);
+        var cache = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
+        var source = Substitute.For<ITrackerSource>();
+        source.Connect().Returns(cache.Connect());
+        FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.SortAndBind(out var rows, sut.Order).Subscribe();
-        cache.AddOrUpdate(Aircraft("f00002", "SAME", "Brazil"));
-        cache.AddOrUpdate(Aircraft("f00001", "SAME", "Brazil"));
-        sut.SortBy(ByCountry);
+        cache.AddOrUpdate(new Aircraft("f00002", LastContact) { Callsign = "SAME", OriginCountry = "Brazil" });
+        cache.AddOrUpdate(new Aircraft("f00001", LastContact) { Callsign = "SAME", OriginCountry = "Brazil" });
+        sut.SortBy(Offered("Origin country"));
         var first = rows.Select(static row => row.Vehicle.Key).ToList();
 
         // When
-        sut.SortBy(ByCallsign);
-        sut.SortBy(ByCountry);
+        sut.SortBy(Offered("Callsign"));
+        sut.SortBy(Offered("Origin country"));
 
         // Then
         first.Should().Equal(["f00001", "f00002"]);
         rows.Select(static row => row.Vehicle.Key).Should().Equal(first, "the same fleet sorted twice by the same comparer is the same sequence");
     }
 
-    /// <summary>A cache of domain vehicles, keyed the way the seam keys its changesets.</summary>
-    /// <returns>A store a test edits to make the seam report.</returns>
-    private static SourceCache<TransportVehicle, string> Cache() => new(static vehicle => vehicle.Key);
-
-    /// <summary>A tracker over one store, described by the aircraft source's own description.</summary>
-    /// <param name="cache">The store the seam reports from.</param>
-    /// <returns>The system under test.</returns>
-    private static FleetTracker Tracker(SourceCache<TransportVehicle, string> cache)
-    {
-        var source = Substitute.For<ITrackerSource>();
-        source.Connect().Returns(cache.Connect());
-
-        return new FleetTrackerFixture().WithSource(source);
-    }
-
-    /// <summary>An aircraft with the three base answers a column reads.</summary>
-    /// <param name="key">The <c>icao24</c> in lowercase hex.</param>
-    /// <param name="callsign">What the identity column shows.</param>
-    /// <param name="country">The country it is registered in, which is also its grouping key.</param>
-    /// <returns>The vehicle a test puts into the store.</returns>
-    private static TransportVehicle Aircraft(string key, string callsign, string country) =>
-        new Aircraft(key, LastContact) { Callsign = callsign, OriginCountry = country };
-
-    /// <summary>The description's country comparer, which is what a test hands to <c>SortBy</c>.</summary>
-    private static readonly IComparer<TransportVehicle> ByCountry =
+    /// <summary>One column's comparer, read off the live source's description rather than written here (B-010).</summary>
+    /// <param name="column">The column's display name.</param>
+    /// <returns>The comparer that column sorts by.</returns>
+    private static IComparer<TransportVehicle> Offered(string column) =>
         AircraftFleetDescription.Offered.Columns
-            .Single(static column => column.Name == "Origin country")
+            .Single(name => name.Name == column)
             .Comparer
             .IfNone(static () => Comparer<TransportVehicle>.Default);
 
-    /// <summary>The description's callsign comparer, the one the tracker falls back to.</summary>
-    private static readonly IComparer<TransportVehicle> ByCallsign =
-        AircraftFleetDescription.Offered.Columns
-            .Single(static column => column.Name == "Callsign")
-            .Comparer
-            .IfNone(static () => Comparer<TransportVehicle>.Default);
-
-    /// <summary>The instant every vehicle here was last heard from.</summary>
+    /// <summary>The instant the first vehicle in every case was last heard from.</summary>
     private static readonly DateTimeOffset LastContact = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
 }
 

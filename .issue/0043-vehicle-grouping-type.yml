@@ -1,0 +1,73 @@
+id: "0043"
+type: spike
+title: Decide whether a grouping is a string key or a VehicleGrouping value
+
+status: ready
+
+priority: medium
+value: 3
+risk: 2
+rank: 54
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  Raised by the person on pull request 29, against
+  `TransportVehicle.GroupKey` — "we may want to investigate adding a proper
+  `VehicleGrouping` later. This might get weird."
+
+  What exists today: `GroupKey` is an `abstract string` on the base
+  (`fleet-pipeline` B-013), and `FleetGrouping.Key` is a
+  `Func<TransportVehicle, string>` the description supplies. A grouping is
+  therefore a label, and two sources that both group by "country" produce keys
+  that collide or diverge with no type to say which was meant.
+
+  Where it gets weird, and what this spike is for:
+
+  1. A second source's grouping whose natural key is not a string — a category
+     code, an enum, a range bucket. Today it is `ToString()`d at the selector and
+     the group header shows whatever that produced.
+  2. Two groupings of one source that answer the same string for different
+     reasons, which `GroupBy` cannot tell apart.
+  3. Sorting groups. A string key sorts lexically, so "10 – 20" sorts before
+     "5 – 10" and a presenter notices on stage.
+  4. An empty answer. `Aircraft.GroupKey` is empty when the wire reported no
+     country, and an empty group header is indistinguishable from a bug.
+
+  Produce a finding with a recommendation and a rejected option: keep the string
+  and let the description own presentation, or introduce a `VehicleGrouping`
+  value carrying the key beside its display form. The cost of the second is a
+  type every source must answer with, which is the abstract-member compile error
+  ADR-0005 item 2 relies on — so it is cheap now and expensive once a second
+  source exists.
+
+acceptance_criteria:
+  - "A written finding naming the option taken and the option rejected, for each
+    of the four cases above."
+  - "A spike produces a decision, not code: the finding lands as an ADR if the
+    choice is durable and cross-cutting, or as a `decisions/` record under
+    `fleet-pipeline`. Any throwaway type used to test an option is deleted."
+  - "Where the answer changes `fleet-pipeline` B-012, B-013 or B-020, the spec
+    delta is named — a claim amendment is `spec-author`'s to write."
+
+decisions: []
+
+out_of_scope:
+  - "A second grouping level, grouped aggregates beyond count, and user-defined
+    columns — `fleet-pipeline` § 5 row 7 excludes all three, and this spike does
+    not reopen them."
+  - "What the grid shows for a group header. That is `fleet-dashboard`'s, whatever
+    this spike decides the key is."
