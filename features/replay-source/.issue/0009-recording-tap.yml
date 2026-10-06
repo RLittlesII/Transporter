@@ -2,7 +2,7 @@ id: "0009"
 type: task
 title: Record a live source's payloads verbatim without costing a request
 
-status: in-review
+status: done
 
 priority: high
 risk: 3
@@ -28,7 +28,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   The recorder is a tap, not a second source. It writes what a live source has
@@ -59,6 +59,12 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — implementer — closed on five of its six claims. B-001 –
+    B-004 are `Verified` against tests and B-006 against a review a reader can
+    now perform; B-005's review needs a recording to look at, which § 5 row 3
+    keeps out of scope and chore `0052` generates. Holding the item open for a
+    file nothing in its scope produces would be the wrong shape — the claim
+    stays here and the § 9 row stays `Missing` until `0052` lands."
   - "2026-10-06 — review of pull request #39 — `IRecordingWriter.Write`
     returns `Task` and the line is written in one call. A `void` member over a
     file commits every caller to blocking a thread before any caller exists,
