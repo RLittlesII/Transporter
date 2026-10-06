@@ -62,7 +62,7 @@ than being slotted into the sequence.
 | B-049 | A contract layer SHALL exist only where the provider is request/response shaped; a push provider's strategy SHALL have none, and no contract SHALL be invented to give a socket one. The surface every strategy shares SHALL be `ITrackerSource` and nothing above it.                                                                                                                                                                                                                                                                        | Decided call; see § 4 row 4                                          |
 | B-050 | The polling interval SHALL be configurable and SHALL default to 15 seconds; the bounding box SHALL be configurable with no default compiled in.                                                                                                                                                                                                                                                                                                                                                                                               | Decided call; decisions/0001                                         |
 | B-051 | A vehicle past the staleness threshold SHALL remain in the collection and SHALL be observably stale; it SHALL NOT be removed for staleness. The threshold SHALL be configurable and SHALL default to five minutes.                                                                                                                                                                                                                                                                                                                            | Decided call; dynamic-data-pipeline § "Staleness and expiry"         |
-| B-052 | The container the application constructs SHALL resolve `IFleetTracker` with every dependency satisfied and every decorator applied, so a chain that compiles and a chain that runs are the same thing.                                                                                                                                                                                                                                                                                                                                        | Decided call; ADR-0003 § Consequences                                |
+| B-052 | The container the application constructs SHALL resolve `IFleetTracker` with every dependency satisfied and every decorator applied, so a chain that compiles and a chain that runs are the same thing.                                                                                                                                                                                                                                                                                                                                        | Decided call; ADR-0011 § Consequences                                |
 | B-011 | The snapshot SHALL have value equality over every member it carries, so two snapshots reporting identical values compare equal and the differ emits no change for them.                                                                                                                                                                                                                                                                                                                                                                       | Decided call — the client diffs records                              |
 | B-012 | The snapshot SHALL carry `icao24` as a non-optional member and SHALL be keyed on it.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | README.md index 0 ("the cache key")                                  |
 | B-013 | The snapshot SHALL carry the wire's values in the wire's units and SHALL perform no conversion, derivation or interpretation; it is the server's record with names on it.                                                                                                                                                                                                                                                                                                                                                                     | Decided call; mapping § "Conversions are explicit, never implicit"   |
@@ -215,7 +215,7 @@ The layering this section would otherwise have had to settle is decided
 repository-wide in
 [ADR-0002](../../../../../.spec/adr/0002-contract-client-strategy-tracker.md), the
 how the decorator is registered in
-[ADR-0003](../../../../../.spec/adr/0003-a-factory-registers-the-swap-decorator.md), and
+[ADR-0011](../../../../../.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md), and
 the tracked item's base in
 [ADR-0005](../../../../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md) —
 none of them here, because each binds more than this Feature. What follows is
@@ -635,12 +635,14 @@ which is what the tracker takes. Until `0006` lands, `ITrackerSource` resolves
 to the strategy directly, so B-052's "every decorator applied" half is not yet
 true of anything.
 
-**That line is `0006`'s to replace, not to wrap.** ADR-0003 was rewritten on
-2026-10-06 after `0049` ran the library it had named: a decorator registered
-over the strategies is one decorator **per** strategy registration, so the
-strategies move to their per-type seams and a single factory registration
-constructs the selector over them. What `0006` changes here is which object that
-one `ITrackerSource` line produces.
+**That line is `0006`'s to replace, not to wrap.**
+[ADR-0011](../../../../../.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md)
+supersedes ADR-0003 on 2026-10-06, after `0049` ran the library it had named: a
+decorator registered over the strategies is one decorator **per** strategy
+registration. So the strategy registers as `ITrackerSourceStrategy` instead, the
+decorator becomes the one registration of `ITrackerSource`, and the container's
+own enumerable is what hands it the set — which is also how a second strategy
+reaches it without a line of this Feature's being edited.
 
 ## 8. Testing Strategy
 
@@ -1054,7 +1056,7 @@ Then: the bounding box and interval in
 [decisions/0002](decisions/0002-busy-indicator-on-swap.md), the staleness policy
 in B-051, the version suffix in B-048, the contract layer's applicability in
 B-049, the integration layout in § 4 row 5, and how the decorator is registered in
-[ADR-0003](../../../../../.spec/adr/0003-a-factory-registers-the-swap-decorator.md).
+[ADR-0011](../../../../../.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md).
 
 ## 12. Sign-off
 
@@ -1080,7 +1082,7 @@ The layering this specification is written against is a cross-cutting technical
 decision rather than a product call, so it is recorded in the repository-wide
 [ADR-0002](../../../../../.spec/adr/0002-contract-client-strategy-tracker.md), and the
 how the decorator is registered in
-[ADR-0003](../../../../../.spec/adr/0003-a-factory-registers-the-swap-decorator.md) —
+[ADR-0011](../../../../../.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md) —
 neither here nor in this Feature's `adr/`.
 
 ## Tasks
@@ -1145,7 +1147,7 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 | 2026-10-04 | `0007` | risk  | 4 → 3, reversing the row above. ADR-0007 gives the observed instant its route, so B-043's clock is a type this item is injected with rather than a design it has to invent. The clock is also the mechanism that makes the two original hazards testable: a swap-then-swap assertion and a staleness assertion both advance one object. What keeps it at 3 rather than 2 is that `IObservedClock` reading `MinValue` before any source reports is a quiet default, and a test that forgets to observe an instant passes for the wrong reason.                                                                                                                                                                                               |
 | 2026-10-04 | `0002` | risk  | 4 → 3. [ADR-0008](../../../../../.spec/adr/0008-the-contract-is-the-boundary-and-may-throw.md) retires the larger of the two hazards the 3 → 4 row recorded: the contract no longer returns a shape a reviewer of the governed pattern has to be taught before reading, and the thrown-`429` is now the design rather than the defect that moved here. What replaces them is smaller and both sit in the transport — an exception raised without first reading `X-Rate-Limit-Retry-After-Seconds` loses the only value the caller needs, and the next item's `catch` has to be narrow enough not to swallow a defect along with the throttle. The `JsonConverter` and `InternalsVisibleTo` hazards are retired by having landed and passed. |
 | 2026-10-05 | `0002` | risk  | No change to the number — `0002` is `done` and its risk is history. The row exists because the 2026-10-04 row above calls B-010's fake "the hazard", and B-010 is now Withdrawn: the hazard is **abandoned rather than retired**. An unarranged `GetStates` on a substitute returns a null task, so a test that forgets to arrange it fails with a `NullReferenceException` instead of a named message. That is accepted, not solved. What makes it affordable is that it fails at all, loudly, in the test that forgot — the failure mode the fake was built against was a double answering a call nobody arranged with a plausible empty value, and a null task is not plausible.                                                         |
-| 2026-10-06 | `0006` | risk  | 4 → 3. The larger of the two hazards the rows above record is **retired rather than mitigated**: ADR-0003 no longer registers the decorator with a library whose `Decorate<>` is order-sensitive and silent, so there is no call a strategy can be registered after. `0049` ran it and rewrote the record. What replaces it is narrower and visible — a strategy registered as `ITrackerSource` rather than under its per-type seam is handed to consumers in place of the selector, and B-052's composition test asserts what the tracker's source actually is, so the trap fails a test rather than a demo. B-040's unstopped poller stands untouched, which is what keeps this at 3.                                                     |
+| 2026-10-06 | `0006` | risk  | 4 → 3. The larger of the two hazards the rows above record is **retired rather than mitigated**: ADR-0011 supersedes ADR-0003, so the decorator is no longer registered with a library whose `Decorate<>` is order-sensitive and silent, and there is no call a strategy can be registered after. `0049` ran it and replaced the record. What replaces the hazard is narrower and visible — a strategy registered as `ITrackerSource` rather than as `ITrackerSourceStrategy` is handed to consumers in place of the selector, and B-052's composition test asserts what the tracker's source actually is, so the trap fails a test rather than a demo. B-040's unstopped poller stands untouched, which is what keeps this at 3.           |
 | 2026-10-05 | `0004` | risk  | 3, unchanged, and the sentence that said this item's claim list may still change is spent: § 11 row 2 answered it and row 4 answered the last open question. The four hazards the row above names are untouched. What B-010's withdrawal removes is work rather than risk — the response queue and recorded-calls list this item would have had to add to the fake, each a piece of double behaviour fifteen claims would have rested on.                                                                                                                                                                                                                                                                                                   |
 
 Why `0001` carries a `value` and no child does: a child omits it to inherit the

@@ -35,21 +35,30 @@ summary: |
 
   So the registration shape every document downstream was written against could
   not have been built. This spike settles the shape against what the container
-  does, rewrites the record — ADR-0003 is `proposed`, so it changes in place —
-  and amends the four documents that were written against the hazard it
-  retires.
+  does, records it as ADR-0011 with ADR-0003 left in place and marked
+  `superseded`, and amends the four documents that were written against the
+  hazard it retires.
 
   It is a spike rather than a chore because its product is a decision: no
   decorator is built here, and `0006` stays the item that builds one.
 
 acceptance_criteria:
-  - "ADR-0003 is rewritten around the evidence, with the run that produced it
-    in its Context and the options it now rejects — Scrutor included — in its
-    table."
-  - "Every reference to the record's old filename resolves, and no document
-    still states the retired ordering hazard as live: `README.md`, `AGENTS.md`,
-    ADR-0002, ADR-0004, `hot-swap-source`, `aircraft-source` § 7 and § Scoring,
-    `replay-source` § 4 row 12 and § Scoring, and item `0012`."
+  - "ADR-0011 carries the decision, with the run that produced it in its
+    Context and the options it rejects — Scrutor and the factory draft
+    included — in its table. ADR-0003 stays where it is, body untouched, marked
+    `superseded` by it."
+  - "ADR-0011 shows how a swap actually happens at runtime: the tap, the
+    `Tell`, the `Switch`, the outgoing poller stopping, and the swap back. A
+    record that leaves the mechanism to be inferred is what review sent the
+    first draft back for."
+  - "Adding a strategy is one registration line and edits nothing else — no
+    decorator constructor, no key table, and no argument list maintained by
+    hand. The factory draft failed this and was rejected in review."
+  - "Every reference resolves at the record that now holds the decision, and no
+    document still states the retired ordering hazard as live: `README.md`,
+    `AGENTS.md`, ADR-0002, ADR-0004, `hot-swap-source`, `aircraft-source` § 3
+    row B-052, § 7 and § Scoring, `replay-source` § 4 row 12 and § Scoring, and
+    item `0012`."
   - "`0006` is back at `ready-for-implementation`, rescored, and carries both
     the three calls made before the stop and the reason for it."
   - "A lesson records how a sentence about a dependency reached four documents
@@ -64,10 +73,20 @@ decisions:
     Rejected: picking the registration shape in passing and amending ADR-0003
     afterwards, which would have put the decision in an item's `decisions` and
     left the record that four documents cite saying something false."
-  - "2026-10-06 — `0049` — a factory registration over the per-type seams, and
-    no package. Rejected with reasons in the record: keyed services, one
-    interface per strategy injected explicitly, Scrutor's `Decorate<>`, and
-    hand-written `ServiceDescriptor` manipulation."
+  - "2026-10-06 — review of pull request #35 — the first draft registered the
+    decorator with a factory listing the strategies, and it was sent back on
+    two readings: a record that is superseded should say so rather than
+    disappear, and an argument list is a second place the strategy set is
+    maintained — with nothing in the record showing how a tap on stage reaches
+    the swap at all. Both are answered: ADR-0003 stays marked `superseded`, and
+    ADR-0011 carries the strategy seam and the runtime walkthrough."
+  - "2026-10-06 — `0049` — strategies register as `ITrackerSourceStrategy` and
+    the decorator is the only `ITrackerSource`, taking the container's
+    enumerable of strategies; selection names a strategy by its per-type seam.
+    No package. Rejected with reasons in the record: keyed services, one
+    interface per strategy injected explicitly, a factory listing the
+    strategies, Scrutor's `Decorate<>`, and hand-written `ServiceDescriptor`
+    manipulation."
 
 out_of_scope:
   - "Building the decorator, the swap actor, or any registration — `0006`, and

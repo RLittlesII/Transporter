@@ -33,8 +33,8 @@ closed: null
 summary: |
   A decorator registered as `ITrackerSource` picks which strategy is live at
   runtime. There is no `IStrategyResolver` and no caller that asks which
-  strategy to use: each strategy registers under its own per-type seam, one
-  factory registration builds the selector over them, and that selector is the
+  strategy to use: each strategy registers as `ITrackerSourceStrategy`, the
+  selector takes the container's enumerable of those, and the selector is the
   only thing registered as `ITrackerSource`. Nothing downstream can observe
   from the stream that a swap happened — which is the claim the closing act
   makes on stage, so it has to be true in the source rather than in the
@@ -42,9 +42,10 @@ summary: |
 
   Adds no package. ADR-0003 named `Scrutor` until `0049` ran it on 2026-10-06:
   `Decorate<>` wraps one registration at a time, so N strategies registered as
-  the seam are N decorators and the last one wins. The record is rewritten
-  around a factory registration, and the ordering hazard that was most of this
-  item's risk is retired with it.
+  the seam are N decorators and the last one wins. ADR-0011 supersedes it with
+  the strategy seam above, and the ordering hazard that was most of this item's
+  risk is retired with it. ADR-0011 § "How a swap happens at runtime" is the
+  walkthrough this item implements, step by step.
 
   Runs after 0005, which declares the interface it decorates and provides the
   one strategy it can wrap. Replay selection (0012) waits on this item, since
@@ -87,9 +88,9 @@ decisions:
     forbids. `AddOpenSky`'s comment saying the next push is `0006`'s is
     corrected rather than honoured."
   - "2026-10-06 — `0049` — risk lowered 4 to 3, and the rank with it. The
-    ordering hazard is retired by the rewritten ADR-0003; what replaces it is a
-    strategy registered as `ITrackerSource` rather than under its per-type
-    seam, which B-052's composition test sees. B-040's unstopped poller stands."
+    ordering hazard is retired by ADR-0011; what replaces it is a strategy
+    registered as `ITrackerSource` rather than as `ITrackerSourceStrategy`,
+    which B-052's composition test sees. B-040's unstopped poller stands."
   - "2026-10-06 — the person — B-052 moves here from `0007`. Its second clause
     is \"every decorator applied\", so the claim is unprovable until this item
     builds one; `0007` held a row nothing it delivered could move."

@@ -108,5 +108,5 @@ the tests that use them, per `test-from-scenarios` § "Fixtures are synthetic".
   must be stated wherever the replay source reads it.
 - **Nothing is added to `Directory.Packages.props`**, so `README.md`
   § "Technology Decisions" gains no line. Like
-  [ADR-0003](0003-a-factory-registers-the-swap-decorator.md) as it now stands,
+  [ADR-0011](0011-the-swap-decorator-selects-among-registered-strategies.md) as it now stands,
   this record costs the talk no explaining.

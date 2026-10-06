@@ -225,9 +225,10 @@ is **not** in this record. Those are claims, in § 3 of
 - **One dependency joins the list**, not yet in `Directory.Packages.props`:
   DynamicData for the caches and the pipeline, added by the first work item that
   needs it rather than ahead of one. The decorator's registration needs none —
-  [ADR-0003](0003-a-factory-registers-the-swap-decorator.md) is a factory over
-  the per-type seams, after the library this record expected to carry it turned
-  out to wrap one registration at a time.
+  [ADR-0011](0011-the-swap-decorator-selects-among-registered-strategies.md)
+  registers strategies under a strategy seam and the decorator as the consumer
+  seam, after the library this record expected to carry it turned out to wrap
+  one registration at a time.
 - **Strategies are not required to be the same shape, and that is the design
   working rather than fraying.** The vessel strategy has no contract layer,
   because a socket has no endpoint to declare, and no hand-written rows step,
@@ -242,7 +243,7 @@ is **not** in this record. Those are claims, in § 3 of
   and recorded: the bounding box and interval in the Feature's `decisions/0001`,
   what the audience sees on a swap in its `decisions/0002`, staleness as marked
   and kept in claim B-051, and how the decorator is registered in
-  [ADR-0003](0003-a-factory-registers-the-swap-decorator.md). Where replay
+  [ADR-0011](0011-the-swap-decorator-selects-among-registered-strategies.md). Where replay
   substitutes was asked and answered after that, and is settled in this record.
 - **`AGENTS.md` gains a rule rather than losing an argument.** It governs
   feature layout and said nothing about integrations, so there was no conflict

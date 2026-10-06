@@ -33,9 +33,8 @@ updated: "2026-10-06"
 closed: null
 
 summary: |
-  Replay registers under its own seam, is named on the one registration that
-  builds the selector, and is selected by the same decorator that selects any
-  live source. There is no offline-mode flag, no replay-only
+  Replay registers as one more strategy and is selected by the same decorator
+  that selects any live source. There is no offline-mode flag, no replay-only
   selector and no second selection path — which is the point of the whole
   Feature for the audience, and the thing most likely to be added under pressure
   on stage.
@@ -66,17 +65,17 @@ acceptance_criteria:
     resolved against one configured root."
   - "B-026 — absent, unreadable or too-short reported at startup, never first
     discovered at the swap."
-  - "Replay registers under its own seam and is named on the one factory line
-    that builds the selector — never as `ITrackerSource` itself, which would
-    hand replay to consumers in place of the selector (ADR-0003 § Decision,
+  - "Replay registers as an `ITrackerSourceStrategy`, which is where the
+    selector finds it — never as `ITrackerSource` itself, which would hand
+    replay to consumers in place of the selector (ADR-0011 § Decision,
     § 4 row 12, hot-swap-source)."
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
   - "2026-10-06 — `0049` — risk lowered 4 to 3, and the rank with it. ADR-0003
-    was rewritten after the library it named was run: `Decorate<>` wraps one
-    registration at a time, so the ordering hazard half of the stack below
-    never existed in a design that could be built. The recording hazard stands,
+    is superseded by ADR-0011 after the library it named was run: `Decorate<>`
+    wraps one registration at a time, so the ordering hazard half of the stack
+    below never existed in a design that could be built. The recording hazard stands,
     and the registration trap that replaces the ordering one is visible to the
     composition test."
   - "2026-10-04 — spec-author — risk raised 3 to 4 when B-024 – B-026 landed

@@ -46,9 +46,11 @@ described. It is simply not a hazard of a design that could not have been built.
 
 ## Spec delta
 
-- [ADR-0003](../adr/0003-a-factory-registers-the-swap-decorator.md) is rewritten
-  — it is `proposed`, so it changes in place — around the evidence: a factory
-  over the per-type seams, no package, and the ordering hazard retired.
+- [ADR-0011](../adr/0011-the-swap-decorator-selects-among-registered-strategies.md)
+  replaces the decision around the evidence — a strategy seam the container
+  enumerates, no package, and the ordering hazard retired. ADR-0003 stays in
+  place marked `superseded`, body untouched, because two of the options it
+  rejected are re-examined in the new record.
 - `replay-source` § 4 row 12 and `aircraft-source` § Scoring, which were written
   against the ordering hazard, are amended by the same change.
 - `.skills/hot-swap-source` § "The mechanism" states the registration shape, so
