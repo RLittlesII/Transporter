@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reactive.Concurrency;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,8 +8,9 @@ using Flurl.Http.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
+using Transponder.Integrations.OpenSky.Configuration;
 
-namespace Transponder.Integrations.OpenSky.Http;
+namespace Transponder.Integrations.OpenSky.Authentication;
 
 /// <summary>
 /// Obtains an OAuth2 client-credentials token and holds it until it expires.

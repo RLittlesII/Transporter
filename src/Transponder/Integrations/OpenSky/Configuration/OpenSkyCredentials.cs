@@ -1,4 +1,4 @@
-namespace Transponder.Integrations.OpenSky;
+namespace Transponder.Integrations.OpenSky.Configuration;
 
 /// <summary>
 /// The OAuth2 client credentials, and nothing else. Separate from <see cref="OpenSkyOptions"/> so

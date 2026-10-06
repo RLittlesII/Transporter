@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Transponder.Integrations.OpenSky.Http;
+namespace Transponder.Integrations.OpenSky.Authentication;
 
 /// <summary>
 /// The one place a bearer token is obtained and held. One token cache, owned here rather than at

@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.Logging;
+using Transponder.Integrations.OpenSky.Authentication;
 using Transponder.Integrations.OpenSky.Contracts;
 
-namespace Transponder.Integrations.OpenSky.Http;
+namespace Transponder.Integrations.OpenSky.Http.Api;
 
 /// <summary>
 /// The contract over HTTP: the one implementation per transport B-007 counts, taking the Flurl
@@ -114,7 +115,7 @@ internal sealed class OpenSkyHttpApi : IOpenSkyApi
     /// The provider answered <c>429</c>. It is inspected here, where the headers still are, so the
     /// seconds <c>X-Rate-Limit-Retry-After-Seconds</c> asked for travel on the exception rather
     /// than being lost with the response (B-028, ADR-0008). Every other non-2xx status is already
-    /// an exception, because nothing allowed it.
+    /// an exception because nothing allowed it.
     /// </exception>
     /// <remarks>
     /// <c>X-Rate-Limit-Remaining</c> is written at debug on every poll (B-027): the header is the

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 
-namespace Transponder.Integrations.OpenSky;
+namespace Transponder.Integrations.OpenSky.Configuration;
 
 /// <summary>
 /// Fails startup when a credential or the bounding box is absent, naming which one.

@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
@@ -208,6 +207,7 @@ public class BoundaryCodeFixTests
             ? resolved.ResolvedFixes.SelectMany(static entry => entry.CodeActions)
             : [];
 
+    /// <summary>Extracts the text of the applied code action.</summary>
     /// <remarks>
     /// The action is applied here rather than read off <c>Changes</c>, which can carry another
     /// diagnostic's edit when one document holds several (<c>RocketSurgeonsGuild/Airframe#359</c>).
