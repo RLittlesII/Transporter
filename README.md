@@ -150,4 +150,3 @@ Replace the polled source with a push source and show that everything downstream
 - [Akka](https://github.com/akkadotnet/akka.net)
 - [Mapperly](https://github.com/riok/mapperly)
 - [Flurl](https://flurl.dev) — the polled HTTP client ([ADR-0001](.spec/adr/0001-flurl-for-http.md))
-- [Scrutor](https://github.com/khellang/Scrutor) — registers the source-swap decorator ([ADR-0003](.spec/adr/0003-scrutor-for-decorator-registration.md))

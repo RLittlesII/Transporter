@@ -119,10 +119,10 @@ Skills come in three kinds, and a skill is never a mixture of them.
 
 **Architecture** — this system's shape, with the reasoning in an ADR:
 
-| Skill             | Covers                                                                                                                                                |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `api-contract`    | the components between a provider and the domain, and which responsibility each owns ([ADR-0002](.spec/adr/0002-contract-client-strategy-tracker.md)) |
-| `hot-swap-source` | the swap decorator, disposal discipline, what must not be rebuilt ([ADR-0003](.spec/adr/0003-scrutor-for-decorator-registration.md))                  |
-| `domain-model`    | the abstract base, units, optional values ([ADR-0005](.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md))                                   |
+| Skill             | Covers                                                                                                                                                   |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api-contract`    | the components between a provider and the domain, and which responsibility each owns ([ADR-0002](.spec/adr/0002-contract-client-strategy-tracker.md))    |
+| `hot-swap-source` | the swap decorator, disposal discipline, what must not be rebuilt ([ADR-0011](.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md)) |
+| `domain-model`    | the abstract base, units, optional values ([ADR-0005](.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md))                                      |
 
 Read the method skill your work belongs to **and** `transponder-conventions`, plus the skills a role names before acting in that role. The stage-day runbook is [`docs/runbook.md`](docs/runbook.md), not a skill — it is operational, not a rule.

@@ -1,0 +1,98 @@
+id: "0049"
+type: spike
+title: Settle how the swap decorator is registered, against what the container actually does
+
+status: done
+
+priority: high
+value: 4
+risk: 2
+rank: 74
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: "2026-10-06"
+
+summary: |
+  `0006` was taken to build the source-swap decorator and stopped at its first
+  step. ADR-0003 chose Scrutor on the sentence that `Decorate<>` "rewrites the
+  prior registrations so the decorator receives them". Run against Scrutor
+  7.0.0 with two strategies registered as `ITrackerSource`, it does not:
+  `Decorate<>` is a one-to-one wrapper, so two registrations produce two
+  decorators and the seam resolves whichever was registered last, and a
+  decorator whose constructor asks for the set fails to activate at all.
+
+  So the registration shape every document downstream was written against could
+  not have been built. This spike settles the shape against what the container
+  does, records it as ADR-0011 with ADR-0003 left in place and marked
+  `superseded`, and amends the four documents that were written against the
+  hazard it retires.
+
+  It is a spike rather than a chore because its product is a decision: no
+  decorator is built here, and `0006` stays the item that builds one.
+
+acceptance_criteria:
+  - "ADR-0011 carries the decision, with the run that produced it in its
+    Context and the options it rejects — Scrutor and the factory draft
+    included — in its table. ADR-0003 stays where it is, body untouched, marked
+    `superseded` by it."
+  - "ADR-0011 shows how a swap actually happens at runtime: the tap, the
+    `Tell`, the `Switch`, the outgoing poller stopping, and the swap back. A
+    record that leaves the mechanism to be inferred is what review sent the
+    first draft back for."
+  - "Adding a strategy is one registration line and edits nothing else — no
+    decorator constructor, no key table, and no argument list maintained by
+    hand. The factory draft failed this and was rejected in review."
+  - "Every reference resolves at the record that now holds the decision, and no
+    document still states the retired ordering hazard as live: `README.md`,
+    `AGENTS.md`, ADR-0002, ADR-0004, `hot-swap-source`, `aircraft-source` § 3
+    row B-052, § 7 and § Scoring, `replay-source` § 4 row 12 and § Scoring, and
+    item `0012`."
+  - "`0006` is back at `ready-for-implementation`, rescored, and carries both
+    the three calls made before the stop and the reason for it."
+  - "A lesson records how a sentence about a dependency reached four documents
+    without being run, and `coding-conventions` carries the rule that follows
+    from it."
+  - "No decorator, no registration and no package land here. The probe that
+    produced the evidence is deleted with the branch that wrote it."
+
+decisions:
+  - "2026-10-06 — the person — the decoration question goes back to the record
+    before any decorator is built, rather than being settled inside `0006`.
+    Rejected: picking the registration shape in passing and amending ADR-0003
+    afterwards, which would have put the decision in an item's `decisions` and
+    left the record that four documents cite saying something false."
+  - "2026-10-06 — review of pull request #35 — the first draft registered the
+    decorator with a factory listing the strategies, and it was sent back on
+    two readings: a record that is superseded should say so rather than
+    disappear, and an argument list is a second place the strategy set is
+    maintained — with nothing in the record showing how a tap on stage reaches
+    the swap at all. Both are answered: ADR-0003 stays marked `superseded`, and
+    ADR-0011 carries the strategy seam and the runtime walkthrough."
+  - "2026-10-06 — `0049` — strategies register as `ITrackerSourceStrategy` and
+    the decorator is the only `ITrackerSource`, taking the container's
+    enumerable of strategies; selection names a strategy by its per-type seam.
+    No package. Rejected with reasons in the record: keyed services, one
+    interface per strategy injected explicitly, a factory listing the
+    strategies, Scrutor's `Decorate<>`, and hand-written `ServiceDescriptor`
+    manipulation."
+
+out_of_scope:
+  - "Building the decorator, the swap actor, or any registration — `0006`, and
+    the three calls it already carries."
+  - "Spike `0040`'s three questions. `0006`'s decisions answer two of them in
+    passing when it builds, and that spike's finding is still owed."
+  - "The second strategy. The vessel feed is `aircraft-source` § 5 row 3 and
+    replay is `replay-source`; this record only says how either reaches the
+    selector."

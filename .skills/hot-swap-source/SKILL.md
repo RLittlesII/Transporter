@@ -33,10 +33,17 @@ internal sealed class SwappingTrackerSource : ITrackerSource
 - **There is no strategy resolver.** Nobody asks which strategy to use: the
   decorator _is_ the registration, so the set of strategies is known in one
   place and no caller has to know it at all.
-- It is registered with Scrutor's `Decorate<>`
-  ([ADR-0003](../../.spec/adr/0003-scrutor-for-decorator-registration.md)),
-  which wraps what is **already** registered — so a strategy registered after
-  the decorate call is resolved raw, silently. **Register strategies first.**
+- **Two seams, and that is what makes the set resolvable.** A strategy registers
+  as the _strategy_ seam; the decorator is the only thing registered as the seam
+  consumers resolve, and it takes the strategies as an `IEnumerable<>` of the
+  first
+  ([ADR-0011](../../.spec/adr/0011-the-swap-decorator-selects-among-registered-strategies.md)).
+  Adding a source is one registration line. **A strategy registered as the
+  consumer seam is handed to consumers in place of the decorator**, and the swap
+  then silently does nothing.
+- **Selection names a strategy by its per-type seam**, so no member carrying a
+  name or a kind is added to the seam to support the swap. The decorator is
+  _told_ what is live by the actor behind the control; nothing asks it.
 - **Every source is a swap target, live or recorded**, because all of them reach
   the seam. **One switch, not two**: there is no separate offline mode and no
   second seam to bridge. They do not all reach the seam at the same depth, and

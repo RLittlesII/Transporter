@@ -6,7 +6,22 @@ type: adr
 
 # ADR-0003: Scrutor for decorator registration
 
-**Status:** proposed
+**Status:** superseded by
+[ADR-0011](0011-the-swap-decorator-selects-among-registered-strategies.md)
+
+**Superseded 2026-10-06 (`0049`), because its central premise is false.** This
+record reads that `services.Decorate<ITrackerSource, SwappingTrackerSource>()`
+"rewrites the prior registrations so the decorator receives them" — plural. It
+does not: `Decorate<>` is a one-to-one wrapper, so N strategies registered as
+`ITrackerSource` become N decorators and the seam resolves whichever was
+registered last. The run that showed it is in ADR-0011 § Context, and
+[lesson 0016](../lessons/0016-an-untested-assumption-is-not-a-decision.md)
+records how the sentence reached four documents without being executed.
+
+The body below is left exactly as it was written. Two of its rejected options —
+keyed services and one interface per strategy — are re-examined in ADR-0011
+against the same drivers, which is why it stays readable rather than being
+deleted.
 
 ## Context
 

@@ -5,8 +5,8 @@ title: Select replay through the one switch every source uses
 status: ready-for-architecture
 
 priority: high
-risk: 4
-rank: 68
+risk: 3
+rank: 71
 
 parent: "0008"
 children: []
@@ -29,11 +29,11 @@ claims:
   - B-026
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-06"
 closed: null
 
 summary: |
-  Replay registers as an `ITrackerSource` and is selected by the same decorator
+  Replay registers as one more strategy and is selected by the same decorator
   that selects any live source. There is no offline-mode flag, no replay-only
   selector and no second selection path — which is the point of the whole
   Feature for the audience, and the thing most likely to be added under pressure
@@ -65,12 +65,19 @@ acceptance_criteria:
     resolved against one configured root."
   - "B-026 — absent, unreadable or too-short reported at startup, never first
     discovered at the swap."
-  - "Both registration-time hazards hold together: Scrutor's `Decorate<>` wraps
-    only what is already registered, and B-024 leaves an unnamed source
-    unregistered. Each is invisible at runtime (ADR-0003, hot-swap-source)."
+  - "Replay registers as an `ITrackerSourceStrategy`, which is where the
+    selector finds it — never as `ITrackerSource` itself, which would hand
+    replay to consumers in place of the selector (ADR-0011 § Decision,
+    § 4 row 12, hot-swap-source)."
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — `0049` — risk lowered 4 to 3, and the rank with it. ADR-0003
+    is superseded by ADR-0011 after the library it named was run: `Decorate<>`
+    wraps one registration at a time, so the ordering hazard half of the stack
+    below never existed in a design that could be built. The recording hazard stands,
+    and the registration trap that replaces the ordering one is visible to the
+    composition test."
   - "2026-10-04 — spec-author — risk raised 3 to 4 when B-024 – B-026 landed
     here. Two registration-time hazards now stack, and neither shows at runtime:
     a strategy registered after Scrutor's `Decorate<>` call resolves raw so the
