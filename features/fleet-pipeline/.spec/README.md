@@ -133,22 +133,55 @@ Feature is cited it is written with its Feature's name.
 | Item                                                                    | Classification | Notes                                                                                                                                                                                                                 |
 | ----------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A silent vehicle is marked, not removed, at a configurable five minutes | Business       | § 2 need 4 and README.md § "UI features". The threshold is a product number; what reads it is technical. B-016, B-017.                                                                                                |
-| One collection, built once, never rebuilt on a swap                     | Both           | Business, because § 2 need 5 is the closing act's claim; technical, because the mechanism is subscription lifetime and disposal. B-001 – B-004.                                                                       |
+| One collection, materialised by whoever binds, never rebuilt on a swap  | Both           | Business, because § 2 need 5 is the closing act's claim; technical, because the mechanism is subscription lifetime and disposal. B-001 – B-004.                                                                       |
 | A column, comparer and grouping key come from the source                | Both           | Business: a second source must not mean editing the grid (§ 2 need 3). Technical: the description is what replaces the downcast ADR-0005 item 6 forbids. B-020 – B-022.                                               |
 | Filtering and sorting take observable inputs                            | Technical      | The user-visible behavior is the dashboard's; what the pipeline owes it is re-evaluation without a rebuild. B-006, B-009.                                                                                             |
 | Counts per group and for the fleet                                      | Business       | § 2 need 1 — the summary row is part of what the audience is shown. Derivation from the same stream is the technical half. B-014, B-015.                                                                              |
 | Staleness is measured against the observed clock                        | Technical      | The business statement is row 1 above. That the instant comes from the provider rather than the wall clock is ADR-0007's, and under replay it is the difference between a loaded fleet and a fleet that is all stale. |
 | The boundaries                                                          | Technical      | B-022 – B-024 constrain what may name what. No business statement is served by them directly; the swap they protect is § 2 need 5's.                                                                                  |
+| Who calls `Bind`, and where the marshal happens                         | Technical      | ADR-0009. No business statement is served either way: the audience sees the same grid. What it buys is a pipeline provable with no view model, and a `mvvm` rule that stops contradicting a claim. B-002, B-005.      |
+| One connection to the seam however many consumers                       | Both           | Business, because a second diff pass over the same snapshots spends OpenSky credits the day's budget is counted in. Technical, because the mechanism is DynamicData's cache-aware `RefCount()`. B-028.                |
 
 ## 7. Technical Design
 
 <!-- Rules: ../../../.spec/templates/feature.md § 7 -->
 
 The pipeline is one object's constructor and one disposal. `FleetTracker` takes
-the seam, the clock, the scheduler provider, the live source's description and
-the user's inputs; it builds the stages once in the order
-`dynamic-data-pipeline` § "The spine" names; and it exposes the collection, the
-groups and the summary. Nothing else in the application subscribes to the seam.
+the seam, the clock and its ticks, the scheduler provider, the live source's
+description and the four inputs the user changes; it builds the stages once in
+the order `dynamic-data-pipeline` § "The spine" names; and it **publishes
+observables** — the fleet, the groups, the summary, the description and the
+notices. It binds nothing and holds no collection
+([ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)),
+and nothing else in the application subscribes to the seam.
+
+The constructor is the whole input surface, so it is worth reading as one thing:
+
+```csharp
+public FleetTracker(
+    ITrackerSource source,
+    IObservedClock clock,
+    IObservedClockTicks ticks,
+    ISchedulerProvider schedulers,
+    IObservable<FleetSourceDescription> description,
+    IObservable<Func<TransportVehicle, bool>> predicate,
+    IObservable<IComparer<TransportVehicle>> comparer,
+    IObservable<FleetGrouping> grouping,
+    IObservable<TimeSpan> staleThreshold)
+```
+
+Nine parameters and no settable member, which is B-003 as a shape: there is no
+way to drive the tracker imperatively because there is nothing to drive. Each
+input has a starting value the pipeline does not wait for — a predicate matching
+everything (B-007), the description's first comparer, its first grouping, and
+five minutes (B-017) — applied with `StartWith` at the stage that reads it rather
+than demanded of the caller.
+
+The stages are shared with DynamicData's `RefCount()` — **not** Rx's
+`Publish().RefCount()` pair. The library's own is cache-aware: one upstream
+subscription, an internal cache created on the first subscriber and disposed when
+the last unsubscribes, so a consumer subscribing while another is bound reads the
+current fleet rather than only later changes (B-028, § 4 row 12).
 
 **Domain model**
 
@@ -156,30 +189,32 @@ The two additions this Feature makes to existing types, and the types it
 introduces. `TransportVehicle` and `Aircraft` exist; the member below is new on
 each (B-013).
 
-| Field                              | Type                                             | Notes                                                                                                                                                                                                  |
-| ---------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `TransportVehicle.GroupKey`        | `string`, `abstract`                             | The answer a view groups by, abstract so a new source cannot inherit one (ADR-0005 item 2, B-013). A string because a grouping key is a label, and the description names which key is being asked for. |
-| `Aircraft.GroupKey`                | `string`, `override`                             | The origin country. `OriginCountry` is already non-optional and defaults to empty, so the key is never absent.                                                                                         |
-| `FleetColumn.Name`                 | `string`                                         | What a header shows.                                                                                                                                                                                   |
-| `FleetColumn.Value`                | `Func<TransportVehicle, string>`                 | The cell, already display-formatted. A selector rather than a member name, so no reflection and no cast (B-020, B-022).                                                                                |
-| `FleetColumn.Comparer`             | `Option<IComparer<TransportVehicle>>`            | Absent when the column is not sortable, which is a fact about the column rather than a null to remember (`language-ext-usage`).                                                                        |
-| `FleetGrouping.Name`               | `string`                                         | What the grouping dropdown shows — "Origin country", "Category".                                                                                                                                       |
-| `FleetGrouping.Key`                | `Func<TransportVehicle, string>`                 | How the group is read. The default grouping's selector is `GroupKey`; a second grouping a source offers supplies its own.                                                                              |
-| `FleetSourceDescription.Columns`   | `IReadOnlyList<FleetColumn>`                     | In display order (B-020).                                                                                                                                                                              |
-| `FleetSourceDescription.Groupings` | `IReadOnlyList<FleetGrouping>`                   | What this source can be grouped by.                                                                                                                                                                    |
-| `FleetSummary.Tracked`             | `int`                                            | Vehicles in the collection (B-015).                                                                                                                                                                    |
-| `FleetSummary.Stale`               | `int`                                            | How many of them are stale.                                                                                                                                                                            |
-| `FleetSummary.Groups`              | `int`                                            | Groups present under the current grouping.                                                                                                                                                             |
-| `FleetGroup.Key`                   | `string`                                         | The group's value.                                                                                                                                                                                     |
-| `FleetGroup.Vehicles`              | `ReadOnlyObservableCollection<TransportVehicle>` | The group's own bound rows — a projection of the one collection, not a second store of items (B-002).                                                                                                  |
-| `StaleVehicle.Vehicle`             | `TransportVehicle`                               | What the collection carries: the vehicle and whether it is currently stale. The flag is **not** stored on the vehicle — `domain-model` § "Never add" forbids that, and the clock moves.                |
-| `StaleVehicle.IsStale`             | `bool`                                           | Derived at the moment the pipeline evaluated it, from `TransportVehicle.IsStale(asOf, threshold)` (B-016, B-018).                                                                                      |
-| `FleetNotice.Kind`                 | `FleetNoticeKind`                                | `Updated`, `Quiet` or `Resumed` (B-025, B-027). An enum rather than three types, because every consumer handles all three and a hierarchy would be matched on.                                         |
-| `FleetNotice.Instant`              | `DateTimeOffset`                                 | The observed instant the notice reports, from `IObservedClock` (B-018). Never a wall-clock read.                                                                                                       |
-| `FleetNotice.Tracked`              | `int`                                            | Vehicles in the collection when the notice was raised.                                                                                                                                                 |
-| `FleetNotice.Added`                | `int`                                            | Vehicles the changeset added (B-025).                                                                                                                                                                  |
-| `FleetNotice.Updated`              | `int`                                            | Vehicles it updated.                                                                                                                                                                                   |
-| `FleetNotice.Removed`              | `int`                                            | Vehicles it removed. `Added + Updated + Removed` is zero only for a `Quiet` or `Resumed` notice, because B-025 raises none for an empty changeset.                                                     |
+| Field                              | Type                                            | Notes                                                                                                                                                                                                  |
+| ---------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TransportVehicle.GroupKey`        | `string`, `abstract`                            | The answer a view groups by, abstract so a new source cannot inherit one (ADR-0005 item 2, B-013). A string because a grouping key is a label, and the description names which key is being asked for. |
+| `Aircraft.GroupKey`                | `string`, `override`                            | The origin country. `OriginCountry` is already non-optional and defaults to empty, so the key is never absent.                                                                                         |
+| `FleetColumn.Name`                 | `string`                                        | What a header shows.                                                                                                                                                                                   |
+| `FleetColumn.Value`                | `Func<TransportVehicle, string>`                | The cell, already display-formatted. A selector rather than a member name, so no reflection and no cast (B-020, B-022).                                                                                |
+| `FleetColumn.Comparer`             | `Option<IComparer<TransportVehicle>>`           | Absent when the column is not sortable, which is a fact about the column rather than a null to remember (`language-ext-usage`).                                                                        |
+| `FleetGrouping.Name`               | `string`                                        | What the grouping dropdown shows — "Origin country", "Category".                                                                                                                                       |
+| `FleetGrouping.Key`                | `Func<TransportVehicle, string>`                | How the group is read. The default grouping's selector is `GroupKey`; a second grouping a source offers supplies its own.                                                                              |
+| `FleetSourceDescription.Columns`   | `IReadOnlyList<FleetColumn>`                    | In display order (B-020).                                                                                                                                                                              |
+| `FleetSourceDescription.Groupings` | `IReadOnlyList<FleetGrouping>`                  | What this source can be grouped by.                                                                                                                                                                    |
+| `FleetSummary.Tracked`             | `int`                                           | Vehicles in the fleet (B-015).                                                                                                                                                                         |
+| `FleetSummary.Stale`               | `int`                                           | How many of them are stale.                                                                                                                                                                            |
+| `FleetSummary.Groups`              | `int`                                           | Groups present under the current grouping.                                                                                                                                                             |
+| `FleetGroup.Key`                   | `string`                                        | The group's value.                                                                                                                                                                                     |
+| `FleetGroup.Count`                 | `int`                                           | Vehicles in the group (B-014).                                                                                                                                                                         |
+| `FleetGroup.StaleCount`            | `int`                                           | How many of them are stale (B-014). Derived from the same stream, never by enumerating anything bound.                                                                                                 |
+| `FleetGroup.Vehicles`              | `IObservable<IChangeSet<StaleVehicle, string>>` | The group's rows as a stream, so a consumer rendering one group binds it and one that needs only the counts does not. Not a second store of items (B-002, ADR-0009).                                   |
+| `StaleVehicle.Vehicle`             | `TransportVehicle`                              | What the published element carries: the vehicle and whether it is currently stale. The flag is **not** stored on the vehicle — `domain-model` § "Never add" forbids that, and the clock moves.         |
+| `StaleVehicle.IsStale`             | `bool`                                          | Derived at the moment the pipeline evaluated it, from `TransportVehicle.IsStale(asOf, threshold)` (B-016, B-018).                                                                                      |
+| `FleetNotice.Kind`                 | `FleetNoticeKind`                               | `Updated`, `Quiet` or `Resumed` (B-025, B-027). An enum rather than three types, because every consumer handles all three and a hierarchy would be matched on.                                         |
+| `FleetNotice.Instant`              | `DateTimeOffset`                                | The observed instant the notice reports, read from the clock (B-018). Never a wall-clock read.                                                                                                         |
+| `FleetNotice.Tracked`              | `int`                                           | Vehicles in the fleet when the notice was raised.                                                                                                                                                      |
+| `FleetNotice.Added`                | `int`                                           | Vehicles the changeset added (B-025).                                                                                                                                                                  |
+| `FleetNotice.Updated`              | `int`                                           | Vehicles it updated.                                                                                                                                                                                   |
+| `FleetNotice.Removed`              | `int`                                           | Vehicles it removed. `Added + Updated + Removed` is zero only for a `Quiet` or `Resumed` notice, because B-025 raises none for an empty changeset.                                                     |
 
 **The arrival notice**
 
@@ -207,8 +242,9 @@ IObservable<FleetNotice> Notices(IObservable<TimeSpan> minimumInterval);
 
 Two callers, two cadences, one rate-cap operator — written and tested once, in
 the pipeline, which is what keeps `fleet-dashboard` from implementing throttling
-twice and differently. It also keeps `IFleetQuery` at four members instead of
-five.
+twice and differently. That it is a method on an interface of properties is
+§ 11 row 4 concern 7, and the review kept it: pacing is an operator with
+behaviour to test, not a projection a consumer shapes.
 
 **A notice carries values, not presentation** (§ 4 row 9). No duration, no
 colour, no severity, no text. `Quiet` is a fact about the feed; that it is worth
@@ -220,44 +256,55 @@ interrupting someone for is a judgement, and it is made in
 ```mermaid
 flowchart LR
     src["ITrackerSource.Connect()<br/>IChangeSet&lt;TransportVehicle, string&gt;"] --> filter
-    predicate(["IObservable&lt;predicate&gt;<br/>from the view model"]) --> filter
+    predicate(["IObservable&lt;predicate&gt;<br/>a constructor parameter"]) --> filter
     filter["Filter"] --> sort
     comparer(["IObservable&lt;IComparer&gt;<br/>from the description"]) --> sort
     sort["Sort"] --> stale
-    clock(["IObservedClock.Instant<br/>+ threshold"]) --> stale
-    stale["mark stale"] --> bind
-    bind["Bind"] --> fleet[["Fleet<br/>the one collection"]]
-    sort --> group["Group"]
+    clock(["IObservedClockTicks.Instant<br/>+ threshold"]) --> stale
+    stale["mark stale"] --> share["RefCount()"]
+    share --> fleet[["Fleet<br/>IObservable&lt;IChangeSet&lt;StaleVehicle, string&gt;&gt;"]]
+    share --> group["Group"]
     grouping(["IObservable&lt;FleetGrouping&gt;"]) --> group
     group --> groups[["Groups"]]
     group --> summary[["Summary"]]
+    fleet -.->|"ObserveOn(UI) + Bind"| vm(["a consumer's own collection<br/>fleet-dashboard"])
 ```
+
+The dotted edge is the Feature boundary. Everything left of it is this
+specification's; the `Bind` on the right is `fleet-dashboard`'s, and § 5 row 9
+says so.
 
 ```mermaid
 sequenceDiagram
     participant Source as ITrackerSource
     participant Tracker as FleetTracker
-    participant Clock as IObservedClock
-    participant View as the bound collection
+    participant Ticks as IObservedClockTicks
+    participant Consumer as a view model
+    participant View as its bound collection
+    Consumer->>Tracker: subscribe to Fleet, ObserveOn(UI), Bind
     Source->>Tracker: changeset — one aircraft updated
-    Tracker->>Tracker: filter, sort, mark
-    Tracker->>View: one update, in place
-    Clock-->>Tracker: instant advances, no data arrived
+    Tracker->>Tracker: filter, sort, mark, share
+    Tracker->>Consumer: one change, on the stream
+    Consumer->>View: one update, in place
+    Ticks-->>Tracker: instant advances, no data arrived
     Tracker->>Tracker: re-evaluate staleness only
-    Tracker->>View: the silent rows change their mark, and stay
+    Tracker->>Consumer: the silent rows' marks change
+    Consumer->>View: the rows change their mark, and stay
 ```
 
-Class diagram: not applicable — the shape is one class and five records, and
-the member tables above state it without a second rendering to keep in step.
+Class diagram: not applicable — the shape is one class and six records, and the
+member tables above state it without a second rendering to keep in step. State
+machine: not applicable — the tracker has no modes; `FleetNoticeKind` is a value
+on a notice, not a state the tracker sits in.
 
 **Interface changes**
 
-> **Provisional, and flagged for an architecture review — § 11 row 4.** Every
-> declaration in this subsection is written to make the claims in § 3
-> falsifiable, and the shapes below are the first ones that do. They are not
-> agreed. Nothing in § 3 names a type or a member, so the review can change any
-> of them without touching a claim — which is the property worth preserving, and
-> the reason no item here starts against a 🟡 § 12.
+The review § 11 row 4 asked for landed on 2026-10-05, and these are the shapes
+it decided ([ADR-0009](../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md),
+[ADR-0010](../../../.spec/adr/0010-a-third-seam-carries-the-observed-clocks-ticks.md)).
+They are no longer provisional. Nothing in § 3 names a type, so the amendments
+the review cost were the two claims whose _obligation_ changed, B-002 and B-005,
+plus B-028 for the sharing — not one claim per declaration.
 
 `IFleetTracker`'s file is created by `aircraft-source` `0007`; these are the
 members this Feature adds to it, and they are written out because the file does
@@ -266,13 +313,13 @@ not exist yet (`transponder-conventions` § "Declarations in § 7").
 ```csharp
 public interface IFleetTracker : IDisposable
 {
-    /// <summary>Gets the one collection everything binds to (B-002).</summary>
-    ReadOnlyObservableCollection<StaleVehicle> Fleet { get; }
+    /// <summary>Gets the fleet, shared, for a consumer to bind (B-002, B-028).</summary>
+    IObservable<IChangeSet<StaleVehicle, string>> Fleet { get; }
 
     /// <summary>Gets the current grouping's groups (B-012).</summary>
-    ReadOnlyObservableCollection<FleetGroup> Groups { get; }
+    IObservable<IChangeSet<FleetGroup, string>> Groups { get; }
 
-    /// <summary>Gets the counts, derived from the same stream as the collection (B-015).</summary>
+    /// <summary>Gets the counts, derived from the same stream as the fleet (B-015).</summary>
     IObservable<FleetSummary> Summary { get; }
 
     /// <summary>Gets the live source's columns and groupings (B-020).</summary>
@@ -284,40 +331,27 @@ public interface IFleetTracker : IDisposable
 }
 ```
 
-The user's inputs arrive by constructor rather than as settable members, so the
-tracker cannot be driven imperatively (B-003):
+Every member is a stream, so no member of this interface is UI-affine and a
+consumer need not know which thread it is on to read one. **There is no
+`IFleetQuery`**: an earlier draft declared one, and the review deleted it — the
+four inputs are constructor parameters (above), because a seam shaped by its only
+implementer is the pipeline's input pointing at its consumer.
+
+One new interface, beside the two `aircraft-source` published rather than
+widening either (§ 4 row 3, ADR-0010):
 
 ```csharp
-public interface IFleetQuery
+public interface IObservedClockTicks
 {
-    IObservable<Func<TransportVehicle, bool>> Predicate { get; }
-
-    IObservable<IComparer<TransportVehicle>> Comparer { get; }
-
-    IObservable<FleetGrouping> Grouping { get; }
-
-    IObservable<TimeSpan> StaleThreshold { get; }
-}
-```
-
-Each is an `IObservable<T>` the dashboard pushes into, and each has a starting
-value the pipeline does not wait for: a predicate matching everything (B-007),
-the description's first comparer, its first grouping, and five minutes (B-017).
-
-The one additive member on an existing interface, for § 4 row 3:
-
-```csharp
-public interface IObservedClock
-{
-    DateTimeOffset Current { get; }
-
     /// <summary>Gets the observed instant, and every advance of it (B-018).</summary>
     IObservable<DateTimeOffset> Instant { get; }
 }
 ```
 
-`IObservedClockWriter` is untouched: the write side still only sets, and a
-consumer holding the read side still cannot advance time (ADR-0007 decision 1).
+`ObservedClock` implements it alongside `IObservedClock` and
+`IObservedClockWriter`. Neither of those changes: the write side still only sets,
+and a consumer holding a read side still cannot advance time (ADR-0007
+decision 1).
 
 | Type               | File                                                                                                | Claims it makes visible |
 | ------------------ | --------------------------------------------------------------------------------------------------- | ----------------------- |
@@ -329,7 +363,7 @@ Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Transponder/Tracking/          IFleetQuery, FleetTracker's pipeline, StaleVehicle
+src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, StaleVehicle
 src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetSourceDescription, FleetGroup, FleetSummary, FleetNotice
 ```
 
@@ -337,24 +371,22 @@ The description lives under `Tracking/` rather than `Model/` deliberately: it
 describes how a source is _presented_, which is not a domain fact, and
 `domain-model` § "Never add" keeps UI-shaped types out of the model.
 
-**Decision required**
+**No open decisions.**
 
-> `AutoRefresh` is in README.md's operator table and has no subject in this
-> pipeline. § 4 row 4 is why: the aircraft strategy projects with `Transform`,
-> so an updated aircraft arrives as a replacement and no instance is ever
-> mutated in place. There is nothing to refresh on.
->
-> | Option | Summary                                                                                                                                                         | Tradeoff                                                                                                                                                                                                                  |
-> | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | A.     | No `AutoRefresh`. Staleness re-evaluates on the clock's observable (B-018), and value changes arrive as changeset updates, which filters and sorts already see. | The simplest pipeline, and it keeps `domain-model`'s "no stored staleness flag". Costs the talk one operator from its own table — the audience is told `AutoRefresh` exists and shown why this pipeline does not need it. |
-> | B.     | Mutate the projected vehicle in place when a snapshot updates, and let `AutoRefresh` re-evaluate filters and sorts.                                             | Demonstrates the operator the table promises. Costs value-replacement semantics: the strategy becomes stateful, `Transform` gains a lookup, and a vehicle's identity and its values stop arriving together.               |
-> | C.     | Keep A for the aircraft feed and demonstrate `AutoRefresh` in the closing act, where a push source genuinely mutates what it already holds.                     | Both honest and complete, at the cost of deferring an operator the main demo advertises to the optional act — which, per README.md § "Open items", is not yet chosen.                                                     |
->
-> **Recommendation:** A, with the README's operator table amended to say where
-> `AutoRefresh` would apply and why this pipeline does not reach for it. B
-> trades a correct pipeline for a demo beat, and the demo's own claim is that
-> the pipeline is ordinary.
-> **Awaiting:** the person (§ 11 row 1).
+`AutoRefresh` was the one open block here, and it is closed:
+[`decisions/0001`](decisions/0001-no-autorefresh-in-this-pipeline.md) took option
+A on 2026-10-05. There is no `AutoRefresh` stage, because `AircraftTrackerSource`
+projects with `Transform` and an updated aircraft arrives as a new instance — § 4
+row 4's fact, and nothing to refresh on. Staleness re-evaluates on
+`IObservedClockTicks.Instant` (B-018), and a vehicle's value changes arrive as
+changeset updates that `Filter` and `Sort` already see. README.md's operator
+table now records where the operator would apply and why this pipeline does not
+reach for it.
+
+The shapes above came out of the § 11 row 4 review and are recorded in ADR-0009
+and ADR-0010 rather than here; what is left for this section is to follow the
+code once it exists — a declaration becomes a type-table row when its file
+lands (`transponder-conventions` § "Declarations in § 7").
 
 ## 8. Testing Strategy
 
@@ -362,13 +394,13 @@ describes how a source is _presented_, which is not a domain fact, and
 
 **Testability assessment**
 
-| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                         | Recommendation                                                                                                                                                                                                                                                                            |
-| ------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DI seams           | Pass          | The tracker takes the seam, the clock, the scheduler provider, the description and `IFleetQuery` by constructor and constructs none of them. A test drives the whole pipeline with a `SourceCache<TransportVehicle, string>` it owns and four subjects, with no provider, no HTTP and no UI anywhere in the arrangement.        | —                                                                                                                                                                                                                                                                                         |
-| Behavior isolation | Pass          | Each stage is observable at its own output: the collection for filter, sort and staleness, `Groups` for grouping, `Summary` for the aggregates. A failing assertion names a stage.                                                                                                                                              | —                                                                                                                                                                                                                                                                                         |
-| Coverage potential | **Qualified** | Twenty-three claims are about a value or a sequence the code produces and are ordinary xUnit tests. Five are structural — B-003, B-008, B-022, B-023 and B-005's "SHALL NOT read inline" half — and a test cannot prove the absence of a line anywhere in an assembly.                                                          | The analyzer already carries this class of rule for `aircraft-source` ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). Five rules are added to it, which is `0031`'s and `0032`'s work, not a new mechanism. **B-024 is not one of them** — see below. |
-| Fixtures           | Pass          | Every vehicle is a synthetic `Aircraft` built in the test — invented `icao24` values, callsigns and countries — and a changeset is produced by writing to a cache the test holds. No JSON and no provider shape appear in this Feature's tests at all, which is B-023 showing up as an arrangement that cannot name a snapshot. | —                                                                                                                                                                                                                                                                                         |
-| Determinism        | Pass          | Both schedulers are one `TestScheduler`, and the clock is a double whose `Instant` the test pushes. Five minutes of silence is three lines and no waiting (§ 4 row 5).                                                                                                                                                          | —                                                                                                                                                                                                                                                                                         |
+| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                              | Recommendation                                                                                                                                                                                                                                                                            |
+| ------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DI seams           | Pass          | The tracker takes the seam, the clock and its ticks, the scheduler provider, the description and the four input observables by constructor and constructs none of them. A test drives the whole pipeline with a `SourceCache<TransportVehicle, string>` it owns and four subjects, binding the fleet stream itself, with no provider, no HTTP and no UI anywhere in the arrangement. | —                                                                                                                                                                                                                                                                                         |
+| Behavior isolation | Pass          | Each stage is observable at its own output: the collection for filter, sort and staleness, `Groups` for grouping, `Summary` for the aggregates. A failing assertion names a stage.                                                                                                                                                                                                   | —                                                                                                                                                                                                                                                                                         |
+| Coverage potential | **Qualified** | Twenty-three claims are about a value or a sequence the code produces and are ordinary xUnit tests. Five are structural — B-003, B-008, B-022, B-023 and B-005's "SHALL NOT read inline" half — and a test cannot prove the absence of a line anywhere in an assembly.                                                                                                               | The analyzer already carries this class of rule for `aircraft-source` ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). Five rules are added to it, which is `0031`'s and `0032`'s work, not a new mechanism. **B-024 is not one of them** — see below. |
+| Fixtures           | Pass          | Every vehicle is a synthetic `Aircraft` built in the test — invented `icao24` values, callsigns and countries — and a changeset is produced by writing to a cache the test holds. No JSON and no provider shape appear in this Feature's tests at all, which is B-023 showing up as an arrangement that cannot name a snapshot.                                                      | —                                                                                                                                                                                                                                                                                         |
+| Determinism        | Pass          | Both schedulers are one `TestScheduler`, and the clock is a double whose `Instant` the test pushes. Five minutes of silence is three lines and no waiting (§ 4 row 5).                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                                         |
 
 **B-024 is unenforced, deliberately.** Decided 2026-10-05 by the person: no
 analyzer rule is written to prove that this Feature's tests do not reach a

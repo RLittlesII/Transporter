@@ -138,38 +138,49 @@ the grid, the inputs and the selection; `FleetDetailViewModel` owns the pane;
 `FleetSummaryViewModel` projects the tracker's counts. Each derives `RxObject`
 and uses the `field`-keyword property form (`mvvm` § "The shape").
 
-`FleetViewModel` is also the implementation of `fleet-pipeline`'s `IFleetQuery`:
-the four observables that Feature consumes are the four things the user changes,
-so the view model that collects them is the one that publishes them. Nothing
-else implements that interface, and the pipeline never names the view model.
+`FleetViewModel` publishes the four observables the pipeline is constructed with
+— the predicate, the comparer, the grouping and the stale threshold — because the
+four things the pipeline reacts to are four things the user changes. It
+implements no interface to do it: `IFleetQuery` was deleted by the § 11 row 4
+review, and the composition root passes these observables to `FleetTracker`'s
+constructor (`fleet-pipeline` § 7, ADR-0009). The pipeline still never names the
+view model.
+
+**This Feature owns every `Bind` in the application.** The tracker publishes
+`IObservable<IChangeSet<…>>`; a view model marshals to
+`ISchedulerProvider.UserInterfaceThread`, binds, and disposes that one
+subscription with itself (`mvvm` § "Projecting state back"). Two consequences
+worth stating: a disposal bug here freezes one view's rows rather than stopping
+the fleet, and the grid's collection is this view model's for its lifetime — the
+object is not replaced by a source swap (B-005, B-006).
 
 **Domain model**
 
 No domain type is added or changed. The types below are view state.
 
-| Field                                 | Type                                            | Notes                                                                                                                                           |
-| ------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FleetViewModel.Fleet`                | `ReadOnlyObservableCollection<StaleVehicle>`    | The tracker's collection, exposed as-is. Not a copy (B-005).                                                                                    |
-| `FleetViewModel.SearchText`           | `string`                                        | `RaiseAndSetIfChanged`; published into the predicate (B-009).                                                                                   |
-| `FleetViewModel.Filters`              | `IReadOnlyList<FleetFilterChoice>`              | What the dropdowns offer, from the description's searchable columns.                                                                            |
-| `FleetViewModel.SelectedFilter`       | `Option<FleetFilterChoice>`                     | Absent means no dropdown constraint, which is a value rather than a null (B-011).                                                               |
-| `FleetViewModel.Columns`              | `IReadOnlyList<FleetColumn>`                    | From the description, in its order (B-007).                                                                                                     |
-| `FleetViewModel.SortedColumn`         | `Option<(FleetColumn Column, bool Descending)>` | Which header is active and in which direction (B-012).                                                                                          |
-| `FleetViewModel.Groupings`            | `IReadOnlyList<FleetGrouping>`                  | From the description.                                                                                                                           |
-| `FleetViewModel.Selected`             | `Option<TransportVehicle>`                      | The abstract type: the grid selects a vehicle, and only the pane learns which kind (B-013).                                                     |
-| `FleetViewModel.IsSwapping`           | `bool`                                          | Drives the busy indicator (B-016).                                                                                                              |
-| `FleetViewModel.SwapCommand`          | `ICommand`                                      | Tells the actor; never `Ask`s it (B-016, B-017).                                                                                                |
-| `FleetFilterChoice.Name`              | `string`                                        | What the dropdown shows.                                                                                                                        |
-| `FleetFilterChoice.Matches`           | `Func<TransportVehicle, bool>`                  | The constraint, over the base only (B-022).                                                                                                     |
-| `FleetDetailViewModel.Vehicle`        | `Option<TransportVehicle>`                      | Absent empties the pane (B-014).                                                                                                                |
-| `FleetDetailViewModel.Rows`           | `IReadOnlyList<(string Label, string Value)>`   | The pane's own projection, where the one legitimate downcast happens (B-013) and where a canonical unit is converted by a named member (B-019). |
-| `FleetSummaryViewModel.Tracked`       | `int`                                           | Projected from the tracker's summary; not recomputed (B-015).                                                                                   |
-| `FleetSummaryViewModel.Stale`         | `int`                                           | Same.                                                                                                                                           |
-| `FleetSummaryViewModel.Groups`        | `int`                                           | Same.                                                                                                                                           |
-| `FleetBannerViewModel.Latest`         | `Option<FleetNotice>`                           | The most recent notice at the banner's cadence; absent until the first arrives (B-023).                                                         |
-| `FleetBannerViewModel.BannerInterval` | `TimeSpan`                                      | Edited on the page, published as an observable into `IFleetTracker.Notices` (B-026). One second by default.                                     |
-| `FleetBannerViewModel.ToastInterval`  | `TimeSpan`                                      | The second subscription's cadence, edited separately (B-026). One minute by default.                                                            |
-| `FleetBannerViewModel.Interrupting`   | `IObservable<FleetNotice>`                      | The notices worth interrupting for — quiet, resumed, and the swap completing — which the **page** turns into a toast (B-025, B-027).            |
+| Field                                 | Type                                            | Notes                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FleetViewModel.Fleet`                | `ReadOnlyObservableCollection<StaleVehicle>`    | **The one collection, materialised here.** `_tracker.Fleet.ObserveOn(schedulers.UserInterfaceThread).Bind(out field).Subscribe()` in the constructor, disposed with the view model. The tracker publishes a stream and owns no collection (ADR-0009), so this is where it becomes one — and the only place (B-005). |
+| `FleetViewModel.SearchText`           | `string`                                        | `RaiseAndSetIfChanged`; published into the predicate (B-009).                                                                                                                                                                                                                                                       |
+| `FleetViewModel.Filters`              | `IReadOnlyList<FleetFilterChoice>`              | What the dropdowns offer, from the description's searchable columns.                                                                                                                                                                                                                                                |
+| `FleetViewModel.SelectedFilter`       | `Option<FleetFilterChoice>`                     | Absent means no dropdown constraint, which is a value rather than a null (B-011).                                                                                                                                                                                                                                   |
+| `FleetViewModel.Columns`              | `IReadOnlyList<FleetColumn>`                    | From the description, in its order (B-007).                                                                                                                                                                                                                                                                         |
+| `FleetViewModel.SortedColumn`         | `Option<(FleetColumn Column, bool Descending)>` | Which header is active and in which direction (B-012).                                                                                                                                                                                                                                                              |
+| `FleetViewModel.Groupings`            | `IReadOnlyList<FleetGrouping>`                  | From the description.                                                                                                                                                                                                                                                                                               |
+| `FleetViewModel.Selected`             | `Option<TransportVehicle>`                      | The abstract type: the grid selects a vehicle, and only the pane learns which kind (B-013).                                                                                                                                                                                                                         |
+| `FleetViewModel.IsSwapping`           | `bool`                                          | Drives the busy indicator (B-016).                                                                                                                                                                                                                                                                                  |
+| `FleetViewModel.SwapCommand`          | `ICommand`                                      | Tells the actor; never `Ask`s it (B-016, B-017).                                                                                                                                                                                                                                                                    |
+| `FleetFilterChoice.Name`              | `string`                                        | What the dropdown shows.                                                                                                                                                                                                                                                                                            |
+| `FleetFilterChoice.Matches`           | `Func<TransportVehicle, bool>`                  | The constraint, over the base only (B-022).                                                                                                                                                                                                                                                                         |
+| `FleetDetailViewModel.Vehicle`        | `Option<TransportVehicle>`                      | Absent empties the pane (B-014).                                                                                                                                                                                                                                                                                    |
+| `FleetDetailViewModel.Rows`           | `IReadOnlyList<(string Label, string Value)>`   | The pane's own projection, where the one legitimate downcast happens (B-013) and where a canonical unit is converted by a named member (B-019).                                                                                                                                                                     |
+| `FleetSummaryViewModel.Tracked`       | `int`                                           | Projected from the tracker's summary; not recomputed (B-015).                                                                                                                                                                                                                                                       |
+| `FleetSummaryViewModel.Stale`         | `int`                                           | Same.                                                                                                                                                                                                                                                                                                               |
+| `FleetSummaryViewModel.Groups`        | `int`                                           | Same.                                                                                                                                                                                                                                                                                                               |
+| `FleetBannerViewModel.Latest`         | `Option<FleetNotice>`                           | The most recent notice at the banner's cadence; absent until the first arrives (B-023).                                                                                                                                                                                                                             |
+| `FleetBannerViewModel.BannerInterval` | `TimeSpan`                                      | Edited on the page, published as an observable into `IFleetTracker.Notices` (B-026). One second by default.                                                                                                                                                                                                         |
+| `FleetBannerViewModel.ToastInterval`  | `TimeSpan`                                      | The second subscription's cadence, edited separately (B-026). One minute by default.                                                                                                                                                                                                                                |
+| `FleetBannerViewModel.Interrupting`   | `IObservable<FleetNotice>`                      | The notices worth interrupting for — quiet, resumed, and the swap completing — which the **page** turns into a toast (B-025, B-027).                                                                                                                                                                                |
 
 **Diagrams**
 
@@ -185,12 +196,13 @@ flowchart TD
     filter --> query
     sortedColumn --> query
     grouping --> query
-    query["FleetViewModel as IFleetQuery<br/>predicate, comparer, grouping, threshold"] --> tracker
+    query["FleetViewModel's four observables<br/>predicate, comparer, grouping, threshold"] --> tracker
     command -->|Tell| actor["the source actor"]
     actor --> tracker
-    tracker["IFleetTracker<br/>the pipeline"] --> fleet["Fleet, Groups, Summary, Description"]
-    fleet --> page["FleetPage — C# markup"]
-    fleet --> detail["FleetDetailViewModel<br/>the only downcast"]
+    tracker["IFleetTracker<br/>publishes changesets"] --> streams["Fleet, Groups, Summary, Description, Notices"]
+    streams -->|"ObserveOn(UI) + Bind"| bound[["FleetViewModel.Fleet<br/>the one collection"]]
+    bound --> page["FleetPage — C# markup"]
+    streams --> detail["FleetDetailViewModel<br/>the only downcast"]
 ```
 
 ```mermaid
@@ -201,14 +213,16 @@ sequenceDiagram
     participant Grid as the bound grid
     User->>VM: types "FLT04"
     VM->>Tracker: a predicate, as an observable value
-    Tracker->>Grid: the rows that no longer match are removed
+    Tracker->>VM: the changes, on the fleet stream
+    VM->>Grid: the rows that no longer match are removed
     Note over Grid: no refetch, no rebuild, no clear
     User->>VM: taps the swap control
     VM->>VM: IsSwapping = true
     VM-->>Tracker: (the actor swaps the source — aircraft-source 0006)
-    Tracker->>Grid: the new fleet arrives as changes
+    Tracker->>VM: the new fleet arrives as changes
+    VM->>Grid: applied to the collection it already holds
     VM->>VM: IsSwapping = false
-    Note over Grid: the same collection object throughout
+    Note over Grid: the same collection object throughout — it is the view model's
 ```
 
 Class diagram: not applicable — the member tables above state the shape, and a
@@ -216,10 +230,12 @@ second rendering of three view models would be one more thing to keep in step.
 
 **Interface changes**
 
-`IFleetQuery` is declared by `fleet-pipeline` § 7; this Feature implements it
-and declares nothing new on it. The page and the view models are classes
-rather than interfaces: nothing substitutes a view, and a view model is
-substituted in a test by construction rather than through a seam.
+**None.** `IFleetQuery` is gone (ADR-0009), so this Feature implements no
+interface of the pipeline's and declares none of its own: it consumes
+`IFleetTracker`'s streams and hands four observables to the composition root.
+The page and the view models are classes rather than interfaces — nothing
+substitutes a view, and a view model is substituted in a test by construction
+rather than through a seam.
 
 | Type              | File                                                                                                                              | Claims it makes visible |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
@@ -258,9 +274,10 @@ through an actor, and no actor holds it.** Three rules converge on that:
 So the two routes out of a view model are the two `mvvm` § "Two kinds of input,
 two routes" already names, and nothing else: a **continuous** value — a
 keystroke, a chosen comparer, a grouping — is published as an observable
-through `IFleetQuery` (B-009, B-012), and a **discrete effect** — swap the
-source, start, stop — is `Tell`d to an actor resolved from `IActorRegistry`
-(B-016). Data comes back the one way: the tracker's collection, bound.
+as a constructor parameter of the pipeline (B-009, B-012), and a **discrete
+effect** — swap the source, start, stop — is `Tell`d to an actor resolved from
+`IActorRegistry` (B-016). Data comes back the one way: the tracker's streams,
+bound here (B-005).
 
 What the actors own here is **time and failure upstream of the seam**, which is
 the arrangement [ADR-0002](../../../.spec/adr/0002-contract-client-strategy-tracker.md)
@@ -274,9 +291,9 @@ flowchart LR
     actor["source actor<br/>owns when, retry, token refresh"] -->|calls| client["snapshot client"]
     client -->|EditDiff| cache[("snapshot cache")]
     cache --> strategy["tracker source strategy"]
-    strategy -->|changeset| tracker["IFleetTracker — the pipeline and the one collection"]
-    tracker -->|bound collection| vm["FleetViewModel"]
-    vm -->|IFleetQuery: predicate, comparer, grouping| tracker
+    strategy -->|changeset| tracker["IFleetTracker — the pipeline, publishing changesets"]
+    tracker -->|"Fleet stream; ObserveOn(UI) + Bind"| vm["FleetViewModel<br/>holds the one collection"]
+    vm -->|"predicate, comparer, grouping (observables)"| tracker
     vm -->|Tell: swap, start, stop| actor
     registry["IActorRegistry"] -.->|resolves| vm
 ```
@@ -392,7 +409,7 @@ until someone performs them and records what they looked at.
 | B-002    | `@B-002` | review — no `.xaml` remains under `src/Gui` but the template's shell, and `MauiProgram` registers neither removed type; re-done by any new page                            | Missing |
 | B-003    | `@B-003` | `FleetPageTests.GivenTheFleetPage_WhenItIsConstructed_ThenItTakesItsViewModelAndResolvesNothing`                                                                           | Missing |
 | B-004    | `@B-004` | `ContainerTests.GivenTheConstructedApplication_WhenThePagesAndViewModelsAreResolved_ThenEachWasRegisteredThroughTheUserInterfaceBuilder`                                   | Missing |
-| B-005    | `@B-005` | `FleetViewModelTests.GivenATracker_WhenTheFleetIsRead_ThenItIsTheTrackersOwnCollection`                                                                                    | Missing |
+| B-005    | `@B-005` | `FleetViewModelTests.GivenATrackerPublishingAFleet_WhenTheViewModelIsConstructed_ThenItBindsTheStreamIntoItsOneCollection`                                                 | Missing |
 | B-006    | `@B-006` | review — one vehicle's change produces one row update and no re-creation; re-done by a change to the grid's item template                                                  | Missing |
 | B-007    | `@B-007` | `FleetViewModelTests.GivenADescription_WhenTheColumnsAreRead_ThenTheyAreTheDescriptionsInItsOrder`                                                                         | Missing |
 | B-008    | `@B-008` | `FleetViewModelTests.GivenAStaleVehicle_WhenItsRowIsProjected_ThenItIsMarkedAndStillInTheFleet`                                                                            | Missing |
