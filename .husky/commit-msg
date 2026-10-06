@@ -39,13 +39,22 @@ subject_status=0
 ## conventional-commits vocabulary -- every item commit on main reads
 ## feature(0023), feature(0005).
 ##
-## The scope names what the commit belongs to, in one of two spellings: a
-## four-digit item id, or a Feature slug where there is no item -- specification
-## authoring is the case, `docs(fleet-pipeline)`, and the slug is not checked
-## against a directory because a Feature's specification does not have to live
-## under features/ (aircraft-source's is under its integration). It is absent
-## when the change belongs to neither, which is every repository-wide chore. The
-## shape is all this can check; which spelling is right is the reference's rule.
+## The scope names what the commit belongs to, and the vocabulary is explicit
+## rather than a loose pattern:
+##
+##   0007          an item, four digits, repository-wide
+##   fleet-pipeline  a Feature, by its slug
+##   B-004         a claim
+##   ADR-0009      an architecture decision record
+##   TRN0004       an analyzer diagnostic
+##
+## `docs` takes any of them, because a documentation change is often about one
+## element rather than a whole Feature. The slug is not checked against a
+## directory, because a Feature's specification does not have to live under
+## features/ -- aircraft-source's is under its integration. The scope is absent
+## when the change belongs to none of these, which is every repository-wide
+## chore. The shape is all this can check; which spelling is right is the
+## reference's rule.
 ##
 ## The `!` is allowed for a breaking change because the standard uses it;
 ## nothing on main carries one yet.
@@ -53,7 +62,7 @@ subject_status=0
 ## Grouped alternation and {} are ERE, so -E is required. The subject must start
 ## lowercase, or with a digit, or with a backtick, which is how a subject naming
 ## a type opens.
-if ! printf '%s' "$subject" | grep -Eq '^(feature|docs|chore|refactor|fix|test|build|ci|perf|style|revert)(\(([0-9]{4}|[a-z][a-z0-9]*(-[a-z0-9]+)*)\))?!?: [a-z0-9`]'; then
+if ! printf '%s' "$subject" | grep -Eq '^(feature|docs|chore|refactor|fix|test|build|ci|perf|style|revert)(\(([0-9]{4}|B-[0-9]{3}|ADR-[0-9]{4}|TRN[0-9]{4}|[a-z][a-z0-9]*(-[a-z0-9]+)*)\))?!?: [a-z0-9`]'; then
     subject_status=1
     echo
     echo "commit-msg: the subject does not match this repository's convention."
@@ -62,12 +71,14 @@ if ! printf '%s' "$subject" | grep -Eq '^(feature|docs|chore|refactor|fix|test|b
     echo
     echo "Shape:  <type>(<item id>): <what is now true>"
     echo "Types:  feature docs chore refactor fix test build ci perf style revert"
-    echo "Scope:  the four-digit item id, or a Feature slug where there is no item."
-    echo "        Absent when the change belongs to neither."
+    echo "Scope:  an item (0007), a Feature (fleet-pipeline), a claim (B-004),"
+    echo "        a record (ADR-0009) or a diagnostic (TRN0004)."
+    echo "        Absent when the change belongs to none of them."
     echo "Case:   lowercase after the colon."
     echo
     echo "    feature(0007): wrap the tracker seam in IFleetTracker and give it the clock"
     echo "    docs(fleet-pipeline): answer every open question, the architecture review included"
+    echo "    docs(B-004): make the disposal claim falsifiable again"
     echo "    chore: gate the commit subject with a commit-msg hook"
     echo
     echo "Note feature, not feat. The rules are in"

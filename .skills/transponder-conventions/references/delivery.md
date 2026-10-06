@@ -79,7 +79,7 @@ What a message must contain is
 how it is spelled here.
 
 ```
-<type>(<item id | feature-slug>): <what is now true>
+<type>(<scope>): <what is now true>
 
 Delivers <id>            # or: Specifies features/<slug>; omitted when neither applies
 
@@ -92,17 +92,28 @@ Delivers <id>            # or: Specifies features/<slug>; omitted when neither a
   `feature(0023):`, `feature(0005):` — not `feat:`. `docs` is a specification,
   an ADR, a lesson or an item edit; `chore` is the tracker, a hook or build
   wiring; `refactor`, `fix` and `test` as usual.
-- **The scope names what the commit belongs to**, in one of two spellings.
-  **An item** is its four-digit id — repository-wide, so `feature(0007):`
-  resolves from any Feature, and work that delivers an item always has one to
-  cite. **A Feature** is its slug, for a change that belongs to a Feature and to
-  no item: `docs(fleet-pipeline): answer every open question …`, which is what
-  specification authoring is. The slug is not checked against a directory,
-  because a Feature's specification need not live under `features/` —
-  `aircraft-source`'s is under its integration. A change that belongs to
-  **neither** carries no scope at all: `chore: gate the commit subject with a
-commit-msg hook`, a repository-wide convention with no Feature and no item
-  behind it.
+- **The scope names what the commit belongs to**, and the vocabulary is
+  explicit:
+
+    | Scope            | Names                                 |
+    | ---------------- | ------------------------------------- |
+    | `0007`           | an item, four digits, repository-wide |
+    | `fleet-pipeline` | a Feature, by its slug                |
+    | `B-004`          | a claim                               |
+    | `ADR-0009`       | an architecture decision record       |
+    | `TRN0004`        | an analyzer diagnostic                |
+
+    **`docs` takes any of them**, because a documentation change is as often
+    about one element as about a whole Feature: `docs(B-004):` when a claim's
+    wording is what moved, `docs(0007):` when an item's record is,
+    `docs(fleet-pipeline):` when the Feature is. **Work that delivers an item
+    cites the item**, so `feature` carries a four-digit id in practice. A change
+    belonging to none of them carries **no scope** — a repository-wide
+    convention or chore, with no Feature, item or claim behind it. The Feature
+    slug is not checked against a directory, because a Feature's specification
+    need not live under `features/` — `aircraft-source`'s is under its
+    integration.
+
 - **The subject names the outcome, not the activity.** "report a declaration
   that is the wrong shape, on the declaration" says what the build now does;
   "add seven analyzer rules" says what the author did. Lowercase after the
@@ -124,8 +135,8 @@ commit-msg hook`, a repository-wide convention with no Feature and no item
   what the ship gate therefore still blocks.
 - **No co-author trailer, no generated-by line, no emoji.** Nothing on `main`
   carries one.
-- **A `commit-msg` hook checks the subject**: the type vocabulary, the scope's
-  shape in either spelling, the lowercase start, a trailing period, and the two
+- **A `commit-msg` hook checks the subject**: the type vocabulary, the scope
+  against the five spellings above, the lowercase start, a trailing period, and the two
   trailers. Which spelling is the right one is this rule's business, not the
   hook's — a pattern cannot tell whether the change has an item. It skips what git composes itself — a merge, a revert, and
   `fixup!`/`squash!`/`amend!` — because rejecting those would break `git merge`,
