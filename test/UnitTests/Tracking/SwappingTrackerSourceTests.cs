@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using AwesomeAssertions;
 using DynamicData;
+using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Model;
 using Transponder.Tracking;
 using Transponder.Tracking.Sources;
@@ -24,16 +25,15 @@ public class SwappingTrackerSourceTests
     public void GivenTwoStrategies_WhenTheLiveOneIsSelected_ThenTheDecoratorChoosesAndNoResolverTypeExists()
     {
         // Given
-        var aircraft = new FirstTrackerSource();
-        var vessels = new SecondTrackerSource();
-        var sut = new SwappingTrackerSource([aircraft, vessels]);
+        var strategies = new SwappingTrackerSourceFixture();
+        SwappingTrackerSource sut = strategies;
         var observed = new List<IChangeSet<TransportVehicle, string>>();
         using var subscription = sut.Connect().Subscribe(observed.Add);
 
         // When
-        aircraft.Report("a1b2c3");
+        strategies.Aircraft.Report("a1b2c3");
         sut.Select<ISecondTrackerSource>();
-        vessels.Report("imo9074729");
+        strategies.Vessels.Report("imo9074729");
 
         // Then
         observed.SelectMany(static changes => changes)
@@ -53,18 +53,17 @@ public class SwappingTrackerSourceTests
     public void GivenASubscriber_WhenASwapOccurs_ThenNothingInTheStreamRevealsIt()
     {
         // Given
-        var aircraft = new FirstTrackerSource();
-        var vessels = new SecondTrackerSource();
-        var sut = new SwappingTrackerSource([aircraft, vessels]);
+        var strategies = new SwappingTrackerSourceFixture();
+        SwappingTrackerSource sut = strategies;
         var observed = new List<IChangeSet<TransportVehicle, string>>();
         var completed = false;
         Exception? failure = null;
         using var subscription = sut.Connect().Subscribe(observed.Add, error => failure = error, () => completed = true);
-        aircraft.Report("a1b2c3");
+        strategies.Aircraft.Report("a1b2c3");
 
         // When
         sut.Select<ISecondTrackerSource>();
-        vessels.Report("imo9074729");
+        strategies.Vessels.Report("imo9074729");
 
         // Then
         observed.SelectMany(static changes => changes).Select(static change => (change.Reason, change.Key))
@@ -86,22 +85,21 @@ public class SwappingTrackerSourceTests
     public void GivenAnOutgoingSource_WhenTheSwapCompletes_ThenItIsStopped()
     {
         // Given
-        var aircraft = new FirstTrackerSource();
-        var vessels = new SecondTrackerSource();
-        var sut = new SwappingTrackerSource([aircraft, vessels]);
+        var strategies = new SwappingTrackerSourceFixture();
+        SwappingTrackerSource sut = strategies;
         using var subscription = sut.Connect().Subscribe();
 
         // When
-        var beforeTheSwap = (aircraft.Started, aircraft.Stopped, vessels.Started);
+        var beforeTheSwap = (strategies.Aircraft.Started, strategies.Aircraft.Stopped, strategies.Vessels.Started);
         sut.Select<ISecondTrackerSource>();
-        var afterTheSwap = (aircraft.Started, aircraft.Stopped, vessels.Started);
+        var afterTheSwap = (strategies.Aircraft.Started, strategies.Aircraft.Stopped, strategies.Vessels.Started);
         sut.Select<IFirstTrackerSource>();
 
         // Then
         beforeTheSwap.Should().Be((1, 0, 0), "the first subscription starts the first poll");
         afterTheSwap.Should().Be((1, 1, 1), "the outgoing poll stops with the subscription that owned it");
-        aircraft.Started.Should().Be(2, "swapping back starts the poll again rather than finding it disposed");
-        vessels.Stopped.Should().Be(1);
+        strategies.Aircraft.Started.Should().Be(2, "swapping back starts the poll again rather than finding it disposed");
+        strategies.Vessels.Stopped.Should().Be(1);
     }
 
     /// <summary>Every member in the production assembly that would answer which source is live.</summary>
@@ -113,6 +111,20 @@ public class SwappingTrackerSourceTests
             .SelectMany(static type => type.GetMethods())
             .Where(static method => typeof(ITrackerSource).IsAssignableFrom(method.ReturnType))
             .Select(static method => $"{method.DeclaringType!.Name}.{method.Name}");
+}
+
+/// <summary>Builds the decorator over two strategies, and keeps a handle on each.</summary>
+/// <remarks>The strategies are the arrangement, so a test that drives one holds the fixture rather than the set.</remarks>
+[AutoFixture(typeof(SwappingTrackerSource))]
+internal partial class SwappingTrackerSourceFixture
+{
+    public SwappingTrackerSourceFixture() => WithEnumerable([Aircraft, Vessels]);
+
+    /// <summary>Gets the strategy that is live until something selects the other.</summary>
+    public FirstTrackerSource Aircraft { get; } = new();
+
+    /// <summary>Gets the strategy a swap selects.</summary>
+    public SecondTrackerSource Vessels { get; } = new();
 }
 
 /// <summary>A per-type seam, the way a real strategy is named.</summary>

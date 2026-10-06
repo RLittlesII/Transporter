@@ -5,7 +5,6 @@ using Akka.TestKit.Xunit2;
 using AwesomeAssertions;
 using DynamicData;
 using Transponder.Model;
-using Transponder.Tracking;
 using Transponder.Tracking.Sources;
 
 namespace Transponder.UnitTests.Tracking;
@@ -21,22 +20,21 @@ public class SourceSwapActorTests : TestKit
     public void GivenASubscribedConsumer_WhenTheActorIsToldToSwap_ThenTheLiveSourceIsTheOneNamed()
     {
         // Given
-        var aircraft = new FirstTrackerSource();
-        var vessels = new SecondTrackerSource();
-        var source = new SwappingTrackerSource([aircraft, vessels]);
-        var sut = Sys.ActorOf(Props.Create(() => new SourceSwapActor(source)));
+        var strategies = new SwappingTrackerSourceFixture();
+        SwappingTrackerSource source = strategies;
+        var sut = Sys.ActorOf(Starts(source));
         var observed = new List<IChangeSet<TransportVehicle, string>>();
         using var subscription = source.Connect().Subscribe(observed.Add);
-        aircraft.Report("a1b2c3");
+        strategies.Aircraft.Report("a1b2c3");
 
         // When
         sut.Tell(SwapSource.To<ISecondTrackerSource>());
-        AwaitAssert(() => aircraft.Stopped.Should().Be(1));
-        vessels.Report("imo9074729");
+        AwaitAssert(() => strategies.Aircraft.Stopped.Should().Be(1));
+        strategies.Vessels.Report("imo9074729");
 
         // Then
         observed.Should().HaveCount(3, "the add, the outgoing fleet leaving, and the incoming add");
-        vessels.Started.Should().Be(1);
+        strategies.Vessels.Started.Should().Be(1);
     }
 
     /// <summary>
@@ -47,8 +45,7 @@ public class SourceSwapActorTests : TestKit
     public void GivenTheActor_WhenItIsToldToSwap_ThenItRepliesWithNothing()
     {
         // Given
-        var source = new SwappingTrackerSource([new FirstTrackerSource(), new SecondTrackerSource()]);
-        var sut = Sys.ActorOf(Props.Create(() => new SourceSwapActor(source)));
+        var sut = Sys.ActorOf(Starts(new SwappingTrackerSourceFixture()));
 
         // When
         sut.Tell(SwapSource.To<ISecondTrackerSource>(), TestActor);
@@ -56,4 +53,15 @@ public class SourceSwapActorTests : TestKit
         // Then
         ExpectNoMsg(TimeSpan.FromMilliseconds(250));
     }
+
+    /// <summary>What the system starts the actor from.</summary>
+    /// <param name="source">The decorator the actor tells, from <see cref="SwappingTrackerSourceFixture"/>.</param>
+    /// <returns>The <see cref="Props"/>.</returns>
+    /// <remarks>
+    /// Not an <c>AutoFixture</c>: Akka reads this expression and requires a <c>new</c> of the actor,
+    /// so a fixture's implicit conversion to an instance is one it rejects. The arrangement that
+    /// varies is the decorator's, and that is a generated fixture.
+    /// </remarks>
+    private static Props Starts(SwappingTrackerSource source) =>
+        Props.Create(() => new SourceSwapActor(source));
 }
