@@ -22,7 +22,7 @@ depends_on: []
 blocks: []
 spikes: []
 
-spec: features/aircraft-source/.spec/README.md
+spec: src/Transponder/Integrations/OpenSky/.spec/README.md
 
 claims:
   - B-001

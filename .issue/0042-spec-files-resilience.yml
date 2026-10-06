@@ -1,0 +1,43 @@
+id: "0042"
+type: refactor
+title: Extract spec files from hardcoded paths to make tests resilient to reorganization
+
+status: ready-for-implementation
+
+priority: medium
+value: 2
+risk: 1
+rank: 50
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transponder/Integrations/OpenSky/.spec/README.md
+
+claims: []
+
+created: "2026-10-05"
+updated: "2026-10-05"
+closed: null
+
+summary: |
+  Test code (BoundaryAnalyzerDescriptorTests) references spec files via hardcoded
+  relative paths, making tests brittle when specs are relocated. After moving
+  aircraft-source/.spec to OpenSky, test paths broke and required manual updates.
+
+  Refactor SpecificationTables to load specs from a conventional location or as
+  part of test assets, so reorganizing spec folders doesn't break test discovery.
+
+acceptance_criteria:
+  - "Spec file paths in tests are determined dynamically (e.g., by convention or
+    test asset location) rather than hardcoded strings."
+  - "Relocating a spec folder does not require updating test code paths."
+  - "All analyzer descriptor tests pass."
+
+decisions: []
+
+out_of_scope: []
