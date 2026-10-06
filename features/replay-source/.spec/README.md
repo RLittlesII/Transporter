@@ -486,30 +486,37 @@ on an item: `Vessel`, its client, its cache and its tracker source are
 unspecified (§ 5 row 2), and what a vessel replay projects into cannot be
 written before they exist.
 
-**Decision required**
+**Credential validation follows the live source**
 
-> One question this section cannot settle, because it changes what the
-> application does rather than how this Feature is built.
->
-> B-011 claims replay runs with no credential configured, and its scenario says
-> so outright. `AddOpenSky` registers the credentials with `ValidateOnStart`, so
-> an application that composes the OpenSky integration refuses to start without
-> them — which makes B-011 unprovable above the unit level and makes a
-> recordings-only laptop unable to run the demo at all.
->
-> | Option | Summary                                                                                                                     | Tradeoff                                                                                                                                                                                                             |
-> | ------ | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | A.     | Credential validation fails the host only when a live source is registered; a replay-only composition starts without.       | Keeps B-011 true end to end. Weakens `aircraft-source` B-029's "the application fails at startup", which was chosen so a presenter learns before the stage — the learning moves to the startup report.               |
-> | B.     | Leave the gate as it is; B-011 is proven at the chain rather than at the host, and the stage always configures credentials. | No change to a claim already delivered, and the simplest thing to build. A venue with no network and a laptop with no secrets configured cannot start the application, which is the scenario the Feature exists for. |
-> | C.     | Split the composition: replay registers without `AddOpenSky`, constructing the contract-side chain itself.                  | Both claims hold untouched. It is a second composition of the same chain, which is what `AddOpenSky`'s own remarks argue against, and the first production scenario it drifts from will pass in a test.              |
->
-> **Recommendation:** A. B-011's scenario is the Feature's reason for existing,
-> and option B answers it by narrowing the claim to something a unit test can
-> reach. The weakening of B-029 is real but small: the report that replaces it
-> runs at the same moment, in the same output, and names the same absence.
->
-> **Awaiting:** the person. `0012` is where it lands, since that is where the
-> replay chain is registered.
+No open decisions. The one this section raised — whether an application
+composing the OpenSky integration may start with no credential, which B-011
+requires and `AddOpenSky`'s `ValidateOnStart` refuses — was answered by the
+person on 2026-10-06, and § 11 row 4 carries the options and why this one won.
+
+The shape it settles: **credential validation is registered with the live
+transport rather than with the integration.** `AddOpenSky` splits into a shared
+part and a live part, and the replay registration calls the shared part only.
+
+| Registered by   | What it carries                                                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| shared          | `OpenSkyOptions`, the observed clock's three aliases, `AircraftSnapshotMapper`, the scheduler provider.                                         |
+| the live part   | `OpenSkyCredentials` and their validation, the token source, the Flurl client cache, `OpenSkyHttpApi`, and the live cache, client and strategy. |
+| the replay part | `ReplayOptions` and its report, the pacer, `ReplayOpenSkyApi`, and the replay cache, client and strategy.                                       |
+
+Two things this is **not**. It is not two compositions of one graph: the shared
+part is one private method both call, which is the objection that ruled out
+building the replay chain outside `AddOpenSky` altogether. And it is not a
+credential becoming optional — a composition that registers the live transport
+validates exactly as it does today, so
+[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+B-029 stays true as written for every composition it was written against. What
+is new is a composition it never contemplated: one with no live transport at
+all, where there is no credential to be missing.
+
+B-029 is therefore unamended here, and amending it is not this Feature's to do
+— it is a delivered claim of another Feature, with a § 9 row and a test behind
+it. Whether its wording should gain the clause out loud is `aircraft-source`'s
+`spec-author`'s call.
 
 ## 8. Testing Strategy
 
@@ -551,16 +558,10 @@ carrying a template row, and why § 3 no longer keeps a build state § 9 owns.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-One open, row 4, raised by the design pass. The three this specification opened
-first have been answered and are recorded below rather than deleted — an
-answered question is a record of what was asked.
-
-| #   | Question                                                                                                                                       | Owner      | Target date                  |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------------------------- |
-| 4   | Does credential validation still fail the host when only a replay source is registered? B-011 says it must not, and `AddOpenSky` says it does. | the person | before `0012` is implemented |
-
-Row 4's options and the recommendation are in § 7 § "Decision required", where
-the design that raised it is, rather than copied here.
+None. All four questions this specification opened have been answered and are
+recorded below rather than deleted — an answered question is a record of what
+was asked. A question arriving later is added here as a row — `#`, Question,
+Owner, Target date — rather than settled in conversation.
 
 **Row 1 — answered: replay substitutes at the API contract, and selection stays
 at the seam.** A replay implementation of the provider's contract hands back
@@ -620,6 +621,38 @@ rehearsal silently becomes the stage recording, and B-005 then fails invisibly
 at the one moment it matters. The cost of the chosen answer is one configuration
 edit per rehearsal, and B-026 is what makes a forgotten edit visible at startup
 rather than at the swap.
+
+**Row 4 — answered: credential validation is registered with the live transport,
+not with the integration.** Raised by the design pass and answered by the person
+the same day. B-011 claims replay runs with no credential configured, and
+`AddOpenSky` registers `OpenSkyCredentials` with `ValidateOnStart`, so an
+application composing the OpenSky integration refuses to start without them —
+which left B-011 unprovable above the unit level and left a recordings-only
+laptop unable to start the demo at all, the exact situation this Feature exists
+for.
+
+`AddOpenSky` splits into a shared part and a live part, and the credentials and
+their validation move to the live part. A composition that registers the live
+transport validates exactly as it does today; one that registers only replay has
+no credential to be missing. § 7 § "Credential validation follows the live
+source" carries which registration holds what.
+
+Two alternatives were named and rejected. **Leave the gate as it is** and prove
+B-011 at the chain rather than at the host: no change to a delivered claim and
+the least work, but it answers the Feature's own scenario by narrowing it to
+what a unit test can reach, and a venue with no network and a laptop with no
+secrets still cannot start the application. **Build the replay chain outside
+`AddOpenSky` entirely**, constructing the contract-side graph itself: both
+claims hold untouched, at the cost of a second composition of one graph — which
+is what `AddOpenSky`'s own remarks argue against, and the first production
+scenario it drifts from passes in a test.
+
+What the answer costs: `aircraft-source` B-029 says a missing credential fails
+at application startup, with no clause about which sources are registered. It
+stays true for every composition it was written against, and the new case is one
+it never contemplated. The claim is not amended here — it is another Feature's,
+delivered, with a § 9 row and a test behind it — so whether its wording should
+say so out loud is `aircraft-source`'s `spec-author`'s call.
 
 ## 12. Sign-off
 

@@ -69,18 +69,27 @@ acceptance_criteria:
     selector finds it — never as `ITrackerSource` itself, which would hand
     replay to consumers in place of the selector (ADR-0011 § Decision,
     § 4 row 12, hot-swap-source)."
+  - "This registration calls `AddOpenSky`'s shared part only, so a composition
+    with no live transport starts with no credential configured. B-011 stays
+    `0010`'s claim; what this item owes is the split that lets it hold above
+    the unit level."
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
-  - "2026-10-06 — implementer — § 7's open decision lands here, and it is the
-    person's: B-011 claims replay runs with no credential configured, while
-    `AddOpenSky` registers the credentials with `ValidateOnStart`, so an
-    application composing the OpenSky integration refuses to start without
-    them. A recordings-only laptop therefore cannot run the demo at all —
-    the scenario this Feature exists for. § 7 § \"Decision required\" names
-    three options and recommends making credential validation conditional on
-    a live source being registered; until it is answered, this item's
-    registration cannot be written to satisfy B-011 above the unit level."
+  - "2026-10-06 — the person — credential validation is registered with the
+    live transport rather than with the OpenSky integration, so a composition
+    that registers only replay starts with no credential and B-011 holds above
+    the unit level. `AddOpenSky` splits into a shared part — options, the
+    observed clock's aliases, the mapper, the scheduler provider — and a live
+    part holding `OpenSkyCredentials` and their validation, the token source,
+    the Flurl client cache, `OpenSkyHttpApi`, and the live cache, client and
+    strategy; this item's registration calls the shared part only. Rejected:
+    leaving the gate and proving B-011 at the chain, which answers the
+    Feature's own scenario by narrowing it to what a unit test can reach; and
+    building the replay chain outside `AddOpenSky`, which is a second
+    composition of one graph. `aircraft-source` B-029 is not amended — it
+    stays true for every composition it was written against, and the clause
+    is that spec's author's call. Specification § 11 row 4."
   - "2026-10-06 — `0049` — risk lowered 4 to 3, and the rank with it. ADR-0003
     is superseded by ADR-0011 after the library it named was run: `Decorate<>`
     wraps one registration at a time, so the ordering hazard half of the stack
