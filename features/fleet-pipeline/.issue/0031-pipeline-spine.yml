@@ -30,16 +30,28 @@ claims:
   - B-005
   - B-023
   - B-024
+  - B-028
 
 created: "2026-10-05"
 updated: "2026-10-05"
 closed: null
 
 summary: |
-  Assemble the pipeline in `FleetTracker`'s constructor, bind one collection of
-  tracked vehicles, and dispose every subscription with the tracker. Filtering
-  and sorting are wired here as stages taking their observable inputs from
-  `IFleetQuery`; what the comparers and grouping keys are is `0032`'s.
+  Assemble the pipeline in `FleetTracker`'s constructor, publish the fleet as a
+  stream of changesets, share the stages, and dispose every subscription with
+  the tracker. Filtering and sorting are wired here as stages taking their
+  observable inputs as constructor parameters; what the comparers and grouping
+  keys are is `0032`'s.
+
+  ADR-0009 moved the item's shape on 2026-10-05: no `ReadOnlyObservableCollection`
+  is exposed, `IFleetQuery` is not declared, and the `Bind` plus the marshal to
+  the user-interface scheduler belong to `fleet-dashboard`'s view models. A test
+  here binds a collection itself to observe the stream.
+
+  The four inputs are **methods** — `Filter`, `SortBy`, `GroupBy`, `StaleAfter`
+  — each ticking a `BehaviorSubject<T>` this item creates and seeds with the
+  claimed default, so B-007's "everything visible" and B-017's five minutes are
+  kept here rather than by every caller's `StartWith`.
 
   Both boundary claims land here because a boundary cannot be asserted before
   one side of it exists, and this item is the first code downstream of the seam.
@@ -49,18 +61,37 @@ summary: |
 
 acceptance_criteria:
   - "B-001 — built once, and a swap rebuilds nothing."
-  - "B-002 — one collection; the groups project it rather than copy it."
+  - "B-002 — changeset streams, no bound collection on the tracker; one
+    collection materialised by the consumer, its element carrying the stale
+    mark."
   - "B-003 — no imperative add, remove, clear or reorder. Analyzer rule."
   - "B-004 — every subscription disposed with the tracker, and a swap leaks
     nothing. The hazard is a pipeline that works and leaks."
-  - "B-005 — the view's work is scheduled on the injected user-interface
-    scheduler, never an ambient one."
+  - "B-005 — every scheduler is injected, none ambient, and the pipeline
+    marshals to no user-interface thread for a consumer."
   - "B-023 — nothing here names a contract, client, cache, snapshot or a
     concrete `ITrackerSource`. Analyzer rule."
-  - "B-024 — no network, file or wall clock in this Feature's tests."
+  - "B-024 — no network, file or wall clock in this Feature's tests.
+    Unenforced by analyzer (§ 8); the arrangement is the evidence."
+  - "B-028 — one connection to the seam however many subscribers, and the
+    stages stop when the last one unsubscribes."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-05 — the person — the pipeline publishes changesets and a consumer
+    binds them (ADR-0009). Asked which way to split `IFleetTracker`'s mixed
+    members, the person pivoted instead: a domain object owning a
+    `ReadOnlyObservableCollection` has decided its consumer has a UI. Also
+    settled here: the stages are shared by DynamicData's cache-aware
+    `RefCount()` — not Rx's `Publish().RefCount()` pair (B-028) — the
+    four inputs are constructor parameters rather than an `IFleetQuery` the view
+    model implements, and the tracker is a container singleton. `0040` still
+    owns the actor wiring and who subscribes first."
+  - "2026-10-05 — the person — the observed clock's ticks arrive on a third
+    read-side seam, `IObservedClockTicks`, rather than by widening the
+    `IObservedClock` `aircraft-source` published (ADR-0010). Lands in `0034`,
+    which carries B-018; this item only has to take it by constructor."
+
 
 out_of_scope:
   - "Everything in § 5 of the specification."

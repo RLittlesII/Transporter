@@ -42,21 +42,24 @@ snapshot changesets into domain changesets
 What the tracker does with the items a strategy hands it. The differ is not in
 it — it ran in the client, and the projection ran in the strategy:
 
-| Stage              | Operator                              | Note                                                                         |
-| ------------------ | ------------------------------------- | ---------------------------------------------------------------------------- |
-| Changeset in       | the strategy seam's `Connect()`       | Where the tracker starts.                                                    |
-| Search and filters | `Filter` with an observable predicate | The predicate is an observable so a keystroke re-filters without rebuilding. |
-| Column sorting     | `Sort` with a user-selected comparer  | The comparer arrives as an observable too.                                   |
-| Grouped view       | `Group`                               | By whatever grouping key the domain base exposes.                            |
-| Summary counts     | `Count` and other aggregates          | Per group, derived from the same stream.                                     |
-| Property changes   | `AutoRefresh`                         | Re-evaluates filters and sorts when an item's own properties change.         |
-| Silent items       | `ExpireAfter` / staleness             | Items that stop reporting.                                                   |
-| Into the UI        | `Bind`                                | The collection the view binds to ([`maui-ui`](../maui-ui/SKILL.md)).         |
+| Stage              | Operator                              | Note                                                                                                                                                                                                                                                                                                                  |
+| ------------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Changeset in       | the strategy seam's `Connect()`       | Where the tracker starts.                                                                                                                                                                                                                                                                                             |
+| Search and filters | `Filter` with an observable predicate | The predicate is an observable so a keystroke re-filters without rebuilding.                                                                                                                                                                                                                                          |
+| Column sorting     | `Sort` with a user-selected comparer  | The comparer arrives as an observable too.                                                                                                                                                                                                                                                                            |
+| Grouped view       | `Group`                               | By whatever grouping key the domain base exposes.                                                                                                                                                                                                                                                                     |
+| Summary counts     | `Count` and other aggregates          | Per group, derived from the same stream.                                                                                                                                                                                                                                                                              |
+| Property changes   | `AutoRefresh`                         | Re-evaluates filters and sorts when an item's own properties change.                                                                                                                                                                                                                                                  |
+| Silent items       | `ExpireAfter` / staleness             | Items that stop reporting.                                                                                                                                                                                                                                                                                            |
+| Shared by many     | `RefCount()`                          | DynamicData's own, **not Rx's `Publish().RefCount()` pair**: cache-aware, so one upstream subscription serves every subscriber and one that joins later reads the current state from an internal cache. That cache is created on the first subscriber and disposed when the last unsubscribes.                        |
+| Into the UI        | `Bind`                                | The collection the view binds to ([`maui-ui`](../maui-ui/SKILL.md)). **Called by the consumer, not by the pipeline**: a pipeline publishes `IObservable<IChangeSet<T, TKey>>` and a view model binds it at its own boundary ([ADR-0009](../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)). |
 
 **Built once, at startup, and never rebuilt because the live source changed.**
 Each client has its own cache of its own snapshot type, so "one cache" is not
-literally true; the invariant that matters is **one domain collection**, inside
-the tracker, which is the only thing anything was ever bound to. It holds the
+literally true; the invariant that matters is **one domain collection** — and it
+is materialised by whoever binds, from the changeset stream the tracker
+publishes ([ADR-0009](../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)), not held as a
+`ReadOnlyObservableCollection` on the tracker itself. It holds the
 abstract domain base ([`domain-model`](../domain-model/SKILL.md)), keyed on its
 key.
 

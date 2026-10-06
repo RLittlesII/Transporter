@@ -38,9 +38,12 @@ updated: "2026-10-05"
 closed: null
 
 summary: |
-  One page in C# markup carrying the five surfaces, binding the collection
-  `IFleetTracker` exposes, with its columns built from the live source's
-  description. The template's `MainPage.xaml`, its code-behind and
+  One page in C# markup carrying the five surfaces, binding the collection its
+  view model materialises from the fleet stream `IFleetTracker` publishes, with
+  its columns built from the live source's description. ADR-0009 moved that
+  boundary on 2026-10-05: the pipeline exposes no bound collection, so the
+  `ObserveOn(UserInterfaceThread)`, the `Bind` and the disposal of that one
+  subscription are this item's (B-005). The template's `MainPage.xaml`, its code-behind and
   `DemoViewModel` go as this item replaces them (B-002) — a removal without a
   replacement would leave the application with no page, which is why it is not
   an item of its own.
@@ -68,7 +71,11 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule or a
     performed review for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-05 — the person — the view model binds the pipeline's stream rather
+    than re-exposing a collection the tracker owns (ADR-0009). B-005 and B-009
+    are amended for it; § 7's member table and diagrams still describe the old
+    seam and are the `implementer`'s to move before this item starts."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

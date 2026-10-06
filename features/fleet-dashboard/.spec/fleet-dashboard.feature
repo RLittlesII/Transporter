@@ -2,8 +2,9 @@
 Feature: Fleet dashboard — one page, thin view models, and the only legitimate downcast
 
   As a line-of-business .NET developer whose data lives behind REST endpoints
-  I want one page that binds the tracker's collection, takes its columns from the live source, and
-    turns a keystroke into a predicate and a header tap into a comparer
+  I want one page whose view model binds the tracker's stream into the one collection, takes its
+    columns from the live source, and turns a keystroke into a predicate and a header tap into a
+    comparer
   So that I can see the pipeline working, read the view model that drives it in one sitting, and
     copy both into an application of my own
 
@@ -16,11 +17,13 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
   # ─────────────────────────────── Happy path ───────────────────────────────
 
   @B-005
-  Scenario: The grid binds the tracker's own collection
-    Given a fleet tracker holding four vehicles
-     When the view model's fleet is read
-     Then it is the tracker's own collection
-      And the view model holds no collection of its own
+  Scenario: The view model binds the tracker's stream into the one collection
+    Given a fleet tracker publishing four vehicles on its fleet stream
+     When the view model is constructed and the scheduler is advanced
+     Then its fleet holds those four vehicles
+      And the collection was produced by binding the stream on the injected user interface scheduler
+      And it is the only collection of tracked items in the application
+      And disposing the view model disposes that subscription and nothing of the tracker's
 
   @B-007
   Scenario: The columns come from the live source's description
@@ -31,10 +34,10 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And no column was compiled into the markup
 
   @B-009
-  Scenario: Typing and choosing a filter publish one predicate
+  Scenario: Typing and choosing a filter hand the tracker one predicate
     Given a dashboard bound to a fleet of six aircraft
      When the search text becomes "FLT04" and the on-ground filter is chosen
-     Then one predicate is published to the pipeline
+     Then the tracker was asked to filter by one composed predicate
       And the view model enumerated no collection and edited none
 
   @B-010
