@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
+using Akka.Hosting;
 using AwesomeAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,12 @@ public class TransponderCompositionTests
     /// over the registrations to say so. Resolving what the window needs from the application's own
     /// composition is what says every one of them is registered.
     /// </summary>
+    /// <remarks>
+    /// The Akka host is in the arrangement because the head has one and the registry comes from it:
+    /// `0058` gave the view model an <c>IActorRegistry</c>, and a composition without the actor host
+    /// resolves everything else and fails on that one — which is this test's whole point, read from
+    /// the head rather than from a list kept here.
+    /// </remarks>
     /// <param name="service">The service the window needs, per <see cref="WindowServiceCases"/>.</param>
     [Theory]
     [ClassData(typeof(WindowServiceCases))]
@@ -37,7 +44,9 @@ public class TransponderCompositionTests
             })
             .Build();
         using var host = new HostBuilder()
-            .ConfigureServices(services => services.AddTransponder(settings, ImmediateScheduler.Instance))
+            .ConfigureServices(services => services
+                .AddTransponder(settings, ImmediateScheduler.Instance)
+                .AddAkka("transponder", static _ => { }))
             .Build();
 
         // When
@@ -67,7 +76,9 @@ public class TransponderCompositionTests
             })
             .Build();
         using var host = new HostBuilder()
-            .ConfigureServices(services => services.AddTransponder(settings, ImmediateScheduler.Instance))
+            .ConfigureServices(services => services
+                .AddTransponder(settings, ImmediateScheduler.Instance)
+                .AddAkka("transponder", static _ => { }))
             .Build();
 
         // When
@@ -116,7 +127,9 @@ public class TransponderCompositionTests
             .Build();
 
         return new HostBuilder()
-            .ConfigureServices(services => services.AddTransponder(settings, ImmediateScheduler.Instance))
+            .ConfigureServices(services => services
+                .AddTransponder(settings, ImmediateScheduler.Instance)
+                .AddAkka("transponder", static _ => { }))
             .Build();
     }
 }

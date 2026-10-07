@@ -18,6 +18,7 @@ using Transponder.Integrations.OpenSky.Configuration;
 using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Http.Api;
 using Transponder.Integrations.OpenSky.Polling;
+using Transponder.Messages;
 using Transponder.Recording;
 using Transponder.Scheduling;
 using Transponder.Tracking;
@@ -96,15 +97,23 @@ public static class OpenSkyRegistration
     /// <param name="resolver">How the actor reaches the client the container owns.</param>
     /// <returns>The same registry, so registration chains.</returns>
     /// <remarks>
+    /// <para>
     /// This integration's, not the tracker's: what is polled, how often, and what refuses a poll are
     /// the provider's business (ADR-0012). Public because the actor and the client are not.
+    /// </para>
+    /// <para>
+    /// Keyed by <see cref="DemandPoll"/> rather than by the actor's own type, so the surface that
+    /// demands a poll names the message and never this provider (`fleet-dashboard` B-028, decided
+    /// 2026-10-07). A second source that polls registers under the same key, which is what keeps
+    /// the closing act's swap from reaching a button.
+    /// </para>
     /// </remarks>
     public static IActorRegistry AddOpenSkyActors(
         this IActorRegistry registry,
         ActorSystem system,
         IDependencyResolver resolver)
     {
-        registry.Register<AircraftPollActor>(system.ActorOf(resolver.Props<AircraftPollActor>(), nameof(AircraftPollActor)));
+        registry.Register<DemandPoll>(system.ActorOf(resolver.Props<AircraftPollActor>(), nameof(AircraftPollActor)));
 
         return registry;
     }

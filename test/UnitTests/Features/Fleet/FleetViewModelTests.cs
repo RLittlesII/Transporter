@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+using Akka.Hosting;
 using AwesomeAssertions;
 using DynamicData;
 using Microsoft.Reactive.Testing;
@@ -216,5 +217,9 @@ internal partial class FleetViewModelFixture
         SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(new TestScheduler());
 
         WithProvider(schedulers);
+
+        // Empty: a test that presses the refresh control registers the probe it expects the
+        // message at (B-028), and every other test never resolves from it.
+        WithRegistry(new ActorRegistry());
     }
 }

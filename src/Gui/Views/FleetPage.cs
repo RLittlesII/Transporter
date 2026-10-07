@@ -102,14 +102,24 @@ public class FleetPage : ContentPage
         }));
     }
 
-    /// <summary>The search box, the filter dropdown and the grouping dropdown; what they publish is item 0037's (B-001).</summary>
+    /// <summary>The search box, the filter dropdown, the grouping dropdown and the refresh control (B-001, B-028).</summary>
     /// <returns>The controls bar.</returns>
+    /// <remarks>
+    /// The refresh button binds a command and the indicator beside it binds a value; neither reads
+    /// the fleet, and no handler here decides whether a poll happens (B-028, ADR-0012).
+    /// </remarks>
     private static HorizontalStackLayout Controls() =>
         new HorizontalStackLayout
         {
             Spacing = 12,
             Children =
             {
+                new Button { Text = "Refresh" }.Bind(
+                    Button.CommandProperty,
+                    static (FleetViewModel model) => model.RefreshCommand),
+                new ActivityIndicator().Bind(
+                    ActivityIndicator.IsRunningProperty,
+                    static (FleetViewModel model) => model.IsRefreshing),
                 new Entry { Placeholder = "Search", WidthRequest = 240 }.Bind(
                     Entry.TextProperty,
                     static (FleetViewModel model) => model.SearchText,
