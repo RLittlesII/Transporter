@@ -3,6 +3,9 @@ using System.Globalization;
 using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
+using Akka.Actor;
+using Akka.DependencyInjection;
+using Akka.Hosting;
 using DynamicData;
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +17,7 @@ using Transponder.Integrations.OpenSky.Authentication;
 using Transponder.Integrations.OpenSky.Configuration;
 using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Http.Api;
+using Transponder.Integrations.OpenSky.Polling;
 using Transponder.Recording;
 using Transponder.Scheduling;
 using Transponder.Tracking;
@@ -74,12 +78,35 @@ public static class OpenSkyRegistration
         services.AddSingleton<AircraftSnapshotClient>();
         services.AddSingleton<IAircraftSnapshotClient>(static provider => provider.GetRequiredService<AircraftSnapshotClient>());
 
+        // One client object behind two seams: the strategy's subscription owns the cadence, and the
+        // actor demands a poll outside it (B-053).
+        services.AddSingleton<IDemandedPoll>(static provider => provider.GetRequiredService<AircraftSnapshotClient>());
+
         services.AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>();
 
         // Never as ITrackerSource: that reaches consumers in place of the selector (ADR-0011).
         services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
 
         return services;
+    }
+
+    /// <summary>Starts the actor a demanded poll is told to.</summary>
+    /// <param name="registry">Where a view model resolves the actor from.</param>
+    /// <param name="system">The system the actor is started in.</param>
+    /// <param name="resolver">How the actor reaches the client the container owns.</param>
+    /// <returns>The same registry, so registration chains.</returns>
+    /// <remarks>
+    /// This integration's, not the tracker's: what is polled, how often, and what refuses a poll are
+    /// the provider's business (ADR-0012). Public because the actor and the client are not.
+    /// </remarks>
+    public static IActorRegistry AddOpenSkyActors(
+        this IActorRegistry registry,
+        ActorSystem system,
+        IDependencyResolver resolver)
+    {
+        registry.Register<AircraftPollActor>(system.ActorOf(resolver.Props<AircraftPollActor>(), nameof(AircraftPollActor)));
+
+        return registry;
     }
 
     /// <summary>

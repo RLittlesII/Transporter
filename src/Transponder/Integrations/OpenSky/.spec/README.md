@@ -203,7 +203,7 @@ why it was allowed.
 | Canonical units are canonical in the model                          | Technical      | ADR-0005 item 7. The model stores what the wire reported — metres, metres per second, degrees from north — and conversion to anything a reader prefers is a view concern (§ 5 row 11). B-035.                                                                                                                                                                                                                                                                                      |
 | `sensors` is excluded on the record, not by disuse                  | Technical      | `mapping` § "Unmapped members are errors", and § 5 row 12 records it so a later reader does not restore it believing it was overlooked. B-021.                                                                                                                                                                                                                                                                                                                                     |
 | One unreadable row costs one row                                    | Both           | Technically a per-row result and a count. The business reason: the grid keeps its other aircraft on stage, which is the difference between a blemish and a dead demo. B-022.                                                                                                                                                                                                                                                                                                       |
-| The box, the interval, and the credit budget                        | Both           | § 2 need 5 — one day's credits, and a rehearsal must not spend the talk's. § 4 row 8 is the technical half: credits bound the _box_, not the interval, which is the opposite of the intuition. B-024, B-050.                                                                                                                                                                                                                                                                       |
+| The box, the interval, and the credit budget                        | Both           | § 2 need 5 — one day's credits, and a rehearsal must not spend the talk's. § 4 row 8 is the technical half: credits bound the _box_, not the interval, which is the opposite of the intuition. A user who can demand a poll is a second way to spend them, which is why demand is bounded by the cadence rather than by a budget of its own (decisions/0003). B-024, B-050, B-053.                                                                                                 |
 | Houston specifically                                                | Business       | `decisions/0001`: chosen for the variety the grouped view needs, and so the vessel closing act shares one geography. Any box works technically.                                                                                                                                                                                                                                                                                                                                    |
 | Token lifecycle, the credit header, and the throttle                | Technical      | § 4 rows 7 and 9 are the provider's terms, not ours to simplify. B-026, B-028, which name the transport: it is the only thing holding the response, and B-006 keeps the credential off the contract.                                                                                                                                                                                                                                                                               |
 | A credential never reaches a log, a fixture or a screenshot         | Both           | Technically § 4 row 12. The business reason is that this runs in front of a room and is recorded, so "it is only a debug log" does not apply. B-027.                                                                                                                                                                                                                                                                                                                               |
@@ -421,32 +421,35 @@ going stale
 The diagrams above keep their type names: a diagram states a relationship
 rather than a declaration, and a stale name in one is something grep finds.
 
-| Type                        | File                                                                                                | Claims it makes visible         |
-| --------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `IOpenSkyApi`               | [`Contracts/IOpenSkyApi.cs`](../Contracts/IOpenSkyApi.cs)                                           | B-005, B-006, B-024, B-048      |
-| `OpenSkyStatesResponse`     | [`Contracts/OpenSkyStatesResponse.cs`](../Contracts/OpenSkyStatesResponse.cs)                       | B-001, B-002                    |
-| `OpenSkyStateRow`           | [`Contracts/OpenSkyStateRow.cs`](../Contracts/OpenSkyStateRow.cs)                                   | B-002, B-004, B-016, B-022      |
-| `OpenSkyThrottledException` | [`Contracts/OpenSkyThrottledException.cs`](../Contracts/OpenSkyThrottledException.cs)               | B-028, transport half; ADR-0008 |
-| `OpenSkyStateRowConverter`  | [`Http/OpenSkyStateRowConverter.cs`](../Http/OpenSkyStateRowConverter.cs)                           | B-002                           |
-| `OpenSkyHttpApi`            | [`Http/OpenSkyHttpApi.cs`](../Http/OpenSkyHttpApi.cs)                                               | B-007                           |
-| `OpenSkyRegistration`       | [`Container/OpenSkyRegistration.cs`](../Container/OpenSkyRegistration.cs)                           | B-008                           |
-| `IAircraftSnapshotClient`   | [`IAircraftSnapshotClient.cs`](../IAircraftSnapshotClient.cs)                                       | B-015, what a strategy may hold |
-| `TransportVehicle`          | [`Model/TransportVehicle.cs`](../../../Model/TransportVehicle.cs)                                   | ADR-0005; B-037, the key's form |
-| `Aircraft`                  | [`Model/Aircraft.cs`](../../../Model/Aircraft.cs)                                                   | B-034 – B-036                   |
-| `GeoPosition`               | [`Model/GeoPosition.cs`](../../../Model/GeoPosition.cs)                                             | B-036                           |
-| `PositionSource`            | [`Model/PositionSource.cs`](../../../Model/PositionSource.cs)                                       | B-036, the enum's absence       |
-| `ITrackerSource`            | [`Tracking/ITrackerSource.cs`](../../../Tracking/ITrackerSource.cs)                                 | B-033, B-049                    |
-| `ITrackerSourceStrategy`    | [`Tracking/ITrackerSourceStrategy.cs`](../../../Tracking/ITrackerSourceStrategy.cs)                 | B-038, the registration's shape |
-| `IAircraftTrackerSource`    | [`Tracking/Sources/IAircraftTrackerSource.cs`](../../../Tracking/Sources/IAircraftTrackerSource.cs) | B-037, the seam's width         |
-| `AircraftTrackerSource`     | [`Tracking/Sources/AircraftTrackerSource.cs`](../../../Tracking/Sources/AircraftTrackerSource.cs)   | B-033, B-034                    |
-| `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../Tracking/Sources/AircraftSnapshotMapper.cs) | B-034 – B-037, B-046            |
-| `SwappingTrackerSource`     | [`Tracking/Sources/SwappingTrackerSource.cs`](../../../Tracking/Sources/SwappingTrackerSource.cs)   | B-038 – B-040                   |
-| `SourceSwapActor`           | [`Tracking/Sources/SourceSwapActor.cs`](../../../Tracking/Sources/SourceSwapActor.cs)               | `fleet-dashboard` B-016's half  |
-| `SwapSource`                | [`Tracking/Sources/SwapSource.cs`](../../../Tracking/Sources/SwapSource.cs)                         | B-037, how a strategy is named  |
-| `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../Tracking/IFleetTracker.cs)                                   | B-041, B-051                    |
-| `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051             |
-| `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives     |
-| `TrackingRegistration`      | [`Tracking/Container/TrackingRegistration.cs`](../../../Tracking/Container/TrackingRegistration.cs) | B-052                           |
+| Type                        | File                                                                                                | Claims it makes visible           |
+| --------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `IOpenSkyApi`               | [`Contracts/IOpenSkyApi.cs`](../Contracts/IOpenSkyApi.cs)                                           | B-005, B-006, B-024, B-048        |
+| `OpenSkyStatesResponse`     | [`Contracts/OpenSkyStatesResponse.cs`](../Contracts/OpenSkyStatesResponse.cs)                       | B-001, B-002                      |
+| `OpenSkyStateRow`           | [`Contracts/OpenSkyStateRow.cs`](../Contracts/OpenSkyStateRow.cs)                                   | B-002, B-004, B-016, B-022        |
+| `OpenSkyThrottledException` | [`Contracts/OpenSkyThrottledException.cs`](../Contracts/OpenSkyThrottledException.cs)               | B-028, transport half; ADR-0008   |
+| `OpenSkyStateRowConverter`  | [`Http/OpenSkyStateRowConverter.cs`](../Http/OpenSkyStateRowConverter.cs)                           | B-002                             |
+| `OpenSkyHttpApi`            | [`Http/OpenSkyHttpApi.cs`](../Http/OpenSkyHttpApi.cs)                                               | B-007                             |
+| `OpenSkyRegistration`       | [`Container/OpenSkyRegistration.cs`](../Container/OpenSkyRegistration.cs)                           | B-008                             |
+| `IAircraftSnapshotClient`   | [`IAircraftSnapshotClient.cs`](../IAircraftSnapshotClient.cs)                                       | B-015, what a strategy may hold   |
+| `IDemandedPoll`             | [`IDemandedPoll.cs`](../IDemandedPoll.cs)                                                           | B-053, what the actor reads       |
+| `PollAircraft`              | [`Polling/PollAircraft.cs`](../Polling/PollAircraft.cs)                                             | B-053, told rather than published |
+| `AircraftPollActor`         | [`Polling/AircraftPollActor.cs`](../Polling/AircraftPollActor.cs)                                   | B-053, where the throttle lives   |
+| `TransportVehicle`          | [`Model/TransportVehicle.cs`](../../../Model/TransportVehicle.cs)                                   | ADR-0005; B-037, the key's form   |
+| `Aircraft`                  | [`Model/Aircraft.cs`](../../../Model/Aircraft.cs)                                                   | B-034 – B-036                     |
+| `GeoPosition`               | [`Model/GeoPosition.cs`](../../../Model/GeoPosition.cs)                                             | B-036                             |
+| `PositionSource`            | [`Model/PositionSource.cs`](../../../Model/PositionSource.cs)                                       | B-036, the enum's absence         |
+| `ITrackerSource`            | [`Tracking/ITrackerSource.cs`](../../../Tracking/ITrackerSource.cs)                                 | B-033, B-049                      |
+| `ITrackerSourceStrategy`    | [`Tracking/ITrackerSourceStrategy.cs`](../../../Tracking/ITrackerSourceStrategy.cs)                 | B-038, the registration's shape   |
+| `IAircraftTrackerSource`    | [`Tracking/Sources/IAircraftTrackerSource.cs`](../../../Tracking/Sources/IAircraftTrackerSource.cs) | B-037, the seam's width           |
+| `AircraftTrackerSource`     | [`Tracking/Sources/AircraftTrackerSource.cs`](../../../Tracking/Sources/AircraftTrackerSource.cs)   | B-033, B-034                      |
+| `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../Tracking/Sources/AircraftSnapshotMapper.cs) | B-034 – B-037, B-046              |
+| `SwappingTrackerSource`     | [`Tracking/Sources/SwappingTrackerSource.cs`](../../../Tracking/Sources/SwappingTrackerSource.cs)   | B-038 – B-040                     |
+| `SourceSwapActor`           | [`Tracking/Sources/SourceSwapActor.cs`](../../../Tracking/Sources/SourceSwapActor.cs)               | `fleet-dashboard` B-016's half    |
+| `SwapSource`                | [`Tracking/Sources/SwapSource.cs`](../../../Tracking/Sources/SwapSource.cs)                         | B-037, how a strategy is named    |
+| `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../Tracking/IFleetTracker.cs)                                   | B-041, B-051                      |
+| `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051               |
+| `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives       |
+| `TrackingRegistration`      | [`Tracking/Container/TrackingRegistration.cs`](../../../Tracking/Container/TrackingRegistration.cs) | B-052                             |
 
 `IOpenSkyApi` carries no suffix, which is B-048 visible in the identifier. Not
 `IOpenSkyApiContract`: "contract" is the pattern's word for the role, not part
@@ -729,19 +732,66 @@ that one message makes the named strategy live while a subscriber keeps the
 subscription it had, and that the actor replies with nothing — told, never
 asked.
 
+**A poll on demand, and what refuses one.** `AircraftPollActor` is told
+`PollAircraft` and answers nothing;
+[ADR-0012](../../../../../.spec/adr/0012-a-user-triggered-refresh-is-told-to-an-actor.md)
+is why a refresh is a message rather than a fifth method on the tracker, and
+decisions/0003 why it is bounded. The actor reads the window from
+`IOptions<OpenSkyOptions>` — B-050's interval, never a second option — and the
+instant from `ISchedulerProvider`, so a test advances time rather than waiting
+for it. Four things are worth the sentences, because each is a way an
+implementation of B-053 goes quietly wrong:
+
+- **The window is measured from the last poll the source actually made**,
+  cadence polls included. `IDemandedPoll` is the seam the actor reads that
+  instant through — a second interface rather than two more members on
+  `IAircraftSnapshotClient`, which stays the one method a strategy's
+  subscription owns. A window measured from the last _demanded_ poll lets a
+  press land a tick after a scheduled one and spend a credit for a snapshot the
+  cadence was about to fetch anyway.
+- **The client stamps that instant immediately before it calls the provider**,
+  not after the response. An attempt is what spends the credit, whatever comes
+  back, so a throttled or failed poll closes the window exactly as a successful
+  one does. The stamp is kept as ticks behind `Interlocked`, because the cadence
+  writes it from the background scheduler and the actor reads it from Akka's
+  dispatcher.
+- **The cadence yields to a demanded poll.** `Poll()`'s loop computes what is
+  left of the interval since the last poll rather than sleeping a full one after
+  its own fetch, so one poll per interval holds whoever asked for it — which is
+  what makes B-053's "demand SHALL NOT make the source spend credits faster"
+  true of the pair rather than of demand alone. A loop keeping its own clock
+  would poll on schedule _and_ on demand, and two credits inside one interval is
+  exactly what decisions/0003 refused. The cost is that a demanded poll pushes
+  the next scheduled one out by up to an interval; § 10 carries the delta, and
+  the scenario's "the cadence is not disturbed" is about a refusal.
+- **A refusal and a failure are both silent.** The refusal is a debug line and a
+  `return`; a failed poll is caught and logged, because `Fetch` already answers
+  B-028 and B-029 by not ending the stream, and an actor that faulted would drop
+  the presses queued behind the one that failed. `ReceiveAsync` is what makes
+  those presses queue rather than overlap: one demanded poll is in flight at a
+  time, and the next is judged against the window the first just closed.
+
+What this does **not** do: a demanded poll reaches the live client, and the
+replay chain's second client has no actor over it — a recording's cadence is the
+recorded spacing (`replay-source` B-007), and there is nothing to demand of a
+file. So a press while a recording is the live source spends a live credit and
+writes into a cache the replay strategy does not read. The gesture that makes
+the press, its indicator, and whether it is offered at all are
+`fleet-dashboard` B-028's, built by `0058`.
+
 ## 8. Testing Strategy
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 8 -->
 
 **Testability assessment**
 
-| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DI seams           | Pass          | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and a substituted `IOpenSkyApi` is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. The double was a hand-written fake until B-010 was withdrawn (§ 4 row 18); it is NSubstitute's now, like every other double here.                                                       | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Behavior isolation | Pass          | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043).                                                                                                                                                                                                                                                                                                                       | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Coverage potential | **Qualified** | Thirty-two claims are about a computed value and are ordinary tests. Eighteen are about structure — what may _name_ what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it _can_ reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the eighteen as build-time diagnostics ([ADR-0006](../../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Seven of them briefly had tests over a declaration, a container or a registration's lifetime and no longer do ([lesson 0006](../../../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
-| Fixtures           | Pass          | Every value is synthetic and lives beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array held as a `static readonly` field — not a committed `.json` file, because a unit test that reads from disk depends on the file system and on a build step that puts the file there — and the 17-versus-18 element cases are two payloads rather than two code paths. Parsing one is `IJson`'s, once, rather than a helper per test class.                                                                                          | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Determinism        | Pass          | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it.                                                                                                                                                                                                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DI seams           | Pass          | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and a substituted `IOpenSkyApi` is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. The double was a hand-written fake until B-010 was withdrawn (§ 4 row 18); it is NSubstitute's now, like every other double here.                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Behavior isolation | Pass          | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043).                                                                                                                                                                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Coverage potential | **Qualified** | Thirty-three claims are about a computed value and are ordinary tests. Eighteen are about structure — what may _name_ what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it _can_ reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the eighteen as build-time diagnostics ([ADR-0006](../../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Seven of them briefly had tests over a declaration, a container or a registration's lifetime and no longer do ([lesson 0006](../../../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
+| Fixtures           | Pass          | Every value is synthetic and lives beside the tests (`transponder-conventions`). The provider's shape is positional, so a fixture is a JSON array held as a `static readonly` field — not a committed `.json` file, because a unit test that reads from disk depends on the file system and on a build step that puts the file there — and the 17-versus-18 element cases are two payloads rather than two code paths. Parsing one is `IJson`'s, once, rather than a helper per test class.                                                                                            | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Determinism        | Pass          | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it.                                                                                                                                                                                                                                                                                                                                                                                                 | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 **Two mechanisms, and which proves what**
 
@@ -805,20 +855,20 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and two of the fifty-two rows read `Missing`** — B-041's
-"what view models depend on" half, owed by `fleet-dashboard` `0039`, and B-053,
-added on 2026-10-07 and built by `0057`.
-Fifty are `Verified`, and they arrived three different ways.
-Thirty-three came from
+**This is the gate, and one of the fifty-two rows reads `Missing`** — B-041's
+"what view models depend on" half, owed by `fleet-dashboard` `0039`.
+Fifty-one are `Verified`, and they arrived three different ways.
+Thirty-four came from
 items: `0002` built the contract, its envelope, the positional row's converter
 and the HTTP transport, `0003` the snapshot and its
 cache, `0004` the snapshot client, the token source, the observed clock and
 the options, `0005` the seam, the domain model and the projection, `0007`
 the tracker's pipeline, its clock and its stale mark, and `0006` the swap
 decorator, the poll the subscription owns and the chain the container
-resolves — the tests
+resolves, and `0057` the poll a user demands and the window that refuses one —
+the tests
 this section names against B-001, B-003, B-011 – B-013,
-B-015 – B-029, B-033 – B-040, B-042, B-043, B-050 – B-052 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
+B-015 – B-029, B-033 – B-040, B-042, B-043, B-050 – B-053 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
 second contract interface would have to be and B-049 what a push provider's
 strategy may not be given, so for each there is no value to compute and
 no declaration to analyze, and the row records what was looked at and when it is
@@ -830,7 +880,7 @@ B-005 – B-007, B-014, B-048), and the call-site rules (B-008, B-030,
 B-031). Each is reported at the line that violates it, and each by the test this
 section named for it.
 
-**Fifty-one rows, not fifty-two, and seventeen rules, not eighteen.** B-010 is
+**Fifty-two rows, not fifty-three, and seventeen rules, not eighteen.** B-010 is
 Withdrawn (§ 4 row 18), so it has no row here, and the analyzer's eighteenth
 rule retired with it — ADR-0006 § "What the analyzer carries" records the
 amendment.
@@ -926,7 +976,7 @@ is B-049 and the clause waiting on `0005`.
 | B-050    | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Verified |
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-052    | `@B-052` | `TransponderCompositionTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
-| B-053    | `@B-053` | [`0057`](../.issue/0057-poll-on-demand.yml) — the on-demand poll and its throttle are not built; nothing in the repository performs a poll a user asked for                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Missing  |
+| B-053    | `@B-053` | `AircraftPollActorTests.GivenAPollPerformedInsideTheInterval_WhenAPollIsDemanded_ThenItIsRefusedSilentlyAndNothingFaults`, `AircraftPollActorTests.GivenTheIntervalHasElapsedSinceTheLastPoll_WhenAPollIsDemanded_ThenOneCallIsMadeAndItsSnapshotsReachTheCache` and `AircraftSnapshotClientTests.GivenAPollDemandedBetweenTwoScheduledOnes_WhenTheCadenceRuns_ThenItWaitsOutTheIntervalFromTheDemandedPoll`                                                                                                                                                                                                                                                   | Verified |
 
 Fifty-one rows, fifty-one live claims, each appearing once — B-010 is Withdrawn
 and has none. A scenario existing is not coverage; this section is the only place
@@ -1054,6 +1104,29 @@ and no error, which is what the test asserts. § 7 states the operator and why,
 so the next reader does not have to re-run it
 ([lesson 0016](../../../../../.spec/lessons/0016-an-untested-assumption-is-not-a-decision.md)
 is the rule this follows).
+
+**Delta, 2026-10-07 — the cadence is measured from the last poll, not from its
+own last fetch.** Trigger: `0057` built B-053's throttle and the guarantee did
+not hold. The actor refuses a demanded poll inside the interval, which bounds
+demand on its own — but the loop slept a full interval after each of its own
+fetches, so a press landing just after a window opened put two calls inside one
+interval and the claim's "demand SHALL NOT make the source spend credits faster
+than B-050's cadence already does" was false of the pair. The person was asked,
+with both readings and their costs, and chose the literal one: `Poll()` now
+waits out what is left of the interval since the last poll **whoever made it**,
+so a demanded poll pushes the next scheduled one out and the source never
+exceeds one poll per interval.
+
+No claim changes — B-050 says the interval is configurable and B-053 bounds
+demand, and both sentences are satisfied by this rather than amended. What moves
+is § 7, which now states the loop's rule and the stamp it reads, and the
+reading of the `@B-053` scenario's last clause: "the cadence is not disturbed"
+is about a **refusal**, which touches nothing, and not about a performed poll,
+which deliberately moves the next scheduled one. The visible cost is on stage —
+a press ten seconds into a fifteen-second interval refuses, and a press at
+sixteen delays the cadence to thirty-one — and the honest answer to both is
+`fleet-dashboard` B-028's indicator rather than a second knob (ADR-0012
+§ Consequences already says so). § 12 keeps its 🟢 rows: nothing agreed changed.
 
 Seven repository-wide lessons also bear on this document. [Lesson 0002](../../../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md)
 is why § 3 keeps no build state that § 9 owns, and why a § 9 row reads

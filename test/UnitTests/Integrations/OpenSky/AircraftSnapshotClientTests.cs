@@ -458,6 +458,48 @@ public class AircraftSnapshotClientTests
             .Contain(["a1b2c3", "d4e5f6", "070809"]);
     }
 
+    /// <summary>
+    /// B-053's guarantee, from the cadence's side: the loop waits out the interval from the last
+    /// poll the source made, whoever made it. A loop keeping a clock of its own would poll at
+    /// thirty seconds as well as at the demanded twenty, which is two credits inside one interval
+    /// and the thing demand is not allowed to buy.
+    /// </summary>
+    /// <returns>The running test.</returns>
+    [Fact]
+    public async Task GivenAPollDemandedBetweenTwoScheduledOnes_WhenTheCadenceRuns_ThenItWaitsOutTheIntervalFromTheDemandedPoll()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var api = Substitute.For<IOpenSkyApi>();
+        api.GetStates(
+                Arg.Any<double>(),
+                Arg.Any<double>(),
+                Arg.Any<double>(),
+                Arg.Any<double>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(static _ => Task.FromResult(OpenSkyPayloads.ThreeRows.Response));
+        AircraftSnapshotClient sut = new AircraftSnapshotClientFixture()
+            .WithApi(api)
+            .WithProvider(schedulers)
+            .WithOptions(Options.Create(new OpenSkyOptions { Box = Houston, PollInterval = TimeSpan.FromSeconds(30) }));
+
+        // When
+        using var polling = sut.Poll();
+        scheduler.AdvanceBy(TimeSpan.FromSeconds(20).Ticks);
+        await sut.PollNow(CancellationToken.None);
+        var afterTheDemandedPoll = api.ReceivedCalls().Count();
+        scheduler.AdvanceBy(TimeSpan.FromSeconds(10).Ticks);
+        var whereTheLoopsOwnIntervalFell = api.ReceivedCalls().Count();
+        scheduler.AdvanceBy(TimeSpan.FromSeconds(20).Ticks);
+
+        // Then
+        afterTheDemandedPoll.Should().Be(2, "the first poll is immediate and the demanded one is the second");
+        whereTheLoopsOwnIntervalFell.Should().Be(2, "thirty seconds after the first poll is ten after the demanded one");
+        api.ReceivedCalls().Should().HaveCount(3, "the cadence polls one interval after the demanded poll");
+    }
+
     /// <summary>Asserts an optional value is present, and what it holds.</summary>
     /// <typeparam name="T">What the option holds.</typeparam>
     /// <param name="actual">The option read from a snapshot.</param>
