@@ -26,7 +26,7 @@ internal sealed class FleetTracker : IFleetTracker
     /// <summary>Initializes a new instance of the <see cref="FleetTracker"/> class.</summary>
     /// <param name="source">The seam every strategy and the swap decorator adhere to (B-041).</param>
     /// <param name="clock">The observed instant staleness is measured against (B-043, ADR-0007).</param>
-    /// <param name="ticks">Every advance of that instant, so silence alone can make a vehicle stale (fleet-pipeline B-018, ADR-0010).</param>
+    /// <param name="ticks">Every advance of that instant, so silence alone can make a vehicle stale, and the stream <see cref="Observed"/> re-publishes (fleet-pipeline B-018, B-031, ADR-0010).</param>
     /// <param name="schedulers">Where the notices' rate cap is timed, which is the one operator here that needs a scheduler at all (fleet-pipeline B-005, B-026).</param>
     /// <param name="description">What the live source offers a view, republished on a swap (fleet-pipeline B-020, B-021).</param>
     public FleetTracker(
@@ -62,6 +62,7 @@ internal sealed class FleetTracker : IFleetTracker
             .Replay(1)
             .RefCount()
             .TakeUntil(_shutdown);
+        Observed = ticks.Instant.TakeUntil(_shutdown);
         Order = _sortBy
             .CombineLatest(Description, static (chosen, offered) => chosen.IfNone(() => FirstSortable(offered)))
             .Select(static comparer => (IComparer<TrackedVehicle>) new FleetOrder(comparer))
@@ -107,6 +108,16 @@ internal sealed class FleetTracker : IFleetTracker
 
     /// <inheritdoc/>
     public IObservable<IComparer<TrackedVehicle>> Order { get; }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The clock's stream with this tracker's shutdown on it and no operator between: no
+    /// <c>DistinctUntilChanged</c>, because a poll that reported the instant it reported last time
+    /// is still a poll that landed, and that is the case B-031 exists for (fleet-pipeline B-025
+    /// raises no notice for it). No <c>ObserveOn</c> either — the pipeline marshals for nobody
+    /// (fleet-pipeline B-005).
+    /// </remarks>
+    public IObservable<DateTimeOffset> Observed { get; }
 
     /// <inheritdoc/>
     public void Filter(Func<TransportVehicle, bool> predicate) => _predicate.OnNext(predicate);

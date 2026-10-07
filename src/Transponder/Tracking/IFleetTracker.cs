@@ -35,6 +35,18 @@ public interface IFleetTracker : IDisposable
     /// </remarks>
     IObservable<IComparer<TrackedVehicle>> Order { get; }
 
+    /// <summary>Gets the observed instant, and every advance of it — one per applied poll, identical data included (fleet-pipeline B-031).</summary>
+    /// <remarks>
+    /// The clock's own stream, re-published rather than re-derived: the instant is the one the
+    /// provider reported, so under replay it comes from the recording and never from a wall clock
+    /// (<c>aircraft-source</c> B-003, ADR-0007). It is here because a consumer depends on this seam
+    /// and nothing below it (<c>aircraft-source</c> B-041), and it is what tells a consumer a poll
+    /// applied a response when <see cref="Notices"/> cannot — a poll whose data was identical
+    /// changes nothing and so raises no notice (fleet-pipeline B-025), but it still reports an
+    /// instant. Nothing is deduplicated for the same reason: two identical instants are two polls.
+    /// </remarks>
+    IObservable<DateTimeOffset> Observed { get; }
+
     /// <summary>Notices, paced by the caller (fleet-pipeline B-025 - B-027).</summary>
     /// <param name="minimumInterval">
     /// The least time between notices; a new value takes effect without rebuilding anything, and
