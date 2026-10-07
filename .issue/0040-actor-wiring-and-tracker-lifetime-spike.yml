@@ -2,7 +2,7 @@ id: "0040"
 type: spike
 title: Settle how an actor gets its dependencies, and who owns the tracker's lifetime
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -13,7 +13,9 @@ parent: null
 children: []
 
 depends_on: []
-blocks: []
+blocks:
+  - "0057"
+  - "0058"
 spikes: []
 
 spec: null
@@ -22,7 +24,7 @@ claims: []
 
 created: "2026-10-05"
 updated: "2026-10-07"
-closed: null
+closed: "2026-10-07"
 
 summary: |
   Cross-cutting, which is why it sits at the repository root rather than beside
@@ -101,6 +103,47 @@ decisions:
   - "2026-10-06 — `0006` — question 2 is untouched and this spike stays open for
     it. Its finding, and the amendments its acceptance criteria name, are still
     owed."
+  - "2026-10-07 — the spike — question 2 is answered, and the finding is that it
+    was already answered. `IFleetTracker` is a container singleton the pages
+    resolve: `TrackingRegistration.AddFleetTracking` registers
+    `AddSingleton<IFleetTracker, FleetTracker>`, `fleet-pipeline` § 4 row 13
+    says `container singleton, disposed by the container`, and ADR-0009 is the
+    reasoning. Three places, none pointing at this spike, so the question read
+    open while the answer shipped — the same failure as lesson 0014 one level
+    up: a decision only the code performs is one nothing states. Rejected: the
+    composition root building and registering an instance, which hands the
+    tracker's disposal to whoever remembers, where a singleton is disposed by
+    the container that made it (`fleet-pipeline` B-004). No code changed; the
+    record did."
+  - "2026-10-07 — the person — a user gesture triggers an update through the
+    actor model, and nothing in the repository let one. The first subscription
+    starts the poll and the cadence does the rest, so the only actor message the
+    demo had was a swap performed once in the closing act. A refresh gesture is
+    specified: ADR-0012 for its shape, `aircraft-source` decision 0003 for the
+    product call and the budget, B-053 for the throttled poll, `fleet-dashboard`
+    B-028 for the button. Items `0057` and `0058` carry the work. Asked whether
+    the lens extended to every discrete gesture, the person took the narrower
+    reading: B-009 – B-012 stay method calls on the tracker, so `mvvm` § `Two
+    kinds of input, two routes` and ADR-0009 decision 4 are unamended and the
+    work `0037` landed is untouched."
+  - "2026-10-07 — the person — the refresh is throttled at the configured
+    polling interval rather than left free. One poll is one credit against 4,000
+    a day, and `fleet-pipeline` decision 0002 already refused a live poll
+    interval on that ground; a button is the same hazard at a smaller grain.
+    Binding the window to B-050 rather than adding an option means demand cannot
+    outspend the cadence and there is no second value to keep in step. Rejected:
+    no throttle, which puts the budget under an unbounded control and fails
+    silently as a spent budget; and a press budget per session, which teaches
+    the economics but needs explaining from the stage — available later without
+    amending B-053."
+  - "2026-10-07 — the spike — what clears the refresh indicator is NOT answered,
+    and is filed as `fleet-dashboard` § 11's refresh-indicator row with `0058`
+    `blocked` on it. With a `Tell` and no `Ask`, nothing reports that the poll
+    finished: a fixed duration clears before slow data lands, and the next
+    notice never clears when the poll returned identical data, which is a
+    refresh's most ordinary outcome. Both are visible on stage, so it is the
+    person's call and not this spike's to assume. Naming it is the spike's job;
+    guessing it would have been the expensive half."
 
 out_of_scope:
   - "Whether a view model reaches the tracker through an actor — already

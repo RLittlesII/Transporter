@@ -30,12 +30,26 @@ spec_status: approved
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
-Twenty-seven claims, in seven groups: **B-001 – B-004** the surfaces and how they
+Twenty-eight claims, in seven groups: **B-001 – B-004** the surfaces and how they
 are wired; **B-005 – B-008** the grid, including the stale mark; **B-009 –
 B-012** the user's input; **B-013 – B-015** the detail pane and the summary;
-**B-016 – B-019** the swap control and what a view model may not hold;
-**B-020 – B-022** the swap test and the boundaries; **B-023 – B-027** the
-arrival notice's two surfaces.
+**B-016 – B-019 and B-028** the controls that tell an actor, and what a view
+model may not hold; **B-020 – B-022** the swap test and the boundaries;
+**B-023 – B-027** the arrival notice's two surfaces.
+
+B-028 was added on 2026-10-07, from spike
+[`0040`](../../../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml):
+the person asked that a button click cause an update, and nothing in the
+repository let one — the first subscription starts the poll and the cadence does
+the rest, so the only actor message the demo had was a swap performed once in the
+closing act. It is grouped with B-016 because it is the same shape — a discrete
+effect told to an actor, with an indicator over it — and the group's heading
+widened rather than a group being invented for one claim.
+[ADR-0012](../../../../../.spec/adr/0012-a-user-triggered-refresh-is-told-to-an-actor.md)
+is why it is a message and not a fifth method on the tracker, and
+`aircraft-source` B-053 is what performs the poll and refuses one inside the
+cadence. **B-009 – B-012 did not move**: a chosen comparer is still a continuous
+value, which is `mvvm` § "Two kinds of input, two routes" unamended.
 
 B-023 – B-027 were added on 2026-10-05, when the person asked for a visible sign
 that new data had arrived. `fleet-pipeline` B-025 – B-027 publish the signal;
@@ -82,6 +96,7 @@ B-020.
 | B-025 | A toast SHALL appear only for a notice worth interrupting for — a quiet notice, a resumed notice, and the swap completing — and SHALL NOT appear for an ordinary update, however long the toast's own interval is set.                                                                                                   | Decided call 2026-10-05; `fleet-pipeline` B-027                          |
 | B-026 | The banner's interval and the toast's interval SHALL be separate inputs on the page, each editable while the application runs, each published as an observable, defaulting to one second and one minute.                                                                                                                 | Decided call 2026-10-05; `fleet-pipeline` B-026 and § 4 row 10           |
 | B-027 | No view model SHALL name a toast, snackbar, alert or any other platform notification type; a view model SHALL publish notices and a view SHALL be what renders one.                                                                                                                                                      | mvvm § "Never add"; maui-ui § "Never add"                                |
+| B-028 | The page SHALL carry a refresh control that `Tell`s an actor and SHALL NOT `Ask` one, call a client, or await anything; while a demanded poll is outstanding the control SHALL show it is working, and that indicator SHALL be driven by the gesture rather than by the fleet changing, since a poll returning identical data changes nothing. | ADR-0012; `aircraft-source` B-053 and decisions/0003; mvvm § "Two kinds of input, two routes" |
 
 ## 4. Constraints
 
@@ -201,6 +216,8 @@ No domain type is added or changed. The types below are view state.
 | `FleetViewModel.Selected`             | `Option<TransportVehicle>`                      | The abstract type: the grid selects a vehicle, and only the pane learns which kind (B-013).                                                                                                                                                                                                                                                |
 | `FleetViewModel.IsSwapping`           | `bool`                                          | Drives the busy indicator (B-016).                                                                                                                                                                                                                                                                                                         |
 | `FleetViewModel.SwapCommand`          | `ICommand`                                      | Tells the actor; never `Ask`s it (B-016, B-017).                                                                                                                                                                                                                                                                                           |
+| `FleetViewModel.RefreshCommand`       | `ICommand`                                      | Tells the actor a poll is wanted; never `Ask`s it and never waits (B-028, B-017). The actor decides whether to perform one — the throttle is `aircraft-source` B-053's, not a rule this view model repeats.                                                                                                                                                                                                                                           |
+| `FleetViewModel.IsRefreshing`         | `bool`                                          | Drives the refresh indicator (B-028). Set by the gesture; **what clears it is § 11's refresh-indicator row and `0058`'s to settle.** It cannot be the fleet changing — a poll returning identical data emits no change (`aircraft-source` B-011) — and it cannot be the actor replying, because B-028 forbids an `Ask`. So the honest options are a fixed duration or a notice, and both are wrong in a case worth naming before the code is written. |
 | `FleetDetailViewModel.Vehicle`        | `Option<TransportVehicle>`                      | Absent empties the pane (B-014).                                                                                                                                                                                                                                                                                                           |
 | `FleetDetailViewModel.Rows`           | `IReadOnlyList<(string Label, string Value)>`   | The pane's own projection, where the one legitimate downcast happens (B-013) and where a canonical unit is converted by a named member (B-019).                                                                                                                                                                                            |
 | `FleetSummaryViewModel.Tracked`       | `int`                                           | Projected from the tracker's summary; not recomputed (B-015).                                                                                                                                                                                                                                                                              |
@@ -369,35 +386,54 @@ page subscribes and calls the toolkit (B-027). That keeps every notice decision
 leaves the platform call in the one place this repository cannot test anyway
 (§ 4 row 10).
 
-**Decision required**
+**Decision taken — spike [`0040`](../../../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml), closed 2026-10-07**
 
-> What is **not** settled is the startup wiring, and it is a mechanism question
-> rather than a design one. `AddAkkaHost` takes an
-> `Action<ActorSystem, IActorRegistry>` and hands an actor starter no
-> `IServiceProvider`
-> ([`src/Gui/Container/AkkaHostBuilder.cs`](../../../../Gui/Container/AkkaHostBuilder.cs)),
-> while every actor above the seam needs container-resolved collaborators — the
-> client, the cache, the clock writer, the options. `ClickActor` is the only
-> actor in the repository and it needs nothing, so the question has never come
-> up.
->
-> Three sub-questions, none answerable from this repository as it stands: how a
-> source actor gets its dependencies (`DependencyResolver`, a `Props` factory
-> closing over the provider, or a registration that resolves the actor from the
-> container); whether `IFleetTracker` is a container singleton the pages resolve
-> or an object the composition root builds and registers; and who starts the
-> first poll, and when, given a page may be constructed before any actor has
-> reported.
->
-> **Recommendation:** answer it with a spike rather than inside an
-> implementation item — [item `0040`](../../../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml),
-> which `fleet-pipeline` `0031` and this Feature's `0036` both name in their
-> `spikes`. It is a day of reading Akka.Hosting and the MAUI container against
-> this repository's own builder blocks, and the wrong guess is expensive in both
-> directions: an actor that resolves its own dependencies from a static provider
-> is the service locator `mvvm` forbids one layer down, and a tracker built
-> twice is two collections (`fleet-pipeline` B-002) with no error to say so.
-> **Awaiting:** the spike's finding, then the person (§ 11 row 4).
+The startup wiring was a mechanism question rather than a design one, and all
+three sub-questions are answered. None of them changed anything this Feature
+claims; what they changed is what a reader may assume while building against it.
+
+1. **How a source actor gets its dependencies — Akka.Hosting's dependency
+   resolver.** Answered in passing by `aircraft-source` `0006` on 2026-10-06:
+   `AddAkkaHost` gained an overload taking
+   `Action<ActorSystem, IActorRegistry, IDependencyResolver>`, and
+   `TrackingRegistration.AddFleetTrackingActors` calls
+   `resolver.Props<SourceSwapActor>()`, so an actor's constructor is resolved
+   like any other type's and an actor with a container-resolved collaborator has
+   no static `Props`. `akka-actor` carries the rule. Rejected: a `Props` factory
+   closing over the provider, a second place the dependencies are written down;
+   and resolving the actor itself from the container, which puts its lifetime in
+   two owners.
+2. **`IFleetTracker` is a container singleton the pages resolve.** It already
+   was, and in three places that never pointed at each other:
+   `TrackingRegistration.AddFleetTracking` registers
+   `AddSingleton<IFleetTracker, FleetTracker>`, `fleet-pipeline` § 4 row 13 says
+   "container singleton, disposed by the container", and ADR-0009 is the
+   reasoning. What the spike found is that the question was closed and unrecorded
+   — the thing [lesson 0014](../../../../../.spec/lessons/0014-a-composition-only-the-head-performs-is-one-nothing-proves.md)
+   is about, one level up: a decision only the code performs is one nothing
+   states. Rejected: the composition root building and registering an instance,
+   which hands the tracker's disposal to whoever remembers to do it, where a
+   singleton is disposed by the container that made it (`fleet-pipeline` B-004).
+3. **The first subscription starts the first poll.** Also `0006`, 2026-10-06:
+   `AircraftTrackerSource.Connect()` wraps its projection in
+   `Observable.Using(() => client.Poll(), …)`, so nothing polls until something
+   subscribes and the poll stops with the subscription (`aircraft-source`
+   B-040). Rejected: a hosted service or an actor polling at composition, which
+   spends credits behind a window nobody has opened. **What a page shows between
+   construction and the first report is not this spike's** — it is § 11 row 3,
+   and still the person's.
+
+**What the spike added, from the person on 2026-10-07: the user triggers an
+update by telling an actor.** Nothing in the repository let a user cause one —
+the first subscription starts the poll and the cadence does the rest — so "click
+a button, the fleet updates" was true of nothing. A refresh gesture is new scope
+and is specified where each half belongs: the button and its `Tell` are B-028
+here, the throttled on-demand poll is `aircraft-source`'s, and
+[ADR-0012](../../../../../.spec/adr/0012-a-user-triggered-refresh-is-told-to-an-actor.md)
+records why it is an actor message rather than another method on the tracker.
+This does **not** move B-009 – B-012: a chosen comparer or grouping is still a
+continuous value and still a method call, which is `mvvm` § "Two kinds of input,
+two routes" unamended.
 
 The two `fleet-pipeline` open questions that decide B-015's and B-019's shape
 are § 4 row 2; this Feature opens no other design decision of its own.
@@ -433,7 +469,7 @@ beside this file — twenty-seven scenarios, each tagged with the `@B-00n` it
 proves. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
-- Happy path → B-005, B-007, B-009 – B-013, B-015, B-016, B-023, B-026
+- Happy path → B-005, B-007, B-009 – B-013, B-015, B-016, B-023, B-026, B-028
 - Failure mode → B-006, B-008, B-014, B-017, B-024, B-025
 - Validation failure → B-001 – B-004, B-018 – B-022, B-027
 - Data-driven → B-010, B-011, B-026
@@ -442,7 +478,7 @@ diagnostics are what execute.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and nineteen of twenty-seven rows read `Missing`.**
+**This is the gate, and twenty of twenty-eight rows read `Missing`.**
 `0036` landed the page, the view model and the two tests on 2026-10-06, and
 performed the two reviews it owed. `0037` landed the inputs on 2026-10-07 and
 moved four rows — B-009 – B-012 — on four tests: two over `FleetSearch`, which
@@ -482,6 +518,7 @@ repository with no UI test runner is that item's to decide.
 | B-025    | `@B-025` | `FleetBannerViewModelTests.GivenAnUpdatedAQuietAndAResumedNotice_WhenTheInterruptingOnesAreObserved_ThenOnlyTheQuietAndResumedAppear`, plus a review of the rendered toast                                                                                                                                                                                                                                                | Missing  |
 | B-026    | `@B-026` | `FleetBannerViewModelTests.GivenTwoIntervalsEditedWhileRunning_WhenNoticesArrive_ThenEachSurfaceIsPacedByItsOwn`                                                                                                                                                                                                                                                                                                          | Missing  |
 | B-027    | `@B-027` | analyzer — a toast, snackbar or alert type named in a view model is reported at the reference                                                                                                                                                                                                                                                                                                                             | Missing  |
+| B-028    | `@B-028` | [`0058`](../.issue/0058-refresh-control.yml) — `FleetViewModelTests.GivenTheRefreshCommand_WhenItIsInvoked_ThenTheActorIsToldAndTheIndicatorIsDrivenByTheGesture`, plus the review that the control is on the page                                                                                                                                                                                                        | Missing  |
 
 ## 10. Lessons / Spec Deltas
 
@@ -535,8 +572,9 @@ code, not ahead of it.
 | 1   | **Answered 2026-10-05 — both on the recommendation, so nothing here moves.** `fleet-pipeline` § 11 row 2 keeps `Summary` on the tracker and row 3 keeps `FleetColumn.Value` a display-formatted `string`; B-015 and B-019 are unchanged, and § 4 row 2 stands as the record of what they decided.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | the person                 | 2026-10-12  |
 | 2   | **Answered 2026-10-06 — all of it goes, `ClickActor` included** (`0036` `decisions`). The repository keeps no worked actor example and `AddAkkaHost` registers none until a source actor exists; `akka-actor` is where the rule lives, and a demo page nobody opens is the worse cost.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | the person                 | 2026-10-12  |
 | 3   | B-016's busy indicator covers the swap per `aircraft-source` decision 0002. Does the same indicator cover the first load, before any source has reported — or is an empty grid with a message the right first impression?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | the person                 | 2026-10-12  |
-| 4   | How a source actor gets its container-resolved dependencies, and who starts the first poll. **Partly answered 2026-10-05**: ADR-0009 makes `IFleetTracker` a container singleton disposed by the container, so what is left is the actor's wiring and the first subscription — a late subscriber receives changes from that point, not the current fleet. § 7's decision block states the three sub-questions, and [item `0040`](../../../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml) is the spike. **`0036` dropped it from `spikes` on 2026-10-06**: no claim B-001 – B-007 is about registration or who polls first, the same reading that freed `fleet-pipeline` `0031`. **Half of that reading was wrong, and [`0047`](../../../../../.issue/0047-application-cannot-start.yml) is what it cost**: B-004 _is_ about registration, nothing registered the tracker, and the application threw building its first window. The composition now lives in `AddTransponder`, where a test resolves what a page takes; who starts the first poll is still this row's ([lesson 0014](../../../../../.spec/lessons/0014-a-composition-only-the-head-performs-is-one-nothing-proves.md)).                                                                                                                                                                                                                                                                                                   | the spike, then the person | 2026-10-12  |
+| 4   | How a source actor gets its container-resolved dependencies, and who starts the first poll. **Partly answered 2026-10-05**: ADR-0009 makes `IFleetTracker` a container singleton disposed by the container, so what is left is the actor's wiring and the first subscription — a late subscriber receives changes from that point, not the current fleet. § 7's decision block states the three sub-questions, and [item `0040`](../../../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml) is the spike. **`0036` dropped it from `spikes` on 2026-10-06**: no claim B-001 – B-007 is about registration or who polls first, the same reading that freed `fleet-pipeline` `0031`. **Half of that reading was wrong, and [`0047`](../../../../../.issue/0047-application-cannot-start.yml) is what it cost**: B-004 _is_ about registration, nothing registered the tracker, and the application threw building its first window. The composition now lives in `AddTransponder`, where a test resolves what a page takes; who starts the first poll is still this row's ([lesson 0014](../../../../../.spec/lessons/0014-a-composition-only-the-head-performs-is-one-nothing-proves.md)). **Answered and closed 2026-10-07 by the spike** — all three sub-questions, written out in § 7's decision block: the dependency resolver, the tracker as a container singleton, and the first subscription starting the first poll. What a page shows before the first report was never this row's; it is row 3. | the spike, then the person | Closed      |
 | 5   | **Answered 2026-10-07 — three calls, taken before `0037` wrote any code.** Raised on reading § 7 against the pipeline's types: B-010 named "the columns the description marks searchable" and `FleetColumn` carries no such marker, and `Filters` had nothing publishing it. **(a)** Search matches the label plus the cell **every** column produces, so no marker is added and B-010 is reworded. **(b)** A filter choice is of two kinds — defined _for_ the user and defined _from_ the data — and both come from the pipeline: `fleet-pipeline` B-029 for the curated choices, which `0037` delivers with the description, and B-030 for the distinct grouping-key values, which [`0056`](../../../../Tracking/.issue/0056-distinct-grouping-values.yml) builds. The rule underneath is B-009 and B-018: a view model may not enumerate the collection, so a choice derived from what the fleet holds is an aggregate the pipeline computes. **(c)** `Aircraft.OnGround` reaches no member of `TransportVehicle`, so `fleet-pipeline` B-022 gained one exception — a source's own description may name the concrete type it was written for — rather than the flag being promoted to the base, which would invent a cross-source semantic ADR-0005 item 5 forbids. Rejected: deriving the curated choices from the groupings, which cannot express "on the ground"; composing them in this Feature, which makes a swap a view edit; and search over the label alone, which finds no origin country. | the person                 | Closed      |
+| 6   | **What clears the refresh indicator (B-028).** The gesture sets it, and nothing available tells the view model the poll finished: the actor is `Tell`d rather than `Ask`ed, and a poll returning identical data emits no change (`aircraft-source` B-011), so neither the reply nor the fleet can clear it. Two honest options, each wrong somewhere worth naming. **A fixed duration** — the indicator means "we asked", not "it arrived", and on a slow network it clears before the data lands, which reads as the refresh having failed. **The next notice** (`fleet-pipeline` B-025) — truthful when something changed, and it never clears when nothing did, which is the most ordinary outcome of a refresh and the one a demo will hit on stage. A third option exists and is excluded by B-028 as written: let the actor reply, which makes this an `Ask` and puts a timeout and a waiting view model back in (B-017). Owner: the person, with [`0058`](../.issue/0058-refresh-control.yml) blocked on the answer.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | the person                 | 2026-10-14  |
 
 ## 12. Sign-off
 
@@ -594,7 +632,14 @@ bound to.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
 
-None yet. The swap's own product call — a busy indicator rather than a frozen
+None of this Feature's own. The refresh gesture B-028 carries was decided in
+`aircraft-source`
+[decision 0003](../../../Integrations/OpenSky/.spec/decisions/0003-a-refresh-is-throttled-at-the-poll-interval.md),
+because the budget it is bounded by is that provider's, and its shape is
+[ADR-0012](../../../../../.spec/adr/0012-a-user-triggered-refresh-is-told-to-an-actor.md);
+this Feature owns the button, not the call to add one.
+
+The swap's own product call — a busy indicator rather than a frozen
 grid — was made in `aircraft-source`
 [decision 0002](../../../Integrations/OpenSky/.spec/decisions/0002-busy-indicator-on-swap.md)
 and is honoured here by B-016 rather than re-decided.
@@ -616,6 +661,7 @@ whose item 6 is why the detail pane exists as a named exception.
 | [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022                       |
 | [`0041`](../.issue/0041-arrival-banner-and-toast.yml)          | B-023 – B-027                                      |
 | [`0044`](../.issue/0044-page-level-claim-proof.yml)            | B-003, B-004, B-006 — their proof, not their build |
+| [`0058`](../.issue/0058-refresh-control.yml)                   | B-028                                              |
 
 Every claim is **built** by exactly one child. `0036` removes the template's page
 and view model as it replaces them (B-002), which is why that claim is not an
