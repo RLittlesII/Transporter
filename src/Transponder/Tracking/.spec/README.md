@@ -73,6 +73,19 @@ which is what the test asserts. Rejected: keeping the words and marking the row
 unprovable, and publishing `ISortedChangeSet` to get move notifications, which
 ADR-0009 decision 2 turned down for widening `Fleet`'s type.
 
+**B-031 was added on 2026-10-07**, at `fleet-dashboard`'s request: its § 11
+row 6 asked what clears the refresh indicator B-028 carries, and the answer the
+person took is the observed instant — every applied poll reports one
+(`aircraft-source` B-003), including a poll whose data was identical, which is
+the case a notice cannot cover because B-025 raises one only when something
+changed. The clock already publishes that stream through `IObservedClockTicks`
+(ADR-0010); what was missing is a consumer's way to reach it, since a view model
+depends on `IFleetTracker` and nothing below it (`aircraft-source` B-041). So
+this is a member on the published seam rather than a new dependency for a view
+model, the same move `Notices` already makes with the same instant.
+[`fleet-dashboard` decision 0001](../../Features/Fleet/.spec/decisions/0001-the-observed-instant-clears-the-refresh-indicator.md)
+is the call; [`0059`](../.issue/0059-observed-instant-on-the-tracker.yml) builds it.
+
 Claim ids are scoped to this specification. This Feature's `B-001` is not
 `aircraft-source`'s, and neither is renumbered for the other
 (`transponder-conventions` § "Claim ids are `B-00n`"). Where a claim of the other
@@ -110,6 +123,7 @@ Feature is cited it is written with its Feature's name.
 | B-028 | The stages SHALL be shared: a second subscriber SHALL NOT cause a second connection to the seam, a second diff pass or a second evaluation of the filter, the sort or the stale mark, and the stages SHALL tear down when the last subscriber unsubscribes.                                                                                                                        | ADR-0009; dynamic-data-pipeline § "The spine"                                 |
 | B-029 | The description SHALL carry the filter choices the live source offers, each a display name beside a predicate over `TransportVehicle`, and SHALL offer them whether or not any vehicle currently satisfies one — a choice is what the source admits, not what the data happens to hold.                                                                                            | § 11 row 6; `fleet-dashboard` B-009 and B-011                                 |
 | B-030 | The tracker SHALL publish the distinct values the current grouping key takes across the fleet, as a changeset, so a choice can be offered for a value the data holds without any consumer enumerating the collection to find it.                                                                                                                                                   | § 11 row 6; `fleet-dashboard` B-009                                           |
+| B-031 | The tracker SHALL publish the observed instant and every advance of it, so a consumer can tell a poll applied a response even when the response changed nothing; it SHALL re-publish the clock's own stream rather than hold a clock or read a wall clock, and the value SHALL be the instant the provider reported.                                                               | `fleet-dashboard` B-028 and decisions/0001; ADR-0010; `aircraft-source` B-003 |
 
 ## 4. Constraints
 
@@ -433,6 +447,9 @@ public interface IFleetTracker : IDisposable
     /// <param name="minimumInterval">The least time between notices; a new value takes effect without rebuilding anything.</param>
     IObservable<FleetNotice> Notices(IObservable<TimeSpan> minimumInterval);
 
+    /// <summary>Gets the observed instant, and every advance of it — one per applied poll, identical data included (B-031).</summary>
+    IObservable<DateTimeOffset> Observed { get; }
+
     /// <summary>Shows only the vehicles the predicate matches (B-006).</summary>
     void Filter(Func<TransportVehicle, bool> predicate);
 
@@ -659,8 +676,8 @@ what execute.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate. Twenty-nine of the thirty rows read `Verified`; B-030 is the
-one `Missing`, and `0056` is what builds it.** As of 2026-10-06 every row then
+**This is the gate. Twenty-nine of the thirty-one rows read `Verified`; B-030
+and B-031 are the two `Missing`, and `0056` and `0059` are what build them.** As of 2026-10-06 every row then
 present read `Verified`: the spine `0031` delivered B-001 – B-005, B-023, B-024 and
 B-028, the description and the sort `0032` delivered B-009 – B-011, B-013 and
 B-020 – B-022, staleness `0034` delivered B-016 – B-019, and the filter, the
@@ -707,6 +724,7 @@ asks for.
 | B-028    | `@B-028` | `FleetTrackerTests.GivenTwoSubscribers_WhenBothAreBound_ThenTheSeamIsConnectedOnceAndTheStagesStopWhenTheLastUnsubscribes` — one connection, one filter evaluation per changeset, and teardown on the last unsubscribe                                                                                                                                                                                                                                                                                                                                                                              | Verified |
 | B-029    | `@B-029` | `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsFiltersAreRead_ThenEachCarriesANameAndAPredicateThatAdmitsAndRejects` — the curated choices, each admitting one synthetic vehicle and rejecting another, with an empty fleet never consulted — `0037`                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-030    | `@B-030` | [`0056`](../.issue/0056-distinct-grouping-values.yml) — the distinct-value stage is not built; nothing in the repository publishes the values the current grouping key takes                                                                                                                                                                                                                                                                                                                                                                                                                        | Missing  |
+| B-031    | `@B-031` | [`0059`](../.issue/0059-observed-instant-on-the-tracker.yml) — the tracker publishes no instant; nothing a consumer can reach says a poll applied a response                                                                                                                                                                                                                                                                                                                                                                                                                                        | Missing  |
 
 ## 10. Lessons / Spec Deltas
 
@@ -941,6 +959,7 @@ and the clock it measures silence with
 | [`0033`](../.issue/0033-filter-group-and-aggregates.yml)                                        | B-006 – B-008, B-012, B-014, B-015, B-025 – B-027 |
 | [`0034`](../.issue/0034-staleness-marking.yml)                                                  | B-016 – B-019                                     |
 | [`0056`](../.issue/0056-distinct-grouping-values.yml)                                           | B-030                                             |
+| [`0059`](../.issue/0059-observed-instant-on-the-tracker.yml)                                    | B-031                                             |
 | `fleet-dashboard` [`0037`](../../Features/Fleet/.issue/0037-search-sort-and-grouping-input.yml) | B-029                                             |
 
 **B-029 is the one claim here a child of another Feature carries.** It was added
@@ -962,7 +981,9 @@ Each item's `depends_on` sequences the work: `0031` waits on `aircraft-source`
 `0033` waits on both — on `0032` for the groupings it applies, and on `0034`
 because B-014's stale count has nothing to count until a vehicle can be marked.
 The prerequisites are direct ones only: no item restates a dependency it
-already inherits through another.
+already inherits through another. `0059` waits on nothing: the clock's stream
+and the seam it is published on both exist, and the item is the member between
+them — it is `fleet-dashboard` `0058` that waits, on this.
 
 ## Scoring
 
@@ -984,3 +1005,5 @@ already inherits through another.
 | 2026-10-05 | `0034` | risk  | Highest of the four. B-018's second clause needs a member `IObservedClock` does not have (§ 4 row 3), so the item changes an interface another Feature delivered. Then two silent-wrong-answer hazards: an inline `UtcNow` passes every test written against a controlled clock and is wrong only under replay, and staleness evaluated once on arrival leaves a silent fleet permanently fresh — which looks exactly like a working demo.                                                                                                                                |
 | 2026-10-05 | `0031` | risk  | Unchanged at 3 after ADR-0009, for a different reason. The leak hazard is smaller — no bound collection to rebuild per swap — and a new one replaces it: sharing is one `RefCount()` call, and without it two subscribers mean two diff passes over the same snapshots, which is invisible until someone profiles it or the credits run out early. Reaching for Rx's `Publish().RefCount()` instead of DynamicData's is the same trap one layer down: it shares the subscription and loses the cache, so a second page opens empty. B-028 exists to make both assertable. |
 | 2026-10-05 | `0034` | risk  | 4 to 3 after ADR-0010. The item no longer widens an interface another Feature published — a new seam breaks no implementer and no test double — so what is left is the two silent-wrong-answer hazards: an inline `UtcNow` that passes every controlled-clock test and fails only under replay, and staleness evaluated once on arrival, which leaves a silent fleet permanently fresh and looks exactly like a working demo.                                                                                                                                             |
+| 2026-10-07 | `0059` | value | 2. Nothing the audience sees is this item's: it exists so `fleet-dashboard` B-028's indicator can clear truthfully, and the Feature's own § 1 outcomes all hold without it. It scores above 1 because the alternative readings both put a lie on screen — an indicator that clears before the data lands, or one that never clears when a poll returned identical data.                                                                                                                                                                                                   |
+| 2026-10-07 | `0059` | risk  | 1, the lowest scored here. One property over a stream `ObservedClock` already publishes, on a seam that already exists, with no stage, no scheduler and no subject added — and B-005 is what a test asserts has not changed. The one hazard is naming: a member called `Instant` beside `Fleet`, `Groups` and `Summary` reads as the tracker's own clock rather than the provider's reported time, so § 7 declares it `Observed` and says what it is.                                                                                                                     |
