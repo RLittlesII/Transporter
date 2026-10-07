@@ -81,7 +81,26 @@ numbers.
       rather than assuming a run happened.
     - Finish only when checks are green, or legitimately skipped, on a current
       branch and no worktree remains.
-10. **Close the item**: done, with the date. The record stays — it is the
+10. **Answer the review on the review.** A comment is addressed when the person
+    who wrote it can see that it was, which is a reply on their thread — not a
+    commit they would have to go and diff to discover. Put the item back to the
+    in-progress state while the work is in hand, and back when it lands; the
+    companion holds the spellings.
+    - **One reply per thread, saying what changed and where**, naming the file
+      or the type rather than restating the comment. A reply that only says
+      "done" makes the reviewer do the reading twice.
+    - **Resolve only the threads you actually addressed.** A thread you pushed
+      back on, or asked a question on, stays open — it is the reviewer's turn,
+      and resolving it ends a conversation they have not had. Resolving
+      everything to make the page look clean is the failure this rule exists to
+      stop.
+    - **Say which comment was a rule that already existed and which was a rule
+      that did not.** The first is yours to have read; the second is a gap, and
+      the gap is landed in the skill that should have held it, in the same
+      change (`coding-conventions` § "Put a rule where it runs").
+    - **A review that found nothing still gets an answer** — the approval is
+      the answer, and nothing is owed.
+11. **Close the item**: done, with the date. The record stays — it is the
     history of the work. If a claim this item owns is still marked unbuilt, it is
     not done.
 
