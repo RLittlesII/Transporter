@@ -66,6 +66,14 @@ claiming coverage for anything.
   rather than failing, so nothing names the test or the missing millisecond.
   Derive the advance from the same arithmetic the subject does, or build the
   fixture so the two cannot differ.
+- **Advance, then await the work the advance was for.** An advance releases
+  scheduled work; it does not wait for work that resumes off the scheduler, and
+  anything the subject awaits as a task resumes on the thread pool instead. So
+  state read on the line after an advance is read early, and a loop whose next
+  wait is scheduled by that late continuation drifts further behind on every
+  iteration — which reads as a stalled subject rather than as a flake. Drive the
+  subject through its awaitable call and stub the loop that would otherwise race
+  it.
 
 ## No network, ever
 

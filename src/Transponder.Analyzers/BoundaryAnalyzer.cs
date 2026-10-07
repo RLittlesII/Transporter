@@ -109,8 +109,15 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // B-045: inside, only the transport and the client. The contract declares the envelope.
-        if (Layers.IsTransport(enclosing) || Layers.IsClientHome(enclosing) || Layers.IsWireSurface(enclosing))
+        // B-045: inside, only a class implementing the contract and the client. The contract
+        // declares the envelope. Read from the contract rather than from the folder: a provider
+        // reached over HTTP and the same provider replayed from a recording are two
+        // implementations of one contract, and the claim names the class by what it implements
+        // (replay-source B-022).
+        if (Layers.IsContractHome(enclosing)
+            || Layers.IsTransport(enclosing)
+            || Layers.IsClientHome(enclosing)
+            || Layers.IsWireSurface(enclosing))
         {
             return;
         }

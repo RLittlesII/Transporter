@@ -148,6 +148,46 @@ public class BoundaryAnalyzerTests
             .Should().BeEmpty("the transport implements the contract, so the envelope and the row are its to hold");
     }
 
+    /// <summary>
+    /// `0053`. The claim names "the class implementing the API contract", and a provider can have
+    /// more than one — a transport over HTTP and a replay over a recording substitute at the same
+    /// contract. The rule read the folder instead, so the second implementation was reported for
+    /// naming the envelope its own signature returns. The pair is what makes the fix the contract
+    /// rather than the namespace: a class beside it that implements nothing is still reported.
+    /// </summary>
+    /// <returns>The running test.</returns>
+    [Fact]
+    public async Task GivenASecondImplementationOfTheContractOutsideTheTransport_WhenAnalyzed_ThenTheEnvelopeIsItsToHoldAndANonImplementationBesideItIsNot()
+    {
+        // Given, When
+        var implementation = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Replay.cs", BoundaryTestData.ReplayImplementingTheContract)
+            .GenerateAsync();
+        var beside = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Contracts.cs", BoundaryTestData.WireSurface)
+            .AddSource("Payloads.cs", BoundaryTestData.ReplayCodeImplementingNothing)
+            .GenerateAsync();
+
+        // Then
+        implementation.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .BeEmpty("a second implementation of the contract is the class aircraft-source B-045 names");
+        beside.AnalyzerResults[typeof(BoundaryAnalyzer)]
+            .Diagnostics
+            .Should()
+            .ContainSingle("the folder is not what makes the envelope reachable")
+            .Which.Id.Should()
+            .Be("TRN0002");
+    }
+
     [Fact]
     public async Task GivenATypeDownstreamOfTheProjectionNamingASnapshot_WhenAnalyzed_ThenItIsReported()
     {

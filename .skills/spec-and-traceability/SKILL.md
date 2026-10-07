@@ -175,6 +175,12 @@ not hold that, so the prose has to, or it leaves with the paste.
   _withdrawn_ claim is the exception, marked on the claim, because the matrix
   has no row for a claim that was never going to be built. Nothing else, and
   nothing implying the scenarios execute.
+- **A mechanism classifies by what the claim names, not by where today's one
+  instance lives.** A folder, a namespace or a name suffix is a proxy that holds
+  until a second instance arrives, and the mechanism then reports work the claim
+  permits — usually printing the claim's own wording in the message, which is
+  where the proxy should have been read from. Where the claim says "the class
+  implementing X", the mechanism asks what a class implements.
 
 ## An imported rule is a decision, not a constraint
 
