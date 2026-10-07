@@ -2,7 +2,7 @@ id: "0059"
 type: task
 title: Publish the observed instant on the tracker, so a consumer can tell a poll landed
 
-status: ready-for-implementation
+status: in-progress
 
 priority: medium
 value: 2
