@@ -2,7 +2,7 @@ id: "0001"
 type: feature
 title: Poll OpenSky for aircraft and project them into the fleet
 
-status: ready-for-architecture
+status: blocked
 
 priority: high
 value: 5
@@ -18,7 +18,8 @@ children:
   - "0006"
   - "0007"
 
-depends_on: []
+depends_on:
+  - "0039"
 blocks: []
 spikes: []
 
@@ -79,7 +80,7 @@ claims:
   - B-052
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-07"
 closed: null
 
 summary: |
@@ -104,6 +105,7 @@ acceptance_criteria:
     is the ship gate, not a green build (§ 4 row 13)."
 
 decisions:
+  - "2026-10-07 — `0055` — `blocked` rather than `ready-for-architecture`, and `depends_on` now names `0039`. The architecture this asked for shipped and all six children are `done`; the one § 9 row still `Missing` is B-041's \"what view models depend on\" half, which needs a container-built view model and is owed by `fleet-dashboard` `0039` under that Feature's B-020 — the row says so already, citing lesson `0011`. So this parent is waiting on another Feature's item rather than on a design, and the field says which one."
   - "2026-10-04 — spec-author — the layering is cut into six children, one per
     component boundary, rather than one item per claim group. Rejected: a
     single item for all 52 claims, which no review could judge against a diff."

@@ -2,7 +2,7 @@ id: "0008"
 type: feature
 title: Replay recorded provider payloads through the live seam
 
-status: ready-for-implementation
+status: blocked
 
 priority: high
 value: 5
@@ -53,7 +53,7 @@ claims:
   - B-027
 
 created: "2026-10-04"
-updated: "2026-10-06"
+updated: "2026-10-07"
 closed: null
 
 summary: |
@@ -79,6 +79,7 @@ acceptance_criteria:
   - "§ 9 has no Missing row once every child is done."
 
 decisions:
+  - "2026-10-07 — `0055` — `blocked` rather than `ready-for-implementation`, because nothing under it can be picked up. Four of five children are `done` through `0012`; the fifth, `0013`, is blocked on the vessel feed's specification (§ 5 row 2), and the last claim this parent still owes outside it, B-005, waits on a captured recording (`0052`). Neither is work anyone can start, and `ready-for-implementation` was putting this in the pickable list."
   - "2026-10-06 — test-writer — §§ 8 and 9 are written, so the specification is
     complete and the statuses move: `0009` and `0010` to `ready` with every
     dependency landed, `0011` and `0012` to `ready-for-implementation` behind

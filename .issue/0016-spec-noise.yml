@@ -2,7 +2,7 @@ id: "0016"
 type: task
 title: Link the rules instead of restating them across the specifications
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -21,8 +21,8 @@ spec: null
 claims: []
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-07"
+closed: "2026-10-04"
 
 summary: |
   Lesson 0001 established that a skill holds the rule and links the fact. It
@@ -58,6 +58,7 @@ acceptance_criteria:
   - "Every fact in the plan's one-home table has exactly one authoritative statement, and every relative link and section cite resolves."
 
 decisions:
+  - "2026-10-07 — `0055` — closed on the work that landed as `37f0a7b`, \"docs: give the rank formula a home beside the fields it derives\", on 2026-10-04, with `b71b69b` recomputing the ranks that move exposed as wrong. Every section of both specifications carries the one-line pointer this asked for, no `{{placeholder}}` is left in a filled specification, and `.spec/templates/item.yml` is where the formula and its buckets live — this chore read the formula from there to recompute `0039`'s rank, which is the criterion working."
   - "2026-10-04 — rlittlesii: a one-line pointer per section rather than stripping the template comments outright. A pointer that also named the section's owner was rejected: it would be an eighth copy of the section-to-owner mapping."
   - "2026-10-04 — rlittlesii: § 9 reports that test-writer owns it and is unwritten, and that is the gate before implementation starts. Rejected transcribing one Missing row per claim ahead of any test existing."
   - "2026-10-04 — rlittlesii: an item prefers a reference to the source of truth, and may duplicate claim text only where the duplication is what makes the item workable."

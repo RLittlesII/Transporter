@@ -2,7 +2,7 @@ id: "0014"
 type: task
 title: Make the skills portable — rule in the skill, facts in the specification
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -22,8 +22,8 @@ spec: null
 claims: []
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-07"
+closed: "2026-10-04"
 
 summary: |
   The nineteen skills under .skills/ had absorbed three kinds of content that
@@ -49,6 +49,7 @@ acceptance_criteria:
   - "Every relative link in .skills/, .agents/ and AGENTS.md resolves, and AGENTS.md's skills table matches the directory."
 
 decisions:
+  - "2026-10-07 — `0055` — closed on the work that landed as `ce25373`, \"docs: put this repository's specifics in one companion skill\", on 2026-10-04. The last decision below says the item stays `in-progress` until the branch lands, because the repository had no remote to push it to; the work went to `main` directly instead and nothing came back here. Every acceptance criterion reads true on the repository today: the method skills name `transponder-conventions`, the technology skills carry no status notes, and root lesson `0001` records why. No criterion was re-proved — what was missing was the closing."
   - "2026-10-04 — rlittlesii: hybrid split rather than a companion per skill. Rejected a full two-tier mirror of the reference repository: it doubles the file count for nineteen skills, and only the five method skills have enough project specifics to be worth separating."
   - "2026-10-04 — rlittlesii: business-content skills move into the specification and are deleted, rather than kept with their narrative stripped."
   - "2026-10-04 — rlittlesii: point-in-time status notes come out. A skill states the rule; current state is read from the repository."

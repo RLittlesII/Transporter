@@ -4,10 +4,10 @@ title: Extract spec files from hardcoded paths to make tests resilient to reorga
 
 status: ready-for-implementation
 
-priority: medium
+priority: low
 value: 2
 risk: 1
-rank: 50
+rank: 37
 
 parent: null
 children: []

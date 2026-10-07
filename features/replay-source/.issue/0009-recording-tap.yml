@@ -6,14 +6,15 @@ status: done
 
 priority: high
 risk: 3
-rank: 71
+rank: 76
 
 parent: "0008"
 children: []
 
 depends_on:
   - "0004"
-blocks: []
+blocks:
+  - "0052"
 spikes: []
 
 spec: features/replay-source/.spec/README.md

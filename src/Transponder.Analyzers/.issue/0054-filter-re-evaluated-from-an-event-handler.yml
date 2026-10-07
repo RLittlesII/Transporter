@@ -7,7 +7,7 @@ status: ready-for-architecture
 priority: medium
 value: 3
 risk: 3
-rank: 54
+rank: 51
 
 parent: "0019"
 children: []
