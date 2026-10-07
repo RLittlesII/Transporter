@@ -103,6 +103,14 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And the refresh indicator is showing
       And whether a poll is performed is the actor's to decide
 
+  @B-028
+  Scenario: The indicator clears on the poll that landed, or on the cap
+    Given the refresh control has been invoked and the indicator is showing
+     When the next observed instant arrives, for a poll that changed no row
+     Then the indicator stops showing
+      And a press the actor refused stops showing after three seconds instead
+      And a second press replaces the window rather than queueing one
+
   # ────────────────────────────── Failure mode ──────────────────────────────
 
   @B-006

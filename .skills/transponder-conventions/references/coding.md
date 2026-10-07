@@ -88,6 +88,15 @@ it. The traps:
   and the replay source all consume that layer, so filing it under one of them
   would make the other two reach into a sibling Feature's folder — the same
   reason integrations are not under `Features/` either.
+- **A message a consumer tells an actor lives in `src/Transponder/Messages/`.**
+  Not in the integration that receives it — a view model naming
+  `Transponder.Integrations.OpenSky.Polling.PollAircraft` puts a provider's name
+  on a surface that must survive the provider being swapped. Not in `Tracking/`
+  either: `TRN0006` lets a view model name a class there only when
+  `IFleetTracker` publishes it, and a message is not something the seam
+  publishes. The message doubles as the `IActorRegistry` key, so the integration
+  registers its actor under the message and a second provider's actor registers
+  under the same one (`fleet-dashboard` § 10, 2026-10-07; ADR-0012).
 - Container wiring extends the existing builder blocks in `src/Gui/Container/`,
   which use C# `extension(MauiAppBuilder)` members, rather than piling
   registrations into [`MauiProgram`](../../../src/Gui/MauiProgram.cs).

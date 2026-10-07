@@ -2,7 +2,7 @@ id: "0058"
 type: task
 title: Put a refresh control on the page that tells an actor
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -26,7 +26,7 @@ claims:
 
 created: "2026-10-07"
 updated: "2026-10-07"
-closed: null
+closed: "2026-10-07"
 
 summary: |
   The gesture half of the refresh: a control on the page, a `Tell` to the actor,
@@ -66,7 +66,56 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test and the review for
     B-028, replacing the row that names this item."
 
-decisions: []
+decisions:
+  - date: "2026-10-07"
+    question: >-
+      What may the dashboard name to tell the poll actor, when the actor and its
+      message are both internal to the OpenSky integration?
+    answer: >-
+      A provider-agnostic message, which is also the registry key. `PollAircraft`
+      is replaced by `DemandPoll`; `AddOpenSkyActors` registers the actor under
+      it, and a second source that polls registers under the same key.
+    why: >-
+      Naming `AircraftPollActor` compiles and passes the analyzer, but it puts a
+      provider's name on the dashboard, and after the closing act's swap the
+      button would be telling an aircraft-shaped actor about vessels. Rejected: a
+      seam in `Tracking` wrapping the `Tell`, which is close to the fifth tracker
+      method ADR-0012 turned down.
+  - date: "2026-10-07"
+    question: >-
+      Where does that message live, given `TRN0006` refuses a view model naming a
+      class under `Tracking/` that `IFleetTracker` does not publish?
+    answer: >-
+      `src/Transponder/Messages/`, its own namespace, with the rule recorded in
+      `transponder-conventions` § "Project structure".
+    why: >-
+      Widening `TRN0006` for a message would weaken the boundary it exists to
+      hold, and suppressing it at the call site is a pattern every later gesture
+      would copy. Found by the analyzer while building, not by review.
+
+delivered: |
+  B-028 to `Verified`. `FleetViewModel` takes `IActorRegistry`, exposes
+  `RefreshCommand` as a `GestureCommand` that `Tell`s `DemandPoll` and returns,
+  and exposes `IsRefreshing` as a derived value read through
+  `ReactiveMarbles.Mvvm`'s `AsValue` — the repository's first use of it. The page
+  carries the button and an `ActivityIndicator` bound to that value.
+
+  The indicator's stream is § 7's: the press opens the window, the next observed
+  instant closes it (`fleet-pipeline` B-031), and a three-second cap covers the
+  press the actor refused. `Skip(1)` is why the instant in force does not close
+  the window on the press that opened it, `Switch` is why a second press replaces
+  the window, and the cap is timed on the injected scheduler.
+
+  Five tests in `FleetRefreshTests`, including one that replies to the actor's
+  message and asserts the indicator ignores it — the `Ask` B-028 forbids would
+  have been waiting for exactly that. 214 unit tests green.
+
+  Two findings, both in `fleet-dashboard` § 10. The message's home was decided by
+  `TRN0006` rather than by preference (`decisions` above). And giving the view
+  model a registry broke `TransponderCompositionTests`, because the registry comes
+  from the head's Akka host and that test built the container from
+  `AddTransponder` alone; the test's arrangement now composes the host too, which
+  is lesson `0047` working as intended.
 
 out_of_scope:
   - "Everything in § 5 of the specification."
