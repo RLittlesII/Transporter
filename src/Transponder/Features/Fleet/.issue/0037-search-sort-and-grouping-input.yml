@@ -2,7 +2,7 @@ id: "0037"
 type: task
 title: Turn a keystroke into a predicate and a header tap into a comparer
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 value: 4
@@ -27,7 +27,7 @@ claims:
   - B-012
 
 created: "2026-10-05"
-updated: "2026-10-05"
+updated: "2026-10-07"
 closed: null
 
 summary: |
