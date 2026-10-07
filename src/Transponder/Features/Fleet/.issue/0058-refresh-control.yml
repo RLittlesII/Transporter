@@ -46,6 +46,12 @@ summary: |
   reaches a view model through `fleet-pipeline` B-031, which is why `0059` is
   now a prerequisite: there is nothing to subscribe to until it lands.
 
+  **One trap, found building `0059` (2026-10-07).** `IFleetTracker.Observed`
+  publishes the instant in force on subscription — the clock holds it behind a
+  `BehaviorSubject` — so the window must `Skip(1)` or it ends on the press that
+  opened it and the indicator is never seen. § 7's stream now carries the skip,
+  and `fleet-pipeline` § 10 records why it exists.
+
   The indicator is a derived value read through `ReactiveMarbles.Mvvm`'s
   `AsValue`, not a property the gesture sets — § 7 carries the stream and what
   each operator in it is for, and this is the repository's first use of

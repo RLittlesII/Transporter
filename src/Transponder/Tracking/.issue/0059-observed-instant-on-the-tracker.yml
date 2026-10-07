@@ -2,7 +2,7 @@ id: "0059"
 type: task
 title: Publish the observed instant on the tracker, so a consumer can tell a poll landed
 
-status: in-progress
+status: done
 
 priority: medium
 value: 2
@@ -24,7 +24,7 @@ claims:
 
 created: "2026-10-07"
 updated: "2026-10-07"
-closed: null
+closed: "2026-10-07"
 
 summary: |
   One member on `IFleetTracker`: the observed instant, and every advance of it.
@@ -58,6 +58,29 @@ acceptance_criteria:
     the row that names this item."
 
 decisions: []
+
+delivered: |
+  B-031 to `Verified`. `IFleetTracker.Observed` is `IObservedClockTicks.Instant`
+  re-published with the tracker's shutdown on it and no operator between — no
+  `DistinctUntilChanged`, because the same instant reported twice is two polls and
+  deduplicating would leave `fleet-dashboard`'s indicator spinning after the second;
+  no `ObserveOn`, because the pipeline marshals for nobody (B-005). No stage, no
+  scheduler and no subject added, which is what the risk score said.
+
+  Four tests in `ObservedInstantTests`: the identical poll that raises no notice and
+  still publishes an instant, the recorded 2021 instant a wall-clock read would get
+  wrong, the in-force value a subscription reads, and disposal completing the stream.
+  206 unit tests green.
+
+  **One finding, and it changes `0058` rather than this.** Subscribing to the stream
+  is itself an emission — the clock holds the instant in force behind a
+  `BehaviorSubject` (ADR-0010), so a subscriber receives it at once, and
+  `DateTimeOffset.MinValue` before any poll. A consumer timing a window from a
+  gesture must `Skip(1)` or the window ends on the press that opened it. The claim
+  is unamended, § 7 and § 10 now say it, `fleet-dashboard` § 7's stream carries the
+  skip, and `0058`'s item carries the trap. Rejected: dropping the in-force value,
+  which would leave a late subscriber with nothing until the next poll and break the
+  staleness re-derivation `Reevaluate` depends on.
 
 out_of_scope:
   - "Everything in § 5 of the specification."
