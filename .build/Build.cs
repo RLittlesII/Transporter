@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using Nuke.Common;
 using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.IO;
@@ -26,11 +28,24 @@ class Build : NukeBuild
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
+    [Parameter("Seed the sample recording is generated from - Default is 1")]
+    private readonly int Seed = 1;
+
+    [Parameter("Where the sample recording is written - Default is recordings/aircraft-sample.ndjson")]
+    private readonly string Recording = null!;
+
     [Solution("Transponder.slnx")] private readonly Solution Solution = null!;
 
     private AbsolutePath SourceDirectory => RootDirectory / "src";
     private AbsolutePath TestDirectory => RootDirectory / "test";
     private AbsolutePath ArtifactsDirectory => RootDirectory / ".artifacts";
+
+    /// Where the sample recording is written. Absolute, so the tool resolves it to the same place
+    /// whatever directory the run started from.
+    private AbsolutePath SampleRecordingFile =>
+        Recording is null
+            ? RootDirectory / "recordings" / "aircraft-sample.ndjson"
+            : (AbsolutePath) Path.GetFullPath(Recording);
 
     /// What this host can build. The MAUI heads in src/Gui target net10.0-ios and
     /// net10.0-maccatalyst, and no Linux SDK can build either, so a Linux run restores,
@@ -92,6 +107,17 @@ class Build : NukeBuild
                     .SetProjectFile(project)
                     .EnableNoBuild()
                     .EnableNoRestore())));
+
+    /// Writes a synthetic aircraft recording into the recordings root, so the application runs and
+    /// the replay path is developed with no provider account (item 0052).
+    ///
+    /// Deliberately outside Default: recordings/ is where a real rehearsal capture lives, and a
+    /// build that wrote there would overwrite one. It shells `dotnet run` rather than referencing
+    /// the project, so this build still runs when the application does not compile.
+    private Target SampleRecording => definition => definition
+        .Executes(() => DotNetRun(settings => settings
+            .SetProjectFile(RootDirectory / "tools" / "Transponder.SampleRecording" / "Transponder.SampleRecording.csproj")
+            .SetApplicationArguments("--seed", Seed.ToString(CultureInfo.InvariantCulture), "--output", SampleRecordingFile)));
 
     Target Default => definition => definition
         .DependsOn(Format)
