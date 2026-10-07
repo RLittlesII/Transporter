@@ -2,7 +2,7 @@ id: "0011"
 type: task
 title: Substitute aircraft replay at the API contract
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 risk: 3
@@ -67,6 +67,15 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — implementer — the § 12 sign-off gate is waived for this item,
+    the second item in a row to need it. All three rows of the specification's
+    § 12 still read 🟡 Draft and `spec_status` is `draft`, and the section is
+    `spec-reviewer`'s — an implementer may not flip the rows it would be
+    clearing for itself. The person directed this item by name after `0010`
+    landed, which is the authority this waiver rests on; it is named to `0011`
+    alone and is not standing, exactly as `0010`'s was. What would end the
+    pattern is the person signing § 12 or `0026` landing, and neither is this
+    item's to do — `0013` will need a third waiver otherwise."
   - "2026-10-06 — implementer — the summary said this chain registers as
     another `ITrackerSource`, which ADR-0011 forbids; corrected to
     `ITrackerSourceStrategy`. § 11 row 1 of the specification carried the same
