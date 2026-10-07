@@ -2,7 +2,7 @@ id: "0052"
 type: chore
 title: Generate a synthetic recording so the app runs with no provider account
 
-status: ready-for-architecture
+status: in-progress
 
 priority: medium
 value: 3
@@ -22,7 +22,7 @@ spec: null
 claims: []
 
 created: "2026-10-06"
-updated: "2026-10-06"
+updated: "2026-10-07"
 closed: null
 
 summary: |
