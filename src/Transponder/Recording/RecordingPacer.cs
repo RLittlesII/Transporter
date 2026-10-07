@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Reactive.Concurrency;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -28,10 +27,11 @@ namespace Transponder.Recording;
 /// minutes into a talk.
 /// </para>
 /// <para>
-/// The payload is answered as the text the line holds, read with
-/// <see cref="JsonElement.GetRawText"/> and never deserialized. Both halves of B-002's verbatim are
-/// then the same bytes end to end — <see cref="RecordingWriter"/> splices the body in as text and
-/// this reads it back out as text — and no line type exists for the format to drift between.
+/// The payload is answered as the text the line holds and is never deserialized here;
+/// <see cref="RecordedLine"/> is what reads a line, and the startup report reads one through the
+/// same type rather than a parser of its own. Both halves of B-002's verbatim are then the same
+/// bytes end to end — <see cref="RecordingWriter"/> splices the body in as text and this reads
+/// it back out as text — and no line type exists for the format to drift between.
 /// </para>
 /// </remarks>
 internal sealed class RecordingPacer : IRecordingPacer
@@ -89,7 +89,7 @@ internal sealed class RecordingPacer : IRecordingPacer
                 continue;
             }
 
-            if (!Read(line, out var receivedAt, out var body))
+            if (!RecordedLine.TryRead(line, out var receivedAt, out var body))
             {
                 // B-012.
                 _logger.LogDebug("A recorded line could not be read and was discarded; replay continues past it.");
@@ -106,50 +106,6 @@ internal sealed class RecordingPacer : IRecordingPacer
             _previous = receivedAt;
 
             return body;
-        }
-    }
-
-    /// <summary>
-    /// Reads one recorded line into the instant that paces it and the payload that leaves it.
-    /// </summary>
-    /// <param name="line">The line as the recording holds it.</param>
-    /// <param name="receivedAt">The instant the payload arrived.</param>
-    /// <param name="body">The payload, as the provider sent it.</param>
-    /// <returns><see langword="true"/> when the line was read; <see langword="false"/> to discard it.</returns>
-    /// <remarks>
-    /// The two instants ADR-0004 puts on a line have one job each, and this reads only the first:
-    /// <c>receivedAt</c> paces playback and never leaves this type, while the reported time that
-    /// becomes the observed instant stays inside <paramref name="body"/> for whatever substitutes
-    /// above (B-009, B-010).
-    /// </remarks>
-    private static bool Read(string line, out DateTimeOffset receivedAt, out string body)
-    {
-        receivedAt = default;
-        body = string.Empty;
-
-        try
-        {
-            using var document = JsonDocument.Parse(line);
-
-            if (!document.RootElement.TryGetProperty("receivedAt", out var instant)
-                || !document.RootElement.TryGetProperty("body", out var payload)
-                || !instant.TryGetDateTimeOffset(out receivedAt))
-            {
-                return false;
-            }
-
-            body = payload.GetRawText();
-
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
-        catch (InvalidOperationException)
-        {
-            // A line whose receivedAt is not a string at all, which TryGetDateTimeOffset throws on.
-            return false;
         }
     }
 

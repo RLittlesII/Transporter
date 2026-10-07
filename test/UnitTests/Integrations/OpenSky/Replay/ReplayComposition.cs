@@ -5,6 +5,7 @@ using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Airframe;
 using Transponder.Integrations.OpenSky;
 using Transponder.Integrations.OpenSky.Container;
+using Transponder.Recording;
 using Transponder.Scheduling;
 using Transponder.UnitTests.Scheduling;
 
@@ -28,11 +29,10 @@ internal static class ReplayComposition
     /// <returns>The provider, which the caller disposes.</returns>
     internal static ServiceProvider Over(Stream recording, TestScheduler scheduler)
     {
-        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
         var services = new ServiceCollection();
 
         services.AddLogging();
-        services.AddSingleton<ISchedulerProvider>(schedulers);
+        services.AddSingleton<ISchedulerProvider>(Schedulers(scheduler));
         services.AddOpenSky(Settings());
         services.AddAircraftReplay(recording);
 
@@ -44,16 +44,29 @@ internal static class ReplayComposition
     /// <returns>The stream, which the caller disposes.</returns>
     internal static MemoryStream Recorded(string lines) => new(Encoding.UTF8.GetBytes(lines));
 
-    /// <summary>The live chain's settings, carrying a box so the live half composes at all.</summary>
+    /// <summary>One scheduler in both positions, so advancing time once drives the whole chain.</summary>
+    /// <param name="scheduler">The scheduler the test advances.</param>
+    /// <returns>The provider.</returns>
+    internal static SchedulerProvider Schedulers(TestScheduler scheduler) =>
+        new SchedulerProviderFixture().WithTestScheduler(scheduler);
+
+    /// <summary>
+    /// The settings a composition reads: a box so the live half composes at all, and the recording
+    /// each replay source is named, when a test names one.
+    /// </summary>
+    /// <param name="aircraft">What <c>Replay:Aircraft</c> names, or nothing.</param>
+    /// <param name="vessels">What <c>Replay:Vessels</c> names, or nothing.</param>
     /// <returns>The configuration.</returns>
     /// <remarks>
     /// No credential: nothing here resolves the token source, and a composition with no live
-    /// transport is B-011's subject rather than this helper's.
+    /// transport is B-011's subject.
     /// </remarks>
-    private static IConfiguration Settings() =>
+    internal static IConfiguration Settings(string? aircraft = null, string? vessels = null) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
+                [$"{ReplayOptions.Section}:{nameof(ReplayOptions.Aircraft)}"] = aircraft,
+                [$"{ReplayOptions.Section}:{nameof(ReplayOptions.Vessels)}"] = vessels,
                 [$"{OpenSkyOptions.Section}:{nameof(OpenSkyOptions.BaseUrl)}"] = OpenSkyOptions.DefaultBaseUrl,
                 [$"{OpenSkyOptions.Section}:Box:LatitudeMinimum"] = "28.8",
                 [$"{OpenSkyOptions.Section}:Box:LongitudeMinimum"] = "-96.0",

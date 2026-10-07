@@ -518,6 +518,21 @@ starts. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
 box: the URL is the provider's and nobody here chooses it, while B-050 leaves the
 box with no default on purpose.
 
+**`AddOpenSky` split in two on `0012`, and the credentials went with the live
+transport.** It is still the only composition of this integration and still the
+only method an application calls for it; what changed is that the shared part —
+the options, the observed clock's aliases, the projection and the scheduler
+provider — is an `internal` method `AddOpenSky` calls first, and
+`AddAircraftReplay` calls instead. `OpenSkyCredentials`, their `ValidateOnStart`,
+the token source, the Flurl client cache and the transport stay in `AddOpenSky`.
+A composition that registers the live transport therefore validates exactly as
+it did before, which is what keeps B-029 true as written; what is new is a
+composition this specification never contemplated, with no live transport and so
+no credential to be missing. The reasoning and the alternatives are
+[replay-source](../../../../../features/replay-source/.spec/README.md) § 11
+row 4, and whether B-029's wording should say so out loud is this
+specification's `spec-author`'s call.
+
 Options and credentials are **two types, not one**, because B-027 bans a
 credential reaching a log line and a single options object invites being logged
 whole. The polling interval defaults to fifteen seconds and the bounding box has

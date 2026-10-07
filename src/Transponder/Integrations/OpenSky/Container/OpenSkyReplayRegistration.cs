@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using DynamicData;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
@@ -52,6 +55,37 @@ public static class OpenSkyReplayRegistration
     };
 
     /// <summary>
+    /// Adds the replay half: the recordings configuration names, checked, and a source over each one
+    /// that is usable.
+    /// </summary>
+    /// <param name="services">The collection to register into.</param>
+    /// <param name="configuration">
+    /// Where the recordings are named — one key per source under <c>Replay</c>, resolved against
+    /// <c>Recording:Root</c> — and where the shared part reads the integration's options.
+    /// </param>
+    /// <returns>The same collection, so registration chains.</returns>
+    /// <remarks>
+    /// <para>
+    /// Calls <see cref="OpenSkyRegistration.AddOpenSkyShared"/> and not <c>AddOpenSky</c>, so a
+    /// composition that registers only replay starts with no credential configured (B-011,
+    /// § 11 row 4). An application that registers both halves calls both, and the shared part runs
+    /// once.
+    /// </para>
+    /// <para>
+    /// Configuration is read here rather than bound and resolved later, because whether a source is
+    /// registered at all depends on what it says: a recording that is unnamed, absent, unreadable
+    /// or too short leaves its source unregistered and therefore unselectable (B-024, B-026), and a
+    /// registration cannot be withdrawn once the container is built. <see cref="ReplayOptions"/> is
+    /// bound as well, so what the report names and what configuration holds are the same values.
+    /// </para>
+    /// </remarks>
+    public static IServiceCollection AddAircraftReplay(this IServiceCollection services, IConfiguration configuration) =>
+        services.AddAircraftReplay(
+            configuration,
+            new RecordingLibrary(
+                configuration[$"{RecordingOptions.Section}:{nameof(RecordingOptions.Root)}"] ?? RecordingOptions.DefaultRoot));
+
+    /// <summary>
     /// Adds the aircraft replay chain over an opened recording.
     /// </summary>
     /// <param name="services">The collection to register into, with the OpenSky integration's shared registrations already in it.</param>
@@ -70,10 +104,10 @@ public static class OpenSkyReplayRegistration
     /// live client, cache and options keep their own unkeyed registrations and are untouched.
     /// </para>
     /// <para>
-    /// The chain is registered behind <see cref="IAircraftReplayTrackerSource"/> and not as an
-    /// <see cref="ITrackerSourceStrategy"/>: selecting it is `0012`'s, along with the recording's
-    /// name, its root and the startup report. Nothing here is selectable yet, which is why
-    /// registering this leaves the live chain's behaviour exactly as it was.
+    /// The chain is registered behind <see cref="IAircraftReplayTrackerSource"/> and as one more
+    /// <see cref="ITrackerSourceStrategy"/> beside the live one. Both are true at once and have to
+    /// be: the seam is how the selector tells two instances of one class apart, and the strategy
+    /// registration is how the selector is handed it at all.
     /// </para>
     /// </remarks>
     public static IServiceCollection AddAircraftReplay(this IServiceCollection services, Stream recording)
@@ -114,6 +148,64 @@ public static class OpenSkyReplayRegistration
                 provider.GetRequiredKeyedService<IAircraftSnapshotClient>(Chain),
                 provider.GetRequiredKeyedService<SourceCache<AircraftSnapshot, string>>(Chain),
                 provider.GetRequiredService<AircraftSnapshotMapper>())));
+
+        // One more strategy, which is the whole of selection: the decorator is handed every
+        // registration of this seam and replay is one of them, so there is no replay-only selector
+        // and no offline-mode flag to add (B-015). Never as ITrackerSource — that reaches consumers
+        // in place of the selector and the swap then silently does nothing (ADR-0011).
+        services.AddSingleton<ITrackerSourceStrategy>(
+            static provider => provider.GetRequiredService<IAircraftReplayTrackerSource>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds the replay half over a given recordings root.
+    /// </summary>
+    /// <param name="services">The collection to register into.</param>
+    /// <param name="configuration">Where the recordings are named, and the shared part's settings.</param>
+    /// <param name="recordings">The root to resolve and open the named recordings in.</param>
+    /// <returns>The same collection, so registration chains.</returns>
+    /// <remarks>
+    /// The root is a parameter here because a rehearsal recording is operational data that is never
+    /// a fixture (B-006), so a test of this registration has no file to point at and supplies
+    /// recordings of its own. B-025's resolution is <see cref="RecordingLibrary"/>'s and is proven
+    /// against that type.
+    /// </remarks>
+    internal static IServiceCollection AddAircraftReplay(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IRecordingLibrary recordings)
+    {
+        services.AddOpenSkyShared(configuration);
+        services.AddOptions<ReplayOptions>().Bind(configuration.GetSection(ReplayOptions.Section));
+
+        var aircraft = CheckedRecording.Check(
+            nameof(ReplayOptions.Aircraft),
+            configuration[$"{ReplayOptions.Section}:{nameof(ReplayOptions.Aircraft)}"],
+            recordings,
+            FleetTracker.DefaultStaleAfter);
+
+        // Reported and then closed: the vessel feed is unspecified, so nothing consumes a vessel
+        // recording until `0013`, and a handle held open for a run nobody reads is a leak with a
+        // claim attached to it. The row is still produced, because B-020 expects the closing act's
+        // recording to be cleared by this report rather than at the swap.
+        var vessels = CheckedRecording.Check(
+            nameof(ReplayOptions.Vessels),
+            configuration[$"{ReplayOptions.Section}:{nameof(ReplayOptions.Vessels)}"],
+            recordings,
+            FleetTracker.DefaultStaleAfter);
+
+        vessels.Payloads?.Dispose();
+
+        services.AddSingleton<IReadOnlyList<CheckedRecording>>([aircraft, vessels]);
+        services.AddSingleton<ReplayStartupReport>();
+        services.AddSingleton<IHostedService>(static provider => provider.GetRequiredService<ReplayStartupReport>());
+
+        if (aircraft.Payloads is { } payloads)
+        {
+            services.AddAircraftReplay(payloads);
+        }
 
         return services;
     }

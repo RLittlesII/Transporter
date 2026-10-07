@@ -42,7 +42,7 @@ public static class OpenSkyRegistration
     /// <returns>The same collection, so registration chains.</returns>
     /// <remarks>
     /// <para>
-    /// This method is the whole composition of the integration, and it takes configuration rather than
+    /// This method is the live composition of the integration, and it takes configuration rather than
     /// pre-bound options so that there is exactly one of it: an application and a test both call this and
     /// differ only in what configuration they supply. A test that assembled the same graph by hand would be a
     /// second composition to keep in step, and the first production scenario it missed would pass.
@@ -50,24 +50,74 @@ public static class OpenSkyRegistration
     /// <para>
     /// The options and the credentials are two registrations, not one, and both validate on start: an absent
     /// credential or an absent bounding box stops the application here rather than failing the first poll on
-    /// stage (B-029, B-050).
+    /// stage (B-029, B-050). The options are <see cref="AddOpenSkyShared"/>'s and the credentials are this
+    /// method's, which is replay-source § 11 row 4: a composition with no live transport has no credential to
+    /// be missing, and one with a live transport validates exactly as it did before.
     /// </para>
     /// </remarks>
     public static IServiceCollection AddOpenSky(this IServiceCollection services, IConfiguration configuration)
     {
-        var validator = new OpenSkyConfigurationValidator();
+        services.AddOpenSkyShared(configuration);
 
-        services.AddSingleton<IValidateOptions<OpenSkyOptions>>(validator);
-        services.AddSingleton<IValidateOptions<OpenSkyCredentials>>(validator);
-        services.AddOptions<OpenSkyOptions>().Bind(configuration.GetSection(OpenSkyOptions.Section)).ValidateOnStart();
+        services.AddSingleton<IValidateOptions<OpenSkyCredentials>>(new OpenSkyConfigurationValidator());
         services.AddOptions<OpenSkyCredentials>().Bind(configuration.GetSection(OpenSkyOptions.Section)).ValidateOnStart();
 
         services.AddSingleton<IFlurlClientCache>(static provider => new FlurlClientCache()
             .Add(OpenSkyHttpApi.ClientName, provider.GetRequiredService<IOptions<OpenSkyOptions>>().Value.BaseUrl)
             .Add(OpenSkyTokenSource.ClientName, OpenSkyTokenSource.TokenUrl));
 
+        services.AddRecordingWriter();
+
+        services.AddSingleton<IOpenSkyTokenSource, OpenSkyTokenSource>();
+        services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
+        services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
+        services.AddSingleton<AircraftSnapshotClient>();
+        services.AddSingleton<IAircraftSnapshotClient>(static provider => provider.GetRequiredService<AircraftSnapshotClient>());
+
+        services.AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>();
+
+        // Never as ITrackerSource: that reaches consumers in place of the selector (ADR-0011).
+        services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds what every composition of this integration holds, live or replayed: the options, the
+    /// observed clock, the projection, the schedulers and the fleet's description.
+    /// </summary>
+    /// <param name="services">The collection to register into.</param>
+    /// <param name="configuration">Where the options and the recordings root are read from.</param>
+    /// <returns>The same collection, so registration chains.</returns>
+    /// <remarks>
+    /// <para>
+    /// The split is replay-source § 11 row 4's answer. <see cref="OpenSkyCredentials"/> and their
+    /// <c>ValidateOnStart</c> are the live transport's, not this integration's, so a composition
+    /// that registers only replay has no credential to be missing and starts on a laptop with no
+    /// secrets and no network — which is replay-source B-011 and the situation that Feature exists
+    /// for. A composition that registers the live transport validates exactly as it did before.
+    /// </para>
+    /// <para>
+    /// Calling this twice is what an application that registers both halves does, so it returns
+    /// having done nothing the second time. The marker is the clock, because one clock object behind
+    /// three aliases is the registration here that two of them would break.
+    /// </para>
+    /// </remarks>
+    internal static IServiceCollection AddOpenSkyShared(this IServiceCollection services, IConfiguration configuration)
+    {
+        foreach (var registered in services)
+        {
+            if (registered.ServiceType == typeof(ObservedClock))
+            {
+                return services;
+            }
+        }
+
+        services.AddSingleton<IValidateOptions<OpenSkyOptions>>(new OpenSkyConfigurationValidator());
+        services.AddOptions<OpenSkyOptions>().Bind(configuration.GetSection(OpenSkyOptions.Section)).ValidateOnStart();
+        services.AddOptions<RecordingOptions>().Bind(configuration.GetSection(RecordingOptions.Section));
+
         services.TryAddSchedulers();
-        services.AddRecording(configuration);
 
         // One clock object behind two interfaces, registered once and aliased to each: the write side reaches
         // the integration and the read side reaches the tracker, so which one a constructor names is what
@@ -77,17 +127,7 @@ public static class OpenSkyRegistration
         services.AddSingleton<IObservedClockWriter>(static provider => provider.GetRequiredService<ObservedClock>());
         services.AddSingleton<IObservedClockTicks>(static provider => provider.GetRequiredService<ObservedClock>());
 
-        services.AddSingleton<IOpenSkyTokenSource, OpenSkyTokenSource>();
-        services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
-        services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
-        services.AddSingleton<AircraftSnapshotClient>();
-        services.AddSingleton<IAircraftSnapshotClient>(static provider => provider.GetRequiredService<AircraftSnapshotClient>());
-
         services.AddSingleton<AircraftSnapshotMapper>();
-        services.AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>();
-
-        // Never as ITrackerSource: that reaches consumers in place of the selector (ADR-0011).
-        services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
 
         // A subject rather than Observable.Return, so the stream does not complete when it is read.
         services.AddSingleton(static _ => new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
@@ -98,12 +138,15 @@ public static class OpenSkyRegistration
     }
 
     /// <summary>
-    /// Registers what records a payload: the options, and either a writer over a file or the one that
-    /// keeps nothing.
+    /// Registers what records a payload: either a writer over a file or the one that keeps nothing.
     /// </summary>
     /// <param name="services">The collection to register into.</param>
-    /// <param name="configuration">Where <c>Recording:Enabled</c> and <c>Recording:Root</c> are read from.</param>
     /// <remarks>
+    /// <para>
+    /// The live transport's, because the tap is: a composition with no live poll records nothing,
+    /// and the options this reads are the shared part's, since a replay reads the root a rehearsal
+    /// wrote to (<c>adr/0001</c> item 2).
+    /// </para>
     /// <para>
     /// Always registers an <see cref="IRecordingWriter"/>, so the transport's tap is one
     /// unconditional call and recording cannot change the shape of the code that runs
@@ -122,10 +165,7 @@ public static class OpenSkyRegistration
     /// not silently erase the recording it is about to extend.
     /// </para>
     /// </remarks>
-    private static void AddRecording(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<RecordingOptions>().Bind(configuration.GetSection(RecordingOptions.Section));
-
+    private static void AddRecordingWriter(this IServiceCollection services) =>
         services.AddSingleton<IRecordingWriter>(static provider =>
         {
             var options = provider.GetRequiredService<IOptions<RecordingOptions>>().Value;
@@ -142,7 +182,6 @@ public static class OpenSkyRegistration
 
             return new RecordingWriter(destination, provider.GetRequiredService<ILogger<RecordingWriter>>());
         });
-    }
 
     /// <summary>
     /// Registers the scheduler provider every time-based element here takes, unless the host has already

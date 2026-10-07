@@ -30,6 +30,12 @@ internal static class ReplayRecordingCases
     /// <summary>Fifteen seconds after <see cref="FirstArrival"/>, exactly.</summary>
     internal const string SecondArrival = "2026-10-04T14:32:26.113Z";
 
+    /// <summary>Ninety seconds after <see cref="FirstArrival"/>, exactly.</summary>
+    internal const string NinetySecondsIn = "2026-10-04T14:33:41.113Z";
+
+    /// <summary>Six minutes after <see cref="FirstArrival"/>, which is past the staleness threshold.</summary>
+    internal const string SixMinutesIn = "2026-10-04T14:38:11.113Z";
+
     /// <summary>How long a vehicle is silent for in <see cref="SilentSixMinutesIn"/>.</summary>
     internal const long SilenceSeconds = 360;
 
@@ -43,6 +49,23 @@ internal static class ReplayRecordingCases
     internal static readonly string TwoPollsFifteenSecondsApart = string.Concat(
         Line(FirstArrival, OpenSkyPayloads.ThreeRows),
         Line(SecondArrival, OpenSkyPayloads.SecondPoll));
+
+    /// <summary>
+    /// Two polls six minutes apart, which is the shortest recording a source may be registered over:
+    /// a recording that does not outlast the staleness threshold cannot show an aircraft go quiet
+    /// (B-005, B-026).
+    /// </summary>
+    internal static readonly string SpanningSixMinutes = string.Concat(
+        Line(FirstArrival, OpenSkyPayloads.ThreeRows),
+        Line(SixMinutesIn, OpenSkyPayloads.SecondPoll));
+
+    /// <summary>
+    /// Two polls ninety seconds apart: a real recording, cut short — the test capture taken after
+    /// the rehearsal, which is the one the startup report exists to catch (B-026).
+    /// </summary>
+    internal static readonly string SpanningNinetySeconds = string.Concat(
+        Line(FirstArrival, OpenSkyPayloads.ThreeRows),
+        Line(NinetySecondsIn, OpenSkyPayloads.SecondPoll));
 
     /// <summary>
     /// Two polls fifteen seconds apart whose one aircraft last reported at the first, so the second
