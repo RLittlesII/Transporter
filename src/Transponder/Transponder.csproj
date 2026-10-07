@@ -26,6 +26,9 @@
 
     <ItemGroup>
       <InternalsVisibleTo Include="Transponder.UnitTests" />
+      <!-- The synthetic payload generator, which hands its payloads to RecordingWriter so the
+           format keeps exactly one writer. Dev tooling, so it does not ship: tools/. -->
+      <InternalsVisibleTo Include="Transponder.SampleRecording" />
       <!-- Castle's dynamic proxy, which NSubstitute builds its doubles with. Every type under
            Integrations/ is internal, so a substitute for an internal interface needs this grant. -->
       <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />

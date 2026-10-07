@@ -30,6 +30,7 @@
         "Format",
         "NugetRestore",
         "Restore",
+        "SampleRecording",
         "Test",
         "WorkflowRestore"
       ]
@@ -112,6 +113,31 @@
             "Debug",
             "Release"
           ]
+        },
+        "PollInterval": {
+          "type": [
+            "null",
+            "number"
+          ],
+          "description": "Seconds between the sample recording's payloads - Default is the tool's own",
+          "format": "double"
+        },
+        "Polls": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "How many payloads the sample recording holds - Default is the tool's own",
+          "format": "int32"
+        },
+        "Recording": {
+          "type": "string",
+          "description": "Where the sample recording is written - Default is recordings/aircraft-sample.ndjson"
+        },
+        "Seed": {
+          "type": "integer",
+          "description": "Seed the sample recording is generated from - Default is 1",
+          "format": "int32"
         },
         "Solution": {
           "type": "string",

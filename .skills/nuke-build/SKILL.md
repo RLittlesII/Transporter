@@ -26,6 +26,11 @@ server, overridable with `--configuration`.
 
 - **Every target that gates a change belongs in `Default`.** A target nothing
   depends on is a target nothing runs, and a check nothing runs is not a check.
+- **A target that writes into the repository is invoked deliberately and stays
+  out of `Default`.** The rule above is about targets that _gate_ a change; a
+  generator is not one, and `SampleRecording` writes into `recordings/`, where a
+  real rehearsal capture lives. Wiring it into `Default` would overwrite one on
+  the next build.
 - **Read `Default`'s dependency graph before claiming the build covered
   something.** A green build proves only what `Default` reached: if it does not
   run the tests, it is not a test run, however green it is.

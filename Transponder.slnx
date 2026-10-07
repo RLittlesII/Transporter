@@ -14,4 +14,7 @@
   <Folder Name="/test/">
     <Project Path="test\UnitTests\UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Transponder.SampleRecording/Transponder.SampleRecording.csproj" />
+  </Folder>
 </Solution>
