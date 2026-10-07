@@ -25,9 +25,18 @@ public static class TransponderRegistration
     /// <param name="userInterfaceThread">The scheduler a view binds on, which only the head can name.</param>
     /// <returns>The same collection, so registration chains.</returns>
     /// <remarks>
+    /// <para>
     /// The schedulers are registered before the integration, which adds a provider of its own only
     /// when the host has chosen none: a view binds on the thread that owns the window, and a poll
     /// does not.
+    /// </para>
+    /// <para>
+    /// Replay is registered beside the live source rather than instead of it, and configuration
+    /// decides only which recording it would read — never whether it is the live one, which is the
+    /// selector's (replay-source B-015). A run with no recording named registers no replay source,
+    /// so the control is absent rather than offering a wrong recording, and the startup report says
+    /// so (B-024, B-026).
+    /// </para>
     /// </remarks>
     public static IServiceCollection AddTransponder(
         this IServiceCollection services,
@@ -38,6 +47,7 @@ public static class TransponderRegistration
             _ => new SchedulerProvider(userInterfaceThread, TaskPoolScheduler.Default));
 
         services.AddOpenSky(configuration);
+        services.AddAircraftReplay(configuration);
         services.AddFleetTracking();
         services.AddTransient<FleetViewModel>();
 
