@@ -18,6 +18,12 @@ public interface IFleetTracker : IDisposable
     /// <summary>Gets the fleet, each vehicle carrying its stale mark, shared between subscribers.</summary>
     IObservable<IChangeSet<TrackedVehicle, string>> Fleet { get; }
 
+    /// <summary>Gets the groups the current grouping forms, each carrying its counts (fleet-pipeline B-012, B-014).</summary>
+    IObservable<IChangeSet<FleetGroup, string>> Groups { get; }
+
+    /// <summary>Gets the fleet-wide counts, derived from the same stream as the fleet (fleet-pipeline B-015).</summary>
+    IObservable<FleetSummary> Summary { get; }
+
     /// <summary>Gets the live source's columns and groupings (fleet-pipeline B-020).</summary>
     IObservable<FleetSourceDescription> Description { get; }
 
@@ -29,6 +35,22 @@ public interface IFleetTracker : IDisposable
     /// </remarks>
     IObservable<IComparer<TrackedVehicle>> Order { get; }
 
+    /// <summary>Notices, paced by the caller (fleet-pipeline B-025 - B-027).</summary>
+    /// <param name="minimumInterval">
+    /// The least time between notices; a new value takes effect without rebuilding anything, and
+    /// one second applies until a value arrives.
+    /// </param>
+    /// <returns>
+    /// One notice per changeset that changed something, a quiet notice when nothing has arrived for
+    /// longer than the staleness threshold, and a resumed notice on the next changeset after one.
+    /// </returns>
+    /// <remarks>
+    /// A method rather than a property, because the pacing is an operator with behaviour to test
+    /// and the cap is per consumer: the banner and the toast run at two cadences over one
+    /// implementation of the rate cap (§ 4 row 10).
+    /// </remarks>
+    IObservable<FleetNotice> Notices(IObservable<TimeSpan> minimumInterval);
+
     /// <summary>Shows only the vehicles the predicate matches (fleet-pipeline B-006, B-007).</summary>
     /// <param name="predicate">What a vehicle must satisfy to be visible; everything is until this is called.</param>
     void Filter(Func<TransportVehicle, bool> predicate);
@@ -36,6 +58,10 @@ public interface IFleetTracker : IDisposable
     /// <summary>Orders the fleet by a comparer the description offers (fleet-pipeline B-009, B-010).</summary>
     /// <param name="comparer">How to order the fleet; the description's first sortable column until this is called.</param>
     void SortBy(IComparer<TransportVehicle> comparer);
+
+    /// <summary>Regroups the fleet under one of the description's groupings (fleet-pipeline B-012).</summary>
+    /// <param name="grouping">How to group the fleet; the vehicle's own grouping answer until this is called.</param>
+    void GroupBy(FleetGrouping grouping);
 
     /// <summary>Sets how long a vehicle may be silent before it is marked stale (B-051).</summary>
     /// <param name="threshold">How long silence is tolerated; five minutes until this is called.</param>

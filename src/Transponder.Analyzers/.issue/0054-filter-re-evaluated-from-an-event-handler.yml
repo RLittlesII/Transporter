@@ -1,0 +1,85 @@
+id: "0054"
+type: task
+title: Report a filter or a sort re-evaluated from an event handler
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 3
+rank: 54
+
+parent: "0019"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transponder.Analyzers/.spec/README.md
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  `fleet-pipeline` B-008 names a diagnostic this analyzer does not carry: a
+  filter or a sort re-evaluated from a UI event handler, reported at the
+  handler, with the message naming the observable input that should have carried
+  it. `0033` delivered the claim's other half — the pipeline's filter is driven
+  by a predicate value and nothing enumerates a bound collection — and recorded
+  B-008's § 9 row as a performed review, because there is nothing in
+  `src/Transponder/Features` or `src/Gui` that re-applies either today.
+
+  The review is what holds the row, and it holds only while that stays true. The
+  first view model wiring a search box is the change that makes a rule worth
+  having, which is `fleet-dashboard` `0037`.
+
+  What this item owes before it can be implemented is the design, and it is not
+  small: a view-model property setter handing the tracker a predicate is the
+  **supported** shape (`fleet-pipeline` § 7), so the rule has to separate that
+  from re-deriving a filter inside a handler. "An event handler" has no single
+  spelling in C# either — a method attached with `+=`, a generated XAML handler,
+  a command body, a `PropertyChanged` observer — and a rule that reads one of
+  them reports a quarter of the cases and reads as enforcement of all four
+  (lesson 0001 and lesson 0002 of this Feature, both about a rule classifying by
+  a proxy).
+
+acceptance_criteria:
+  - "§ 3 of this specification gains a claim for the rule, and B-008's count of
+    seventeen rules is amended with it — a rule without a claim here is the
+    second store `spec-and-traceability` forbids."
+  - "A new `TRN` id from this Feature's own sequence; `TRN0018` is retired and
+    is not reused (B-002, B-007)."
+  - "The diagnostic reports at the handler and names the observable input that
+    should have carried the value, which is what `fleet-pipeline` B-008's
+    scenario asks for."
+  - "A view-model property setter that hands the tracker a predicate is **not**
+    reported — that is the shape `fleet-pipeline` § 7 decided on."
+  - "`fleet-pipeline` § 9's B-008 row names the diagnostic and its test, and
+    stops naming a review."
+
+decisions:
+  - "2026-10-06 — implementer — filed by `0033` rather than built by it, and
+    `fleet-pipeline` B-008's row carries a performed review in the meantime.
+    Same call `0032` made for B-022 and `0031` for B-023: a rule this analyzer
+    does not carry is a claim for this Feature to make, and the alternative was
+    `0033` inventing a rule class in another Feature's specification while
+    closing nine rows of its own. What makes the review honest rather than a
+    deferral is that it is performable now and was performed: nothing under
+    `Features/` or `src/Gui` calls `Filter`, `SortBy` or `GroupBy` at all, and
+    `src/Gui` has no event handler in it."
+  - "2026-10-06 — implementer — `ready-for-architecture` rather than
+    `ready-for-implementation`, because the design question in the summary is
+    unanswered and the obvious rule would report the supported shape. § 7 of
+    this specification answers it first, the way `0051`'s is waiting on the
+    same section."
+
+out_of_scope:
+  - "The half of `fleet-pipeline` B-008 that `TRN0007` already covers — an
+    imperative edit of a bound collection is reported today, and B-003 of that
+    Feature cites it."
+  - "Widening the analyzer's layer map, which is what B-022 and B-023 of
+    `fleet-pipeline` are waiting on and a separate question from this one."
