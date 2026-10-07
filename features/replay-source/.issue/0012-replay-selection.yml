@@ -2,7 +2,7 @@ id: "0012"
 type: task
 title: Select replay through the one switch every source uses
 
-status: in-progress
+status: done
 
 priority: high
 risk: 3
@@ -30,7 +30,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   Replay registers as one more strategy and is selected by the same decorator
@@ -76,6 +76,71 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — implementer — closed on all seven of its claims and on one it
+    does not hold. B-015 moved against `ReplayCompositionTests`, B-016 – B-018
+    against `ReplaySwapTests`, B-024 and B-025 against
+    `ReplayRegistrationTests`, B-026 against `ReplayStartupReportTests`, and
+    B-011 — `0010`'s claim, which `0010` could not prove — against a host
+    composed of the replay half alone. The specification's § 9 now reads
+    twenty-two `Verified` of twenty-seven, and the five that are left are the
+    vessel half and B-005, neither of which is work."
+  - "2026-10-06 — implementer — the recording is checked where the source is
+    registered and reported when the host starts. They read as one step in
+    `adr/0001` item 4 and are two: item 1 of the same record makes an unusable
+    recording leave its source unregistered, and a registration cannot be
+    withdrawn once the container is built — so the check runs while the
+    collection is still open, which is before a logger can be resolved.
+    `ReplayStartupReport` is an `IHostedService` holding rows it did not
+    produce. Rejected: an `IValidateOptions<ReplayOptions>`, which runs after
+    the container is closed and could only fail the host — the one thing B-026
+    forbids, because an unusable fallback with a working live demo is a degraded
+    talk and stopping the application makes it no talk. Specification § 10
+    carries the delta for `adr/0001`'s wording; the claim is unamended."
+  - "2026-10-06 — implementer — the registration takes the recordings root as a
+    seam rather than a path. A rehearsal recording is operational data that is
+    never a fixture (B-006), so a test of a registration that decides whether a
+    source exists has no file to point at; the public overload builds the
+    file-backed root from configuration and the internal one takes an
+    `IRecordingLibrary`. B-025's resolving is therefore asserted against
+    `RecordingLibrary` itself, which is the only type in the replay half that
+    touches a file system. Rejected: a test writing a recording to a temporary
+    directory, which puts a payload on disk in a test run and makes B-006 a rule
+    the suite breaks."
+  - "2026-10-06 — implementer — measuring a recording's span reads it through
+    `RecordedLine`, which is the pacer's own line reader extracted rather than
+    copied. Two parsers of one format is the drift ADR-0004 exists to prevent,
+    and the second one written is the one that reads a field the recorder
+    stopped writing. The pacer is `0010`'s and the extraction touches it, which
+    is the narrowest honest change: the alternative was a second `receivedAt`
+    parse living in the report."
+  - "2026-10-06 — implementer — the vessel key is checked, reported, and its
+    handle closed. B-020 expects the closing act's recording to be cleared by
+    this report, so a configured vessel recording produces a row even though
+    nothing can consume one until `0013`; holding its stream open for a run
+    nobody reads it in would be a leak with a claim attached. Nothing registers
+    a vessel source here — § 5 row 2 is why."
+  - "2026-10-06 — implementer — the shared part of `AddOpenSky` returns having
+    done nothing when it has already run, and the marker it checks is
+    `ObservedClock`. An application registers both halves and so calls it twice,
+    and one clock object behind three aliases is exactly the registration two
+    calls would break. Same shape as the scheduler provider's existing guard in
+    that method. `aircraft-source` § 7 gained a paragraph saying the split
+    happened and that B-029 stays true as written; the claim is not amended —
+    that is its own Feature's `spec-author`'s call, as § 11 row 4 says."
+  - "2026-10-06 — implementer — the `ITrackerSourceStrategy` registration lives
+    in `AddAircraftReplay(Stream)`, beside the chain it makes selectable, rather
+    than in the configuration overload above it. A chain registered without it
+    is a chain nothing can reach, which is the trap § 4 row 12 is about in its
+    new form; keeping them in one method means there is no way to register the
+    one and forget the other. `0011`'s remarks on that method said selection was
+    `0012`'s and are corrected rather than left standing."
+  - "2026-10-06 — implementer — the § 12 sign-off gate is waived for this item,
+    the third in a row to need it. All three rows still read 🟡 Draft and
+    `spec_status` is `draft`; the section is `spec-reviewer`'s and an
+    implementer may not flip rows it would be clearing for itself. The person
+    directed this item by name after `0011` landed, which is the authority the
+    waiver rests on, and it is named to `0012` alone. `0013` is the next item
+    here and will need a fourth unless the person signs § 12 or `0026` lands."
   - "2026-10-06 — the person — credential validation is registered with the
     live transport rather than with the OpenSky integration, so a composition
     that registers only replay starts with no credential and B-011 holds above

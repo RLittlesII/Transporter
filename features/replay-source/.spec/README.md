@@ -421,39 +421,32 @@ in this table once its file exists (`transponder-conventions` § "Declarations i
 § 7"). Accessibility follows the repository's rule — a type a consumer never
 names is `internal`, and the registration method is the only public surface.
 
-| Type                 | File                                                                                | Claims it makes visible                                        |
-| -------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `IRecordingWriter`   | [`IRecordingWriter.cs`](../../../src/Transponder/Recording/IRecordingWriter.cs)     | B-001's shape, and that a tap never faults into a poll (B-004) |
-| `RecordingWriter`    | [`RecordingWriter.cs`](../../../src/Transponder/Recording/RecordingWriter.cs)       | B-001, B-002                                                   |
-| `UnrecordedPayloads` | [`UnrecordedPayloads.cs`](../../../src/Transponder/Recording/UnrecordedPayloads.cs) | B-004 — the null object is what makes the tap branch-free      |
-| `RecordingOptions`   | [`RecordingOptions.cs`](../../../src/Transponder/Recording/RecordingOptions.cs)     | The one recordings root a rehearsal writes and a replay reads  |
-| `IRecordingPacer`    | [`IRecordingPacer.cs`](../../../src/Transponder/Recording/IRecordingPacer.cs)       | B-007's shape, and that a payload leaves still raw (B-014)     |
-| `RecordingPacer`     | [`RecordingPacer.cs`](../../../src/Transponder/Recording/RecordingPacer.cs)         | B-007, B-008, B-012, B-027                                     |
+| Type                  | File                                                                                  | Claims it makes visible                                           |
+| --------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `IRecordingWriter`    | [`IRecordingWriter.cs`](../../../src/Transponder/Recording/IRecordingWriter.cs)       | B-001's shape, and that a tap never faults into a poll (B-004)    |
+| `RecordingWriter`     | [`RecordingWriter.cs`](../../../src/Transponder/Recording/RecordingWriter.cs)         | B-001, B-002                                                      |
+| `UnrecordedPayloads`  | [`UnrecordedPayloads.cs`](../../../src/Transponder/Recording/UnrecordedPayloads.cs)   | B-004 — the null object is what makes the tap branch-free         |
+| `RecordingOptions`    | [`RecordingOptions.cs`](../../../src/Transponder/Recording/RecordingOptions.cs)       | The one recordings root a rehearsal writes and a replay reads     |
+| `IRecordingPacer`     | [`IRecordingPacer.cs`](../../../src/Transponder/Recording/IRecordingPacer.cs)         | B-007's shape, and that a payload leaves still raw (B-014)        |
+| `RecordingPacer`      | [`RecordingPacer.cs`](../../../src/Transponder/Recording/RecordingPacer.cs)           | B-007, B-008, B-012, B-027                                        |
+| `RecordedLine`        | [`RecordedLine.cs`](../../../src/Transponder/Recording/RecordedLine.cs)               | One reader of ADR-0004's line, for the pacer and the report both  |
+| `ReplayOptions`       | [`ReplayOptions.cs`](../../../src/Transponder/Recording/ReplayOptions.cs)             | B-024 — one key per source, and no default to be wrong            |
+| `IRecordingLibrary`   | [`IRecordingLibrary.cs`](../../../src/Transponder/Recording/IRecordingLibrary.cs)     | B-025's resolving, as the seam a test supplies recordings through |
+| `RecordingLibrary`    | [`RecordingLibrary.cs`](../../../src/Transponder/Recording/RecordingLibrary.cs)       | B-025 — the only file system in the replay half                   |
+| `RecordingDefect`     | [`RecordingDefect.cs`](../../../src/Transponder/Recording/RecordingDefect.cs)         | What B-026 reports, named rather than described                   |
+| `CheckedRecording`    | [`CheckedRecording.cs`](../../../src/Transponder/Recording/CheckedRecording.cs)       | B-024, B-026 — the check that decides whether a source registers  |
+| `ReplayStartupReport` | [`ReplayStartupReport.cs`](../../../src/Transponder/Recording/ReplayStartupReport.cs) | B-026 — a report at startup, and never a refusal                  |
 
-| Type                           | File                                                                                                                   | Claims it makes visible                                         |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `ReplayOpenSkyApi`             | [`ReplayOpenSkyApi.cs`](../../../src/Transponder/Integrations/OpenSky/Replay/ReplayOpenSkyApi.cs)                      | B-007's client half, B-009, B-013, B-014, B-022                 |
-| `IAircraftReplayTrackerSource` | [`IAircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/IAircraftReplayTrackerSource.cs)         | The seam the selector tells two instances of one class apart by |
-| `AircraftReplayTrackerSource`  | [`AircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/AircraftReplayTrackerSource.cs)           | B-022 — it delegates `Connect` and projects nothing             |
-| `OpenSkyReplayRegistration`    | [`OpenSkyReplayRegistration.cs`](../../../src/Transponder/Integrations/OpenSky/Container/OpenSkyReplayRegistration.cs) | B-007's zero interval, B-016's separate cache, B-022            |
+| Type                           | File                                                                                                                   | Claims it makes visible                                            |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `ReplayOpenSkyApi`             | [`ReplayOpenSkyApi.cs`](../../../src/Transponder/Integrations/OpenSky/Replay/ReplayOpenSkyApi.cs)                      | B-007's client half, B-009, B-013, B-014, B-022                    |
+| `IAircraftReplayTrackerSource` | [`IAircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/IAircraftReplayTrackerSource.cs)         | The seam the selector tells two instances of one class apart by    |
+| `AircraftReplayTrackerSource`  | [`AircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/AircraftReplayTrackerSource.cs)           | B-022 — it delegates `Connect` and projects nothing                |
+| `OpenSkyReplayRegistration`    | [`OpenSkyReplayRegistration.cs`](../../../src/Transponder/Integrations/OpenSky/Container/OpenSkyReplayRegistration.cs) | B-007's zero interval, B-015, B-016's separate cache, B-022, B-024 |
 
-The remaining declaration is written out because its file does not exist yet.
-
-```csharp
-/// <summary>Which recording each replay source reads (adr/0001). The root is not here — see below.</summary>
-internal sealed class ReplayOptions
-{
-    /// <summary>The configuration section this binds under.</summary>
-    internal const string Section = "Replay";
-
-    /// <summary>Gets or sets the aircraft recording's file name. Null until configuration names one, and no default is compiled in.</summary>
-    public string? Aircraft { get; set; }
-
-    /// <summary>Gets or sets the vessel recording's file name. Null until configuration names one.</summary>
-    public string? Vessels { get; set; }
-}
-
-```
+Every declaration this section wrote out now has a file, so the table above is
+the whole of it. `ReplayOptions` arrived with `0012` carrying exactly the two
+keys written here, and the root is not among them.
 
 **The recordings root moved, and the reason is `adr/0001` item 2.** This section
 first declared `Root` on `ReplayOptions`, beside the recording names. `0009`
@@ -522,6 +515,38 @@ which fails the host. An absent credential means nothing works; an unusable
 recording means the fallback is gone while the live demo is fine, and stopping
 the application for it would turn a degraded talk into no talk.
 
+**What `0012` settled in building it**
+
+Four things this section left open, and each is a consequence of B-024 rather
+than a preference.
+
+- **The check runs at registration and the report runs at startup.** They read
+  as one thing above and are two: whether a source is registered at all depends
+  on what the check finds, and a registration cannot be withdrawn once the
+  container is built — so the check has to run while the collection is still
+  open, which is before anything can resolve a logger. What is left for startup
+  is saying so, which
+  [`ReplayStartupReport`](../../../src/Transponder/Recording/ReplayStartupReport.cs)
+  does as an `IHostedService` holding rows it did not produce. Rejected: an
+  `IValidateOptions<ReplayOptions>`, which runs after the container is closed
+  and could only fail the host — the one thing this report must not do.
+- **The recordings root is a seam, not a path.** A rehearsal recording is
+  operational data that is never a fixture (B-006), so a test of the
+  registration has no file to point at; the registration takes an
+  `IRecordingLibrary` and the public overload builds the file-backed one from
+  configuration. B-025's resolving is then asserted against `RecordingLibrary`
+  itself, which is where the combine against the root lives, and the only file
+  system in the replay half.
+- **The pacer's line reader is now shared, not copied.** Measuring a recording's
+  span reads `receivedAt` off every line, which is the pacer's own parse — so it
+  moved to `RecordedLine` and both call it. Two parsers of one format is the
+  drift ADR-0004 exists to prevent, and the second one written is the one that
+  reads a field the recorder stopped writing.
+- **The vessel key is checked, reported, and closed.** B-020 expects the closing
+  act's recording to be cleared by this report, so the row is produced for a
+  configured vessel recording even though nothing can consume one until `0013`.
+  Its handle is released rather than held open for a run nobody reads it in.
+
 **The vessel half**
 
 B-023 substitutes at the strategy: a vessel replay source implements
@@ -552,9 +577,18 @@ part and a live part, and the replay registration calls the shared part only.
 | the live part   | `OpenSkyCredentials` and their validation, the token source, the Flurl client cache, `OpenSkyHttpApi`, and the live cache, client and strategy. |
 | the replay part | `ReplayOptions` and its report, the pacer, `ReplayOpenSkyApi`, and the replay cache, client and strategy.                                       |
 
+`0012` built it: `AddOpenSky` calls `AddOpenSkyShared` and then registers the
+live transport, `AddAircraftReplay` calls the same shared method and then
+registers the replay half, and an application calls both. The shared part
+returns having done nothing when it has already run, because calling it twice is
+what an application that registers both halves does — and the marker it checks
+is the observed clock, since one clock object behind three aliases is the
+registration two calls would break.
+
 Two things this is **not**. It is not two compositions of one graph: the shared
-part is one private method both call, which is the objection that ruled out
-building the replay chain outside `AddOpenSky` altogether. And it is not a
+part is one method both call — `internal` rather than private, because the two
+registrations are two classes in one assembly — which is the objection that
+ruled out building the replay chain outside `AddOpenSky` altogether. And it is not a
 credential becoming optional — a composition that registers the live transport
 validates exactly as it does today, so
 [`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md)
@@ -629,6 +663,24 @@ reassignment is still `spec-author`'s to make, and it is now one row rather than
 three; what the outcome shows is that closing the item on what it proved cost
 nothing, because the item that could write the tests wrote them next.
 
+**And `0012` settled the last of it.** B-011's row is `Verified` against
+`ReplayCompositionTests`, over a host composed of the replay half alone: it
+starts with no credential configured, the fleet fills from a recording, and
+Flurl's `HttpTest` saw no call at all. So the finding is now about a row that
+has moved rather than a row that cannot — three claims an item held and could
+not prove, all proved by the items that could. Whether `0010` should still carry
+B-011 in § Tasks is `spec-author`'s call and is the only part left of this
+finding; nothing is waiting on it.
+
+**What `0012` settled here.** A registration that decides whether a source
+exists at all cannot be driven through the file system, because what it reads is
+operational data no test may hold (B-006). The seam is the answer: the
+registration takes the recordings root, a test supplies one held in memory, and
+B-025's resolving is asserted against the real
+[`RecordingLibrary`](../../../src/Transponder/Recording/RecordingLibrary.cs)
+instead — which is also the only type in the replay half with a file system in
+it.
+
 **Scenarios**
 
 Twenty-seven scenarios in [`replay-source.feature`](replay-source.feature)
@@ -656,8 +708,8 @@ already stands up the application's own composition in
 `TransponderCompositionTests` — which is the shape every host-level row below
 reuses rather than assembling a graph by hand.
 
-Four traps are worth carrying, because each cost a cycle in this Feature
-specifically:
+Five traps are worth carrying, because each cost a cycle in this Feature
+specifically or would have:
 
 - **An advance is not a wait, for work that left the scheduler.** Everything
   above the pacer awaits tasks rather than scheduler operations, so a
@@ -683,6 +735,12 @@ specifically:
   cache-shaped parameters collide the moment the replay chain hands it different
   ones. That type's fixture is hand-written over `AutoFixtureBase<T>`, saying so
   in its remarks.
+- **A recording has to outlast the staleness threshold or no source is
+  registered over it** (B-026). So the two-polls-fifteen-seconds-apart recording
+  that proves B-007 is useless to every selection test: the registration rejects
+  it and the composition under test has nothing to select. The recordings
+  selection reads span six minutes, and the ninety-second one exists to be
+  rejected.
 - **The arrangement is not a helper.** A synthetic recording is _data_ and may be
   built by a private method; the stream handed to the pacer, the host, and the
   configuration handed to the registration are the `// Given` and stay in the
@@ -692,8 +750,8 @@ specifically:
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and thirteen of the twenty-seven rows read `Missing`.**
-Fourteen are `Verified`. Five arrived with `0009`, which built the recorder:
+**This is the gate, and five of the twenty-seven rows read `Missing`.**
+Twenty-two are `Verified`. Five arrived with `0009`, which built the recorder:
 B-001 – B-004 against `RecordingWriterTests` and `RecordingTapTests`, and
 B-006 as a review a reader can now perform. Three arrived with `0010`, which
 built the pacer: B-008, B-012 and B-027 against `RecordingPacerTests`. Six
@@ -701,11 +759,18 @@ arrived with `0011`, which built the replay contract and the second chain over
 it: B-009, B-010, B-013 and B-014 against `ReplayOpenSkyApiTests`,
 `ReplayStalenessTests` and `ReplayCadenceTests`, B-022 against
 `ReplayCompositionTests` and a review this section records, and B-007 completed —
-its pacer half passed on `0010` and its client half passes now. What is left is
-the selection half and the vessel half — nothing registers replay as a strategy
-yet, and no vessel feed is specified — and those rows name what will prove each
-claim rather than leaving the section empty, which is the difference between a
-gate that says what is owed and one that says only that something is.
+its pacer half passed on `0010` and its client half on `0011`. Eight arrived
+with `0012`, which built selection: B-015 against `ReplayCompositionTests`,
+B-016 – B-018 against `ReplaySwapTests`, B-024 and B-025 against
+`ReplayRegistrationTests`, B-026 against `ReplayStartupReportTests`, and B-011 —
+the row `0010` held and could not move — against a host composed of the replay
+half alone.
+
+What is left is the vessel half, which waits on a specification rather than on
+work, and B-005, which waits on a recording nobody has captured. Those rows name
+what will prove each claim rather than leaving the section empty, which is the
+difference between a gate that says what is owed and one that says only that
+something is.
 
 A row's Status becomes `Verified` when every mechanism it names passes in a run,
 and a review becomes `Verified` when it is performed and recorded. A scenario
@@ -734,41 +799,45 @@ scenario here, so no tag anchors two.
 | B-008    | `@B-008` | `RecordingPacerTests.GivenTheRecordingIsReplayedPastItsEnd_WhenTheBoundaryIsCrossed_ThenTheFirstPayloadFollowsTheLastAndNoChangesetRemovesEveryAircraft` — `0010`. The changeset half is proven by construction rather than by assertion: there is no cache below the substitution point, so the pacer clears nothing and emits nothing but payloads, and the test asserts the boundary releases the first payload after the last with no completion and no fault                                                                                                                                                 | Verified |
 | B-009    | `@B-009` | `ReplayOpenSkyApiTests.GivenALineWhosePayloadReportsOneInstantAndArrivedAtAnother_WhenItIsReplayed_ThenTheReportedOneIsTheObservedInstant`, over a recording that arrived in 2030 and reports 2026, so the two instants cannot be confused for one another — `0011`                                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-010    | `@B-010` | `ReplayStalenessTests.GivenAnAircraftLastReportedSixMinutesBeforeTheRecordingEnds_WhenTheRecordingIsReplayed_ThenItIsMarkedStaleAtThatPointAndKept`, over the real cache, projection and tracker with the poll loop stubbed — `0011`                                                                                                                                                                                                                                                                                                                                                                              | Verified |
-| B-011    | `@B-011` | `ReplayCompositionTests.GivenNoCredentialConfiguredAndNoReachableProvider_WhenTheHostStartsAndReplayRuns_ThenTheFleetFillsAndNoRequestIsMade` — a host test over the registration split § 11 row 4 decided, so **`0012` builds what moves this row** while `0010` holds the claim (§ 8's finding for `spec-author`)                                                                                                                                                                                                                                                                                               | Missing  |
+| B-011    | `@B-011` | `ReplayCompositionTests.GivenNoCredentialConfiguredAndNoReachableProvider_WhenTheHostStartsAndReplayRuns_ThenTheFleetFillsAndNoRequestIsMade` — a host composed of the replay half alone, which starts because credential validation moved to the live transport (§ 11 row 4); the fleet fills from the recording and Flurl's `HttpTest` saw no call. `0010` holds the claim and **`0012` built the test**                                                                                                                                                                                                        | Verified |
 | B-012    | `@B-012` | `RecordingPacerTests.GivenARecordingWhoseFinalLineIsCutMidToken_WhenItIsReplayed_ThenEveryCompleteLineIsReplayedAndTheStreamDoesNotFault` — `0010`                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Verified |
 | B-013    | `@B-013` | `ReplayOpenSkyApiTests.GivenAPayloadThatProducedAnAircraftLive_WhenTheSamePayloadIsReplayed_ThenTheAircraftIsIdenticalAndTheLiveProjectionBuiltIt`, asserting the snapshots and the projected vehicles both — `0011`                                                                                                                                                                                                                                                                                                                                                                                              | Verified |
 | B-014    | `@B-014` | `ReplayOpenSkyApiTests.GivenARecordingTakenBeforeAConverterFix_WhenItIsReplayedAfterTheFix_ThenTheCorrectedValuesAreObservedWithNoRecapture` — `0011` built the test, so the row moves: the recording still holds the padded callsign and the quoted squawk the provider sent, and the values observed are the ones today's reader produces from those bytes. `0010` delivered the half it could, the pacer answering the payload as text and never deserializing it                                                                                                                                              | Verified |
-| B-015    | `@B-015` | `ReplayCompositionTests.GivenBothSourcesRegistered_WhenReplayIsSelected_ThenItIsSelectedThroughTheOneDecoratorAndNothingElseSelectsIt` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
-| B-016    | `@B-016` | `ReplaySwapTests.GivenTheFleetIsObserved_WhenTheSourceSwapsToReplay_ThenNoMarkerCompletionOrErrorReachesTheSeam` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Missing  |
-| B-017    | `@B-017` | `ReplaySwapTests.GivenALivePollerIsRunning_WhenReplayBecomesTheLiveSource_ThenTheOutgoingPollStops` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
-| B-018    | `@B-018` | `ReplaySwapTests.GivenAFilterASortAndAGroupInPlace_WhenTheSourceSwapsToReplay_ThenNoneIsRebuiltAndTheBindingSurvives` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Missing  |
+| B-015    | `@B-015` | `ReplayCompositionTests.GivenBothSourcesRegistered_WhenReplayIsSelected_ThenItIsSelectedThroughTheOneDecoratorAndNothingElseSelectsIt` — one registration answers the seam a consumer holds, both sources answer the one the selector reads, and selecting replay through it is what fills the fleet from the recording — `0012`                                                                                                                                                                                                                                                                                  | Verified |
+| B-016    | `@B-016` | `ReplaySwapTests.GivenTheFleetIsObserved_WhenTheSourceSwapsToReplay_ThenNoMarkerCompletionOrErrorReachesTheSeam` — the stream neither completes nor errors across the swap, and every change in it is an ordinary cache change about a vehicle — `0012`                                                                                                                                                                                                                                                                                                                                                           | Verified |
+| B-017    | `@B-017` | `ReplaySwapTests.GivenALivePollerIsRunning_WhenReplayBecomesTheLiveSource_ThenTheOutgoingPollStops` — the outgoing poll is disposed once and never restarted, counted at the client the strategy's subscription owns — `0012`                                                                                                                                                                                                                                                                                                                                                                                     | Verified |
+| B-018    | `@B-018` | `ReplaySwapTests.GivenAFilterASortAndAGroupInPlace_WhenTheSourceSwapsToReplay_ThenNoneIsRebuiltAndTheBindingSurvives` — the bound collection is the same instance after the swap, the predicate set against the live feed still excludes the recording's aircraft reporting no position, the groups re-formed, and the live client was polled exactly once — `0012`                                                                                                                                                                                                                                               | Verified |
 | B-019    | `@B-019` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselRecordingTests.GivenASequenceOfReceivedMessages_WhenEachIsRecorded_ThenThereIsOneLinePerMessageAndNoneIsBatched` — `0013`                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
 | B-020    | `@B-020` | **Review**, performed before the closing act is presented: a vessel recording is named in configuration and the startup report clears it. Re-done by the change that alters the closing act's source — `0013`                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
 | B-021    | `@B-021` | **Review** — no vehicle, record or snapshot type declared under the replay namespaces. Re-done by any change that adds a type there, and the reviewer's question is whether the type belongs to the recorded provider's Feature instead — `0013`                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
 | B-022    | `@B-022` | Both halves: `ReplayCompositionTests.GivenTheReplayChainIsRegistered_WhenItIsResolved_ThenTheClientIsTheLiveClassOverTheReplayContract`, with `GivenBothChainsAreRegistered_WhenEachIsResolved_ThenTheReplayChainHasItsOwnCacheAndAnIntervalOfZero` for the second instance; and a **Review**, performed on `0011`: `Integrations/OpenSky/Replay/` declares one type, `ReplayOpenSkyApi`, and the chain's only other additions are a seam interface and a strategy that delegates `Connect` — no client, cache, converter or projection in either. Re-done by any type added under the replay namespaces — `0011` | Verified |
 | B-023    | `@B-023` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselReplayTrackerSourceTests.GivenARecordingAndNoContractToStandInFor_WhenTheStrategyIsRegistered_ThenItReachesTheSeamLikeEveryOtherSource` — `0013`                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
-| B-024    | `@B-024` | `ReplayRegistrationTests.GivenAnAircraftRecordingNamedAndNoVesselOne_WhenTheHostStarts_ThenOnlyTheAircraftReplaySourceIsSelectableAndTheLiveSourceIsStillSelected` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                       | Missing  |
-| B-025    | `@B-025` | `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
-| B-026    | `@B-026` | `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                | Missing  |
+| B-024    | `@B-024` | `ReplayRegistrationTests.GivenAnAircraftRecordingNamedAndNoVesselOne_WhenTheHostStarts_ThenOnlyTheAircraftReplaySourceIsSelectableAndTheLiveSourceIsStillSelected` — two strategies, one of them replay, and the vessel key reported as unnamed rather than registered — `0012`                                                                                                                                                                                                                                                                                                                                   | Verified |
+| B-025    | `@B-025` | `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` — asserted against `RecordingLibrary`, the one type here that touches a file system, over a root holding nothing — `0012`                                                                                                                                                                                                                                                                                                                                | Verified |
+| B-026    | `@B-026` | `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` — the host starts, two warnings name the two recordings, and no strategy is registered for either — `0012`                                                                                                                                                                                                                                                                                                                                              | Verified |
 | B-027    | `@B-027` | `RecordingPacerTests.GivenSyntheticLinesInAMemoryStream_WhenThePacerIsDriven_ThenItReplaysThemWithNoFileSystemAndReadsNoConfiguration` — proven by a test that has no file system rather than by reading the constructor — `0010`, with `GivenAStreamThatCannotSeek_WhenThePacerIsConstructed_ThenItSaysSoRatherThanFailingAtTheLoopBoundary` for the precondition the handover carries                                                                                                                                                                                                                           | Verified |
 
 **What the matrix says about the items.** Every claim has a row and a named
-mechanism, so no item is waiting on this section. Four rows are blocked on
-something other than work: B-005 on a recording nobody has captured, B-019 and
-B-023 on a specification nobody has written, and B-011 on `0012` while `0010`
-carries it. Two of the six that were in that state moved on `0011` — B-007 and
-B-014, which `0010` held and `0011` proved — so one of § 8's two findings for
-`spec-author` is now about one claim rather than three. The rest move when their
-item builds and their test passes.
+mechanism, so no item is waiting on this section. Three rows are blocked on
+something other than work: B-005 on a recording nobody has captured, and B-019
+and B-023 on a specification nobody has written. All three of the rows that were
+blocked on another item have moved — B-007 and B-014 on `0011`, B-011 on `0012`
+— so § 8's finding about a claim an item holds and cannot prove is now a record
+of three settled cases rather than an open problem.
 
-**`0010` closed on three of its six claims, and `0011` moved two of the other
-three.** B-008, B-012 and B-027 were `Verified` against `RecordingPacerTests`
-when the pacer landed; B-007's client half and B-014 are `Verified` now, against
-the replay-contract tests `0010` could not write. B-011 is the one left: its
-mechanism is a host test over the registration split, which is `0012`'s. Closing
-`0010` on what it proved rather than holding it open is what let `0011` run, and
-`0011` is what moved the rows — which is the case § 8's findings make, now with
-the outcome attached rather than only the argument.
+**`0010` is closed on all six of its claims, across three items.** B-008, B-012
+and B-027 were `Verified` against `RecordingPacerTests` when the pacer landed;
+B-007's client half and B-014 moved on `0011`, against the replay-contract tests
+`0010` could not write; B-011 moved on `0012`, against a host over the
+registration split. Closing `0010` on what it proved rather than holding it open
+is what let `0011` and then `0012` run, and both moved the rows — which is the
+case § 8's findings make, now with the whole outcome attached rather than only
+the argument.
+
+**`0012` closed on all seven of its own claims and one it did not hold.** B-015
+– B-018 are selection and the swap, B-024 – B-026 are which recording a run
+loads, and B-011 is the row this item existed to make provable. What it did not
+do is the vessel half: `0013`'s four claims are untouched, and § 5 row 2 is why.
 
 **`0009` is closed on five of its six claims, and B-005 is why it is not six.**
 That row needs a recording to look at, which § 5 row 3 keeps out of scope and
@@ -779,6 +848,18 @@ in its scope produces.
 ## 10. Lessons / Spec Deltas
 
 <!-- Rules: ../../../.spec/templates/feature.md § 10 -->
+
+**Spec delta, 2026-10-06, from `0012`: `adr/0001` item 4 reads as one step and is
+two.** The record says a defective recording "is reported when the application
+starts", and B-026 repeats it. What `0012` found is that the _check_ cannot wait
+for startup: item 1 of the same record makes an unusable recording leave its
+source unregistered, and a registration cannot be withdrawn once the container
+is built — so the recording is resolved, opened and measured while the service
+collection is still open, and startup is where the finding is said out loud. The
+claim's wording is unamended, because what a presenter observes is exactly what
+it promises; the record's item 4 would read truer as "reported no later than
+startup, and decided before the container closes". That is `spec-author`'s call
+and nothing waits on it.
 
 **Spec delta, 2026-10-06, from `0009`: ADR-0004's two requirements cannot both
 hold for a payload containing a line break.** The record fixes one JSON object
