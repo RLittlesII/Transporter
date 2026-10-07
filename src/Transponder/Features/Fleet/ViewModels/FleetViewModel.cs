@@ -3,19 +3,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Windows.Input;
 using Akka.Actor;
 using Akka.Hosting;
 using DynamicData;
 using LanguageExt;
+using ReactiveMarbles.Command;
 using ReactiveMarbles.Mvvm;
 using Rocket.Surgery.Airframe;
 using Transponder.Messages;
 using Transponder.Model;
 using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
-using Unit = System.Reactive.Unit;
 
 namespace Transponder.Features.Fleet.ViewModels;
 
@@ -38,12 +37,17 @@ public sealed class FleetViewModel : RxObject, IDisposable
     public FleetViewModel(IFleetTracker tracker, ISchedulerProvider schedulers, IActorRegistry registry)
     {
         _tracker = tracker;
-        RefreshCommand = new GestureCommand(() =>
-        {
-            registry.Get<DemandPoll>().Tell(DemandPoll.Instance);
-            _presses.OnNext(Unit.Default);
-        });
-        _isRefreshing = _presses
+
+        // The scheduler is passed rather than left to default: an unset one is resolved from
+        // ReactiveMarbles' service locator, which is the ambient read B-005 forbids.
+        var refresh = RxCommand
+            .Create(
+                () => registry.Get<DemandPoll>().Tell(DemandPoll.Instance),
+                outputScheduler: schedulers.UserInterfaceThread)
+            .DisposeWith(_garbage);
+
+        RefreshCommand = refresh;
+        _isRefreshing = refresh
             .Select(_ => Observable
                 .Return(true)
                 .Concat(tracker
@@ -53,9 +57,11 @@ public sealed class FleetViewModel : RxObject, IDisposable
                     .Merge(Observable.Timer(ClearsAfter, schedulers.UserInterfaceThread).Select(static _ => false))
                     .Take(1)))
             .Switch()
-            .StartWith(false)
-            .ObserveOn(schedulers.UserInterfaceThread)
-            .AsValue(_ => RaisePropertyChanged(nameof(IsRefreshing)));
+            .AsValue(
+                _ => RaisePropertyChanged(nameof(IsRefreshing)),
+                schedulers.UserInterfaceThread,
+                static () => false)
+            .DisposeWith(_garbage);
         tracker
             .Fleet
             .ObserveOn(schedulers.UserInterfaceThread)
@@ -169,18 +175,7 @@ public sealed class FleetViewModel : RxObject, IDisposable
     }
 
     /// <inheritdoc/>
-    public void Dispose()
-    {
-        // The binder holds the one subscription this view model did not put in _garbage, and
-        // the interface it is handed back as does not say it is disposable.
-        if (_isRefreshing is IDisposable binder)
-        {
-            binder.Dispose();
-        }
-
-        _presses.Dispose();
-        _garbage.Dispose();
-    }
+    public void Dispose() => _garbage.Dispose();
 
     /// <summary>The same order, read the other way (B-012).</summary>
     /// <param name="comparer">The description's comparer.</param>
@@ -201,7 +196,6 @@ public sealed class FleetViewModel : RxObject, IDisposable
     private static readonly TimeSpan ClearsAfter = TimeSpan.FromSeconds(3);
 
     private readonly CompositeDisposable _garbage = [];
-    private readonly Subject<Unit> _presses = new();
     private readonly IValueBinder<bool> _isRefreshing;
     private readonly ReadOnlyObservableCollection<TrackedVehicle> _fleet;
     private readonly IFleetTracker _tracker;

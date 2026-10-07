@@ -117,6 +117,25 @@ delivered: |
   `AddTransponder` alone; the test's arrangement now composes the host too, which
   is lesson `0047` working as intended.
 
+review: |
+  Pull request #52, 2026-10-07 — `Needs work`, five findings, all taken.
+  `GestureCommand` is deleted: `RxCommand` from `ReactiveMarbles.Command` is both
+  the command and the stream of its own presses, so the subject beside it is gone
+  too. `AsValue` now carries the initial value and the scheduler, replacing a
+  `StartWith(false)` that projected a presentation default down the pipeline and
+  the `ObserveOn` above the call; the binder and the command are disposed with
+  `DisposeWith(_garbage)`. `0047`'s three composition tests pass a `TestScheduler`
+  instead of `ImmediateScheduler.Instance`.
+
+  No claim moved and no behaviour changed: B-028's five tests passed before and
+  after, 214 green. One consequence found while making the change — `RxCommand`
+  reads its exception handler from ReactiveMarbles' process-wide locator even when
+  the output scheduler is passed, so `AddTransponder` writes that locator's core
+  registrations and the test assembly does the same once in a module initialiser.
+  The rules are in `mvvm` and `test-from-scenarios`, and
+  `lessons/0002-a-hand-rolled-command-and-a-projected-default.md` holds the
+  incident.
+
 out_of_scope:
   - "Everything in § 5 of the specification."
   - "The instant itself — `fleet-pipeline` B-031, built by `0059`."

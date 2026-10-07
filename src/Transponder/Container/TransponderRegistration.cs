@@ -1,6 +1,11 @@
+using System;
+using System.Reactive;
 using System.Reactive.Concurrency;
+using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ReactiveMarbles.Locator;
+using ReactiveMarbles.Mvvm;
 using Rocket.Surgery.Airframe;
 using Transponder.Features.Fleet.ViewModels;
 using Transponder.Integrations.OpenSky.Container;
@@ -45,6 +50,15 @@ public static class TransponderRegistration
     {
         services.AddSingleton<ISchedulerProvider>(
             _ => new SchedulerProvider(userInterfaceThread, TaskPoolScheduler.Default));
+
+        // ReactiveMarbles' own locator, which `RxCommand` reads its exception handler and default
+        // schedulers from. It is process-wide, so the composition root is the one place that may
+        // write it: a view model doing this would be resolving from a static, and every view model
+        // takes its schedulers by constructor instead (`fleet-pipeline` B-005).
+        ServiceLocator.Current().AddCoreRegistrations(
+            userInterfaceThread,
+            TaskPoolScheduler.Default,
+            Observer.Create<Exception>(static error => ExceptionDispatchInfo.Capture(error).Throw()));
 
         services.AddOpenSky(configuration);
         services.AddAircraftReplay(configuration);

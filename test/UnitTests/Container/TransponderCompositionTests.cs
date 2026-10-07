@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Reactive.Concurrency;
 using Akka.Hosting;
 using AwesomeAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Reactive.Testing;
 using Transponder.Container;
 using Transponder.Integrations.OpenSky;
 using Transponder.Tracking;
@@ -45,7 +45,7 @@ public class TransponderCompositionTests
             .Build();
         using var host = new HostBuilder()
             .ConfigureServices(services => services
-                .AddTransponder(settings, ImmediateScheduler.Instance)
+                .AddTransponder(settings, new TestScheduler())
                 .AddAkka("transponder", static _ => { }))
             .Build();
 
@@ -77,7 +77,7 @@ public class TransponderCompositionTests
             .Build();
         using var host = new HostBuilder()
             .ConfigureServices(services => services
-                .AddTransponder(settings, ImmediateScheduler.Instance)
+                .AddTransponder(settings, new TestScheduler())
                 .AddAkka("transponder", static _ => { }))
             .Build();
 
@@ -128,7 +128,7 @@ public class TransponderCompositionTests
 
         return new HostBuilder()
             .ConfigureServices(services => services
-                .AddTransponder(settings, ImmediateScheduler.Instance)
+                .AddTransponder(settings, new TestScheduler())
                 .AddAkka("transponder", static _ => { }))
             .Build();
     }

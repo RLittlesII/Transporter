@@ -60,6 +60,12 @@ claiming coverage for anything.
   recorded source age items the same way a live one does.
 - **No sleeps, no real delays, no retry-until-true.** If a test takes a second,
   it is reading the wrong clock.
+- **The only scheduler a test passes is a `TestScheduler`** — never
+  `ImmediateScheduler.Instance` or `CurrentThreadScheduler.Instance`, even where
+  a test does not advance time. An immediate scheduler runs scheduled work inline,
+  so a stage that marshalled and a stage that did not look the same, and the first
+  claim about which thread something arrives on passes for the wrong reason
+  (PR #52's review, 2026-10-07).
 - **Advance to the due instant, not to the figure the fixture reads like.** A
   test that awaits a value released by a scheduled wait hangs for ever when the
   advance stops short of it — the await never completes and the run looks stuck
