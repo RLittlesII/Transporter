@@ -216,7 +216,7 @@ No domain type is added or changed. The types below are view state.
 | `FleetViewModel.Selected`             | `Option<TransportVehicle>`                      | The abstract type: the grid selects a vehicle, and only the pane learns which kind (B-013).                                                                                                                                                                                                                                                                                                                                             |
 | `FleetViewModel.IsSwapping`           | `bool`                                          | Drives the busy indicator (B-016).                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `FleetViewModel.SwapCommand`          | `ICommand`                                      | Tells the actor; never `Ask`s it (B-016, B-017).                                                                                                                                                                                                                                                                                                                                                                                        |
-| `FleetViewModel.RefreshCommand`       | `ICommand`                                      | An `RxCommand`, which is also the stream of its own presses, that tells the actor a poll is wanted; never `Ask`s it and never waits (B-028, B-017). The actor decides whether to perform one — the throttle is `aircraft-source` B-053's, not a rule this view model repeats.                                                                                                                                                           |
+| `FleetViewModel.RefreshCommand`       | `RxCommand<Unit, Unit>`                         | An `RxCommand`, which is also the stream of its own presses, that tells the actor a poll is wanted; never `Ask`s it and never waits (B-028, B-017). Typed as the command rather than as `ICommand`, which it implements for the binding, because the indicator is read from it. The actor decides whether to perform one — the throttle is `aircraft-source` B-053's, not a rule this view model repeats.                               |
 | `FleetViewModel.IsRefreshing`         | `bool`                                          | Drives the refresh indicator (B-028). Set by the gesture, cleared by the next observed instant — `fleet-pipeline` B-031, one per applied poll including a poll whose data was identical — with a three-second cap for the press that was refused and produced no poll at all (decisions/0001). A **derived value**, not a field the view model sets: the gesture, the instant and the cap are one stream read through `AsValue`, below. |
 | `FleetDetailViewModel.Vehicle`        | `Option<TransportVehicle>`                      | Absent empties the pane (B-014).                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `FleetDetailViewModel.Rows`           | `IReadOnlyList<(string Label, string Value)>`   | The pane's own projection, where the one legitimate downcast happens (B-013) and where a canonical unit is converted by a named member (B-019).                                                                                                                                                                                                                                                                                         |
@@ -271,57 +271,29 @@ sequenceDiagram
     Note over Grid: the same collection object throughout — it is the view model's
 ```
 
-**The refresh indicator is a derived value, not a flag the gesture sets.** The
-press, the instant that ends it and the cap are one stream, read through
-`ReactiveMarbles.Mvvm`'s `AsValue` — the first use of it in this repository,
-beside the `RaiseAndSetIfChanged` the four inputs already use. The difference is
-which direction the value flows: an input is state the user sets and the view
-model remembers, and the indicator is state the pipeline decides, so a property
-with a setter would be a second place its value lives.
+**The refresh indicator is a derived value, not a flag the gesture sets.** An
+input is state the user sets and the view model remembers; the indicator is state
+the domain decides, so a property with a setter would be a second place its value
+lives. The press is the command and the command is the stream of its own
+executions, so the view model keeps no subject to watch its own gesture.
 
-**The press is the command, and the command is the stream.** `RxCommand` from
-`ReactiveMarbles.Command` is an `IObservable` of its own executions, so the
-gesture needs no subject beside it and the view model holds none — PR #52's
-review, and § 10. Its output scheduler is passed rather than defaulted, because an
-unset one is read from ReactiveMarbles' process-wide locator; the composition root
-is what writes that locator, and a view model still takes every scheduler it uses
-by constructor (B-005).
+What the indicator owes, which is this section's to state and
+[`FleetViewModel`](../ViewModels/FleetViewModel.cs) to carry:
 
-```csharp
-var refresh = RxCommand
-    .Create(() => registry.Get<DemandPoll>().Tell(DemandPoll.Instance), outputScheduler: schedulers.UserInterfaceThread)
-    .DisposeWith(_garbage);
-
-RefreshCommand = refresh;
-_isRefreshing = refresh
-    .Select(_ => Observable.Return(true).Concat(
-        tracker.Observed.Skip(1).Select(static _ => false)
-            .Merge(Observable.Timer(ClearsAfter, schedulers.UserInterfaceThread).Select(static _ => false))
-            .Take(1)))
-    .Switch()
-    .AsValue(_ => RaisePropertyChanged(nameof(IsRefreshing)), schedulers.UserInterfaceThread, static () => false)
-    .DisposeWith(_garbage);
-```
-
-Six things are stated by that shape rather than left to a reader. `AsValue`'s
-initial-value overload is what makes the property `false` before the first press,
-rather than a `StartWith` projecting a value down the pipeline, and the same call
-takes the scheduler the value surfaces on instead of an `ObserveOn` above it; both
-the binder and the command are disposed with the view model's own disposables. `Skip(1)` is
-the one `0059` added: the tracker publishes the instant in force on subscription,
-because the clock holds it behind a `BehaviorSubject`, so without the skip the
-window would end on the press that opened it and the indicator would never be
-seen (`fleet-pipeline` § 10, delta of 2026-10-07). `Switch`
-means a second press replaces the first window rather than queueing a second
-one, which matters because a press inside the interval is refused and must not
-leave an indicator owned by a poll that never happens. `Take(1)` is what ends
-the window on **whichever** arrives first, the instant or the cap. The timer is
-on the injected scheduler, so a test advances the cap rather than waiting three
-seconds (`fleet-pipeline` B-005, § 4 row 5). And `ClearsAfter` is this Feature's
-constant, not a value read from `OpenSkyOptions` — the view model names no
-provider's configuration, and the cap is a presentation choice rather than the
-throttle, which is `aircraft-source` B-053's and measured somewhere this type
-cannot see.
+- The press raises it, and the **next observed instant** lowers it — one per
+  applied poll, identical data included (`fleet-pipeline` B-031). The instant in
+  force at subscription is not one of those (`fleet-pipeline` § 10, 2026-10-07).
+- A press the actor refused produces no poll and no instant, so a cap of
+  `ClearsAfter` — three seconds, decisions/0001 — lowers it instead. Whichever
+  comes first ends the window.
+- A second press **replaces** the window rather than queueing one, so an
+  indicator is never owned by a poll that never happened.
+- `ClearsAfter` is this Feature's constant, never read from `OpenSkyOptions`: the
+  cap is a presentation choice, and the throttle it looks like is
+  `aircraft-source` B-053's, measured where this type cannot see.
+- Every scheduler is the injected one, the command's output included, so a test
+  advances the cap rather than waiting it out and nothing reads ReactiveMarbles'
+  process-wide locator (B-005; the composition root is what writes that locator).
 
 What `tracker.Observed` is, and why it is on the tracker rather than
 `IObservedClockTicks` taken directly: `fleet-pipeline` B-031 and decisions/0001.
@@ -586,6 +558,22 @@ repository with no UI test runner is that item's to decide.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 10 -->
 
+**Delta, 2026-10-07 — § 7 carried live code, and a lesson with it.** Trigger: pull
+request #52's second review round. The indicator's stream was written out here as
+`csharp`, with a paragraph walking a reader through each operator — a second
+definition of shipped code, edited by hand every time the code moved, and "six
+things are stated by that shape" is a lesson wearing a specification's clothes.
+The rule already existed and was read too narrowly: `transponder-conventions`
+§ "Declarations in § 7" said a declaration is written out only while its file does
+not exist, and it now opens with the general form — no code in a specification once
+the code is live, operator pipelines and constructor bodies included. B-028's
+indicator is five bullets of what it owes, pointing at
+[`FleetViewModel`](../ViewModels/FleetViewModel.cs);
+[lesson 0003](lessons/0003-a-specification-that-carried-live-code.md) holds the
+incident. The same round took two more findings in the code: the command is
+assigned straight to its property and read from there rather than through a local,
+and `Observable.Return(true).Concat(…)` is one `StartWith(true)` on the window.
+
 **Delta, 2026-10-07 — the command is the stream, and the repository already had
 one.** Trigger: pull request #52's review, `Needs work`. `0058` wrote a
 `GestureCommand` implementing `ICommand` and a `Subject<Unit>` beside it, where
@@ -598,7 +586,7 @@ with the view model's own disposables. The review's fourth finding was in
 pass a `TestScheduler`.
 
 No claim changed and no behaviour changed — B-028's five tests passed before and
-after. What changed is § 7's stream, the type table, three skills and
+after. What changed is § 7's rules for the indicator, the type table, three skills and
 [lesson 0002](lessons/0002-a-hand-rolled-command-and-a-projected-default.md),
 which is where the reason sits: nothing had said which command type to use,
 because nothing in this repository had a command before. One consequence worth

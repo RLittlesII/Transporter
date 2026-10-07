@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Windows.Input;
 using Akka.Hosting;
 using Akka.TestKit.Xunit2;
 using AwesomeAssertions;
@@ -40,7 +41,9 @@ public class FleetRefreshTests : TestKit
         sut.IsRefreshing.Should().BeFalse("a fleet that changed on its own is not a refresh anybody asked for");
 
         // When
-        sut.RefreshCommand.Execute(null);
+        // Through ICommand, which is the path the button's binding takes; the reactive
+        // Execute().Subscribe() the other tests use reaches the same command.
+        ((ICommand) sut.RefreshCommand).Execute(null);
         Flush(scheduler);
 
         // Then
@@ -62,7 +65,7 @@ public class FleetRefreshTests : TestKit
         var scheduler = new TestScheduler();
         var observed = Observed();
         var sut = ViewModel(Tracker(Fleet(), observed), scheduler, Registry(CreateTestProbe()));
-        sut.RefreshCommand.Execute(null);
+        using var press = sut.RefreshCommand.Execute().Subscribe();
         Flush(scheduler);
         sut.IsRefreshing.Should().BeTrue("the instant in force is not a poll that landed");
 
@@ -86,7 +89,7 @@ public class FleetRefreshTests : TestKit
         // Given
         var scheduler = new TestScheduler();
         var sut = ViewModel(Tracker(Fleet(), Observed()), scheduler, Registry(CreateTestProbe()));
-        sut.RefreshCommand.Execute(null);
+        using var press = sut.RefreshCommand.Execute().Subscribe();
         Flush(scheduler);
         sut.IsRefreshing.Should().BeTrue("the window is open, and no instant will ever arrive for this press");
 
@@ -110,11 +113,11 @@ public class FleetRefreshTests : TestKit
         var scheduler = new TestScheduler();
         var observed = Observed();
         var sut = ViewModel(Tracker(Fleet(), observed), scheduler, Registry(CreateTestProbe()));
-        sut.RefreshCommand.Execute(null);
+        using var first = sut.RefreshCommand.Execute().Subscribe();
         scheduler.AdvanceBy(TimeSpan.FromSeconds(1).Ticks);
 
         // When
-        sut.RefreshCommand.Execute(null);
+        using var second = sut.RefreshCommand.Execute().Subscribe();
         scheduler.AdvanceBy(TimeSpan.FromSeconds(1).Ticks);
         sut.IsRefreshing.Should().BeTrue("the first window's cap was replaced, not left running beside the second");
         observed.OnNext(Reported);
@@ -138,7 +141,7 @@ public class FleetRefreshTests : TestKit
         var sut = ViewModel(Tracker(Fleet(), Observed()), scheduler, Registry(actor));
 
         // When
-        sut.RefreshCommand.Execute(null);
+        using var press = sut.RefreshCommand.Execute().Subscribe();
         Flush(scheduler);
 
         // Then

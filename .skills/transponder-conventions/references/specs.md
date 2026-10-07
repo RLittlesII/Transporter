@@ -64,6 +64,17 @@ fields it applies to.
 
 ## Declarations in § 7
 
+**No code in a specification once the code is live.** The rule covers more than
+declarations: an operator pipeline, a constructor body, a stream written out
+line by line — once the file exists, the file is where that lives, and a copy in
+§ 7 is a second definition that drifts on the first refactor nobody mirrors. What
+§ 7 writes instead is what the code **owes**: the behaviour, the rule, the reason
+an operator is the one chosen, each as a claim or a sentence pointing at the
+file. If an explanation reads as a walk through code — "five things are stated by
+that shape" — it is a lesson or a code comment wearing a specification's clothes:
+put the reason in `.spec/lessons/` or beside the line it explains (PR #52's
+review, 2026-10-07).
+
 § 7 Technical Design writes a type's declaration out only while its file does
 not exist. Once the file exists the declaration becomes a row in § 7's type
 table — `| Type | File | Claims it makes visible |`, the file as a relative

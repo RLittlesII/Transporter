@@ -83,13 +83,20 @@ command and holds no subject beside it. A hand-written command forces that
 subject, which is a second place the gesture lives.
 
 ```csharp
-var swap = RxCommand
+SwapCommand = RxCommand
     .Create(() => registry.Get<SourceActor>().Tell(new SwapSource(selected)), outputScheduler: schedulers.UserInterfaceThread)
     .DisposeWith(_garbage);
 
-SwapCommand = swap;           // exposed as ICommand for the binding
-_isSwapping = swap.Select(...) // and listened to as a stream
+_isSwapping = SwapCommand.Select(...).Switch().AsValue(…); // the command is the stream
 ```
+
+Assign the command to its property and read the property — no local to pass
+around, and no second field. Type the property as the command rather than as
+`ICommand`, which `RxCommand` implements for the binding: a property typed
+`ICommand` cannot be subscribed to, which is the whole reason to use this type.
+A test presses it the reactive way, `Execute().Subscribe()`, because `Execute`
+returns a cold observable; `ICommand.Execute(null)` is the path a button takes,
+and one test should take it too.
 
 **Pass the output scheduler.** An unset one is resolved from ReactiveMarbles'
 process-wide locator, which is the ambient read a view model must not make. The

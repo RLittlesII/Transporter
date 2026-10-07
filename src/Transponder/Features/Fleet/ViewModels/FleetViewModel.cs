@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Windows.Input;
 using Akka.Actor;
 using Akka.Hosting;
 using DynamicData;
@@ -15,6 +14,7 @@ using Transponder.Messages;
 using Transponder.Model;
 using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
+using Unit = System.Reactive.Unit;
 
 namespace Transponder.Features.Fleet.ViewModels;
 
@@ -40,22 +40,20 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
         // The scheduler is passed rather than left to default: an unset one is resolved from
         // ReactiveMarbles' service locator, which is the ambient read B-005 forbids.
-        var refresh = RxCommand
+        RefreshCommand = RxCommand
             .Create(
                 () => registry.Get<DemandPoll>().Tell(DemandPoll.Instance),
                 outputScheduler: schedulers.UserInterfaceThread)
             .DisposeWith(_garbage);
 
-        RefreshCommand = refresh;
-        _isRefreshing = refresh
-            .Select(_ => Observable
-                .Return(true)
-                .Concat(tracker
-                    .Observed
-                    .Skip(1)
-                    .Select(static _ => false)
-                    .Merge(Observable.Timer(ClearsAfter, schedulers.UserInterfaceThread).Select(static _ => false))
-                    .Take(1)))
+        _isRefreshing = RefreshCommand
+            .Select(_ => tracker
+                .Observed
+                .Skip(1)
+                .Select(static _ => false)
+                .Merge(Observable.Timer(ClearsAfter, schedulers.UserInterfaceThread).Select(static _ => false))
+                .Take(1)
+                .StartWith(true))
             .Switch()
             .AsValue(
                 _ => RaisePropertyChanged(nameof(IsRefreshing)),
@@ -88,9 +86,11 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// <remarks>
     /// Whether a poll happens is the actor's decision — a press inside the polling interval is
     /// refused there (`aircraft-source` B-053) — so this command names no client, awaits nothing and
-    /// never <c>Ask</c>s (B-017, ADR-0012).
+    /// never <c>Ask</c>s (B-017, ADR-0012). Typed as the command rather than as
+    /// <c>ICommand</c>, which it implements for the binding, because it is also the stream of
+    /// its own presses and <see cref="IsRefreshing"/> is read from it.
     /// </remarks>
-    public ICommand RefreshCommand { get; }
+    public RxCommand<Unit, Unit> RefreshCommand { get; }
 
     /// <summary>Gets a value indicating whether a demanded poll is outstanding (B-028).</summary>
     /// <remarks>
