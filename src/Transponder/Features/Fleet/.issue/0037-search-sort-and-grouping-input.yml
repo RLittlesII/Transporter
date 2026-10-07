@@ -57,7 +57,49 @@ acceptance_criteria:
     reverse, and a grouping is published from the description."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - date: "2026-10-07"
+    by: the person
+    what: |
+      Search matches the vehicle's label plus the cell every column of the
+      description produces, rather than a marked subset. B-010 had named "the
+      columns the description marks searchable" and `FleetColumn` carries no
+      such marker. Rejected: adding `Searchable` to `FleetColumn`, a
+      `fleet-pipeline` type change for a distinction no source has asked for;
+      and the label alone, which finds no origin country. B-010 reworded,
+      `fleet-dashboard` § 11 row 5 (a).
+  - date: "2026-10-07"
+    by: the person
+    what: |
+      A filter choice is of two kinds — defined for the user, and defined from
+      the data — and both come from the pipeline. `fleet-pipeline` B-029 carries
+      the curated choices, which ship with the description and this item
+      delivers; B-030 carries the distinct grouping-key values, filed as `0056`
+      and not a dependency of this item, because the control renders whatever
+      list it is handed. The rule underneath is B-009 and B-018: a view model may
+      not enumerate the collection, so a choice derived from what the fleet holds
+      is an aggregate the pipeline computes. Rejected: deriving the curated
+      choices from the groupings, which cannot express "on the ground"; and
+      composing them here, which makes a swap a view edit and fails B-021.
+  - date: "2026-10-07"
+    by: the person
+    what: |
+      `fleet-pipeline` B-022 gained one exception: a source's own description may
+      name the concrete vehicle type it was written for. `Aircraft.OnGround`
+      reaches no member of `TransportVehicle`, and the exception cannot leak
+      because a description is the per-source file a swap replaces. Rejected:
+      promoting the flag to the base, which invents a cross-source semantic
+      ADR-0005 item 5 forbids; and base-only choices, which leave the dropdown
+      with "has a position fix" and nothing the talk is about.
+  - date: "2026-10-07"
+    by: the implementer
+    what: |
+      `FleetFilterChoice` moved from `Features/Fleet/` to `Tracking/Fleet/`, and
+      the matching rule became `FleetSearch`, a static of this Feature's. The
+      choice is a thing a source publishes, so it belongs with what publishes it;
+      the predicate is a function of its arguments, so it is tested by calling it
+      rather than through a view model and a scheduler. Not a product call, so
+      not the person's — recorded because § 7 and § 9 name both.
 
 out_of_scope:
   - "Everything in § 5 of the specification."

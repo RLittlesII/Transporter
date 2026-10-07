@@ -42,15 +42,17 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
 
   @B-010
   Scenario Outline: Search matches case-insensitively and ignores surrounding space
-    Given an aircraft whose label is "FLT0421"
+    Given an aircraft whose label is "FLT0421" and whose origin country is "Germany"
+      And a description whose columns show the callsign, the origin country and the last contact
      When the search text is <text>
      Then the aircraft is <outcome>
 
     Examples:
-      | text        | outcome   |
-      | "flt0421"   | matched   |
-      | "  FLT04  " | matched   |
-      | ""          | matched   |
+      | text        | outcome     |
+      | "flt0421"   | matched     |
+      | "  FLT04  " | matched     |
+      | ""          | matched     |
+      | "germany"   | matched     |
       | "QFA"       | not matched |
 
   @B-011
