@@ -2,7 +2,7 @@ id: "0033"
 type: task
 title: Filter, group, count, and raise a notice when data arrives
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 value: 4
