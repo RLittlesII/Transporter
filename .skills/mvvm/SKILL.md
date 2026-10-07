@@ -99,6 +99,16 @@ observe it, so there is no continuation at all.
   `.DisposeWith(…)`** into the view model's own disposables, so the disposal is
   stated at the subscription rather than remembered at the bottom of the
   constructor.
+- **A value the view model only derives is read, not assigned.** Where the
+  property's every value comes from a stream and the user never sets it, compose
+  the stream and expose it as a value — `AsValue` in `ReactiveMarbles.Mvvm`,
+  `ToProperty` in ReactiveUI — rather than subscribing and assigning. A setter
+  on derived state is a second place its value lives, and the first bug is
+  someone assigning it from a code path the stream does not know about. Keep
+  `RaiseAndSetIfChanged` for the other direction: state the user sets and the
+  view model remembers, which is an input to the domain rather than a projection
+  of it. The two live side by side on one view model, and which one a property
+  uses says which way its value flows.
 - **Marshal to the UI scheduler at the view model boundary**, not deep inside
   the pipeline, and take the scheduler by constructor so a test can substitute
   it.

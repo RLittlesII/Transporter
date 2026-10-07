@@ -2,7 +2,7 @@ id: "0058"
 type: task
 title: Put a refresh control on the page that tells an actor
 
-status: blocked
+status: ready-for-implementation
 
 priority: medium
 value: 3
@@ -15,6 +15,7 @@ children: []
 depends_on:
   - "0036"
   - "0057"
+  - "0059"
 blocks: []
 spikes: []
 
@@ -35,29 +36,35 @@ summary: |
   B-053 holds the throttle, and repeating it here would be a second place the
   rule lives.
 
-  Runs after `0036`, which built the page, and after `0057`, which builds the
+  Runs after `0036`, which built the page, and after `0057`, which built the
   actor there is something to tell.
 
-  **Blocked, not ready**: § 11's refresh-indicator row is unanswered, and it
-  decides what the indicator does. With a `Tell` and no `Ask`, nothing reports
-  that the poll finished — a fixed duration clears before slow data lands, and
-  the next notice never clears when the poll returned identical data, which is
-  a refresh's most ordinary outcome. Either choice is visible on stage, so it is
-  the person's, and building first would mean guessing at the one part of this
-  item anyone will look at.
+  **Unblocked on 2026-10-07**: § 11 row 6 is answered, and `decisions/0001` is
+  the call. The indicator is set by the press and cleared by the next observed
+  instant — one per applied poll, identical data included — with a three-second
+  cap for the press that was refused and produced no poll at all. That instant
+  reaches a view model through `fleet-pipeline` B-031, which is why `0059` is
+  now a prerequisite: there is nothing to subscribe to until it lands.
+
+  The indicator is a derived value read through `ReactiveMarbles.Mvvm`'s
+  `AsValue`, not a property the gesture sets — § 7 carries the stream and what
+  each operator in it is for, and this is the repository's first use of
+  `AsValue`, so `mvvm` gained the rule that says when to reach for it.
 
 acceptance_criteria:
   - "B-028 — a control that `Tell`s the actor, names no client, awaits nothing,
     and shows it is working while a demanded poll is outstanding."
+  - "B-028's indicator clears on the observed instant and on the cap, whichever
+    is first, and a second press replaces the window rather than queueing one —
+    the three clauses § 7's stream states (decisions/0001)."
   - "§ 9 Traceability Matrix carries a row naming a test and the review for
     B-028, replacing the row that names this item."
-  - "§ 11's refresh-indicator row is answered, and § 7's `IsRefreshing` cell
-    states what clears it rather than deferring."
 
 decisions: []
 
 out_of_scope:
   - "Everything in § 5 of the specification."
+  - "The instant itself — `fleet-pipeline` B-031, built by `0059`."
   - "The poll itself and its throttle — `aircraft-source` B-053, `0057`."
   - "Whether a view model reaches its actor with `Tell` or `Ask` in general
     (README.md § \"Open items\") — B-028 settles it for this control only."
