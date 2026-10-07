@@ -282,7 +282,7 @@ with a setter would be a second place its value lives.
 ```csharp
 _isRefreshing = _presses
     .Select(_ => Observable.Return(true).Concat(
-        tracker.Observed.Select(static _ => false)
+        tracker.Observed.Skip(1).Select(static _ => false)
             .Merge(Observable.Timer(ClearsAfter, schedulers.UserInterfaceThread).Select(static _ => false))
             .Take(1)))
     .Switch()
@@ -291,7 +291,11 @@ _isRefreshing = _presses
     .AsValue(_ => RaisePropertyChanged(nameof(IsRefreshing)));
 ```
 
-Four things are stated by that shape rather than left to a reader. `Switch`
+Five things are stated by that shape rather than left to a reader. `Skip(1)` is
+the one `0059` added: the tracker publishes the instant in force on subscription,
+because the clock holds it behind a `BehaviorSubject`, so without the skip the
+window would end on the press that opened it and the indicator would never be
+seen (`fleet-pipeline` § 10, delta of 2026-10-07). `Switch`
 means a second press replaces the first window rather than queueing a second
 one, which matters because a press inside the interval is refused and must not
 leave an indicator owned by a poll that never happens. `Take(1)` is what ends

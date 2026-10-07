@@ -288,3 +288,20 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      Then one quiet notice is raised
       And advancing further raises no second quiet notice
       And the next changeset that changes something raises a resumed notice
+
+  # ─────────────────────────── The observed instant ───────────────────────────
+
+  @B-031
+  Scenario: A poll that moved nothing still says it landed
+    Given a consumer subscribed to the tracker's observed instant
+      And a poll has reported the instant 14:32:10
+     When a second poll reports 14:32:10 and its response changed nothing
+     Then the observed instant is published a second time
+      And no notice is raised for it, because nothing moved
+
+  @B-031
+  Scenario: The instant is the provider's, and a recording's is a recording's
+    Given a replayed source reporting instants recorded in 2021
+     When one of them is applied
+     Then the published instant is the recorded one
+      And it is not a wall-clock read, so the replayed fleet is not stale on load
