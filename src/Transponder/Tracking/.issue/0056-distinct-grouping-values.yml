@@ -1,0 +1,59 @@
+id: "0056"
+type: task
+title: Publish the distinct values the current grouping key takes
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 2
+rank: 54
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0033"
+blocks: []
+spikes: []
+
+spec: src/Transponder/Tracking/.spec/README.md
+
+claims:
+  - B-030
+
+created: "2026-10-07"
+updated: "2026-10-07"
+closed: null
+
+summary: |
+  The filter control offers two kinds of choice, and this item builds the second
+  (§ 11 row 6). B-029 carries the choices the source declares — "On the ground",
+  "Airborne" — and they ship with the description. This one carries the choices
+  the data holds: the distinct values the current grouping key takes across the
+  fleet, so the control can offer "Germany" because a German aircraft is being
+  tracked, and withdraw it when the last one leaves.
+
+  It is a stage over the same stream the groups come from, published as a
+  changeset. Runs after `0033`, which is what introduced the grouping the key is
+  read from.
+
+  The reason it is here rather than in the dashboard is `fleet-dashboard` B-009
+  and B-018: a view model may not enumerate the bound collection, so a choice
+  derived from what the fleet contains is an aggregate this pipeline computes.
+  A `Distinct` over the grouping key is one operator; the same answer written in
+  a view model is the loop the demo exists to replace.
+
+acceptance_criteria:
+  - "B-030 — the distinct grouping-key values, published as a changeset that
+    adds a value on the first vehicle carrying it and removes it on the last."
+  - "§ 9 Traceability Matrix carries a row naming a test for B-030, replacing
+    the row that names this item."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Composing a choice into a predicate (§ 5 row 4) — `fleet-dashboard` B-009."
+  - "The choices the source declares (B-029) — delivered with the description by
+    `fleet-dashboard` `0037`."

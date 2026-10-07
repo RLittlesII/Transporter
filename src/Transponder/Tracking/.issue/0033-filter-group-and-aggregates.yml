@@ -18,6 +18,7 @@ depends_on:
 blocks:
   - "0037"
   - "0041"
+  - "0056"
 spikes: []
 
 spec: src/Transponder/Tracking/.spec/README.md
@@ -34,7 +35,7 @@ claims:
   - B-027
 
 created: "2026-10-05"
-updated: "2026-10-06"
+updated: "2026-10-07"
 closed: "2026-10-06"
 
 summary: |
