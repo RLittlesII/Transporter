@@ -2,7 +2,7 @@ id: "0040"
 type: spike
 title: Settle how an actor gets its dependencies, and who owns the tracker's lifetime
 
-status: ready
+status: in-progress
 
 priority: high
 value: 4
@@ -21,7 +21,7 @@ spec: null
 claims: []
 
 created: "2026-10-05"
-updated: "2026-10-06"
+updated: "2026-10-07"
 closed: null
 
 summary: |
