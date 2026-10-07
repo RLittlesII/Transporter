@@ -430,7 +430,14 @@ names is `internal`, and the registration method is the only public surface.
 | `IRecordingPacer`    | [`IRecordingPacer.cs`](../../../src/Transponder/Recording/IRecordingPacer.cs)       | B-007's shape, and that a payload leaves still raw (B-014)     |
 | `RecordingPacer`     | [`RecordingPacer.cs`](../../../src/Transponder/Recording/RecordingPacer.cs)         | B-007, B-008, B-012, B-027                                     |
 
-The remaining declarations are written out because their files do not exist yet.
+| Type                           | File                                                                                                                   | Claims it makes visible                                         |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `ReplayOpenSkyApi`             | [`ReplayOpenSkyApi.cs`](../../../src/Transponder/Integrations/OpenSky/Replay/ReplayOpenSkyApi.cs)                      | B-007's client half, B-009, B-013, B-014, B-022                 |
+| `IAircraftReplayTrackerSource` | [`IAircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/IAircraftReplayTrackerSource.cs)         | The seam the selector tells two instances of one class apart by |
+| `AircraftReplayTrackerSource`  | [`AircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/AircraftReplayTrackerSource.cs)           | B-022 — it delegates `Connect` and projects nothing             |
+| `OpenSkyReplayRegistration`    | [`OpenSkyReplayRegistration.cs`](../../../src/Transponder/Integrations/OpenSky/Container/OpenSkyReplayRegistration.cs) | B-007's zero interval, B-016's separate cache, B-022            |
+
+The remaining declaration is written out because its file does not exist yet.
 
 ```csharp
 /// <summary>Which recording each replay source reads (adr/0001). The root is not here — see below.</summary>
@@ -446,8 +453,6 @@ internal sealed class ReplayOptions
     public string? Vessels { get; set; }
 }
 
-/// <summary>The replay chain's seam, empty for the reason <see cref="IAircraftTrackerSource"/> is.</summary>
-internal interface IAircraftReplayTrackerSource : ITrackerSourceStrategy;
 ```
 
 **The recordings root moved, and the reason is `adr/0001` item 2.** This section
@@ -466,6 +471,41 @@ introduces no envelope type and no row reader: the provider's own
 `OpenSkyStatesResponse` is deserialized with the converter already attached to
 `OpenSkyStateRow`, which is what keeps B-013's "no second converter" true in
 code rather than in prose.
+
+**What `0011` settled in building it**
+
+Three things the section above left to the implementer, and one hazard the zero
+interval creates.
+
+- **The replay chain is registered piece by piece under a key**, not built by
+  one factory: the pacer, the contract, the cache, the options and the client
+  each have their own keyed registration, and the live chain keeps the unkeyed
+  ones it already had. "The same class, a second instance" is then something the
+  container expresses rather than something a comment claims, and a composition
+  test resolves each piece instead of reaching inside an object graph.
+- **The strategy under the replay seam delegates to the live one.**
+  `AircraftTrackerSource` adheres to `IAircraftTrackerSource`, so two instances
+  of it registered as strategies would both answer that seam and
+  `SwappingTrackerSource.Select` would throw on every swap. The replay
+  registration therefore wraps the live strategy in a type whose only member
+  forwards `Connect`. Rejected: making `AircraftTrackerSource` adhere to both
+  seams, which leaves the ambiguity where it was; and splitting it into a live
+  subclass and a replay subclass, which edits a delivered type of another
+  Feature to say what one line of delegation says.
+- **A recorded payload that is not a states response is discarded, not thrown.**
+  B-012 says a complete line that cannot be read costs one payload, and the
+  contract is where a body is read, so this is the contract's discard rather
+  than the pacer's. The bound matters more than the discard: this chain's
+  interval is zero, so a call that failed would be answered immediately and
+  asked again, and the loop would spin a core instead of waiting. A thousand
+  unreadable payloads in a row ends the chain, which is a file that is not a
+  recording of this provider.
+- **A zero interval makes any immediate failure a busy loop**, not just this
+  one. The live client answers a failed poll with its configured interval
+  (`aircraft-source` B-029), and on this chain that interval is nothing — so
+  every failure path above the pacer has to either wait or stop. `0012`'s
+  startup report is what keeps most of them unreachable, and this is the reason
+  it is a report rather than a nicety.
 
 **The startup report**
 
@@ -579,15 +619,15 @@ nothing that can move its row. This is the shape
 names, and the remedy is a claim reassignment in § Tasks rather than a test
 `0010` cannot write — not this section's to make.
 
-**The same finding holds for B-014, and for half of B-007.** B-014's row names
-`ReplayOpenSkyApiTests`, and B-007's second test is `ReplayCadenceTests` over
-the live client on the replay contract: both of those types are `0011`'s, so
-`0010` built the pacer under them and moved neither row. Three of `0010`'s six
-claims are therefore held by an item that cannot finish them — B-011, B-014 and
-half of B-007 — which is one claim short of half the item and the clearest case
-yet for the reassignment the paragraph above asks `spec-author` for. What `0010`
-does prove stands on its own: B-008, B-012 and B-027 against
-`RecordingPacerTests`.
+**The same finding held for B-014 and for half of B-007, and `0011` settled
+both.** B-014's row names `ReplayOpenSkyApiTests` and B-007's second test is
+`ReplayCadenceTests` over the live client on the replay contract: both types are
+`0011`'s, so `0010` built the pacer under them and moved neither row. `0011`
+wrote both and both rows read `Verified`, which leaves B-011 alone in the state
+this finding describes — a claim `0010` holds and `0012` must prove. The
+reassignment is still `spec-author`'s to make, and it is now one row rather than
+three; what the outcome shows is that closing the item on what it proved cost
+nothing, because the item that could write the tests wrote them next.
 
 **Scenarios**
 
@@ -616,8 +656,19 @@ already stands up the application's own composition in
 `TransponderCompositionTests` — which is the shape every host-level row below
 reuses rather than assembling a graph by hand.
 
-Three traps are worth carrying, because each cost a cycle in this Feature
+Four traps are worth carrying, because each cost a cycle in this Feature
 specifically:
+
+- **An advance is not a wait, for work that left the scheduler.** Everything
+  above the pacer awaits tasks rather than scheduler operations, so a
+  continuation resumes on the thread pool and `AdvanceBy` returns before the
+  chain has reacted. Worse than the race: the poll loop's next wait is scheduled
+  when that late continuation runs, against a clock that has already moved, so
+  the loop falls further behind on every advance and reads as a subject that
+  stopped. Drive the chain through an awaitable fetch, await it after advancing,
+  and hand the strategy a client that polls nothing when the loop is not what is
+  being asserted
+  ([lesson 0020](../../../.spec/lessons/0020-an-advance-is-not-a-wait-for-work-that-left-the-scheduler.md)).
 
 - **A recorded instant that is not a round number of seconds hangs the run.** A
   test awaits a payload the pacer releases from a `TestScheduler`, so the
@@ -641,15 +692,20 @@ specifically:
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and nineteen of the twenty-seven rows read `Missing`.**
-Eight are `Verified`. Five arrived with `0009`, which built the recorder:
+**This is the gate, and thirteen of the twenty-seven rows read `Missing`.**
+Fourteen are `Verified`. Five arrived with `0009`, which built the recorder:
 B-001 – B-004 against `RecordingWriterTests` and `RecordingTapTests`, and
 B-006 as a review a reader can now perform. Three arrived with `0010`, which
-built the pacer: B-008, B-012 and B-027 against `RecordingPacerTests`. What is
-left is unbuilt — no replay contract, no registration — and those rows name what
-will prove each claim rather than leaving the section empty, which is the
-difference between a gate that says what is owed and one that says only that
-something is.
+built the pacer: B-008, B-012 and B-027 against `RecordingPacerTests`. Six
+arrived with `0011`, which built the replay contract and the second chain over
+it: B-009, B-010, B-013 and B-014 against `ReplayOpenSkyApiTests`,
+`ReplayStalenessTests` and `ReplayCadenceTests`, B-022 against
+`ReplayCompositionTests` and a review this section records, and B-007 completed —
+its pacer half passed on `0010` and its client half passes now. What is left is
+the selection half and the vessel half — nothing registers replay as a strategy
+yet, and no vessel feed is specified — and those rows name what will prove each
+claim rather than leaving the section empty, which is the difference between a
+gate that says what is owed and one that says only that something is.
 
 A row's Status becomes `Verified` when every mechanism it names passes in a run,
 and a review becomes `Verified` when it is performed and recorded. A scenario
@@ -666,52 +722,53 @@ The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Every claim carries exactly one
 scenario here, so no tag anchors two.
 
-| Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Status   |
-| -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| B-001    | `@B-001` | `RecordingWriterTests.GivenAPayloadAndTheInstantItArrived_WhenTheLineIsWritten_ThenItHoldsBothInTheFormatADR0004Fixes`, with `GivenAnArrivalInstantOffFromUtc_...ThenTheInstantIsWrittenAsUtc` and `GivenThreePayloads_WhenEachIsRecorded_ThenThereIsOneLinePerPayload` — `0009`                                                                                                                                                                                  | Verified |
-| B-002    | `@B-002` | `RecordingWriterTests.GivenAPayloadTheProviderSent_WhenItIsRecorded_ThenTheLineHoldsThoseBytesUnchanged`, over `RecordingWriterCases` — `0009`                                                                                                                                                                                                                                                                                                                    | Verified |
-| B-003    | `@B-003` | `RecordingTapTests.GivenRecordingIsOn_WhenOnePollCompletes_ThenOnlyThePollsOwnRequestWasMade`, asserting the calls Flurl's `HttpTest` saw rather than counting in the tap — `0009`                                                                                                                                                                                                                                                                                | Verified |
-| B-004    | `@B-004` | `RecordingTapTests.GivenOnePayloadPolledWithRecordingOnAndOff_WhenEachEnvelopeIsRead_ThenTheyAreIdenticalAndSoAreTheRequests`, with `RecordingWriterTests.GivenADestinationThatThrows_...ThenTheTaskCompletesAndTheFailureIsLogged` for the failing-write half — `0009`                                                                                                                                                                                           | Verified |
-| B-005    | `@B-005` | **Review**, and it cannot be performed yet: § 5 row 3 keeps capturing a recording out of scope, so there is nothing to look at. Performed against the recording taken for the talk, before the talk. Its automated half arrives with B-026, whose startup check measures exactly this span — `0009`                                                                                                                                                               | Missing  |
-| B-006    | `@B-006` | **Review**, done on `0009`: `.gitignore` line 361 is `recordings/`, no tracked file carries an `.ndjson` extension, and no test reads a recording — every payload a test uses is a synthetic `static readonly` in `OpenSkyPayloads`, and the recorder's own tests write to a `StringWriter`. Re-done by any change that commits a recording, adds an `.ndjson` fixture, or points a test at a file                                                                | Verified |
-| B-007    | `@B-007` | Two tests, per § 8's behaviour-isolation finding: `RecordingPacerTests.GivenThreePayloadsFifteenSecondsApart_WhenTheRecordingIsReplayed_ThenEachIsReleasedAtTheRecordedSpacing` for the spacing, and `ReplayCadenceTests.GivenTheLiveClientOverTheReplayContract_WhenPayloadsArrive_ThenNoIntervalOfItsOwnIsAdded` — the first passes on `0010`; the second needs the replay contract, so **`0011` builds what moves this row**                                   | Missing  |
-| B-008    | `@B-008` | `RecordingPacerTests.GivenTheRecordingIsReplayedPastItsEnd_WhenTheBoundaryIsCrossed_ThenTheFirstPayloadFollowsTheLastAndNoChangesetRemovesEveryAircraft` — `0010`. The changeset half is proven by construction rather than by assertion: there is no cache below the substitution point, so the pacer clears nothing and emits nothing but payloads, and the test asserts the boundary releases the first payload after the last with no completion and no fault | Verified |
-| B-009    | `@B-009` | `ReplayOpenSkyApiTests.GivenALineWhosePayloadReportsOneInstantAndArrivedAtAnother_WhenItIsReplayed_ThenTheReportedOneIsTheObservedInstant` — `0011`                                                                                                                                                                                                                                                                                                               | Missing  |
-| B-010    | `@B-010` | `ReplayStalenessTests.GivenAnAircraftLastReportedSixMinutesBeforeTheRecordingEnds_WhenTheRecordingIsReplayed_ThenItIsMarkedStaleAtThatPointAndKept` — `0011`                                                                                                                                                                                                                                                                                                      | Missing  |
-| B-011    | `@B-011` | `ReplayCompositionTests.GivenNoCredentialConfiguredAndNoReachableProvider_WhenTheHostStartsAndReplayRuns_ThenTheFleetFillsAndNoRequestIsMade` — a host test over the registration split § 11 row 4 decided, so **`0012` builds what moves this row** while `0010` holds the claim (§ 8's finding for `spec-author`)                                                                                                                                               | Missing  |
-| B-012    | `@B-012` | `RecordingPacerTests.GivenARecordingWhoseFinalLineIsCutMidToken_WhenItIsReplayed_ThenEveryCompleteLineIsReplayedAndTheStreamDoesNotFault` — `0010`                                                                                                                                                                                                                                                                                                                | Verified |
-| B-013    | `@B-013` | `ReplayOpenSkyApiTests.GivenAPayloadThatProducedAnAircraftLive_WhenTheSamePayloadIsReplayed_ThenTheAircraftIsIdenticalAndTheLiveProjectionBuiltIt` — `0011`                                                                                                                                                                                                                                                                                                       | Missing  |
-| B-014    | `@B-014` | `ReplayOpenSkyApiTests.GivenARecordingTakenBeforeAConverterFix_WhenItIsReplayedAfterTheFix_ThenTheCorrectedValuesAreObservedWithNoRecapture` — the test is a replay-contract test, so **`0011` builds what moves this row** while `0010` holds the claim, B-011's shape exactly (§ 8's second finding for `spec-author`). `0010` delivered the half it can: the pacer answers the payload as text and never deserializes it                                       | Missing  |
-| B-015    | `@B-015` | `ReplayCompositionTests.GivenBothSourcesRegistered_WhenReplayIsSelected_ThenItIsSelectedThroughTheOneDecoratorAndNothingElseSelectsIt` — `0012`                                                                                                                                                                                                                                                                                                                   | Missing  |
-| B-016    | `@B-016` | `ReplaySwapTests.GivenTheFleetIsObserved_WhenTheSourceSwapsToReplay_ThenNoMarkerCompletionOrErrorReachesTheSeam` — `0012`                                                                                                                                                                                                                                                                                                                                         | Missing  |
-| B-017    | `@B-017` | `ReplaySwapTests.GivenALivePollerIsRunning_WhenReplayBecomesTheLiveSource_ThenTheOutgoingPollStops` — `0012`                                                                                                                                                                                                                                                                                                                                                      | Missing  |
-| B-018    | `@B-018` | `ReplaySwapTests.GivenAFilterASortAndAGroupInPlace_WhenTheSourceSwapsToReplay_ThenNoneIsRebuiltAndTheBindingSurvives` — `0012`                                                                                                                                                                                                                                                                                                                                    | Missing  |
-| B-019    | `@B-019` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselRecordingTests.GivenASequenceOfReceivedMessages_WhenEachIsRecorded_ThenThereIsOneLinePerMessageAndNoneIsBatched` — `0013`                                                                                                                                                                                                                                             | Missing  |
-| B-020    | `@B-020` | **Review**, performed before the closing act is presented: a vessel recording is named in configuration and the startup report clears it. Re-done by the change that alters the closing act's source — `0013`                                                                                                                                                                                                                                                     | Missing  |
-| B-021    | `@B-021` | **Review** — no vehicle, record or snapshot type declared under the replay namespaces. Re-done by any change that adds a type there, and the reviewer's question is whether the type belongs to the recorded provider's Feature instead — `0013`                                                                                                                                                                                                                  | Missing  |
-| B-022    | `@B-022` | Both halves: `ReplayCompositionTests.GivenTheReplayChainIsRegistered_WhenItIsResolved_ThenTheClientIsTheLiveClassOverTheReplayContract` for what it reuses, and a **Review** that the replay namespaces declare no client, cache, converter or projection of their own — `0011`                                                                                                                                                                                   | Missing  |
-| B-023    | `@B-023` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselReplayTrackerSourceTests.GivenARecordingAndNoContractToStandInFor_WhenTheStrategyIsRegistered_ThenItReachesTheSeamLikeEveryOtherSource` — `0013`                                                                                                                                                                                                                      | Missing  |
-| B-024    | `@B-024` | `ReplayRegistrationTests.GivenAnAircraftRecordingNamedAndNoVesselOne_WhenTheHostStarts_ThenOnlyTheAircraftReplaySourceIsSelectableAndTheLiveSourceIsStillSelected` — `0012`                                                                                                                                                                                                                                                                                       | Missing  |
-| B-025    | `@B-025` | `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` — `0012`                                                                                                                                                                                                                                                                                                 | Missing  |
-| B-026    | `@B-026` | `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` — `0012`                                                                                                                                                                                                                                                                                                | Missing  |
-| B-027    | `@B-027` | `RecordingPacerTests.GivenSyntheticLinesInAMemoryStream_WhenThePacerIsDriven_ThenItReplaysThemWithNoFileSystemAndReadsNoConfiguration` — proven by a test that has no file system rather than by reading the constructor — `0010`, with `GivenAStreamThatCannotSeek_WhenThePacerIsConstructed_ThenItSaysSoRatherThanFailingAtTheLoopBoundary` for the precondition the handover carries                                                                           | Verified |
+| Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Status   |
+| -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| B-001    | `@B-001` | `RecordingWriterTests.GivenAPayloadAndTheInstantItArrived_WhenTheLineIsWritten_ThenItHoldsBothInTheFormatADR0004Fixes`, with `GivenAnArrivalInstantOffFromUtc_...ThenTheInstantIsWrittenAsUtc` and `GivenThreePayloads_WhenEachIsRecorded_ThenThereIsOneLinePerPayload` — `0009`                                                                                                                                                                                                                                                                                                                                  | Verified |
+| B-002    | `@B-002` | `RecordingWriterTests.GivenAPayloadTheProviderSent_WhenItIsRecorded_ThenTheLineHoldsThoseBytesUnchanged`, over `RecordingWriterCases` — `0009`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Verified |
+| B-003    | `@B-003` | `RecordingTapTests.GivenRecordingIsOn_WhenOnePollCompletes_ThenOnlyThePollsOwnRequestWasMade`, asserting the calls Flurl's `HttpTest` saw rather than counting in the tap — `0009`                                                                                                                                                                                                                                                                                                                                                                                                                                | Verified |
+| B-004    | `@B-004` | `RecordingTapTests.GivenOnePayloadPolledWithRecordingOnAndOff_WhenEachEnvelopeIsRead_ThenTheyAreIdenticalAndSoAreTheRequests`, with `RecordingWriterTests.GivenADestinationThatThrows_...ThenTheTaskCompletesAndTheFailureIsLogged` for the failing-write half — `0009`                                                                                                                                                                                                                                                                                                                                           | Verified |
+| B-005    | `@B-005` | **Review**, and it cannot be performed yet: § 5 row 3 keeps capturing a recording out of scope, so there is nothing to look at. Performed against the recording taken for the talk, before the talk. Its automated half arrives with B-026, whose startup check measures exactly this span — `0009`                                                                                                                                                                                                                                                                                                               | Missing  |
+| B-006    | `@B-006` | **Review**, done on `0009`: `.gitignore` line 361 is `recordings/`, no tracked file carries an `.ndjson` extension, and no test reads a recording — every payload a test uses is a synthetic `static readonly` in `OpenSkyPayloads`, and the recorder's own tests write to a `StringWriter`. Re-done by any change that commits a recording, adds an `.ndjson` fixture, or points a test at a file                                                                                                                                                                                                                | Verified |
+| B-007    | `@B-007` | Two tests, per § 8's behaviour-isolation finding: `RecordingPacerTests.GivenThreePayloadsFifteenSecondsApart_WhenTheRecordingIsReplayed_ThenEachIsReleasedAtTheRecordedSpacing` for the spacing, and `ReplayCadenceTests.GivenTheLiveClientOverTheReplayContract_WhenPayloadsArrive_ThenNoIntervalOfItsOwnIsAdded` for the interval — the first passed on `0010`, the second on `0011`, where it reads the interval the client answers with rather than inferring it from timing ([lesson 0020](../../../.spec/lessons/0020-an-advance-is-not-a-wait-for-work-that-left-the-scheduler.md))                        | Verified |
+| B-008    | `@B-008` | `RecordingPacerTests.GivenTheRecordingIsReplayedPastItsEnd_WhenTheBoundaryIsCrossed_ThenTheFirstPayloadFollowsTheLastAndNoChangesetRemovesEveryAircraft` — `0010`. The changeset half is proven by construction rather than by assertion: there is no cache below the substitution point, so the pacer clears nothing and emits nothing but payloads, and the test asserts the boundary releases the first payload after the last with no completion and no fault                                                                                                                                                 | Verified |
+| B-009    | `@B-009` | `ReplayOpenSkyApiTests.GivenALineWhosePayloadReportsOneInstantAndArrivedAtAnother_WhenItIsReplayed_ThenTheReportedOneIsTheObservedInstant`, over a recording that arrived in 2030 and reports 2026, so the two instants cannot be confused for one another — `0011`                                                                                                                                                                                                                                                                                                                                               | Verified |
+| B-010    | `@B-010` | `ReplayStalenessTests.GivenAnAircraftLastReportedSixMinutesBeforeTheRecordingEnds_WhenTheRecordingIsReplayed_ThenItIsMarkedStaleAtThatPointAndKept`, over the real cache, projection and tracker with the poll loop stubbed — `0011`                                                                                                                                                                                                                                                                                                                                                                              | Verified |
+| B-011    | `@B-011` | `ReplayCompositionTests.GivenNoCredentialConfiguredAndNoReachableProvider_WhenTheHostStartsAndReplayRuns_ThenTheFleetFillsAndNoRequestIsMade` — a host test over the registration split § 11 row 4 decided, so **`0012` builds what moves this row** while `0010` holds the claim (§ 8's finding for `spec-author`)                                                                                                                                                                                                                                                                                               | Missing  |
+| B-012    | `@B-012` | `RecordingPacerTests.GivenARecordingWhoseFinalLineIsCutMidToken_WhenItIsReplayed_ThenEveryCompleteLineIsReplayedAndTheStreamDoesNotFault` — `0010`                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Verified |
+| B-013    | `@B-013` | `ReplayOpenSkyApiTests.GivenAPayloadThatProducedAnAircraftLive_WhenTheSamePayloadIsReplayed_ThenTheAircraftIsIdenticalAndTheLiveProjectionBuiltIt`, asserting the snapshots and the projected vehicles both — `0011`                                                                                                                                                                                                                                                                                                                                                                                              | Verified |
+| B-014    | `@B-014` | `ReplayOpenSkyApiTests.GivenARecordingTakenBeforeAConverterFix_WhenItIsReplayedAfterTheFix_ThenTheCorrectedValuesAreObservedWithNoRecapture` — `0011` built the test, so the row moves: the recording still holds the padded callsign and the quoted squawk the provider sent, and the values observed are the ones today's reader produces from those bytes. `0010` delivered the half it could, the pacer answering the payload as text and never deserializing it                                                                                                                                              | Verified |
+| B-015    | `@B-015` | `ReplayCompositionTests.GivenBothSourcesRegistered_WhenReplayIsSelected_ThenItIsSelectedThroughTheOneDecoratorAndNothingElseSelectsIt` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
+| B-016    | `@B-016` | `ReplaySwapTests.GivenTheFleetIsObserved_WhenTheSourceSwapsToReplay_ThenNoMarkerCompletionOrErrorReachesTheSeam` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Missing  |
+| B-017    | `@B-017` | `ReplaySwapTests.GivenALivePollerIsRunning_WhenReplayBecomesTheLiveSource_ThenTheOutgoingPollStops` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
+| B-018    | `@B-018` | `ReplaySwapTests.GivenAFilterASortAndAGroupInPlace_WhenTheSourceSwapsToReplay_ThenNoneIsRebuiltAndTheBindingSurvives` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Missing  |
+| B-019    | `@B-019` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselRecordingTests.GivenASequenceOfReceivedMessages_WhenEachIsRecorded_ThenThereIsOneLinePerMessageAndNoneIsBatched` — `0013`                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
+| B-020    | `@B-020` | **Review**, performed before the closing act is presented: a vessel recording is named in configuration and the startup report clears it. Re-done by the change that alters the closing act's source — `0013`                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
+| B-021    | `@B-021` | **Review** — no vehicle, record or snapshot type declared under the replay namespaces. Re-done by any change that adds a type there, and the reviewer's question is whether the type belongs to the recorded provider's Feature instead — `0013`                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
+| B-022    | `@B-022` | Both halves: `ReplayCompositionTests.GivenTheReplayChainIsRegistered_WhenItIsResolved_ThenTheClientIsTheLiveClassOverTheReplayContract`, with `GivenBothChainsAreRegistered_WhenEachIsResolved_ThenTheReplayChainHasItsOwnCacheAndAnIntervalOfZero` for the second instance; and a **Review**, performed on `0011`: `Integrations/OpenSky/Replay/` declares one type, `ReplayOpenSkyApi`, and the chain's only other additions are a seam interface and a strategy that delegates `Connect` — no client, cache, converter or projection in either. Re-done by any type added under the replay namespaces — `0011` | Verified |
+| B-023    | `@B-023` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselReplayTrackerSourceTests.GivenARecordingAndNoContractToStandInFor_WhenTheStrategyIsRegistered_ThenItReachesTheSeamLikeEveryOtherSource` — `0013`                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
+| B-024    | `@B-024` | `ReplayRegistrationTests.GivenAnAircraftRecordingNamedAndNoVesselOne_WhenTheHostStarts_ThenOnlyTheAircraftReplaySourceIsSelectableAndTheLiveSourceIsStillSelected` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                       | Missing  |
+| B-025    | `@B-025` | `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
+| B-026    | `@B-026` | `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` — `0012`                                                                                                                                                                                                                                                                                                                                                                                                                                                | Missing  |
+| B-027    | `@B-027` | `RecordingPacerTests.GivenSyntheticLinesInAMemoryStream_WhenThePacerIsDriven_ThenItReplaysThemWithNoFileSystemAndReadsNoConfiguration` — proven by a test that has no file system rather than by reading the constructor — `0010`, with `GivenAStreamThatCannotSeek_WhenThePacerIsConstructed_ThenItSaysSoRatherThanFailingAtTheLoopBoundary` for the precondition the handover carries                                                                                                                                                                                                                           | Verified |
 
 **What the matrix says about the items.** Every claim has a row and a named
-mechanism, so no item is waiting on this section. Six rows are blocked on
+mechanism, so no item is waiting on this section. Four rows are blocked on
 something other than work: B-005 on a recording nobody has captured, B-019 and
-B-023 on a specification nobody has written, and B-007, B-011 and B-014 on an
-item other than the one holding the claim — all three of those on `0011` or
-`0012` while `0010` carries them, which is what § 8's two findings for
-`spec-author` ask to be re-cut. The rest move when their item builds and their
-test passes.
+B-023 on a specification nobody has written, and B-011 on `0012` while `0010`
+carries it. Two of the six that were in that state moved on `0011` — B-007 and
+B-014, which `0010` held and `0011` proved — so one of § 8's two findings for
+`spec-author` is now about one claim rather than three. The rest move when their
+item builds and their test passes.
 
-**`0010` is closed on three of its six claims, and the other three are not its
-to finish.** B-008, B-012 and B-027 are `Verified` against
-`RecordingPacerTests`. B-011's mechanism is `0012`'s host test, B-014's is a
-replay-contract test, and B-007's second test is the live client over that
-contract — so the pacer is built and three rows cannot move until `0011` and
-`0012` do. § 8's two findings for `spec-author` are the remedy; carrying the item
-open against them would hold `0011`, which is the work that moves them.
+**`0010` closed on three of its six claims, and `0011` moved two of the other
+three.** B-008, B-012 and B-027 were `Verified` against `RecordingPacerTests`
+when the pacer landed; B-007's client half and B-014 are `Verified` now, against
+the replay-contract tests `0010` could not write. B-011 is the one left: its
+mechanism is a host test over the registration split, which is `0012`'s. Closing
+`0010` on what it proved rather than holding it open is what let `0011` run, and
+`0011` is what moved the rows — which is the case § 8's findings make, now with
+the outcome attached rather than only the argument.
 
 **`0009` is closed on five of its six claims, and B-005 is why it is not six.**
 That row needs a recording to look at, which § 5 row 3 keeps out of scope and
@@ -743,9 +800,26 @@ newline-free and that a provider which pretty-prints needs a superseding
 record. Not amended here, because an ADR binds more than this Feature and
 `0009` is not the change that decides for the repository.
 
-No Feature-scoped lesson yet — the above is a specification gap rather than a
-bug that shipped. One repository-wide lesson bears on this
-document: [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
+**Spec delta, 2026-10-06, from `0011`: a boundary rule read a folder where its
+claim named a contract.** The replay contract did not compile: `TRN0002`
+reported it for naming the envelope its own signature returns, because the rule
+allowed the transport namespace and a `Client` name suffix rather than asking
+what a class implements. `aircraft-source` B-045 names "the class implementing
+the API contract", and B-022 is what makes a second one of those ordinary — so
+the rule was stricter than any claim, which is
+[the analyzer Feature's lesson 0002](../../../src/Transponder.Analyzers/.spec/lessons/0002-a-rule-that-reads-a-folder.md)
+and item
+[`0053`](../../../src/Transponder.Analyzers/.issue/0053-contract-implementation-read-from-its-folder.yml).
+Nothing here changed: § 4 row 4 still reads "satisfied rather than relaxed",
+and it is now true in the analyzer as well as in prose.
+
+No Feature-scoped lesson yet — the gap above is a specification one and the
+drift was another Feature's. Two repository-wide lessons bear on this document:
+[lesson 0020](../../../.spec/lessons/0020-an-advance-is-not-a-wait-for-work-that-left-the-scheduler.md),
+which § 8 carries as this Feature's fourth trap and which cost `0011` the same
+kind of cycle [lesson 0019](../../../.spec/lessons/0019-an-advance-that-stops-short-hangs-instead-of-failing.md)
+cost `0010`; and
+[lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
 which is why § 3 keeps no build state § 9 owns, and why §§ 6 – 9 said in words
 that they were unwritten rather than carrying a template row until the design
 and coverage passes wrote them. All four are written now; a `Missing` row in

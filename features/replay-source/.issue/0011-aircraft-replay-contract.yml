@@ -2,7 +2,7 @@ id: "0011"
 type: task
 title: Substitute aircraft replay at the API contract
 
-status: in-progress
+status: done
 
 priority: high
 risk: 3
@@ -28,7 +28,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   A replay implementation of the OpenSky contract, handing back recorded
@@ -67,6 +67,65 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — implementer — closed on all four of its own claims, and it
+    moved two of `0010`'s. B-009, B-010, B-013 and B-022 are `Verified` against
+    `ReplayOpenSkyApiTests`, `ReplayStalenessTests` and `ReplayCompositionTests`,
+    and B-022's review half is performed and recorded in its § 9 row. B-014 and
+    B-007's client half were rows `0010` held and could not write, and both read
+    `Verified` now — which is the outcome § 8's findings for `spec-author`
+    predicted when `0010` closed on three of six rather than waiting. B-011 is
+    the one row still held by `0010` and owed by `0012`."
+  - "2026-10-06 — implementer — the chain is registered piece by piece under a
+    key rather than built by one factory: the pacer, the contract, the cache,
+    the options and the client each have a keyed registration and the live
+    chain keeps its unkeyed ones. \"The same class, a second instance\" is then
+    something the container expresses, and the composition test resolves each
+    piece instead of reaching into an object graph. Rejected: one factory
+    returning the assembled strategy, which makes B-022's own assertion a
+    matter of reading the factory."
+  - "2026-10-06 — implementer — the replay strategy is a type that forwards
+    `Connect` to the live one under a seam of its own. `AircraftTrackerSource`
+    adheres to `IAircraftTrackerSource`, and `SwappingTrackerSource.Select`
+    resolves a strategy by `Single(seam.IsInstanceOfType)` — so two instances of
+    it registered as strategies would both answer that seam and every swap would
+    throw. Rejected: adhering to both seams, which leaves the ambiguity where it
+    was; and splitting the live class into a live and a replay subclass, which
+    edits a delivered type of another Feature to say what one line of delegation
+    says. § 7 carries it."
+  - "2026-10-06 — implementer — a recorded body that is not a states payload is
+    discarded and the next line is read, with a bound of a thousand in a row.
+    B-012 makes a complete-but-unreadable line cost one payload, and the
+    contract is where a body is read, so the discard belongs here rather than in
+    the pacer. The bound is the point: this chain's interval is zero, so a call
+    that failed would be answered immediately and asked again and the loop would
+    spin a core rather than wait — the hazard the zero interval creates, now
+    stated in § 7 beside it."
+  - "2026-10-06 — implementer — the chain registers behind
+    `IAircraftReplayTrackerSource` and not as an `ITrackerSourceStrategy`.
+    Selecting replay is B-015 – B-018 and `0012`'s, along with the recording's
+    name, its root and the startup report; registering the alias here would make
+    replay selectable before anything reports whether its recording can be read.
+    Nothing this item adds changes the live chain's behaviour, which is what the
+    live composition tests still passing says."
+  - "2026-10-06 — implementer — `TRN0002` reported the replay contract for
+    naming the envelope its own signature returns, and the rule was fixed in
+    this item's pull request rather than in a boundary-analyzer one of its own.
+    That is the call the person made on `0045` for the same situation: the
+    blocked item cannot compile without it. Filed as analyzer item `0053` with
+    its own lesson; no claim and no descriptor changed, because the rule now
+    asks what a class implements, which is what `aircraft-source` B-045 says and
+    what the message already printed. Rejected: suppressing the diagnostic on
+    the replay contract, and filing the recording under `.../Http` to satisfy a
+    namespace check."
+  - "2026-10-06 — implementer — the first cadence and staleness tests asserted
+    on state read straight after `AdvanceBy`, which races a chain whose waits
+    are scheduled from inside awaited tasks: the continuation resumes on the
+    thread pool, and the loop's next wait is then scheduled from a later clock,
+    so it drifts and reads as a subject that stopped. Both tests now drive an
+    awaitable fetch and await it, and the staleness test hands its strategy a
+    client that polls nothing. Root lesson 0020 records it, `test-from-scenarios`
+    § \"Time is injected, always\" gained the rule, and § 8 carries it as this
+    Feature's fourth trap."
   - "2026-10-06 — implementer — the § 12 sign-off gate is waived for this item,
     the second item in a row to need it. All three rows of the specification's
     § 12 still read 🟡 Draft and `spec_status` is `draft`, and the section is
