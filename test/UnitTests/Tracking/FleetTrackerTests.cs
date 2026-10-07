@@ -4,12 +4,15 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AwesomeAssertions;
 using DynamicData;
+using Microsoft.Reactive.Testing;
 using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Model;
+using Transponder.Scheduling;
 using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
 using Transponder.Tracking.Sources;
+using Transponder.UnitTests.Scheduling;
 
 namespace Transponder.UnitTests.Tracking;
 
@@ -331,10 +334,13 @@ internal partial class FleetTrackerFixture
 {
     public FleetTrackerFixture()
     {
-        WithSource(Substitute.For<ITrackerSource>());
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(new TestScheduler());
         var clock = new ObservedClock();
+
+        WithSource(Substitute.For<ITrackerSource>());
         WithClock(clock);
         WithTicks(clock);
+        WithProvider(schedulers);
         WithObservable(new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
     }
 }
