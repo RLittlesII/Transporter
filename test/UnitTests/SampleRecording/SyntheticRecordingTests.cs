@@ -91,6 +91,46 @@ public class SyntheticRecordingTests
     }
 
     /// <summary>
+    /// The hazard polls are derived from the length, so a recording asked for shorter than the
+    /// default still carries all of them. A fixed poll number would quietly drop the malformed row
+    /// and the empty poll out of a shorter recording, leaving a sample that exercises nothing and
+    /// says nothing about it.
+    /// </summary>
+    /// <returns>The running test.</returns>
+    [Fact]
+    public async Task GivenARecordingShorterThanTheDefault_WhenItIsReplayed_ThenItStillCarriesTheMalformedRowAndTheEmptyPoll()
+    {
+        // Given
+        using var destination = new StringWriter();
+        RecordingWriter recorder = new RecordingWriterFixture().WithDestination(destination);
+        SyntheticRecording generator = new SyntheticRecordingFixture().WithWriter(recorder).WithPolls(24);
+        await generator.Write();
+        var scheduler = new TestScheduler();
+        using var recording = ReplayComposition.Recorded(destination.ToString());
+        using var composed = ReplayComposition.Over(recording, scheduler);
+        var replay = (AircraftSnapshotClient) composed.GetRequiredKeyedService<IAircraftSnapshotClient>(OpenSkyReplayRegistration.Chain);
+        var cache = composed.GetRequiredKeyedService<SourceCache<AircraftSnapshot, string>>(OpenSkyReplayRegistration.Chain);
+        var excluded = new List<int>();
+        var reported = new List<int>();
+
+        // When
+        for (var poll = 0; poll < generator.Polls; poll++)
+        {
+            var fetch = replay.Fetch(CancellationToken.None);
+            scheduler.AdvanceBy(generator.Interval.Ticks);
+            await fetch;
+            excluded.Add(replay.UnreadableRows);
+            reported.Add(cache.Count);
+        }
+
+        // Then
+        generator.Span.Should().BeGreaterThan(FleetTracker.DefaultStaleAfter, "a recording this short is still worth replaying");
+        excluded.Sum().Should().Be(1, "the malformed row lands on a poll this recording has");
+        excluded[generator.Malformed].Should().Be(1, "and on the one the length derives");
+        reported[generator.Empties].Should().Be(0, "so does the poll that reports nothing");
+    }
+
+    /// <summary>
     /// The live reader reads it, and every hazard it carries lands where the reader's claims say
     /// it should: an absent velocity against a category of zero, an absent category, a callsign
     /// that was all padding, a squawk whose leading zero survived, one row excluded and counted,
@@ -116,10 +156,10 @@ public class SyntheticRecordingTests
         var reported = new List<int>();
 
         // When
-        for (var poll = 0; poll < SyntheticRecording.Polls; poll++)
+        for (var poll = 0; poll < generator.Polls; poll++)
         {
             var fetch = replay.Fetch(CancellationToken.None);
-            scheduler.AdvanceBy(SyntheticRecording.Interval.Ticks);
+            scheduler.AdvanceBy(generator.Interval.Ticks);
             await fetch;
             excluded.Add(replay.UnreadableRows);
             reported.Add(cache.Count);
@@ -127,9 +167,9 @@ public class SyntheticRecordingTests
 
         // Then
         var fleet = cache.Items.ToDictionary(static snapshot => snapshot.Icao24);
-        excluded[SyntheticRecording.Malformed].Should().Be(1, "one row carries a flag that is neither true nor false");
+        excluded[generator.Malformed].Should().Be(1, "one row carries a flag that is neither true nor false");
         excluded.Sum().Should().Be(1, "every other row in the recording is readable");
-        reported[SyntheticRecording.Empties].Should().Be(0, "one poll reports nothing at all");
+        reported[generator.Empties].Should().Be(0, "one poll reports nothing at all");
         ((object) fleet["a2b2c2"].Velocity).Should()
             .Be(Option<double>.None, "an aircraft on the ground reports no speed rather than a speed of zero");
         ((object) fleet["a2b2c2"].Category).Should()
@@ -156,5 +196,7 @@ internal partial class SyntheticRecordingFixture
     public SyntheticRecordingFixture()
     {
         WithSeed(1);
+        WithPolls(SyntheticRecording.DefaultPolls);
+        WithInterval(SyntheticRecording.DefaultInterval);
     }
 }

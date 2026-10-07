@@ -1,0 +1,66 @@
+id: "0060"
+type: chore
+title: Hoist the properties every project repeats into the root build props
+
+status: ready-for-implementation
+
+priority: low
+value: 2
+risk: 1
+rank: 37
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-07"
+updated: "2026-10-07"
+closed: null
+
+summary: |
+  Every `.csproj` in the repository declares `Nullable` and `ImplicitUsings`
+  itself, so five files carry one answer and the sixth project added is the one
+  that forgets. Both belong in
+  [`Directory.Build.props`](../Directory.Build.props), which already carries
+  `GenerateDocumentationFile` and the analyzer references for the same reason.
+
+  `TargetFramework` does **not** hoist: `Transponder.Analyzers` and
+  `Transponder.CodeFixes` target `netstandard2.0`, `Gui` multi-targets the MAUI
+  heads, and the rest are `net10.0`. A property three projects would have to
+  override is not a shared default. `IsPackable` is the same shape — true for
+  the library, false for the test and tools projects.
+
+  Filed from review on `0052`, which asked whether the new tools project could
+  take these from the root props. It can, and so can the other four; doing it
+  for one project would have left the duplication everywhere else and widened
+  that item's diff to every project file in the repository.
+
+acceptance_criteria:
+  - "`Nullable` and `ImplicitUsings` are declared once, in the root
+    `Directory.Build.props`, and in no `.csproj`."
+  - "`TargetFramework` stays in each project file, and the reason is written
+    where the next reader of the props file will see it."
+  - "`./build.sh` is green, and no project changed its effective language
+    version, nullable context or implicit usings — a build with no new warning
+    is the evidence."
+
+decisions:
+  - "2026-10-07 — the person — review on `0052` asked for the hoist and agreed
+    to file it rather than take it there. Rejected: hoisting only the tools
+    project's properties, which removes four lines and leaves the convention
+    unstated and duplicated four more times."
+
+out_of_scope:
+  - "`TargetFramework` and `IsPackable`, which differ per project — see the
+    summary."
+  - "Central package versions, which are already centralized in
+    `Directory.Packages.props`."
+  - "The analyzer and code-fix references in the root props, which are already
+    there and unaffected."

@@ -40,8 +40,10 @@ it. The traps:
   specification, an ADR or a lesson — those are linkable; a comment restating one
   drifts from it. Cite instead of explaining.
 - **A comment is a maintenance burden, and the default is not to write one.**
-  Two shapes are the ones reviews keep catching, and both are deletions rather
-  than rewrites:
+  This covers every tracked file, not only `.cs`: a note in `.gitignore` or a
+  `.csproj` explaining why a rule was deleted is the same burden, and the commit
+  that deleted it already holds the why. Three shapes are the ones reviews keep
+  catching, and all three are deletions rather than rewrites:
     - **Prose that restates the line below it.** A sentence above
       `AddSingleton<IAircraftTrackerSource, AircraftTrackerSource>()` saying the
       strategy is registered behind its seam says what the call says. If an
@@ -54,6 +56,10 @@ it. The traps:
       where no traceability matrix reads it and nothing fails when the claim is
       renumbered or withdrawn. A bare citation on a line that would be wrong
       without it is the form that survives; the paragraph around it is not.
+    - **A note saying why something was removed.** A comment left where a
+      deleted `.gitignore` rule or package reference used to be documents the
+      previous state of the file, which is what the history is for, and it
+      outlives every reader who would have wondered.
 
     The test before writing one: delete it, and name what a reader loses. Nothing
     loses means it was never a comment.
@@ -70,7 +76,11 @@ it. The traps:
   ([`0052`](../../../.issue/0052-sample-recording-generator.yml)) is the first.
   A build target invokes one with `dotnet run` against its project path, because
   a `.build` that referenced the application could not compile while the
-  application did not.
+  application did not. **A tool that produces provider data builds the
+  provider's wire shape and never serializes a domain or snapshot type** — a
+  recording holds what the provider sent, a domain type is this repository's
+  reading of it, and a hazard like an unreadable row cannot be expressed as one
+  at all.
 - Feature code lives under
   `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}`.
 - **Integration code does not live under `Features/`.** A provider's API

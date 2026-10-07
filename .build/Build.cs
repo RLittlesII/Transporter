@@ -34,6 +34,12 @@ class Build : NukeBuild
     [Parameter("Where the sample recording is written - Default is recordings/aircraft-sample.ndjson")]
     private readonly string Recording = null!;
 
+    [Parameter("How many payloads the sample recording holds - Default is the tool's own")]
+    private readonly int? Polls;
+
+    [Parameter("Seconds between the sample recording's payloads - Default is the tool's own")]
+    private readonly double? PollInterval;
+
     [Solution("Transponder.slnx")] private readonly Solution Solution = null!;
 
     private AbsolutePath SourceDirectory => RootDirectory / "src";
@@ -117,7 +123,34 @@ class Build : NukeBuild
     private Target SampleRecording => definition => definition
         .Executes(() => DotNetRun(settings => settings
             .SetProjectFile(RootDirectory / "tools" / "Transponder.SampleRecording" / "Transponder.SampleRecording.csproj")
-            .SetApplicationArguments("--seed", Seed.ToString(CultureInfo.InvariantCulture), "--output", SampleRecordingFile)));
+            .SetApplicationArguments(SampleRecordingArguments())));
+
+    /// What the generator is told: the seed and the output always, the length and the cadence only
+    /// when they were asked for, so the tool's own defaults stay the one answer for them.
+    private string[] SampleRecordingArguments()
+    {
+        var arguments = new List<string>
+        {
+            "--seed",
+            Seed.ToString(CultureInfo.InvariantCulture),
+            "--output",
+            SampleRecordingFile.ToString(),
+        };
+
+        if (Polls is { } polls)
+        {
+            arguments.Add("--polls");
+            arguments.Add(polls.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (PollInterval is { } interval)
+        {
+            arguments.Add("--interval");
+            arguments.Add(interval.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return arguments.ToArray();
+    }
 
     Target Default => definition => definition
         .DependsOn(Format)

@@ -293,9 +293,6 @@ paket-files/
 __pycache__/
 *.pyc
 
-# Cake's tools/ rules are gone: this repository builds with Nuke, and tools/ is
-# where its own development tooling lives (transponder-conventions
-# § "Project structure").
 BuildArtifacts/
 
 # Tabs Studio

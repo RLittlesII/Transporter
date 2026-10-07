@@ -21,9 +21,10 @@ namespace Transponder.SampleRecording;
 /// repository, because a recording holds what the provider sent.
 /// </para>
 /// <para>
-/// One seed writes one byte-identical file: the fleet, the instants and every drawn value come
-/// from <see cref="Random"/> seeded with it, and a seeded <see cref="Random"/> is the same sequence
-/// on every machine and run.
+/// One seed writes one byte-identical file: the fleet and every drawn value come from
+/// <see cref="Random"/> seeded with it, and a seeded <see cref="Random"/> is the same sequence on
+/// every machine and run. The length and the cadence are arguments; which poll carries which
+/// hazard is derived from the length, so a shorter recording still carries all of them.
 /// </para>
 /// </remarks>
 internal sealed class SyntheticRecording
@@ -31,32 +32,45 @@ internal sealed class SyntheticRecording
     /// <summary>Initializes a new instance of the <see cref="SyntheticRecording"/> class.</summary>
     /// <param name="recorder">The one writer of the recorded line's shape, which composes each line.</param>
     /// <param name="seed">What every drawn value comes from, so the file is reproducible.</param>
-    public SyntheticRecording(IRecordingWriter recorder, int seed)
+    /// <param name="polls">How many payloads it holds.</param>
+    /// <param name="interval">The spacing between them.</param>
+    public SyntheticRecording(IRecordingWriter recorder, int seed, int polls, TimeSpan interval)
     {
         _recorder = recorder;
         _seed = seed;
+        Polls = polls;
+        Interval = interval;
     }
 
-    /// <summary>How many payloads the recording holds: nine minutes and forty-five seconds, past the five-minute staleness threshold.</summary>
-    internal const int Polls = 40;
-
-    /// <summary>The last poll one aircraft reports a fresh contact on, so the recording ends six and three quarter minutes after it went quiet.</summary>
-    internal const int QuietensAfter = 12;
-
-    /// <summary>The poll that reports no aircraft at all.</summary>
-    internal const int Empties = 20;
-
-    /// <summary>The poll carrying the one row the reader cannot read.</summary>
-    internal const int Malformed = 3;
+    /// <summary>How many payloads a recording holds unless an argument says otherwise.</summary>
+    internal const int DefaultPolls = 40;
 
     /// <summary>How many aircraft carry no hazard and are there to fill the grid.</summary>
     internal const int Ordinary = 6;
 
+    /// <summary>The spacing between payloads unless an argument says otherwise, which is the live poll interval.</summary>
+    internal static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(15);
+
     /// <summary>The instant the recording begins, fixed rather than read from a clock so the file is reproducible.</summary>
     internal static readonly DateTimeOffset Begins = new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
-    /// <summary>The spacing between payloads, which is the poll interval a live recording would have been taken at.</summary>
-    internal static readonly TimeSpan Interval = TimeSpan.FromSeconds(15);
+    /// <summary>Gets how many payloads it holds.</summary>
+    public int Polls { get; }
+
+    /// <summary>Gets the spacing between payloads.</summary>
+    public TimeSpan Interval { get; }
+
+    /// <summary>Gets how much of the provider's own time it covers, which is what the startup check measures.</summary>
+    public TimeSpan Span => Interval * (Polls - 1);
+
+    /// <summary>Gets the poll carrying the one row the reader cannot read.</summary>
+    public int Malformed => Polls / 10;
+
+    /// <summary>Gets the last poll one aircraft reports a fresh contact on, so it is quiet for most of the recording.</summary>
+    public int QuietensAfter => Polls * 3 / 10;
+
+    /// <summary>Gets the poll that reports no aircraft at all.</summary>
+    public int Empties => Polls / 2;
 
     /// <summary>Writes the whole recording.</summary>
     /// <returns>The running write.</returns>
@@ -148,76 +162,6 @@ internal sealed class SyntheticRecording
         aircraft.VerticalRate = 0;
     }
 
-    /// <summary>Moves an aircraft along its track by one interval's worth of flight.</summary>
-    /// <param name="aircraft">The aircraft to move.</param>
-    /// <param name="random">Where the heading and speed drift come from.</param>
-    private static void Advance(SyntheticAircraft aircraft, Random random)
-    {
-        if (aircraft.Velocity is not { } velocity)
-        {
-            return;
-        }
-
-        var radians = aircraft.TrueTrack * Math.PI / 180;
-        var degrees = velocity * Interval.TotalSeconds / MetresPerDegree;
-
-        aircraft.Latitude = Rounded(aircraft.Latitude + (degrees * Math.Cos(radians)), 4);
-        aircraft.Longitude = Rounded(aircraft.Longitude + (degrees * Math.Sin(radians)), 4);
-        aircraft.TrueTrack = Rounded((aircraft.TrueTrack + (random.NextDouble() * 4) - 2 + 360) % 360, 1);
-        aircraft.BarometricAltitude = Rounded(aircraft.BarometricAltitude + (aircraft.VerticalRate * Interval.TotalSeconds), 0);
-        aircraft.Velocity = Rounded(velocity + (random.NextDouble() * 6) - 3, 1);
-    }
-
-    /// <summary>Composes one payload, in the shape the provider answers a states request with.</summary>
-    /// <param name="poll">Which poll it is, which decides what the payload reports.</param>
-    /// <param name="instant">The instant it reports, which becomes the observed instant downstream.</param>
-    /// <param name="fleet">The whole fleet, of which it reports whatever is audible.</param>
-    /// <returns>The payload as the provider would have sent it.</returns>
-    private static string Payload(int poll, DateTimeOffset instant, IReadOnlyList<SyntheticAircraft> fleet)
-    {
-        var reported = instant.ToUnixTimeSeconds();
-        var buffer = new ArrayBufferWriter<byte>();
-
-        using (var json = new Utf8JsonWriter(buffer))
-        {
-            json.WriteStartObject();
-            json.WriteNumber("time", reported);
-            json.WriteStartArray("states");
-
-            foreach (var aircraft in fleet)
-            {
-                if (!Reports(aircraft, poll))
-                {
-                    continue;
-                }
-
-                Row(json, aircraft, Contact(aircraft, poll, reported));
-            }
-
-            json.WriteEndArray();
-            json.WriteEndObject();
-        }
-
-        return Encoding.UTF8.GetString(buffer.WrittenSpan);
-    }
-
-    /// <summary>Whether an aircraft is reported on a poll.</summary>
-    /// <param name="aircraft">The aircraft.</param>
-    /// <param name="poll">Which poll it is.</param>
-    /// <returns><see langword="true"/> when the payload carries its row.</returns>
-    private static bool Reports(SyntheticAircraft aircraft, int poll) =>
-        poll != Empties && (!aircraft.Unreadable || poll == Malformed);
-
-    /// <summary>The instant a row reports as its last contact.</summary>
-    /// <param name="aircraft">The aircraft the row reports.</param>
-    /// <param name="poll">Which poll it is.</param>
-    /// <param name="reported">The instant the payload reports.</param>
-    /// <returns>The payload's instant, or the instant the aircraft went quiet.</returns>
-    private static long Contact(SyntheticAircraft aircraft, int poll, long reported) =>
-        aircraft.Quietens && poll > QuietensAfter
-            ? (Begins + (Interval * QuietensAfter)).ToUnixTimeSeconds()
-            : reported;
-
     /// <summary>Writes one positional row.</summary>
     /// <param name="json">Where the row is written.</param>
     /// <param name="aircraft">The aircraft the row reports.</param>
@@ -287,6 +231,76 @@ internal sealed class SyntheticRecording
     /// <param name="digits">How many decimal places to keep.</param>
     /// <returns>The rounded value.</returns>
     private static double Rounded(double value, int digits) => Math.Round(value, digits, MidpointRounding.AwayFromZero);
+
+    /// <summary>Composes one payload, in the shape the provider answers a states request with.</summary>
+    /// <param name="poll">Which poll it is, which decides what the payload reports.</param>
+    /// <param name="instant">The instant it reports, which becomes the observed instant downstream.</param>
+    /// <param name="fleet">The whole fleet, of which it reports whatever is audible.</param>
+    /// <returns>The payload as the provider would have sent it.</returns>
+    private string Payload(int poll, DateTimeOffset instant, IReadOnlyList<SyntheticAircraft> fleet)
+    {
+        var reported = instant.ToUnixTimeSeconds();
+        var buffer = new ArrayBufferWriter<byte>();
+
+        using (var json = new Utf8JsonWriter(buffer))
+        {
+            json.WriteStartObject();
+            json.WriteNumber("time", reported);
+            json.WriteStartArray("states");
+
+            foreach (var aircraft in fleet)
+            {
+                if (!Reports(aircraft, poll))
+                {
+                    continue;
+                }
+
+                Row(json, aircraft, Contact(aircraft, poll, reported));
+            }
+
+            json.WriteEndArray();
+            json.WriteEndObject();
+        }
+
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
+    }
+
+    /// <summary>Whether an aircraft is reported on a poll.</summary>
+    /// <param name="aircraft">The aircraft.</param>
+    /// <param name="poll">Which poll it is.</param>
+    /// <returns><see langword="true"/> when the payload carries its row.</returns>
+    private bool Reports(SyntheticAircraft aircraft, int poll) =>
+        poll != Empties && (!aircraft.Unreadable || poll == Malformed);
+
+    /// <summary>The instant a row reports as its last contact.</summary>
+    /// <param name="aircraft">The aircraft the row reports.</param>
+    /// <param name="poll">Which poll it is.</param>
+    /// <param name="reported">The instant the payload reports.</param>
+    /// <returns>The payload's instant, or the instant the aircraft went quiet.</returns>
+    private long Contact(SyntheticAircraft aircraft, int poll, long reported) =>
+        aircraft.Quietens && poll > QuietensAfter
+            ? (Begins + (Interval * QuietensAfter)).ToUnixTimeSeconds()
+            : reported;
+
+    /// <summary>Moves an aircraft along its track by one interval's worth of flight.</summary>
+    /// <param name="aircraft">The aircraft to move.</param>
+    /// <param name="random">Where the heading and speed drift come from.</param>
+    private void Advance(SyntheticAircraft aircraft, Random random)
+    {
+        if (aircraft.Velocity is not { } velocity)
+        {
+            return;
+        }
+
+        var radians = aircraft.TrueTrack * Math.PI / 180;
+        var degrees = velocity * Interval.TotalSeconds / MetresPerDegree;
+
+        aircraft.Latitude = Rounded(aircraft.Latitude + (degrees * Math.Cos(radians)), 4);
+        aircraft.Longitude = Rounded(aircraft.Longitude + (degrees * Math.Sin(radians)), 4);
+        aircraft.TrueTrack = Rounded((aircraft.TrueTrack + (random.NextDouble() * 4) - 2 + 360) % 360, 1);
+        aircraft.BarometricAltitude = Rounded(aircraft.BarometricAltitude + (aircraft.VerticalRate * Interval.TotalSeconds), 0);
+        aircraft.Velocity = Rounded(velocity + (random.NextDouble() * 6) - 3, 1);
+    }
 
     /// <summary>Metres per degree of latitude, near enough for a demo's positions.</summary>
     private const double MetresPerDegree = 111_320;
