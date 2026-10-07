@@ -67,12 +67,12 @@ acceptance_criteria:
   - "A registration spelling the rule does not recognize is reported rather than
     treated as compliant."
 
-decisions: []
-
+decisions:
   - "2026-10-05 — implementer — B-011, B-012 and B-020 are `Verified`, and
     B-016 with them: the cite check it names could not pass until the eighteenth
     test name existed, and this item wrote the last four. The status is set here
     rather than after the merge, per lesson 0010."
+
 out_of_scope:
   - "Reference rules — 0022. Declaration rules — 0023."
   - "The descriptor conventions — 0021, which this item depends on."

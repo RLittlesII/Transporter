@@ -16,6 +16,7 @@ depends_on:
   - "0031"
 blocks:
   - "0033"
+  - "0036"
 spikes: []
 
 spec: src/Transponder/Tracking/.spec/README.md

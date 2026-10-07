@@ -7,7 +7,7 @@ status: ready-for-architecture
 priority: high
 value: 4
 risk: 4
-rank: 68
+rank: 73
 
 parent: "0035"
 children: []
@@ -15,7 +15,8 @@ children: []
 depends_on:
   - "0036"
   - "0006"
-blocks: []
+blocks:
+  - "0001"
 spikes: []
 
 spec: src/Transponder/Features/Fleet/.spec/README.md
@@ -72,6 +73,7 @@ acceptance_criteria:
     which has no view model to build."
 
 decisions:
+  - "2026-10-07 — `0055` — `blocks` now names `0001`, and the rank moves 68 to 73 with it. `aircraft-source` B-041's \"what view models depend on\" half needs a container-built view model and is owed here under B-020, which that row already said in prose; the field says it now, so this item unblocks one and the formula reads it. `value` and `risk` are untouched — 4 and 4, as authored."
   - "2026-10-06 — the person — this item takes `aircraft-source` B-041's
     view-model half from that Feature's `0007`, which has no view model to build
     and could not close while holding it (lesson 0011). The claim stays

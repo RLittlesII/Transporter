@@ -1,0 +1,157 @@
+id: "0055"
+type: chore
+title: Close the items whose status outlived their work
+
+status: done
+
+priority: medium
+value: 3
+risk: 1
+rank: 57
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-07"
+updated: "2026-10-07"
+closed: "2026-10-07"
+
+summary: |
+  Six items read a state their work no longer matches, and the tracker is the
+  only thing that says what is available to pick up — so a wrong status is not
+  cosmetic. It cost scheduling time twice already: `0005` read as an
+  outstanding prerequisite when `0011` came up (its own `0005` row records
+  that), and three root items have read `in-progress` since 2026-10-04, which
+  the conventions make the one signal an item is taken.
+
+  What was wrong, and the evidence for each:
+
+  - `0014`, `0015`, `0016` — delivered on 2026-10-04 and never closed. Each
+    says why in its own last decision: the repository had no remote, so the
+    branch could not be pushed and the item "stays in-progress until the branch
+    lands". The work landed on `main` directly instead — `ce25373` put this
+    repository's specifics in one companion skill (`0014`), `cf06899` moved each
+    item beside the specification it was cut from (`0015`), and `37f0a7b` gave
+    the rank formula a home beside the fields it derives (`0016`) — so the
+    condition the three were waiting for was met by a different route and
+    nothing went back to the items.
+  - `0030` — `fleet-pipeline`'s parent, reading `ready-for-implementation` with
+    all four children done, § 9 at twenty-eight `Verified` of twenty-eight, § 12
+    three rows 🟢 and `spec_status: approved`. There is nothing left to
+    implement.
+  - `0001` — `aircraft-source`'s parent, reading `ready-for-architecture` with
+    its architecture delivered and all six children done. One § 9 row is
+    `Missing`: B-041's "what view models depend on" half, which needs a
+    container-built view model and is owed by `fleet-dashboard` `0039`. So the
+    item is blocked on another Feature's item rather than waiting on
+    architecture.
+  - `0008` — `replay-source`'s parent, reading `ready-for-implementation` with
+    four of five children done and the fifth, `0013`, blocked on a
+    specification nobody has written (§ 5 row 2). Its last claim, B-005, waits
+    on a captured recording (`0052`).
+
+  `.issue/.sequence` also read `0052` while `0053` and `0054` exist, so the next
+  item filed from it would have collided. Bumped to this item's id.
+
+  Reading all fifty-five items as YAML to check the above found two that do not
+  parse at all, and six whose derived fields disagree with the formula
+  `.spec/templates/item.yml` holds — the thing `0016` gave that formula one home
+  to prevent. Both kinds are the same failure as a stale status: a field nobody
+  can trust is a field nobody reads.
+
+  - `0047` used `\'` inside a double-quoted scalar twice, which is not an escape
+    YAML defines.
+  - `0024` carried `decisions: []` followed by a list item indented under
+    nothing, so the file was two mappings and a dangling sequence.
+  - `0025`, `0028` and `0042` stored a `priority` their own `rank` does not
+    produce; `0042`, `0050`, `0051` and `0054` stored a `rank` their `value`,
+    `risk` and `unblocks` do not produce.
+  - `0009` and `0032` declared fewer `blocks` than the `depends_on` edges
+    pointing at them, and `0032`'s stored rank was already computed from the
+    edge its `blocks` omitted.
+
+acceptance_criteria:
+  - "`0014`, `0015` and `0016` read `done` with `closed` set to the day their
+    work landed, each carrying the commit that landed it."
+  - "`0030` reads `done` with `closed` set to the day its last claim was
+    verified."
+  - "`0001` reads `blocked` and names what blocks it in `depends_on`, so the
+    block is machine-readable rather than prose."
+  - "`0008` reads `blocked`, naming the unwritten specification `0013` waits on."
+  - "`.issue/.sequence` is ahead of every id in use."
+  - "Every item file parses as YAML."
+  - "Every stored `rank` recomputes from its own `value`, `risk` and `unblocks`,
+    and every `priority` from its bucket — `0016`'s criterion, re-checked across
+    all of them rather than the two it was written against."
+  - "Each item's `blocks` names every item whose `depends_on` points at it."
+  - "No claim is re-verified, no specification's § 9 changes, and no item's
+    `value` or `risk` is edited — a status that lagged is not evidence about the
+    work."
+
+decisions:
+  - "2026-10-07 — implementer — each item is closed with the date its work
+    landed rather than today's, and the commit that landed it is named in the
+    row. A `closed` date is a fact about the work, not about when someone
+    noticed; dating all four today would erase the three-day lag this chore
+    exists because of."
+  - "2026-10-07 — implementer — `0001` gains `depends_on: 0039` rather than only
+    a decision row, so the block is in the field a reader and a script both use.
+    The cost is that `0039` now unblocks one item, which the rank formula reads:
+    its rank moves 68 to 73 and `fleet-dashboard` § Scoring carries the row.
+    That is the formula working rather than a hand edit — the alternative was
+    prose nothing schedules from."
+  - "2026-10-07 — implementer — `0001` and `0008` are `blocked` rather than
+    `in-review`. Neither is waiting for a reader: `0001` needs another
+    Feature's item to produce a test, and `0008` needs a specification nobody
+    has written. `blocked` is the status the template names for work that
+    bounces back, and it keeps both out of the pickable list where
+    `ready-for-implementation` had been putting them."
+  - "2026-10-07 — implementer — nothing was re-verified to close `0014` – `0016`.
+    Their acceptance criteria are checkable by reading the repository, and they
+    are: `.issues/` is gone and `.issue/.sequence` exists (`0015`),
+    `.skills/transponder-conventions` holds this repository's specifics and
+    root lesson `0001` records why (`0014`), every specification section carries
+    a one-line pointer and the rank formula lives in `.spec/templates/item.yml`
+    (`0016`). What was missing was the closing, not the work."
+  - "2026-10-07 — implementer — the derived fields are recomputed from the
+    formula and the authored fields are not touched. `0042`'s rank was stored
+    five buckets high and drops it to `low`, `0050` and `0051` and `0054` each
+    move by five, and `0025` and `0028` keep their rank and lose a priority it
+    never produced. Where a `blocks` field was short, the edge was added rather
+    than the rank adjusted to match it — `0032`'s rank already counted the
+    missing edge, which is the evidence for which of the two fields was wrong.
+    `0009` is the exception that moves: adding `0052` to its `blocks` is a real
+    unblock and takes it 71 to 76."
+  - "2026-10-07 — implementer — the four replay children are left alone, and
+    this is the one finding this chore does not close. `0009` – `0012` carry no
+    `value`, and `replay-source` § Scoring says a child omits it to inherit
+    `0008`'s — which is 5. Their stored ranks are all computed from a value of 4
+    instead, so either the ranks or the inheritance is wrong, and thirteen other
+    items carry no `value` either. Setting one would be inventing an authored
+    field, which this chore has no standing to do: `value` is the person's.
+    Filed as an observation here rather than guessed at, and raised in the pull
+    request."
+  - "2026-10-07 — implementer — `0029` is left `ready` and untouched. Its
+    trigger is a second JSON boundary of this repository's own, and the
+    recording format is one — but what answers it is `RecordedLine`, which is in
+    flight on `0012` and not yet on `main`. A row citing unmerged code would be
+    the same kind of stale fact this chore is cleaning up."
+
+out_of_scope:
+  - "Any change to source, tests, the build or CI. This is the tracker only."
+  - "Authoring a `value` for the fifteen items that carry none, or deciding
+    whether a child inherits its parent's. The field is the person's."
+  - "A check that keeps the tracker parseable and its derived fields honest.
+    This chore read them once by hand; `0042` is the item about tooling for the
+    specification files and is where that belongs."
+  - "Closing `0025` – `0028`, which read `in-review` because they are waiting on
+    a reader rather than on a mistake."
+  - "Re-verifying any claim, or editing any `value` or `risk`."

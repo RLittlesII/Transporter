@@ -2,7 +2,7 @@ id: "0030"
 type: feature
 title: Filter, sort, group, count, mark and bind one collection of vehicles
 
-status: ready-for-implementation
+status: done
 
 priority: high
 value: 5
@@ -54,8 +54,8 @@ claims:
   - B-028
 
 created: "2026-10-05"
-updated: "2026-10-06"
-closed: null
+updated: "2026-10-07"
+closed: "2026-10-06"
 
 summary: |
   As a line-of-business .NET developer whose data lives behind REST endpoints
@@ -95,6 +95,7 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-07 — `0055` — closed on 2026-10-06, the day `0033` merged as #44 and took the specification's § 9 to twenty-eight `Verified` of twenty-eight. All four children are `done`, § 12 reads 🟢 on all three rows and `spec_status` is `approved`, so this parent held nothing but a stale field. Nothing was re-verified to close it: the gate it is closed against is § 9, which its children wrote."
   - "2026-10-05 — the person — the pipeline and the dashboard are two Features,
     not one. This item is the pipeline, provable with no UI at all; the MAUI
     surfaces, the view models and the composition of search text into a

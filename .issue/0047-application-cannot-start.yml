@@ -71,8 +71,8 @@ decisions:
     Rejected: wiring `AddOpenSky` and `AddFleetTracking` into `MauiProgram` as
     the smallest change — asked for first and withdrawn the same hour, because
     it leaves the composition in the one project no test here can reference,
-    which is the whole of why this was invisible. Who owns the tracker\'s
-    lifetime and who starts the first poll are still `0040`\'s; this item
+    which is the whole of why this was invisible. Who owns the tracker's
+    lifetime and who starts the first poll are still `0040`'s; this item
     answers neither."
   - "2026-10-06 — the person — configuration ships as a `MauiAsset` carrying the
     base URL, the poll interval and the bounding box, and carries no
