@@ -60,6 +60,12 @@ claiming coverage for anything.
   recorded source age items the same way a live one does.
 - **No sleeps, no real delays, no retry-until-true.** If a test takes a second,
   it is reading the wrong clock.
+- **Advance to the due instant, not to the figure the fixture reads like.** A
+  test that awaits a value released by a scheduled wait hangs for ever when the
+  advance stops short of it — the await never completes and the run looks stuck
+  rather than failing, so nothing names the test or the missing millisecond.
+  Derive the advance from the same arithmetic the subject does, or build the
+  fixture so the two cannot differ.
 
 ## No network, ever
 

@@ -2,7 +2,7 @@ id: "0010"
 type: task
 title: Feed a recording back at its recorded cadence, looping, with no network
 
-status: ready
+status: done
 
 priority: high
 risk: 3
@@ -29,7 +29,7 @@ claims:
 
 created: "2026-10-04"
 updated: "2026-10-06"
-closed: null
+closed: "2026-10-06"
 
 summary: |
   Reads an NDJSON recording and yields each payload in recorded order at the
@@ -66,6 +66,50 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — implementer — closed on three of its six claims. B-008, B-012
+    and B-027 are `Verified` against `RecordingPacerTests`. The other three are
+    held by this item and provable only by another: B-011's is a host test over
+    `0012`'s registration split, which § 8 already found; B-014's is a
+    `ReplayOpenSkyApiTests` test, and B-007's second test is `ReplayCadenceTests`
+    over the live client on the replay contract, both of which are `0011`'s. § 8
+    gained that second finding and § 9 says which item moves each row. Holding
+    the item open for three mechanisms nothing in its scope can build is the
+    wrong shape — the same call `0009` made on B-005 — and the re-cut those
+    findings ask for is `spec-author`'s."
+  - "2026-10-06 — implementer — the pacer refuses two inputs rather than
+    carrying them, and § 7 carries both. A stream that cannot seek is refused in
+    the constructor, because the loop seeks rather than reopening a file the
+    pacer never opened and a precondition checked at the loop boundary first
+    fails minutes into a talk. A recording with no readable line throws on the
+    second rewind inside one call rather than spinning; B-026's startup report on
+    `0012` is what keeps that unreachable."
+  - "2026-10-06 — implementer — the payload leaves as the text the line holds,
+    read with `JsonElement.GetRawText` and never deserialized, and no recorded
+    line type is introduced. B-002's verbatim then holds end to end — the writer
+    splices the body in as text and this reads it back out as text — and there is
+    no second declaration of the format to drift from ADR-0004. Rejected: a
+    `RecordedLine` record, which would put a type on the read side that the write
+    side does not have."
+  - "2026-10-06 — implementer — B-008's changeset half is proven by construction
+    rather than by assertion, and its § 9 row says so. There is no cache below
+    the substitution point, so the pacer clears nothing and emits nothing but
+    payloads; the test asserts the boundary releases the first payload after the
+    last, spaced by the recording's own last gap, with no completion and no
+    fault. The claim's `EditDiff` half is observable only through a client, which
+    is `0011`'s."
+  - "2026-10-06 — implementer — a fixture whose recorded instants carried
+    millisecond jitter made the first gap 15.005 seconds, so an `AdvanceBy` of
+    fifteen never reached it and the awaited payload hung the whole run with no
+    test named. Root lesson 0019 records the incident and
+    `test-from-scenarios` § \"Time is injected, always\" gained the rule; § 8 of
+    the specification carries it as this Feature's third trap, because `0011` and
+    `0013` pace from recorded instants too."
+  - "2026-10-06 — person — the § 12 sign-off gate is waived for this item. All
+    three rows of the specification's § 12 read 🟡 Draft and `spec_status` is
+    `draft`, which `transponder-conventions` § \"The rules that bind every
+    change\" would otherwise hold `in-progress` behind. The waiver is named to
+    `0010` alone and is not standing; `0009` ran against the same rows and
+    recorded no waiver at all, which is the hole this row closes."
   - "2026-10-04 — spec-author — the pacer yields raw payloads rather than parsed
     envelopes, so B-014 holds and so a push recording (0013) can use the same
     component. Rejected: parsing here, which would put a converter below the
