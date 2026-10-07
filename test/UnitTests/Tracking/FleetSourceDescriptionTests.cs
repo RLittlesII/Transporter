@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Transponder.Model;
 using Transponder.Tracking.Sources;
+using Transponder.UnitTests.Model.Fixtures;
 
 namespace Transponder.UnitTests.Tracking;
 
@@ -17,7 +18,7 @@ public class FleetSourceDescriptionTests
     {
         // Given
         var offered = AircraftFleetDescription.Offered;
-        TransportVehicle vehicle = new Aircraft("a1b2c3", LastContact) { Callsign = "ZULU", OriginCountry = "Mexico" };
+        TransportVehicle vehicle = new AircraftFixture().WithCallsign("ZULU").WithOriginCountry("Mexico");
 
         // When
         var cells = offered.Columns.Select(column => column.Value(vehicle)).ToList();
@@ -31,6 +32,35 @@ public class FleetSourceDescriptionTests
         groups.Should().Equal(["Mexico"]);
     }
 
-    /// <summary>The instant the vehicle here was last heard from.</summary>
-    private static readonly DateTimeOffset LastContact = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
+    /// <summary>
+    /// fleet-pipeline B-029. The curated choices ship with the description, each a name beside a
+    /// predicate that admits one vehicle and rejects another — a choice that admits everything is a
+    /// dropdown entry that appears to do nothing, which reads as the filter being broken. They are
+    /// read off a static description with no fleet in the arrangement, which is the other half of
+    /// the claim: a choice is what the source admits, not what the data happens to hold.
+    /// </summary>
+    [Fact]
+    public void GivenTheAircraftDescription_WhenItsFiltersAreRead_ThenEachCarriesANameAndAPredicateThatAdmitsAndRejects()
+    {
+        // Given
+        var offered = AircraftFleetDescription.Offered;
+        TransportVehicle grounded = new AircraftFixture().WithCallsign("ZULU").WithOnGround(true);
+        TransportVehicle airborne = new AircraftFixture().WithCallsign("ALFA").WithOnGround(false);
+        TransportVehicle located = new AircraftFixture().WithCallsign("BRAVO").WithPosition(new GeoPosition(19.4, -99.1));
+
+        // When
+        var vehicles = new[] { grounded, airborne, located };
+
+        // Then
+        offered.Filters.Should().NotBeEmpty();
+        offered.Filters.Should().OnlyContain(static choice => choice.Name.Length > 0, "a choice with no name is an empty dropdown entry");
+        offered.Filters.Should().OnlyContain(
+            choice => vehicles.Any(vehicle => choice.Matches(vehicle)) && vehicles.Any(vehicle => !choice.Matches(vehicle)),
+            "a choice that admits every vehicle or rejects every vehicle constrains nothing");
+        var onTheGround = offered.Filters.Single(static choice => choice.Name == "On the ground");
+        var reporting = offered.Filters.Single(static choice => choice.Name == "Reporting a position");
+        onTheGround.Matches(grounded).Should().BeTrue();
+        onTheGround.Matches(airborne).Should().BeFalse();
+        reporting.Matches(grounded).Should().BeFalse("the aircraft reports no fix, and absent is a fact rather than 0,0");
+    }
 }

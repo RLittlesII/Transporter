@@ -30,12 +30,21 @@ spec_status: approved
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 3 -->
 
-Twenty-eight claims, in eight groups: **B-001 – B-005 and B-028** the spine —
+Thirty claims, in eight groups: **B-001 – B-005 and B-028** the spine —
 what is built, when, what is published and who binds it; **B-006 – B-008** search
 and filtering; **B-009 – B-011** sorting; **B-012 – B-015** grouping and
 aggregates; **B-016 – B-019** staleness; **B-020 – B-022** the source
 description; **B-023 and B-024** the boundaries; **B-025 – B-027** the arrival
 notice.
+
+B-029 and B-030 were added on 2026-10-07, from § 11 row 5: the filter control's
+choices are of two kinds, and the pipeline is what each must come from. B-029
+carries the choices the source declares — curated, offered whether or not a
+vehicle satisfies one, and grouped with B-020 – B-022 because the description is
+where they live. B-030 carries the choices the data holds, as the distinct values
+of the current grouping key, and is grouped with B-012 – B-015 because it is an
+aggregate over the same stream. Neither composes a predicate: `fleet-dashboard`
+B-009 does that, and this Feature claims only what the pipeline offers it.
 
 B-028 was added, and B-002 and B-005 amended, on 2026-10-05 by
 [ADR-0009](../../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md):
@@ -90,15 +99,17 @@ Feature is cited it is written with its Feature's name.
 | B-017 | The staleness threshold SHALL be settable on the tracker and SHALL default to five minutes, held by the tracker rather than supplied by a caller at construction.                                                                                                                                                                                                                  | README.md § "UI features"                                                     |
 | B-018 | Staleness SHALL be measured against the observed clock, SHALL NOT read `DateTime.UtcNow` or `DateTimeOffset.Now` inline, and SHALL be re-evaluated when the observed instant advances — so a vehicle becomes stale with no new data arriving for it.                                                                                                                               | `aircraft-source` B-043 and B-003; ADR-0007; ADR-0010                         |
 | B-019 | No vehicle SHALL be removed from the fleet because it stopped reporting, and `ExpireAfter` SHALL NOT appear in this pipeline.                                                                                                                                                                                                                                                      | README.md § "DynamicData operators"; see § 5 row 2                            |
-| B-020 | The live source SHALL supply a description naming the columns, comparers and grouping keys available for it; each column SHALL be a display name plus a selector over `TransportVehicle`.                                                                                                                                                                                          | maui-ui § "The swap test"; ADR-0005 item 6                                    |
+| B-020 | The live source SHALL supply a description naming the columns, comparers, grouping keys and filter choices available for it; each column SHALL be a display name plus a selector over `TransportVehicle`.                                                                                                                                                                          | maui-ui § "The swap test"; ADR-0005 item 6                                    |
 | B-021 | Swapping the live source SHALL swap the description, and SHALL NOT require editing the pipeline, a comparer, a predicate or a grouping key.                                                                                                                                                                                                                                        | hot-swap-source; README.md § "Closing act"                                    |
-| B-022 | No column, comparer, predicate, grouping key or aggregate SHALL downcast, type-test or `switch` on a concrete `TransportVehicle` subclass.                                                                                                                                                                                                                                         | ADR-0005 item 6; domain-model § "Never add"                                   |
+| B-022 | No column, comparer, predicate, grouping key or aggregate SHALL downcast, type-test or `switch` on a concrete `TransportVehicle` subclass. **One exception**: a source's own description (B-029) MAY name the concrete type it was written for, and nothing else MAY — it is the per-source file a swap replaces, so a cast there cannot outlive the source it belongs to.         | ADR-0005 item 6; domain-model § "Never add"; § 11 row 6                       |
 | B-023 | Nothing in this Feature SHALL name an API contract, an API type, a client, a cache, a snapshot or a concrete `ITrackerSource`.                                                                                                                                                                                                                                                     | `aircraft-source` B-047; hot-swap-source                                      |
 | B-024 | Nothing in this Feature SHALL read a network, a file or a wall clock.                                                                                                                                                                                                                                                                                                              | dynamic-data-pipeline § "Testing"; see § 4 row 5                              |
 | B-025 | The tracker SHALL publish a notice each time a changeset arrives carrying at least one change, and the notice SHALL carry the observed instant and the counts — vehicles tracked, and vehicles added, updated and removed by that changeset. A changeset carrying no change SHALL produce no notice.                                                                               | Decided call 2026-10-05; see § 7 § "The arrival notice"                       |
 | B-026 | The notices SHALL be reachable as a stream paced by a caller-supplied minimum-interval observable, so two consumers SHALL be able to run at two different cadences at once and either SHALL be changeable while the application runs. An interval SHALL default to one second until a value arrives, and the most recent notice in a capped window SHALL be the one published.     | Decided call 2026-10-05; see § 4 rows 8 and 10                                |
 | B-027 | The notices stream SHALL report a quiet notice when no changeset has arrived for longer than the staleness threshold, and a resumed notice on the next changeset after one, so silence is reported once rather than inferred from the absence of notices. The arrival timer SHALL be built per subscription, so the tracker holds none and B-028's teardown is not defeated by it. | Decided call 2026-10-05; `aircraft-source` decision 0002 (the swap's own)     |
 | B-028 | The stages SHALL be shared: a second subscriber SHALL NOT cause a second connection to the seam, a second diff pass or a second evaluation of the filter, the sort or the stale mark, and the stages SHALL tear down when the last subscriber unsubscribes.                                                                                                                        | ADR-0009; dynamic-data-pipeline § "The spine"                                 |
+| B-029 | The description SHALL carry the filter choices the live source offers, each a display name beside a predicate over `TransportVehicle`, and SHALL offer them whether or not any vehicle currently satisfies one — a choice is what the source admits, not what the data happens to hold.                                                                                            | § 11 row 6; `fleet-dashboard` B-009 and B-011                                 |
+| B-030 | The tracker SHALL publish the distinct values the current grouping key takes across the fleet, as a changeset, so a choice can be offered for a value the data holds without any consumer enumerating the collection to find it.                                                                                                                                                   | § 11 row 6; `fleet-dashboard` B-009                                           |
 
 ## 4. Constraints
 
@@ -254,6 +265,9 @@ each (B-013).
 | `FleetGrouping.Key`                | `Func<TransportVehicle, string>`                  | How the group is read. The default grouping's selector is `GroupKey`; a second grouping a source offers supplies its own.                                                                              |
 | `FleetSourceDescription.Columns`   | `IReadOnlyList<FleetColumn>`                      | In display order (B-020).                                                                                                                                                                              |
 | `FleetSourceDescription.Groupings` | `IReadOnlyList<FleetGrouping>`                    | What this source can be grouped by.                                                                                                                                                                    |
+| `FleetSourceDescription.Filters`   | `IReadOnlyList<FleetFilterChoice>`                | The curated choices this source offers, in the order the control shows them (B-029). Empty is legal and means the control offers search alone.                                                         |
+| `FleetFilterChoice.Name`           | `string`                                          | What the control shows — "On the ground", "Airborne".                                                                                                                                                  |
+| `FleetFilterChoice.Matches`        | `Func<TransportVehicle, bool>`                    | What a vehicle must satisfy. Built in the source's own description, which is the one place a cast to the concrete type is allowed (B-022's exception, B-029).                                          |
 | `FleetSummary.Tracked`             | `int`                                             | Vehicles in the fleet (B-015).                                                                                                                                                                         |
 | `FleetSummary.Stale`               | `int`                                             | How many of them are stale.                                                                                                                                                                            |
 | `FleetSummary.Groups`              | `int`                                             | Groups present under the current grouping.                                                                                                                                                             |
@@ -463,8 +477,9 @@ decision 1).
 | `Aircraft`                                               | [`src/Transponder/Model/Aircraft.cs`](../../Model/Aircraft.cs)                                           | B-013                                              |
 | `IObservedClock`                                         | [`src/Transponder/Tracking/IObservedClock.cs`](../IObservedClock.cs)                                     | B-018                                              |
 | `IObservedClockTicks`                                    | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../IObservedClockTicks.cs)                           | B-018                                              |
-| `FleetColumn`, `FleetGrouping`, `FleetSourceDescription` | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-020 – B-022                                      |
-| `AircraftFleetDescription`                               | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021                                       |
+| `FleetColumn`, `FleetGrouping`, `FleetSourceDescription` | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-020 – B-022, B-029                               |
+| `FleetFilterChoice`                                      | [`src/Transponder/Tracking/Fleet/FleetFilterChoice.cs`](../Fleet/FleetFilterChoice.cs)                   | B-029                                              |
+| `AircraftFleetDescription`                               | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021, B-029                                |
 | `TrackedVehicle`, `FleetTracker`                         | [`src/Transponder/Tracking/`](..)                                                                        | B-001 – B-005, B-009 – B-011, B-016 – B-019, B-028 |
 | `FleetGroup`                                             | [`src/Transponder/Tracking/Fleet/FleetGroup.cs`](../Fleet/FleetGroup.cs)                                 | B-012, B-014                                       |
 | `FleetSummary`                                           | [`src/Transponder/Tracking/Fleet/FleetSummary.cs`](../Fleet/FleetSummary.cs)                             | B-015                                              |
@@ -475,7 +490,7 @@ structure":
 
 ```
 src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle
-src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetSourceDescription, FleetGroup, FleetSummary, FleetNotice
+src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetGroup, FleetSummary, FleetNotice
 ```
 
 The description lives under `Tracking/` rather than `Model/` deliberately: it
@@ -635,7 +650,7 @@ Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
 
 - Happy path → B-001, B-002, B-006, B-007, B-009, B-011 – B-015, B-020, B-025,
-  B-028
+  B-028 – B-030
 - Failure mode → B-004, B-005, B-016 – B-019, B-027
 - Validation failure → B-003, B-008, B-010, B-021 – B-024
 - Data-driven → B-011, B-014, B-017, B-026
@@ -644,8 +659,9 @@ what execute.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and every one of the twenty-eight rows reads `Verified` as
-of 2026-10-06**: the spine `0031` delivered B-001 – B-005, B-023, B-024 and
+**This is the gate. Twenty-nine of the thirty rows read `Verified`; B-030 is the
+one `Missing`, and `0056` is what builds it.** As of 2026-10-06 every row then
+present read `Verified`: the spine `0031` delivered B-001 – B-005, B-023, B-024 and
 B-028, the description and the sort `0032` delivered B-009 – B-011, B-013 and
 B-020 – B-022, staleness `0034` delivered B-016 – B-019, and the filter, the
 groups, the aggregates and the notices `0033` delivered B-006 – B-008, B-012,
@@ -689,6 +705,8 @@ asks for.
 | B-026    | `@B-026` | `FleetNoticeTests.GivenTwoSubscribersAtDifferentIntervals_WhenNoticesArriveFaster_ThenEachReceivesTheLatestAtItsOwnCadence` over the three orders, with `GivenASubscriberPacedByAMinute_WhenItAsksForASecondInstead_ThenNoticesArriveWithoutResubscribing` for the interval changed while running — `0033`                                                                                                                                                                                                                                                                                          | Verified |
 | B-027    | `@B-027` | `FleetNoticeTests.GivenNoChangesetForLongerThanTheThreshold_WhenTheClockAdvances_ThenAQuietNoticeIsRaisedOnceAndTheNextChangesetResumes` — one quiet notice, none on the next advance, and a resumed notice carrying what moved — `0033`                                                                                                                                                                                                                                                                                                                                                            | Verified |
 | B-028    | `@B-028` | `FleetTrackerTests.GivenTwoSubscribers_WhenBothAreBound_ThenTheSeamIsConnectedOnceAndTheStagesStopWhenTheLastUnsubscribes` — one connection, one filter evaluation per changeset, and teardown on the last unsubscribe                                                                                                                                                                                                                                                                                                                                                                              | Verified |
+| B-029    | `@B-029` | `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsFiltersAreRead_ThenEachCarriesANameAndAPredicateThatAdmitsAndRejects` — the curated choices, each admitting one synthetic vehicle and rejecting another, with an empty fleet never consulted — `0037`                                                                                                                                                                                                                                                                                                                               | Verified |
+| B-030    | `@B-030` | [`0056`](../.issue/0056-distinct-grouping-values.yml) — the distinct-value stage is not built; nothing in the repository publishes the values the current grouping key takes                                                                                                                                                                                                                                                                                                                                                                                                                        | Missing  |
 
 ## 10. Lessons / Spec Deltas
 
@@ -700,13 +718,14 @@ None yet — nothing is built, so no bug has been closed here.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 11 -->
 
-| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Owner         | Target date |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------- |
-| 1   | **Answered 2026-10-05 — option A, [`decisions/0001`](decisions/0001-no-autorefresh-in-this-pipeline.md).** `AutoRefresh` has no subject in this pipeline (§ 4 row 4), staleness re-evaluates on the clock's observable (B-018), and README.md's operator table records where the operator would apply instead.                                                                                                                                                        | the person    | Closed      |
-| 2   | **Answered 2026-10-05 — it stays on the tracker.** The pivot's scope call keeps every operator in the pipeline, aggregates included, so `Summary` is published beside the fleet and the groups and is derived once rather than in each consumer that shows it (ADR-0009 decision 2). B-015 is unchanged.                                                                                                                                                              | the person    | 2026-10-12  |
-| 3   | **Answered 2026-10-05 — the display-formatted cell is the boundary.** `FleetColumn.Value` stays a `string`: the pipeline converts no unit and the view formats none, which keeps unit logic out of the markup and B-022's no-downcast rule cheap. B-020 is unchanged; a canonical value plus a formatter was rejected as a second member per column and a generic `FleetColumn<T>` no need asks for. No `decisions/` record — it shapes code, not what the demo does. | the person    | Closed      |
-| 4   | **Answered 2026-10-05 — see the resolution below.** Seven concerns, resolved by [ADR-0009](../../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md) and [ADR-0010](../../../../.spec/adr/0010-a-third-seam-carries-the-observed-clocks-ticks.md). § 7 was rewritten against them the same day, and § 12 §§ 6-7 is 🟢.                                                                                                                        | the architect | —           |
-| 5   | **Answered 2026-10-05 — no, [`decisions/0002`](decisions/0002-the-poll-interval-is-not-a-live-input.md).** The poll interval stays `aircraft-source`'s startup option and is excluded by § 5 row 8; a control that polls faster can empty the day's 4,000 credits during the talk. The notice interval (B-026) stays live.                                                                                                                                            | the person    | Closed      |
+| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Owner         | Target date |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------- |
+| 1   | **Answered 2026-10-05 — option A, [`decisions/0001`](decisions/0001-no-autorefresh-in-this-pipeline.md).** `AutoRefresh` has no subject in this pipeline (§ 4 row 4), staleness re-evaluates on the clock's observable (B-018), and README.md's operator table records where the operator would apply instead.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | the person    | Closed      |
+| 2   | **Answered 2026-10-05 — it stays on the tracker.** The pivot's scope call keeps every operator in the pipeline, aggregates included, so `Summary` is published beside the fleet and the groups and is derived once rather than in each consumer that shows it (ADR-0009 decision 2). B-015 is unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | the person    | 2026-10-12  |
+| 3   | **Answered 2026-10-05 — the display-formatted cell is the boundary.** `FleetColumn.Value` stays a `string`: the pipeline converts no unit and the view formats none, which keeps unit logic out of the markup and B-022's no-downcast rule cheap. B-020 is unchanged; a canonical value plus a formatter was rejected as a second member per column and a generic `FleetColumn<T>` no need asks for. No `decisions/` record — it shapes code, not what the demo does.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | the person    | Closed      |
+| 4   | **Answered 2026-10-05 — see the resolution below.** Seven concerns, resolved by [ADR-0009](../../../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md) and [ADR-0010](../../../../.spec/adr/0010-a-third-seam-carries-the-observed-clocks-ticks.md). § 7 was rewritten against them the same day, and § 12 §§ 6-7 is 🟢.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | the architect | —           |
+| 5   | **Answered 2026-10-05 — no, [`decisions/0002`](decisions/0002-the-poll-interval-is-not-a-live-input.md).** The poll interval stays `aircraft-source`'s startup option and is excluded by § 5 row 8; a control that polls faster can empty the day's 4,000 credits during the talk. The notice interval (B-026) stays live.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | the person    | Closed      |
+| 6   | **Answered 2026-10-07 — both kinds exist, and each comes from here.** Raised building `fleet-dashboard` `0037`: `FleetViewModel.Filters` had no source, since the description published columns and groupings only. The person's answer was that a filter can be _defined for_ the user or _defined from_ the data. So B-029 carries the curated choices the source declares, and B-030 the distinct values the data holds. The dividing rule is `fleet-dashboard` B-009 and B-018: a view model may not enumerate the collection, so a choice derived from what the fleet contains is an aggregate this pipeline computes, never a loop in a view model. B-022 gained its one exception in the same answer — a source's own description may name the concrete type it was written for, because `Aircraft.OnGround` reaches no member of `TransportVehicle` and promoting it would invent a cross-source semantic ADR-0005 item 5 forbids. Rejected: deriving the curated choices from the groupings, which cannot express "on the ground"; and composing them in the dashboard, which makes a swap a view edit and fails B-021. | the person    | Closed      |
 
 **§ 11 row 4 — the review, and what it decided.** Raised by the person on
 2026-10-05 on reading § 7, and answered the same day. Concern 1 was not patched
@@ -810,7 +829,7 @@ What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
 [lesson 0007](../../../../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md):
 § 9 is the ship gate and blocks an item reaching `done`, not the agreement
-reaching `approved`. All twenty-eight rows read `Missing`, and the sections are
+reaching `approved`. All twenty-eight rows then present read `Missing`, and the sections are
 written and agreed, so the rows above are 🟢 and `spec_status` is `approved`.
 
 **Review of 2026-10-05.** Mechanically clean: 28 claims, 28 § 9 rows, 30
@@ -861,6 +880,17 @@ Three findings were raised and all three are closed in the same pass:
 3. **B-014 still said "the bound collection"**, where B-016 and B-019 were
    reworded for the pivot. Now "a collection bound from it".
 
+**Amended 2026-10-07 — two claims added from § 11 row 6.** B-029 and B-030 split
+the filter control's choices into the two kinds the person named: declared by the
+source, and derived from the data. Both are this Feature's because both are
+things the pipeline offers; composing them into a predicate stays
+`fleet-dashboard` B-009's. §§ 3, 7, 9, 11 and Tasks moved together, B-020's list
+and B-022's rule were amended, and § 9 is now twenty-nine `Verified` and one
+`Missing`. The rows above are re-earned rather than carried: B-022 gained an
+exception, which is a change to what the agreement forbids, and the exception is
+written with the reason it cannot leak — a description is the per-source file a
+swap replaces, so a cast in one dies with the source that needed it.
+
 **One finding outside this specification**, recorded here because this review is
 where it surfaced: [`.agents/spec-reviewer.md`](../../../../.agents/spec-reviewer.md)
 told the reviewer to flip `spec_status` only "when every row is 🟢 **and § 9 has
@@ -903,15 +933,25 @@ and the clock it measures silence with
 
 <!-- Rules: ../../../../.spec/templates/feature.md § Tasks -->
 
-| Item                                                     | Claims                                            |
-| -------------------------------------------------------- | ------------------------------------------------- |
-| [`0030`](../.issue/0030-fleet-pipeline.yml)              | all 28 — the parent; its children hold the work   |
-| [`0031`](../.issue/0031-pipeline-spine.yml)              | B-001 – B-005, B-023, B-024, B-028                |
-| [`0032`](../.issue/0032-source-description-and-sort.yml) | B-009 – B-011, B-013, B-020 – B-022               |
-| [`0033`](../.issue/0033-filter-group-and-aggregates.yml) | B-006 – B-008, B-012, B-014, B-015, B-025 – B-027 |
-| [`0034`](../.issue/0034-staleness-marking.yml)           | B-016 – B-019                                     |
+| Item                                                                                            | Claims                                            |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| [`0030`](../.issue/0030-fleet-pipeline.yml)                                                     | all 30 — the parent; its children hold the work   |
+| [`0031`](../.issue/0031-pipeline-spine.yml)                                                     | B-001 – B-005, B-023, B-024, B-028                |
+| [`0032`](../.issue/0032-source-description-and-sort.yml)                                        | B-009 – B-011, B-013, B-020 – B-022               |
+| [`0033`](../.issue/0033-filter-group-and-aggregates.yml)                                        | B-006 – B-008, B-012, B-014, B-015, B-025 – B-027 |
+| [`0034`](../.issue/0034-staleness-marking.yml)                                                  | B-016 – B-019                                     |
+| [`0056`](../.issue/0056-distinct-grouping-values.yml)                                           | B-030                                             |
+| `fleet-dashboard` [`0037`](../../Features/Fleet/.issue/0037-search-sort-and-grouping-input.yml) | B-029                                             |
 
-Every claim is carried by exactly one child. `0031` builds the spine and publishes
+**B-029 is the one claim here a child of another Feature carries.** It was added
+by `fleet-dashboard` `0037`, which is where the gap was found and where the
+control that consumes a choice is built, and the description it extends is one
+file. Splitting it into an item of its own would have been two items, two pull
+requests and a dashboard blocked on the first — for a record type gaining a list
+(§ 11 row 6). `0056` is a child here in the ordinary way: B-030 is a stage over
+the fleet stream, and nothing outside this Feature can build one.
+
+Every other claim is carried by exactly one child. `0031` builds the spine and publishes
 the streams, so the two boundary claims land there: a boundary cannot be
 asserted before one side of it exists. `0032` comes before `0033` because the
 grouping `0033` applies is chosen from the description `0032` introduces, and

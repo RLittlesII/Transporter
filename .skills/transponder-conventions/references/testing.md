@@ -34,6 +34,14 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   where the reason each case exists is written. A private helper may still build
   **data** a case needs (a domain value, a cache the test writes to); it may not
   build a double ([lesson 0013](../../../.spec/lessons/0013-a-fake-built-in-a-helper-hides-its-arrangement.md)).
+  **A domain value that helper builds comes from that type's fixture**, and a
+  type with no fixture gets one rather than a constructor call in the test: the
+  fixture is where the plausible default lives, so a test says only the member it
+  is about, and a type gaining a required member is one file to fix rather than
+  every arrangement that names it. A shared constant feeding those constructors —
+  an instant, a key — is the same smell one level down, and goes into the
+  fixture's defaults
+  ([lesson 0021](../../../.spec/lessons/0021-an-arrangement-written-by-hand-is-a-fixture-nobody-wrote.md)).
 - **Everything a test injects comes from a fixture, not only the system under
   test.** A collaborator the application composes — the scheduler provider, the
   clock — is built by its own fixture and handed in whole, so a test advances the

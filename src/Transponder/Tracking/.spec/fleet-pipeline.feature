@@ -118,6 +118,23 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And a sortable column carries a comparer and an unsortable one carries none
       And its groupings name what the aircraft feed can be grouped by
 
+  @B-029
+  Scenario: The source description carries the filter choices it offers
+    Given the aircraft source's description
+     When its filter choices are read
+     Then each carries a display name and a predicate over the abstract vehicle
+      And the on-the-ground choice admits an aircraft on the ground and rejects an airborne one
+      And the choices are offered with no fleet consulted
+
+  @B-030
+  Scenario: The distinct values of the current grouping key are published
+    Given a bound fleet of four aircraft registered in three countries
+     When the distinct values of the current grouping key are observed
+     Then three values are published, one per country
+      And a fourth aircraft from a fourth country adds one value
+      And the last aircraft from a country leaving removes its value
+      And no consumer enumerated the collection to learn any of it
+
   # ────────────────────────────── Failure mode ──────────────────────────────
 
   @B-004
