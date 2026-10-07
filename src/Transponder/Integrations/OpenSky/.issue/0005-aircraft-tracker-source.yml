@@ -2,7 +2,7 @@ id: "0005"
 type: task
 title: Project cached snapshots into domain vehicles behind ITrackerSource
 
-status: in-review
+status: done
 
 priority: high
 risk: 2
@@ -31,7 +31,7 @@ claims:
   - B-049
 
 created: "2026-10-04"
-updated: "2026-10-05"
+updated: "2026-10-06"
 closed: "2026-10-05"
 
 summary: |
@@ -67,6 +67,14 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — implementer — the status reads `done`, which it should have
+    read since 2026-10-05. The work landed as #19 and that pull request wrote
+    `closed` and the `delivered` block while leaving `status: in-review`, so the
+    item has sat finished and marked otherwise for a day — long enough to read
+    as a hard prerequisite still outstanding when `0011`, which depends on it,
+    came up for scheduling. All seven claims read `Verified` in the
+    specification's § 9 against the tests #19 landed; nothing is re-verified
+    here and no file outside this one changes."
   - "2026-10-05 — the person — B-049 moves here from `0002`. Its § 9 row is a
     review, and two of the three clauses were reviewable on `0002` and hold; the
     third names the `ITrackerSource` this item declares, so no change before
