@@ -2,7 +2,7 @@ id: "0037"
 type: task
 title: Turn a keystroke into a predicate and a header tap into a comparer
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -28,7 +28,7 @@ claims:
 
 created: "2026-10-05"
 updated: "2026-10-07"
-closed: null
+closed: "2026-10-07"
 
 summary: |
   `FleetViewModel` drives `fleet-pipeline` through the four methods the tracker
