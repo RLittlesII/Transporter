@@ -2,7 +2,7 @@ id: "0010"
 type: task
 title: Feed a recording back at its recorded cadence, looping, with no network
 
-status: ready
+status: in-progress
 
 priority: high
 risk: 3
@@ -66,6 +66,12 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-06 — person — the § 12 sign-off gate is waived for this item. All
+    three rows of the specification's § 12 read 🟡 Draft and `spec_status` is
+    `draft`, which `transponder-conventions` § \"The rules that bind every
+    change\" would otherwise hold `in-progress` behind. The waiver is named to
+    `0010` alone and is not standing; `0009` ran against the same rows and
+    recorded no waiver at all, which is the hole this row closes."
   - "2026-10-04 — spec-author — the pacer yields raw payloads rather than parsed
     envelopes, so B-014 holds and so a push recording (0013) can use the same
     component. Rejected: parsing here, which would put a converter below the
