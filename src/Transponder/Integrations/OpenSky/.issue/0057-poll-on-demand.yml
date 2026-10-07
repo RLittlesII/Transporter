@@ -2,7 +2,7 @@ id: "0057"
 type: task
 title: Poll when told to, and refuse a poll that would outspend the cadence
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -24,7 +24,7 @@ claims:
 
 created: "2026-10-07"
 updated: "2026-10-07"
-closed: null
+closed: "2026-10-07"
 
 summary: |
   The half of the refresh gesture that performs the work. An actor is told a
@@ -67,6 +67,30 @@ decisions:
     demanded poll pushes the next cadence poll out by up to one interval, so the
     scenario's \"the cadence is not disturbed\" covers a refusal and not a
     performed poll — § 7 says so and § 10 carries the delta."
+
+delivered: |
+  B-053 to `Verified`. `AircraftPollActor` is told `PollAircraft` and decides:
+  inside B-050's interval it refuses — a debug line and a return, so the caller
+  learns nothing and the stream neither faults nor completes — and outside it
+  performs one poll through the same `Fetch` the cadence calls, so the snapshot
+  reaches the cache by the path every other poll takes. `IDemandedPoll` is the
+  seam it reads the last poll's instant through, and `AddOpenSkyActors` starts
+  the actor from this integration's own registration.
+
+  The window is measured from the last poll the source actually made, and the
+  client stamps that instant immediately before it calls the provider, so a
+  throttled or failed poll closes the window exactly as a successful one does.
+
+  One design defect was found while building it rather than after: the actor's
+  refusal bounds demand on its own, but the cadence slept a full interval after
+  each of its own fetches, so a press landing just after a window opened put two
+  calls inside one interval and B-053's guarantee was false of the pair. The
+  person chose the literal reading, the loop now waits out what is left of the
+  interval since the last poll whoever made it, and the third test is what would
+  have caught it. § 10 carries the delta and § 7 the rule.
+
+  Three tests, and `dotnet test test/UnitTests` is 205 green. `./build.sh` is
+  what verified the whole of it.
 
 out_of_scope:
   - "Everything in § 5 of the specification."
