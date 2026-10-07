@@ -106,6 +106,38 @@ internal static class BoundaryTestData
         """;
 
     // lang=csharp
+    internal const string ReplayImplementingTheContract = """
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.Integrations.OpenSky.Replay;
+
+        internal sealed class ReplayOpenSkyApi : IOpenSkyApi
+        {
+            Task<OpenSkyStatesResponse> IOpenSkyApi.GetStates(CancellationToken cancellationToken) =>
+                Task.FromResult(new OpenSkyStatesResponse());
+        }
+        """;
+
+    // lang=csharp
+    internal const string ReplayCodeImplementingNothing = """
+        using Transponder.Integrations.OpenSky.Contracts;
+
+        namespace Transponder.Integrations.OpenSky.Replay;
+
+        internal sealed class ReplayPayloads
+        {
+            public int Rows()
+            {
+                OpenSkyStatesResponse response = new();
+
+                return response.States.Length;
+            }
+        }
+        """;
+
+    // lang=csharp
     internal const string Snapshot = """
         namespace Transponder.Integrations.OpenSky;
 

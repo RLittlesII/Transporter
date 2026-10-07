@@ -144,7 +144,7 @@ that proves it in that specification's § 9, so neither is copied here.
 | Diagnostic | Enforces                | What it examines                                                                                                                   |
 | ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `TRN0001`  | `aircraft-source` B-004 | Every reference to the positional row from outside the integration                                                                 |
-| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the two types allowed to hold them                                             |
+| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the implementations of the contract and the snapshot client                    |
 | `TRN0003`  | `aircraft-source` B-046 | Every reference to a snapshot, against the client, its cache and the projection                                                    |
 | `TRN0004`  | `aircraft-source` B-047 | References from below `IFleetTracker` to a contract, client, cache, snapshot or concrete source, excluding what the seam publishes |
 | `TRN0005`  | `aircraft-source` B-032 | References to a domain type from the cache                                                                                         |
@@ -440,8 +440,23 @@ the decorator are reported exactly as before
 ([lesson 0001](lessons/0001-a-rule-that-reads-a-namespace.md), item
 [`0045`](../.issue/0045-published-types-reported-as-internals.yml)).
 
-One Feature-scoped lesson,
-[lesson 0001](lessons/0001-a-rule-that-reads-a-namespace.md). Three
+**Delta, 2026-10-06 — `TRN0002` reads the contract a class implements rather
+than the folder it sits in.** Trigger: the first file `replay-source` `0011`
+added did not compile, because the rule allowed the transport namespace and a
+`Client` name suffix, and a replay implementation of the same contract is
+neither — so it was reported for naming the envelope its own signature returns.
+The rule now asks what a class implements, which is what
+`aircraft-source` B-045 says and what the descriptor's message already printed.
+No claim changed, no descriptor changed and B-008's set is still seventeen; a
+type beside the replay contract that implements nothing is reported exactly as
+before ([lesson 0002](lessons/0002-a-rule-that-reads-a-folder.md), item
+[`0053`](../.issue/0053-contract-implementation-read-from-its-folder.yml)).
+
+Two Feature-scoped lessons,
+[lesson 0001](lessons/0001-a-rule-that-reads-a-namespace.md) and
+[lesson 0002](lessons/0002-a-rule-that-reads-a-folder.md) — one rule that read a
+namespace and one that read a folder, which is the same mistake twice and why
+the rule now lives in a skill. Three
 repository-wide lessons bear on this document:
 [lesson 0002](../../../.spec/lessons/0002-metadata-about-a-rule-drifts-too.md),
 which is why § 3 carries no build state and § 9 is the only store for one;

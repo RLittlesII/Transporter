@@ -155,6 +155,18 @@ internal static class Layers
     internal static bool IsContractImplementation(ISymbol symbol) =>
         symbol is INamedTypeSymbol { TypeKind: TypeKind.Class } type && ContractOf(type) is not null;
 
+    /// <summary>Whether a symbol is inside a class implementing one of a provider's API contracts.</summary>
+    /// <remarks>
+    /// Read from the contract the class adheres to rather than from where it was filed, because
+    /// <c>aircraft-source</c> B-045 names "the class implementing the API contract" and a provider
+    /// may have more than one — a transport over HTTP and a replay over a recording are both that
+    /// class, substituting at the same contract (<c>replay-source</c> B-022).
+    /// </remarks>
+    /// <param name="symbol">The symbol to classify.</param>
+    /// <returns><see langword="true"/> when the symbol is inside a contract implementation.</returns>
+    internal static bool IsContractHome(ISymbol symbol) =>
+        EffectiveType(symbol) is { } type && IsContractImplementation(type);
+
     /// <summary>The API contract a class implements, or <see langword="null"/> when it implements none.</summary>
     /// <param name="type">The type to read.</param>
     /// <returns>The contract interface.</returns>
