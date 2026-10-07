@@ -63,6 +63,14 @@ it. The traps:
 - `src/Transponder` — the model, the feature logic and the integrations;
   `src/Gui` — the MAUI host, pages and container wiring; `test/UnitTests` — the
   test project, root namespace `Transponder.UnitTests`.
+- **`tools/` holds development tooling, which does not ship.** A tool is its own
+  console project referencing the application, reached through one more
+  `InternalsVisibleTo`, and invented data lives there rather than in the product
+  assembly — the synthetic payload generator
+  ([`0052`](../../../.issue/0052-sample-recording-generator.yml)) is the first.
+  A build target invokes one with `dotnet run` against its project path, because
+  a `.build` that referenced the application could not compile while the
+  application did not.
 - Feature code lives under
   `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}`.
 - **Integration code does not live under `Features/`.** A provider's API

@@ -2,7 +2,7 @@ id: "0052"
 type: chore
 title: Generate a synthetic recording so the app runs with no provider account
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -23,7 +23,7 @@ claims: []
 
 created: "2026-10-06"
 updated: "2026-10-07"
-closed: null
+closed: "2026-10-07"
 
 summary: |
   A seeded generator writes a synthetic aircraft recording into the configured
@@ -108,6 +108,24 @@ acceptance_criteria:
     `recordings/` would overwrite a real rehearsal capture."
 
 decisions:
+  - "2026-10-07 — implementer — the aircraft that goes quiet keeps its row with
+    its last contact frozen, rather than disappearing from the payload. The
+    criterion said \"stops being reported\", and a row that vanishes is removed
+    by the differential write — which proves nothing about staleness, because a
+    vehicle past the threshold is marked and kept, never removed. Frozen is also
+    what the provider does, and what `ReplayRecordingCases.SilentSixMinutesIn`
+    already recorded for the same claim. The recording's wholesale removal case
+    is the poll that reports nothing, which the criteria ask for separately."
+  - "2026-10-07 — implementer — the generated recording is tested from
+    `test/UnitTests`, which gains a project reference to
+    `tools/Transponder.SampleRecording` and reaches its internals through one
+    `InternalsVisibleTo`. Determinism and the hazard list are claims about
+    behaviour, and the criteria for them read as tests rather than as a review;
+    the alternative was a second test project for one tool, which is a harness
+    to keep in step for no coverage. Both readable-by-the-replay-path criteria
+    are proven through production components — `CheckedRecording.Check` for the
+    span and the live replay chain for the rows — so neither has a reader of the
+    test's own."
   - "2026-10-06 — the person — the generator is its own console project and
     `RecordingWriter` stays in the application. The question as first filed was
     wrong: it asked where the writer could live such that a build target could
