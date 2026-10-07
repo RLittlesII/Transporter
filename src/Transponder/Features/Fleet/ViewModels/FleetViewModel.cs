@@ -3,19 +3,24 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Akka.Actor;
+using Akka.Hosting;
 using DynamicData;
 using LanguageExt;
+using ReactiveMarbles.Command;
 using ReactiveMarbles.Mvvm;
 using Rocket.Surgery.Airframe;
+using Transponder.Messages;
 using Transponder.Model;
 using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
+using Unit = System.Reactive.Unit;
 
 namespace Transponder.Features.Fleet.ViewModels;
 
 /// <summary>
-/// The grid's view model: the one collection, the live source's columns, and the four inputs the
-/// user changes (B-005, B-007, B-009 - B-012).
+/// The grid's view model: the one collection, the live source's columns, the four inputs the user
+/// changes, and the gesture that asks for a poll (B-005, B-007, B-009 - B-012, B-028).
 /// </summary>
 /// <remarks>
 /// The tracker publishes changesets and owns no collection, so the <c>ObserveOn</c>, the
@@ -28,9 +33,33 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// <summary>Initializes a new instance of the <see cref="FleetViewModel"/> class.</summary>
     /// <param name="tracker">The pipeline over the tracker seam, and all this view model depends on (B-020).</param>
     /// <param name="schedulers">Where the binding is marshalled, by constructor so a test advances it (B-005).</param>
-    public FleetViewModel(IFleetTracker tracker, ISchedulerProvider schedulers)
+    /// <param name="registry">Where the actor a demanded poll is told to is resolved from (B-028, ADR-0012).</param>
+    public FleetViewModel(IFleetTracker tracker, ISchedulerProvider schedulers, IActorRegistry registry)
     {
         _tracker = tracker;
+
+        // The scheduler is passed rather than left to default: an unset one is resolved from
+        // ReactiveMarbles' service locator, which is the ambient read B-005 forbids.
+        RefreshCommand = RxCommand
+            .Create(
+                () => registry.Get<DemandPoll>().Tell(DemandPoll.Instance),
+                outputScheduler: schedulers.UserInterfaceThread)
+            .DisposeWith(_garbage);
+
+        _isRefreshing = RefreshCommand
+            .Select(_ => tracker
+                .Observed
+                .Skip(1)
+                .Select(static _ => false)
+                .Merge(Observable.Timer(ClearsAfter, schedulers.UserInterfaceThread).Select(static _ => false))
+                .Take(1)
+                .StartWith(true))
+            .Switch()
+            .AsValue(
+                _ => RaisePropertyChanged(nameof(IsRefreshing)),
+                schedulers.UserInterfaceThread,
+                static () => false)
+            .DisposeWith(_garbage);
         tracker
             .Fleet
             .ObserveOn(schedulers.UserInterfaceThread)
@@ -52,6 +81,26 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
     /// <summary>Gets the collection the grid binds, materialised here and in no other place (B-005).</summary>
     public ReadOnlyObservableCollection<TrackedVehicle> Fleet => _fleet;
+
+    /// <summary>Gets the command that says a poll is wanted: one <c>Tell</c>, and no answer waited for (B-028).</summary>
+    /// <remarks>
+    /// Whether a poll happens is the actor's decision — a press inside the polling interval is
+    /// refused there (`aircraft-source` B-053) — so this command names no client, awaits nothing and
+    /// never <c>Ask</c>s (B-017, ADR-0012). Typed as the command rather than as
+    /// <c>ICommand</c>, which it implements for the binding, because it is also the stream of
+    /// its own presses and <see cref="IsRefreshing"/> is read from it.
+    /// </remarks>
+    public RxCommand<Unit, Unit> RefreshCommand { get; }
+
+    /// <summary>Gets a value indicating whether a demanded poll is outstanding (B-028).</summary>
+    /// <remarks>
+    /// Derived, never assigned: the press opens the window and the next observed instant closes it,
+    /// with <see cref="ClearsAfter"/> as the cap for the press that was refused and produced no poll
+    /// to report (decisions/0001, `fleet-pipeline` B-031). Driven by the gesture rather than by the
+    /// fleet changing, because a poll returning identical data changes nothing — the clause ADR-0012
+    /// says an implementation is most likely to get wrong.
+    /// </remarks>
+    public bool IsRefreshing => _isRefreshing.Value;
 
     /// <summary>Gets the live source's columns, in the order it published them (B-007).</summary>
     public IReadOnlyList<FleetColumn> Columns { get; private set => RaiseAndSetIfChanged(ref field, value); } = [];
@@ -137,7 +186,17 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// <summary>Hands the tracker the one predicate the two inputs compose into (B-009).</summary>
     private void Filter() => _tracker.Filter(FleetSearch.Composed(SearchText, Columns, SelectedFilter));
 
+    /// <summary>How long the indicator shows before it gives up waiting for a poll that was refused (decisions/0001).</summary>
+    /// <remarks>
+    /// This Feature's number, chosen by feel and checked by the first rehearsal. Not read from
+    /// <c>OpenSkyOptions</c>: the throttle's window is a provider's configuration and this is a
+    /// presentation choice, and a view model that named one would be a surface that knew what a poll
+    /// costs.
+    /// </remarks>
+    private static readonly TimeSpan ClearsAfter = TimeSpan.FromSeconds(3);
+
     private readonly CompositeDisposable _garbage = [];
+    private readonly IValueBinder<bool> _isRefreshing;
     private readonly ReadOnlyObservableCollection<TrackedVehicle> _fleet;
     private readonly IFleetTracker _tracker;
 }

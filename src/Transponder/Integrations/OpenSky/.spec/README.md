@@ -432,7 +432,7 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `OpenSkyRegistration`       | [`Container/OpenSkyRegistration.cs`](../Container/OpenSkyRegistration.cs)                           | B-008                             |
 | `IAircraftSnapshotClient`   | [`IAircraftSnapshotClient.cs`](../IAircraftSnapshotClient.cs)                                       | B-015, what a strategy may hold   |
 | `IDemandedPoll`             | [`IDemandedPoll.cs`](../IDemandedPoll.cs)                                                           | B-053, what the actor reads       |
-| `PollAircraft`              | [`Polling/PollAircraft.cs`](../Polling/PollAircraft.cs)                                             | B-053, told rather than published |
+| `DemandPoll`                | [`Messages/DemandPoll.cs`](../../../Messages/DemandPoll.cs)                                         | B-053, told rather than published |
 | `AircraftPollActor`         | [`Polling/AircraftPollActor.cs`](../Polling/AircraftPollActor.cs)                                   | B-053, where the throttle lives   |
 | `TransportVehicle`          | [`Model/TransportVehicle.cs`](../../../Model/TransportVehicle.cs)                                   | ADR-0005; B-037, the key's form   |
 | `Aircraft`                  | [`Model/Aircraft.cs`](../../../Model/Aircraft.cs)                                                   | B-034 – B-036                     |
@@ -733,7 +733,7 @@ subscription it had, and that the actor replies with nothing — told, never
 asked.
 
 **A poll on demand, and what refuses one.** `AircraftPollActor` is told
-`PollAircraft` and answers nothing;
+`DemandPoll` and answers nothing;
 [ADR-0012](../../../../../.spec/adr/0012-a-user-triggered-refresh-is-told-to-an-actor.md)
 is why a refresh is a message rather than a fifth method on the tracker, and
 decisions/0003 why it is bounded. The actor reads the window from
@@ -1104,6 +1104,23 @@ and no error, which is what the test asserts. § 7 states the operator and why,
 so the next reader does not have to re-run it
 ([lesson 0016](../../../../../.spec/lessons/0016-an-untested-assumption-is-not-a-decision.md)
 is the rule this follows).
+
+**Delta, 2026-10-07 — the message is the registry key, and it is not this
+integration's type.** Trigger: `fleet-dashboard` `0058` built the gesture that
+tells this actor. `PollAircraft` and `AircraftPollActor` are both internal to
+this integration, so a dashboard naming either would carry a provider's name —
+and after the closing act's swap the button would be telling an aircraft-shaped
+actor about a fleet of vessels. The person chose a provider-agnostic message, so
+`PollAircraft` is gone and the actor is told
+[`DemandPoll`](../../../Messages/DemandPoll.cs), declared in
+`src/Transponder/Messages/` and registered as the actor's key in
+`AddOpenSkyActors`. A second source that polls registers under the same key.
+
+No claim changes: B-053 says a poll is told to an actor and bounded there, which
+is unaffected by what the message is called or who else may name it. § 7's type
+row and the prose beside it carry the new name, and the actor's own test tells
+`DemandPoll.Instance` as the dashboard does. `fleet-dashboard` § 10 records why
+the message lives where it does rather than under `Tracking/`.
 
 **Delta, 2026-10-07 — the cadence is measured from the last poll, not from its
 own last fetch.** Trigger: `0057` built B-053's throttle and the guarantee did

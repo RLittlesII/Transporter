@@ -77,7 +77,7 @@ delivered: |
   `BehaviorSubject` (ADR-0010), so a subscriber receives it at once, and
   `DateTimeOffset.MinValue` before any poll. A consumer timing a window from a
   gesture must `Skip(1)` or the window ends on the press that opened it. The claim
-  is unamended, § 7 and § 10 now say it, `fleet-dashboard` § 7's stream carries the
+  is unamended, § 7 and § 10 now say it, `fleet-dashboard`'s view model carries the
   skip, and `0058`'s item carries the trap. Rejected: dropping the in-force value,
   which would leave a late subscriber with nothing until the next poll and break the
   staleness re-derivation `Reevaluate` depends on.

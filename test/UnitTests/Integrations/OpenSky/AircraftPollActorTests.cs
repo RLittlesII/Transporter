@@ -14,6 +14,7 @@ using Transponder.Integrations.OpenSky;
 using Transponder.Integrations.OpenSky.Contracts;
 using Transponder.Integrations.OpenSky.Model;
 using Transponder.Integrations.OpenSky.Polling;
+using Transponder.Messages;
 using Transponder.Scheduling;
 using Transponder.UnitTests.Scheduling;
 
@@ -55,7 +56,7 @@ public class AircraftPollActorTests : TestKit
         var sut = Sys.ActorOf(Starts(client, options, schedulers));
 
         // When
-        sut.Tell(PollAircraft.Instance, TestActor);
+        sut.Tell(DemandPoll.Instance, TestActor);
 
         // Then
         ExpectNoMsg(TimeSpan.FromMilliseconds(250));
@@ -98,7 +99,7 @@ public class AircraftPollActorTests : TestKit
         var sut = Sys.ActorOf(Starts(client, options, schedulers));
 
         // When
-        sut.Tell(PollAircraft.Instance);
+        sut.Tell(DemandPoll.Instance);
 
         // Then
         AwaitAssert(() => api.ReceivedCalls().Should().HaveCount(2, "the window had elapsed, so the demand was performed"));

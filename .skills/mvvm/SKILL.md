@@ -75,12 +75,34 @@ in the view model.
 
 ## Talking to an actor
 
-Resolve from `IActorRegistry` and prefer `Tell` for a command whose result
-arrives as state:
+**A command is an `RxCommand` (`ReactiveMarbles.Command`), never a hand-rolled
+`ICommand`.** The reason is not the saved file: an `RxCommand` is an
+`IObservable` of its own executions, so a view model that needs to watch its own
+gesture — to drive an indicator, to open a window, to debounce — listens to the
+command and holds no subject beside it. A hand-written command forces that
+subject, which is a second place the gesture lives.
 
 ```csharp
-registry.Get<SourceActor>().Tell(new SwapSource(selected));
+SwapCommand = RxCommand
+    .Create(() => registry.Get<SourceActor>().Tell(new SwapSource(selected)), outputScheduler: schedulers.UserInterfaceThread)
+    .DisposeWith(_garbage);
+
+_isSwapping = SwapCommand.Select(...).Switch().AsValue(…); // the command is the stream
 ```
+
+Assign the command to its property and read the property — no local to pass
+around, and no second field. Type the property as the command rather than as
+`ICommand`, which `RxCommand` implements for the binding: a property typed
+`ICommand` cannot be subscribed to, which is the whole reason to use this type.
+A test presses it the reactive way, `Execute().Subscribe()`, because `Execute`
+returns a cold observable; `ICommand.Execute(null)` is the path a button takes,
+and one test should take it too.
+
+**Pass the output scheduler.** An unset one is resolved from ReactiveMarbles'
+process-wide locator, which is the ambient read a view model must not make. The
+locator's core registrations — the exception handler and the default schedulers —
+are written once by the composition root, and a test assembly does the same in a
+module initialiser.
 
 Use `Ask<T>` only for genuine request/response, and **always with an explicit
 timeout**.
@@ -99,6 +121,13 @@ observe it, so there is no continuation at all.
   `.DisposeWith(…)`** into the view model's own disposables, so the disposal is
   stated at the subscription rather than remembered at the bottom of the
   constructor.
+- **`AsValue` takes the initial value and the scheduler.** Its overloads accept a
+  `Func<T>` for the value the property reads before the stream produces one, and
+  an `IScheduler` for where values surface — so a `StartWith` seeding a default
+  and an `ObserveOn` above the call are both redundant, and the `StartWith` is
+  worse than redundant: it projects a presentation default down the pipeline.
+  Dispose the binder the way every other subscription here is disposed, with
+  `DisposeWith(…)`.
 - **A value the view model only derives is read, not assigned.** Where the
   property's every value comes from a stream and the user never sets it, compose
   the stream and expose it as a value — `AsValue` in `ReactiveMarbles.Mvvm`,

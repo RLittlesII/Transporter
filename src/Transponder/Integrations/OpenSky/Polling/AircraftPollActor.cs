@@ -4,6 +4,7 @@ using Akka.Actor;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
+using Transponder.Messages;
 
 namespace Transponder.Integrations.OpenSky.Polling;
 
@@ -28,7 +29,7 @@ internal sealed class AircraftPollActor : ReceiveActor
         IOptions<OpenSkyOptions> options,
         ISchedulerProvider schedulers,
         ILogger<AircraftPollActor> logger) =>
-        ReceiveAsync<PollAircraft>(async _ =>
+        ReceiveAsync<DemandPoll>(async _ =>
         {
             var interval = options.Value.PollInterval;
             var now = schedulers.BackgroundThread.Now;
