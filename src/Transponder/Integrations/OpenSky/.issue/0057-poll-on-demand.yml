@@ -2,7 +2,7 @@ id: "0057"
 type: task
 title: Poll when told to, and refuse a poll that would outspend the cadence
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 value: 4
@@ -57,7 +57,16 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for B-053, replacing
     the row that names this item."
 
-decisions: []
+decisions:
+  - "2026-10-07 — the person — the cadence yields to a demanded poll. B-053's
+    guarantee is read literally, so the poll loop measures its next poll from
+    the last poll performed rather than from its own last fetch: one poll per
+    interval, always. Rejected the reading that leaves the loop untouched, which
+    caps demanded polls at one per interval but lets a press landing just after
+    the window opens put two polls inside one interval. The cost is that a
+    demanded poll pushes the next cadence poll out by up to one interval, so the
+    scenario's \"the cadence is not disturbed\" covers a refusal and not a
+    performed poll — § 7 says so and § 10 carries the delta."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
