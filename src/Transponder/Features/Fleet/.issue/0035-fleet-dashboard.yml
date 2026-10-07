@@ -16,6 +16,8 @@ children:
   - "0038"
   - "0039"
   - "0041"
+  - "0044"
+  - "0058"
 
 depends_on:
   - "0030"
@@ -52,9 +54,10 @@ claims:
   - B-025
   - B-026
   - B-027
+  - B-028
 
 created: "2026-10-05"
-updated: "2026-10-05"
+updated: "2026-10-07"
 closed: null
 
 summary: |
@@ -71,7 +74,7 @@ summary: |
   `0036` replaces all three as it builds the page (B-002).
 
   The children are slices of this item rather than work beside it, which is why
-  it carries all twenty-two claims.
+  it carries all twenty-eight claims.
 
   § 12 is 🟡 on every row and § 11 holds three open questions, two of which are
   `fleet-pipeline`'s to answer, so this stays at `ready-for-architecture`.
@@ -92,6 +95,8 @@ acceptance_criteria:
   - "B-023 – B-027 — a banner that always shows the latest notice, a toast only
     for one worth interrupting for, two cadences edited live, and no view model
     naming a platform alert."
+  - "B-028 — a refresh control that tells an actor and shows it is working,
+    added 2026-10-07 by spike `0040`."
   - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule or a
     performed review for each id above."
 

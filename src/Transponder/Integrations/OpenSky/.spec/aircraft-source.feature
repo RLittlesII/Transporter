@@ -263,6 +263,18 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And it spends no further credits
       And its in-flight result does not reach any cache after the swap
 
+  @B-053
+  Scenario: A demanded poll inside the interval is refused
+    Given an aircraft source polling on a fifteen-second interval
+      And a poll performed five seconds ago
+     When a poll is demanded
+     Then no call is made to OpenSky
+      And no credit is spent
+      And the stream does not fault and the cadence is not disturbed
+     When the interval has elapsed since the last poll
+      And a poll is demanded
+     Then one call is made and its snapshot reaches the cache
+
   # B-010 is Withdrawn (README.md § 3, § 4 row 18, § 11 row 4), so its scenario
   # is gone rather than kept as documentation of a rule this repository does not
   # follow. The contract's double is NSubstitute's, like every other double here.

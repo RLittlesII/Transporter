@@ -94,6 +94,15 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And the busy indicator is showing
       And it stops showing when the new fleet's first change arrives
 
+  @B-028
+  Scenario: The refresh control tells an actor a poll is wanted
+    Given a dashboard bound to a live aircraft source
+     When the refresh control is invoked
+     Then the actor is told, not asked
+      And the view model awaited nothing and named no client
+      And the refresh indicator is showing
+      And whether a poll is performed is the actor's to decide
+
   # ────────────────────────────── Failure mode ──────────────────────────────
 
   @B-006

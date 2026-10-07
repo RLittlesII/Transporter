@@ -20,6 +20,7 @@ blocks:
   - "0039"
   - "0041"
   - "0044"
+  - "0058"
 spikes: []
 
 spec: src/Transponder/Features/Fleet/.spec/README.md
@@ -34,7 +35,7 @@ claims:
   - B-007
 
 created: "2026-10-05"
-updated: "2026-10-06"
+updated: "2026-10-07"
 closed: "2026-10-06"
 
 summary: |

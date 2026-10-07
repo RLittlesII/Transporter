@@ -30,13 +30,24 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
-Fifty-two claims, in nine groups — one per component, plus the boundary rules:
+Fifty-three claims, in nine groups — one per component, plus the boundary rules:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
 types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029 and
 B-050** the snapshot client — except **B-026 – B-028**, re-subjected to the HTTP
 transport when § 11 row 2 was answered, and still delivered by `0004`; **B-030 – B-032** the cache; **B-033 – B-037** the
 tracker source strategy; **B-038 – B-040** the swap decorator; **B-041 – B-044,
 B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries.
+
+B-053 was added on 2026-10-07, from spike
+[`0040`](../../../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml):
+the person asked that a button click cause an update, and this is the half that
+performs one. It is grouped with the snapshot client's claims because what it
+bounds is a call to OpenSky — B-050's interval is the window it refuses inside —
+and the gesture that triggers it is `fleet-dashboard` B-028.
+[ADR-0012](../../../../../.spec/adr/0012-a-user-triggered-refresh-is-told-to-an-actor.md)
+is why it is told to an actor, and
+[decision 0003](decisions/0003-a-refresh-is-throttled-at-the-poll-interval.md)
+is why it is throttled rather than free.
 
 B-052 sits in the last group because the fleet tracker is what the container
 has to hand back, not because composition belongs to that component: it is the
@@ -63,6 +74,7 @@ than being slotted into the sequence.
 | B-050 | The polling interval SHALL be configurable and SHALL default to 15 seconds; the bounding box SHALL be configurable with no default compiled in.                                                                                                                                                                                                                                                                                                                                                                                               | Decided call; decisions/0001                                         |
 | B-051 | A vehicle past the staleness threshold SHALL remain in the collection and SHALL be observably stale; it SHALL NOT be removed for staleness. The threshold SHALL be configurable and SHALL default to five minutes.                                                                                                                                                                                                                                                                                                                            | Decided call; dynamic-data-pipeline § "Staleness and expiry"         |
 | B-052 | The container the application constructs SHALL resolve `IFleetTracker` with every dependency satisfied and every decorator applied, so a chain that compiles and a chain that runs are the same thing.                                                                                                                                                                                                                                                                                                                                        | Decided call; ADR-0011 § Consequences                                |
+| B-053 | A poll SHALL be performable on demand, told to an actor rather than published as a value, and it SHALL be refused when one has been performed within the configured polling interval — so demand SHALL NOT make the source spend credits faster than B-050's cadence already does. A refusal SHALL be silent to the caller, and SHALL NOT fault the stream or interrupt the cadence.                                                                                                                                                          | ADR-0012; decisions/0003; `fleet-dashboard` B-028                    |
 | B-011 | The snapshot SHALL have value equality over every member it carries, so two snapshots reporting identical values compare equal and the differ emits no change for them.                                                                                                                                                                                                                                                                                                                                                                       | Decided call — the client diffs records                              |
 | B-012 | The snapshot SHALL carry `icao24` as a non-optional member and SHALL be keyed on it.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | README.md index 0 ("the cache key")                                  |
 | B-013 | The snapshot SHALL carry the wire's values in the wire's units and SHALL perform no conversion, derivation or interpretation; it is the server's record with names on it.                                                                                                                                                                                                                                                                                                                                                                     | Decided call; mapping § "Conversions are explicit, never implicit"   |
@@ -764,7 +776,7 @@ diagnostics are what execute.
 - Happy path → B-001 – B-003, B-005, B-008, B-011, B-012, B-015, B-016,
   B-019, B-020, B-023 – B-025, B-027, B-030 – B-035, B-038, B-039, B-041,
   B-042, B-050, B-052
-- Failure mode → B-022, B-026 – B-029, B-040, B-043, B-051
+- Failure mode → B-022, B-026 – B-029, B-040, B-043, B-051, B-053
 - Validation failure → B-004, B-006, B-007, B-009, B-013, B-014, B-017,
   B-021, B-036, B-037, B-044 – B-049
 - Data-driven → B-018 – B-020, B-022, B-035
@@ -793,7 +805,9 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and one of the fifty-one rows reads `Missing`.**
+**This is the gate, and two of the fifty-two rows read `Missing`** — B-041's
+"what view models depend on" half, owed by `fleet-dashboard` `0039`, and B-053,
+added on 2026-10-07 and built by `0057`.
 Fifty are `Verified`, and they arrived three different ways.
 Thirty-three came from
 items: `0002` built the contract, its envelope, the positional row's converter
@@ -912,6 +926,7 @@ is B-049 and the clause waiting on `0005`.
 | B-050    | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Verified |
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-052    | `@B-052` | `TransponderCompositionTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
+| B-053    | `@B-053` | [`0057`](../.issue/0057-poll-on-demand.yml) — the on-demand poll and its throttle are not built; nothing in the repository performs a poll a user asked for                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Missing  |
 
 Fifty-one rows, fifty-one live claims, each appearing once — B-010 is Withdrawn
 and has none. A scenario existing is not coverage; this section is the only place
@@ -1175,6 +1190,7 @@ back, is [the template's § 12](../../../../../.spec/templates/feature.md).
 
 - [0001 — Houston is the bounding box, and the interval starts at 15 seconds](decisions/0001-houston-bounding-box.md) — decided
 - [0002 — A busy indicator covers the swap, then the new fleet arrives](decisions/0002-busy-indicator-on-swap.md) — decided
+- [0003 — The demo gets a refresh button, throttled at the poll interval](decisions/0003-a-refresh-is-throttled-at-the-poll-interval.md) — decided
 
 The layering this specification is written against is a cross-cutting technical
 decision rather than a product call, so it is recorded in the repository-wide
@@ -1189,13 +1205,14 @@ neither here nor in this Feature's `adr/`.
 
 | Item                                                     | Claims                                          |
 | -------------------------------------------------------- | ----------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)             | all 52 — the parent; its children hold the work |
+| [`0001`](../.issue/0001-aircraft-source.yml)             | all 53 — the parent; its children hold the work |
 | [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001, B-002, B-004 – B-010, B-048              |
 | [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml) | B-011 – B-014, B-030 – B-032                    |
 | [`0004`](../.issue/0004-aircraft-snapshot-client.yml)    | B-003, B-015 – B-029, B-045, B-050              |
 | [`0005`](../.issue/0005-aircraft-tracker-source.yml)     | B-033 – B-037, B-046, B-049                     |
 | [`0006`](../.issue/0006-source-swap-decorator.yml)       | B-038 – B-040, B-052                            |
 | [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-042 – B-044, B-047, B-051                     |
+| [`0057`](../.issue/0057-poll-on-demand.yml)              | B-053                                           |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. `0002` keeps
