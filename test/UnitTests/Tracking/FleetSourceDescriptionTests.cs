@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Transponder.Model;
 using Transponder.Tracking.Sources;
+using Transponder.UnitTests.Model.Fixtures;
 
 namespace Transponder.UnitTests.Tracking;
 
@@ -17,7 +18,7 @@ public class FleetSourceDescriptionTests
     {
         // Given
         var offered = AircraftFleetDescription.Offered;
-        TransportVehicle vehicle = new Aircraft("a1b2c3", LastContact) { Callsign = "ZULU", OriginCountry = "Mexico" };
+        TransportVehicle vehicle = new AircraftFixture().WithCallsign("ZULU").WithOriginCountry("Mexico");
 
         // When
         var cells = offered.Columns.Select(column => column.Value(vehicle)).ToList();
@@ -43,9 +44,9 @@ public class FleetSourceDescriptionTests
     {
         // Given
         var offered = AircraftFleetDescription.Offered;
-        TransportVehicle grounded = new Aircraft("a1b2c3", LastContact) { Callsign = "ZULU", OriginCountry = "Mexico", OnGround = true };
-        TransportVehicle airborne = new Aircraft("d4e5f6", LastContact) { Callsign = "ALFA", OriginCountry = "Mexico", OnGround = false };
-        TransportVehicle located = new Aircraft("f7a8b9", LastContact) { Callsign = "BRAVO", Position = new GeoPosition(19.4, -99.1) };
+        TransportVehicle grounded = new AircraftFixture().WithCallsign("ZULU").WithOnGround(true);
+        TransportVehicle airborne = new AircraftFixture().WithCallsign("ALFA").WithOnGround(false);
+        TransportVehicle located = new AircraftFixture().WithCallsign("BRAVO").WithPosition(new GeoPosition(19.4, -99.1));
 
         // When
         var vehicles = new[] { grounded, airborne, located };
@@ -62,7 +63,4 @@ public class FleetSourceDescriptionTests
         onTheGround.Matches(airborne).Should().BeFalse();
         reporting.Matches(grounded).Should().BeFalse("the aircraft reports no fix, and absent is a fact rather than 0,0");
     }
-
-    /// <summary>The instant the vehicle here was last heard from.</summary>
-    private static readonly DateTimeOffset LastContact = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
 }

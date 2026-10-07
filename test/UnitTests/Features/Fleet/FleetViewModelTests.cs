@@ -11,7 +11,9 @@ using Transponder.Model;
 using Transponder.Scheduling;
 using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
+using Transponder.UnitTests.Model.Fixtures;
 using Transponder.UnitTests.Scheduling;
+using Transponder.UnitTests.Tracking.Fixtures;
 
 namespace Transponder.UnitTests.Features.Fleet;
 
@@ -88,15 +90,7 @@ public class FleetViewModelTests
         // Given
         var scheduler = new TestScheduler();
         SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
-        var description = new FleetSourceDescription
-        {
-            Columns =
-            [
-                new FleetColumn { Name = "Callsign", Value = static vehicle => vehicle.Label },
-                new FleetColumn { Name = "Origin country", Value = static vehicle => vehicle.GroupKey },
-            ],
-            Groupings = [new FleetGrouping { Name = "Origin country", Key = static vehicle => vehicle.GroupKey }],
-        };
+        FleetSourceDescription description = new FleetSourceDescriptionFixture();
         var tracker = Substitute.For<IFleetTracker>();
         tracker.Fleet.Returns(Observable.Never<IChangeSet<TrackedVehicle, string>>());
         tracker.Order.Returns(Observable.Return(ByKey));
@@ -125,12 +119,7 @@ public class FleetViewModelTests
         var scheduler = new TestScheduler();
         SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
         var onTheGround = new FleetFilterChoice { Name = "On the ground", Matches = static vehicle => vehicle is Aircraft { OnGround: true } };
-        var description = new FleetSourceDescription
-        {
-            Columns = [new FleetColumn { Name = "Callsign", Value = static vehicle => vehicle.Label }],
-            Groupings = [new FleetGrouping { Name = "Origin country", Key = static vehicle => vehicle.GroupKey }],
-            Filters = [onTheGround],
-        };
+        FleetSourceDescription description = new FleetSourceDescriptionFixture().WithFilters([onTheGround]);
         var fleet = new SourceCache<TrackedVehicle, string>(static tracked => tracked.Vehicle.Key);
         var predicates = new List<Func<TransportVehicle, bool>>();
         var tracker = Substitute.For<IFleetTracker>();
@@ -153,9 +142,9 @@ public class FleetViewModelTests
         sut.Filters.Should().Equal(description.Filters, "the choices are the description's, not ones the view model invented");
         predicates.Should().NotBeEmpty("every change to an input hands the tracker a predicate");
         var composed = predicates[^1];
-        composed(Grounded("a1b2c3")).Should().BeTrue("the last predicate carries the search and the choice together");
-        composed(Airborne("a1b2c3")).Should().BeFalse("the choice is part of the same predicate");
-        composed(Grounded("zzz999")).Should().BeFalse("the search is part of the same predicate");
+        composed(new AircraftFixture().WithKey("a1b2c3").WithOnGround(true)).Should().BeTrue("the last predicate carries the search and the choice together");
+        composed(new AircraftFixture().WithKey("a1b2c3").WithOnGround(false)).Should().BeFalse("the choice is part of the same predicate");
+        composed(new AircraftFixture().WithKey("zzz999").WithOnGround(true)).Should().BeFalse("the search is part of the same predicate");
         sut.Fleet.Should().HaveCount(bound, "the view model filters nothing itself — the pipeline is what re-evaluates");
     }
 
@@ -176,7 +165,7 @@ public class FleetViewModelTests
         var sortable = new FleetColumn { Name = "Callsign", Value = static vehicle => vehicle.Label, Comparer = byLabel };
         var unsortable = new FleetColumn { Name = "Position", Value = static vehicle => "no fix" };
         var category = new FleetGrouping { Name = "Category", Key = static vehicle => vehicle.GroupKey };
-        var description = new FleetSourceDescription { Columns = [sortable, unsortable], Groupings = [category] };
+        FleetSourceDescription description = new FleetSourceDescriptionFixture().WithColumns([sortable, unsortable]).WithGroupings([category]);
         var comparers = new List<IComparer<TransportVehicle>>();
         var groupings = new List<FleetGrouping>();
         var tracker = Substitute.For<IFleetTracker>();
@@ -189,8 +178,8 @@ public class FleetViewModelTests
             .Do(call => groupings.Add(call.Arg<FleetGrouping>()));
         FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
         scheduler.Start();
-        TransportVehicle first = new Aircraft("a1b2c3", LastContact) { Callsign = "AAA" };
-        TransportVehicle second = new Aircraft("d4e5f6", LastContact) { Callsign = "ZZZ" };
+        TransportVehicle first = new AircraftFixture().WithKey("a1b2c3").WithCallsign("AAA");
+        TransportVehicle second = new AircraftFixture().WithKey("d4e5f6").WithCallsign("ZZZ");
 
         // When
         sut.ChooseColumn(sortable);
@@ -206,19 +195,14 @@ public class FleetViewModelTests
         groupings.Should().Equal([category], "the grouping handed over is the description's");
     }
 
-    private static TransportVehicle Grounded(string key) =>
-        new Aircraft(key, LastContact) { OriginCountry = "Belgium", OnGround = true };
-
-    private static TransportVehicle Airborne(string key) =>
-        new Aircraft(key, LastContact) { OriginCountry = "Belgium", OnGround = false };
-
+    /// <summary>One vehicle as the pipeline publishes it, keyed so the bound order is readable.</summary>
+    /// <param name="key">The key, which is also the label while the callsign is absent.</param>
+    /// <returns>The element the fleet stream carries.</returns>
     private static TrackedVehicle Tracked(string key) =>
-        new() { Vehicle = new Aircraft(key, LastContact) { OriginCountry = "Belgium" }, IsStale = false };
+        new TrackedVehicleFixture().WithVehicle(new AircraftFixture().WithKey(key).WithOriginCountry("Belgium"));
 
     private static readonly IComparer<TrackedVehicle> ByKey =
         Comparer<TrackedVehicle>.Create(static (left, right) => string.CompareOrdinal(left.Vehicle.Key, right.Vehicle.Key));
-
-    private static readonly DateTimeOffset LastContact = new(2026, 10, 6, 14, 32, 10, TimeSpan.Zero);
 }
 
 /// <summary>Builds the view model, so a constructor change edits this fixture rather than every test.</summary>

@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
 using AwesomeAssertions;
 using LanguageExt;
 using Transponder.Features.Fleet;
 using Transponder.Model;
 using Transponder.Tracking.Fleet;
+using Transponder.UnitTests.Model.Fixtures;
+using Transponder.UnitTests.Tracking.Fixtures;
 
 namespace Transponder.UnitTests.Features.Fleet;
 
@@ -12,28 +12,21 @@ public class FleetSearchTests
 {
     /// <summary>
     /// B-010. The predicate is a function of the text and the description's columns, so it is tested
-    /// by calling it. Three clauses, and each has its own way of failing quietly: a case-sensitive
-    /// comparison looks correct until someone types in lowercase, an untrimmed one until a paste
-    /// brings a space, and empty text matching nothing shows an empty grid the moment the box is
-    /// cleared — the gesture the audience is most likely to make.
+    /// by calling it. Which clause each case covers, and how each fails quietly, is written in
+    /// <see cref="SearchTextCases"/> beside the cases themselves.
     /// </summary>
     /// <param name="text">What the user typed.</param>
     /// <param name="expected">Whether the aircraft survives it.</param>
     [Theory]
-    [InlineData("flt0421", true)]
-    [InlineData("FLT0421", true)]
-    [InlineData("  FLT04  ", true)]
-    [InlineData("", true)]
-    [InlineData("   ", true)]
-    [InlineData("germany", true)]
-    [InlineData("QFA", false)]
+    [ClassData(typeof(SearchTextCases))]
     public void GivenSearchText_WhenItIsMatched_ThenMatchingIsCaseInsensitiveTrimmedAndEmptyMatchesEverything(string text, bool expected)
     {
         // Given
-        TransportVehicle vehicle = new Aircraft("a1b2c3", LastContact) { Callsign = "FLT0421", OriginCountry = "Germany" };
+        FleetSourceDescription description = new FleetSourceDescriptionFixture();
+        TransportVehicle vehicle = new AircraftFixture().WithCallsign("FLT0421").WithOriginCountry("Germany");
 
         // When
-        var matches = FleetSearch.Matching(text, Columns)(vehicle);
+        var matches = FleetSearch.Matching(text, description.Columns)(vehicle);
 
         // Then
         matches.Should().Be(expected, "the label and every column's cell are what search reads, case-insensitively and trimmed");
@@ -41,42 +34,37 @@ public class FleetSearchTests
 
     /// <summary>
     /// B-011. The two inputs are independent predicates joined by conjunction, which is the whole
-    /// claim: clearing one leaves the other standing. A dropdown that silently resets the search box
-    /// reads as a bug to the person watching, and the implementation that causes it — one input
-    /// overwriting the predicate the other set — passes every test that only ever sets one.
+    /// claim: clearing one leaves the other standing. The three vehicles and what each case proves
+    /// are written in <see cref="ComposedPredicateCases"/>.
     /// </summary>
-    [Fact]
-    public void GivenASearchAndAFilter_WhenEitherIsCleared_ThenTheOtherStillApplies()
+    /// <param name="text">What the user typed.</param>
+    /// <param name="chosen">Whether the on-the-ground choice is taken.</param>
+    /// <param name="vehicle">Which of the three vehicles is offered to the predicate.</param>
+    /// <param name="expected">Whether it survives.</param>
+    [Theory]
+    [ClassData(typeof(ComposedPredicateCases))]
+    public void GivenASearchAndAFilter_WhenEitherIsCleared_ThenTheOtherStillApplies(string text, bool chosen, string vehicle, bool expected)
     {
         // Given
-        var onTheGround = new FleetFilterChoice { Name = "On the ground", Matches = static vehicle => vehicle is Aircraft { OnGround: true } };
-        TransportVehicle matchesBoth = new Aircraft("a1b2c3", LastContact) { Callsign = "FLT0421", OriginCountry = "Germany", OnGround = true };
-        TransportVehicle searchOnly = new Aircraft("d4e5f6", LastContact) { Callsign = "FLT0422", OriginCountry = "Germany", OnGround = false };
-        TransportVehicle filterOnly = new Aircraft("f7a8b9", LastContact) { Callsign = "QFA12", OriginCountry = "Australia", OnGround = true };
+        var onTheGround = new FleetFilterChoice { Name = "On the ground", Matches = static candidate => candidate is Aircraft { OnGround: true } };
+        FleetSourceDescription description = new FleetSourceDescriptionFixture().WithFilters([onTheGround]);
+        var choice = chosen ? onTheGround : Option<FleetFilterChoice>.None;
 
         // When
-        var both = FleetSearch.Composed("FLT04", Columns, onTheGround);
-        var searchCleared = FleetSearch.Composed(string.Empty, Columns, onTheGround);
-        var filterCleared = FleetSearch.Composed("FLT04", Columns, Option<FleetFilterChoice>.None);
+        var composed = FleetSearch.Composed(text, description.Columns, choice);
 
         // Then
-        both(matchesBoth).Should().BeTrue("the vehicle satisfies the search and the choice");
-        both(searchOnly).Should().BeFalse("the choice still applies when the search matches");
-        both(filterOnly).Should().BeFalse("the search still applies when the choice matches");
-        searchCleared(filterOnly).Should().BeTrue("clearing the search leaves the choice applied");
-        searchCleared(searchOnly).Should().BeFalse("the choice did not go with the search");
-        filterCleared(searchOnly).Should().BeTrue("clearing the choice leaves the search applied");
-        filterCleared(filterOnly).Should().BeFalse("the search did not go with the choice");
+        composed(Offered(vehicle)).Should().Be(expected, "the search and the choice are independent predicates joined by conjunction");
     }
 
-    /// <summary>The columns a description publishes here: the label, the group key, and one that is neither.</summary>
-    private static readonly IReadOnlyList<FleetColumn> Columns =
-    [
-        new FleetColumn { Name = "Callsign", Value = static vehicle => vehicle.Label },
-        new FleetColumn { Name = "Origin country", Value = static vehicle => vehicle.GroupKey },
-        new FleetColumn { Name = "Key", Value = static vehicle => vehicle.Key },
-    ];
-
-    /// <summary>The instant the vehicles here were last heard from.</summary>
-    private static readonly DateTimeOffset LastContact = new(2026, 10, 7, 9, 15, 0, TimeSpan.Zero);
+    /// <summary>One of the three vehicles the cases name.</summary>
+    /// <param name="which">Which one the case asked for.</param>
+    /// <returns>The vehicle.</returns>
+    private static TransportVehicle Offered(string which) =>
+        which switch
+        {
+            "both" => new AircraftFixture().WithKey("a1b2c3").WithCallsign("FLT0421").WithOnGround(true),
+            "search" => new AircraftFixture().WithKey("d4e5f6").WithCallsign("FLT0422").WithOnGround(false),
+            _ => new AircraftFixture().WithKey("f7a8b9").WithCallsign("QFA12").WithOnGround(true),
+        };
 }
