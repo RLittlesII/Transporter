@@ -114,17 +114,17 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
   # ────────────────────────────── Failure mode ──────────────────────────────
 
   @B-006
-  Scenario: One vehicle changing updates one row
-    Given a grid showing twelve aircraft
+  Scenario: One vehicle changing updates one card
+    Given cards showing twelve aircraft
      When one aircraft reports a new altitude
-     Then that row updates in place
-      And the other eleven rows are not re-created
+     Then that card updates in place
+      And the other eleven cards are not re-created
 
   @B-008
-  Scenario: A stale row is marked and keeps its place
+  Scenario: A stale card is marked and keeps its place
     Given an aircraft that has been silent past the threshold
-     When the grid is read
-     Then its row carries the stale mark
+     When the fleet is read
+     Then its card carries the stale mark, as an icon and the word "Stale" beside its colour
       And it is still present, in the order the comparer put it
 
   @B-014
@@ -141,6 +141,14 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When the project is built
      Then each is reported at the member that holds it
       And the diagnostic names what owns that concern instead
+
+  @B-017
+  Scenario: A view animating toward a bound value holds no timer
+    Given a view whose ring empties toward the next poll's due instant
+      And a view model exposing that instant and nothing that ticks
+     When the project is built
+     Then nothing is reported, because the animation fetches, derives and polls nothing
+      And the same ring driven by a timer in the view model is reported
 
   # ─────────────────────────── Validation failure ───────────────────────────
 
@@ -253,3 +261,132 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When the project is built
      Then it is reported at the reference
       And the same call inside a page is not
+
+  # ───────────────────── Cards, the trail, and how a status looks ─────────────────────
+
+  @B-029
+  Scenario: A card is built from the roles the description names
+    Given a description whose card roles are callsign, origin country, place, and altitude, speed and leg as readouts
+     When the fleet is shown at a width that fits three cards across
+     Then each aircraft is one card, three to a line
+      And each card shows those columns' cells in those roles
+     When the page narrows to fit one card across
+     Then the same cards reflow into one column and none is re-created
+
+  @B-029
+  Scenario: A role the source leaves empty is absent, not blank
+    Given a second description that names no place role
+     When the live source is swapped for it
+     Then its cards carry no place line and no empty space where one was
+      And no view or markup was edited
+
+  @B-030
+  Scenario: A card shows how far its vehicle moved, from the element
+    Given SYN101's element carries a leg of 11.8 km and a total of 101.2 km
+     When its card is projected
+     Then it shows "11.8 km" since the last poll and "101.2 km" since first seen
+      And no view model measured either
+     When SYN102's element carries no leg and no total
+     Then its card shows neither, rather than "0 km"
+
+  @B-031
+  Scenario: A card's age moves with the observed instant, not with a clock
+    Given SYN101 last reported at 14:32:10
+      And the observed instant is 14:32:28
+     When its card is projected
+     Then it shows "18s ago"
+     When no poll arrives for a minute
+     Then it still shows "18s ago", because nothing ticked
+     When the observed instant advances to 14:32:43
+     Then it shows "33s ago"
+
+  @B-032
+  Scenario Outline: A status is an icon and a word as well as a colour
+    Given a card whose vehicle is <status>
+     When the card is projected
+     Then it carries the icon <icon> and the word "<word>"
+      And its colour is never the only thing that says so
+
+    Examples:
+      | status                           | icon        | word          |
+      | fresh                            | ring-full   | Live          |
+      | stale                            | ring-hatch  | Stale         |
+      | without a position               | crosshair   | No position   |
+      | on the ground                    | ground      | On ground     |
+
+  @B-033
+  Scenario: The page is one dark theme, drawn from tokens
+    Given the page and every view on it
+     When their colours are read
+     Then each comes from one set of named tokens, and none is a literal in a view
+      And body text contrasts with the surface beneath it at least 7:1
+      And every other label at least 4.5:1
+
+  @B-034
+  Scenario: The detail map draws the trail, and extends it
+    Given SYN101 is selected and its element carries a trail of 30 points
+     When the detail pane is shown
+     Then the map draws one line through the 30 points, coloured along the trail measure's range
+      And the ramp stays in order under protan, deutan and tritan vision
+     When a changeset adds a 31st point
+     Then the line is extended by one segment and not redrawn from empty
+
+  @B-034
+  Scenario: A gap in the trail is a break in the line
+    Given SYN101's trail has a point marked as following a gap
+     When the detail map is drawn
+     Then the line breaks before that point
+      And no segment joins the two sides of the silence
+
+  @B-035
+  Scenario: The detail pane lists the trail, newest first
+    Given SYN101's trail of three points, the last two 9.6 km and 10.2 km from the one before
+     When the detail pane is shown
+     Then it lists three points, newest first, each with its last contact
+      And the newest two show "10.2 km" and "9.6 km", and the first shows none
+      And no view model computed a distance
+
+  @B-036
+  Scenario: The page shows when the next poll is due, and a refusal
+    Given the tracker's poll status says the next poll is due at 14:32:25
+     When the page is projected
+     Then it counts down to 14:32:25 by a view animation toward that instant
+      And the view model holds no timer to do it
+     When the status carries a refusal asking for 42 seconds
+     Then it shows "Throttled" with its icon, and "retry in 42s"
+      And nothing on the page started a timer to say so
+
+  @B-036
+  Scenario: A source that does not poll shows no poll status
+    Given the live source is one that pushes, and the tracker publishes no poll status
+     When the page is projected
+     Then it shows no next poll and no throttling
+
+  @B-037
+  Scenario: The banner shows the recent window, not a list it keeps
+    Given the tracker's window of recent notices holds twenty
+     When the banner is projected
+     Then it shows the latest notice's counts beside the added, updated and removed counts of all twenty
+      And the view model holds no list of notices of its own
+
+  @B-038
+  Scenario: A changed readout shows its change and pulses once
+    Given a description whose altitude readout names a delta
+      And SYN101's element carries the vehicle its last update replaced, at 12,180 ft
+     When an update reports SYN101 at 12,300 ft
+     Then its altitude readout shows "▲ +120 ft", as the description formatted it
+      And the readout pulses once
+      And no view model subtracted anything
+
+  @B-038
+  Scenario: Reduced motion keeps the change and drops the pulse
+    Given the platform asks for reduced motion
+     When SYN101's altitude readout changes
+     Then the change is shown
+      And nothing on the card moves
+
+  @B-038
+  Scenario: A vehicle just added shows no change
+    Given SYN104 enters the fleet in this changeset
+     When its card is projected
+     Then no readout shows a change, and none pulses

@@ -1,0 +1,50 @@
+id: "0066"
+type: task
+title: Keep a window of the twenty most recent notices on the tracker
+
+status: ready-for-architecture
+
+priority: medium
+value: 2
+risk: 1
+rank: 42
+
+parent: "0030"
+children: []
+
+depends_on: []
+blocks:
+  - "0041"
+spikes: []
+
+spec: src/Transponder/Tracking/.spec/README.md
+
+claims:
+  - B-039
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  The tracker publishes the last twenty notices, oldest first (B-039), so the
+  banner can show counts across a window rather than only the latest
+  (`fleet-dashboard` B-037). The window is the tracker's, and no consumer
+  pacing its own notices (B-026) thins it.
+
+  Depends on nothing open: notices are raised by `0033`'s stage, on `main`.
+  `fleet-dashboard` `0041` waits on this one.
+
+  One trap. A window built over a consumer's paced stream holds what that
+  consumer happened to see; it is built over the notices as raised, before any
+  rate cap.
+
+acceptance_criteria:
+  - "B-039 — the last twenty notices, oldest first, unthinned by any consumer's pacing."
+  - "§ 9 Traceability Matrix carries a row naming a test for B-039."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Showing the window — `fleet-dashboard` `0041`."

@@ -1,0 +1,61 @@
+id: "0064"
+type: task
+title: Name what fills a card, and the change each readout shows, in the description
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 2
+rank: 84
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0062"
+blocks:
+  - "0070"
+  - "0073"
+spikes: []
+
+spec: src/Transponder/Tracking/.spec/README.md
+
+claims:
+  - B-036
+  - B-042
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  The description gains two things a card needs. Card roles (B-036): which
+  column is the title, the subtitle, the place and the ordered readouts, so the
+  card is laid out from the description the same way the grid's columns were
+  (`fleet-dashboard` B-007, B-021), and a swap to another kind of vehicle
+  changes the card without a markup edit. And a delta per readout (B-042): a
+  selector over the vehicle B-041 carries and the current one, returning the
+  change already formatted — "▲ +120 ft" — or none when nothing changed.
+
+  Waits on `0062` for the replaced vehicle. `fleet-dashboard` `0070` lays the
+  card out from the roles, and `0073` shows the delta.
+
+  One trap, and it is § 11 row 3's. Cells are formatted strings, so a
+  consumer cannot subtract them; the arithmetic lives in the description,
+  beside the unit conversion it needs, and under B-022's exception only. A
+  delta computed in a view model from two formatted cells parses its own
+  output and breaks on the first locale that writes a decimal comma.
+
+acceptance_criteria:
+  - "B-036 — title, subtitle, place and ordered readouts each name a column; an empty role stays empty."
+  - "B-042 — a readout names its delta, formatted by the description; none where nothing changed."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The place column itself — `0065`."
+  - "A delta for a sort or filter column — § 5 row 12."
+  - "The pulse and the reduced-motion rule — `fleet-dashboard` `0073`."

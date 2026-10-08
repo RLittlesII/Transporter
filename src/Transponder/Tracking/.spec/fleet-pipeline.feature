@@ -305,3 +305,134 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When one of them is applied
      Then the published instant is the recorded one
       And it is not a wall-clock read, so the replayed fleet is not stale on load
+
+  # ──────────────────────── Derived from movement ────────────────────────
+  # Coordinates are synthetic points inside the Houston box; distances are
+  # great-circle, rounded to the tenth of a kilometre.
+
+  @B-032
+  Scenario: An update that moves a vehicle carries the leg it flew
+    Given a bound fleet holding SYN101 at 29.70, -95.40
+     When a changeset updates SYN101 to 29.80, -95.40
+     Then SYN101's element carries a leg of 11.1 km
+      And no view model or view measured it
+
+  @B-032
+  Scenario: No position on either side is no leg, not a zero
+    Given a bound fleet holding SYN102 with no position
+     When a changeset updates SYN102 to 29.75, -95.35
+     Then SYN102's element carries no leg
+      And SYN103, entering the fleet in the same changeset, carries no leg either
+
+  @B-033
+  Scenario: The running total adds every leg since the vehicle entered
+    Given SYN101 entered the fleet and has flown legs of 11.1 km and 9.6 km
+     When a changeset moves it a further 10.2 km
+     Then SYN101's element carries a total of 30.9 km
+     When SYN101 is removed and a later changeset reports it again
+     Then its element carries a total of zero and no leg
+
+  @B-034
+  Scenario: The trail rides on the element and leaves with it
+    Given SYN101 entered the fleet at 29.70, -95.40
+     When three changesets move it, and a fourth updates its altitude without moving it
+     Then its element carries a trail of four points, oldest first
+      And each point carries its last contact, its trail measure and its distance from the one before
+      And no store of trails exists beside the fleet
+     When SYN101 is removed
+     Then no trail of SYN101 remains anywhere downstream of the seam
+
+  @B-034
+  Scenario: The trail is bounded, and the oldest point goes first
+    Given the tracker holds the default trail bound
+      And SYN101 carries a trail of 240 points
+     When a changeset moves it once more
+     Then its trail still holds 240 points
+      And the first point it held is the one that went
+
+  @B-035
+  Scenario: A silence longer than the threshold is a gap in the trail
+    Given a staleness threshold of five minutes
+      And SYN101's last trail point has a last contact of 14:00:00
+     When a changeset moves it with a last contact of 14:07:30
+     Then the new point is marked as following a gap
+     When the next changeset moves it with a last contact of 14:07:45
+     Then that point is not
+
+  @B-036
+  Scenario: The description names what fills each role on a card
+    Given the aircraft description
+     When its card roles are read
+     Then the title, the subtitle, the place and an ordered list of readouts each name one of its columns
+      And a description for a source with no place names none for that role
+      And the role it left empty is empty rather than filled from a member a consumer chose
+
+  @B-037
+  Scenario: The trail measure is named by the source, not by the base
+    Given the aircraft description
+     When its trail measure is read
+     Then it carries a display name, the range a colour ramp spans and a selector
+      And the selector yields an aircraft's barometric altitude in metres
+      And an aircraft with no altitude yields no value rather than zero
+      And no member of TransportVehicle carries an altitude
+
+  @B-038
+  Scenario: A place is resolved from the table compiled in, or not at all
+    Given a description offering a place column over a compiled table
+     When the column is read for a position two kilometres from an entry
+     Then it yields that entry's name
+     When it is read for a position farther than the bound from every entry
+     Then it yields the position's coordinates
+      And neither read made a network call or opened a file
+
+  @B-038
+  Scenario: An aircraft's place is bounded at ten kilometres
+    Given the aircraft description, whose place table holds one entry, "Pasadena"
+     When its place column is read for a position 9.5 km from Pasadena
+     Then it yields "Pasadena"
+     When it is read for a position 10.5 km from Pasadena
+     Then it yields the position's coordinates rather than "Pasadena"
+
+  @B-039
+  Scenario: The recent notices are a window the tracker keeps
+    Given twenty-five changesets that each changed something
+     When the window of recent notices is observed
+     Then it holds the last twenty, oldest first
+      And a consumer pacing its own notices at one minute does not thin it
+
+  @B-041
+  Scenario: The element carries the vehicle its last update replaced
+    Given a bound fleet holding SYN101 at 9,000 m
+     When a changeset updates SYN101 to 9,036.6 m
+     Then SYN101's element carries the vehicle at 9,000 m as the one replaced
+     When the next changeset updates it to 9,100 m
+     Then the one replaced is the vehicle at 9,036.6 m, and the one at 9,000 m is kept nowhere
+      And SYN103, entering the fleet in that changeset, carries none
+
+  @B-042
+  Scenario: A readout names the change it shows
+    Given the aircraft description, whose altitude readout names a delta
+      And SYN101's element replaced a vehicle at 9,000 m with one at 9,036.6 m
+     When the altitude readout's delta is read
+     Then it yields "▲ +120 ft", formatted by the description
+     When an update leaves the altitude unchanged
+     Then the delta yields none
+      And no view model or view subtracted one value from another
+
+  # ───────────────────────── The poll status ─────────────────────────
+
+  @B-040
+  Scenario: The poll status is re-published, not produced
+    Given a live source reporting its next poll due at 14:32:25
+     When a consumer subscribes to the tracker's poll status
+     Then it reads 14:32:25
+     When the source reports a refusal asking for 42 seconds
+     Then the status carries the refusal and the 42 seconds
+      And the tracker started no timer and read no clock to say so
+
+  @B-040
+  Scenario: A source that does not poll has no poll status
+    Given a polled source reporting its next poll due
+     When the live source is swapped for one that pushes
+     Then the poll status is replaced by none
+      And nothing names the source that was swapped out
