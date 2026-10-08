@@ -6,7 +6,7 @@ status: done
 
 priority: high
 risk: 3
-rank: 71
+rank: 76
 
 parent: "0008"
 children: []
@@ -14,7 +14,8 @@ children: []
 depends_on:
   - "0006"
   - "0011"
-blocks: []
+blocks:
+  - "0039"
 spikes: []
 
 spec: features/replay-source/.spec/README.md
@@ -29,7 +30,7 @@ claims:
   - B-026
 
 created: "2026-10-04"
-updated: "2026-10-06"
+updated: "2026-10-07"
 closed: "2026-10-06"
 
 summary: |
@@ -76,6 +77,9 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-07 — `0039` — `blocks` now names `0039`, and the rank moves 71 to
+    76 with it. The swap control must reach the strategy this item registered,
+    which that item's `depends_on` now says; `value` and `risk` are untouched."
   - "2026-10-06 — implementer — closed on all seven of its claims and on one it
     does not hold. B-015 moved against `ReplayCompositionTests`, B-016 – B-018
     against `ReplaySwapTests`, B-024 and B-025 against

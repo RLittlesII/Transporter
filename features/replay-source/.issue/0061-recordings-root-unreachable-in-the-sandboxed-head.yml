@@ -1,0 +1,105 @@
+id: "0061"
+type: bug
+title: A recording the sandboxed head cannot open leaves the grid empty with nothing said
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 2
+rank: 74
+
+parent: "0008"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+  - B-025
+  - B-026
+
+created: "2026-10-07"
+updated: "2026-10-07"
+closed: null
+
+summary: |
+  Found 2026-10-07 while trying to see `0052`'s generated recording on screen,
+  and reproduced in the built Mac Catalyst head by tracing it from the terminal.
+  The Mac Catalyst head runs under the App Sandbox —
+  `src/Gui/Platforms/MacCatalyst/Entitlements.plist` enables
+  `com.apple.security.app-sandbox` — and two things follow that the replay
+  half was not written against.
+
+  **The recordings root is unreachable.** B-025 defaults the root to
+  `recordings/` relative to the running application and makes it overridable
+  so an awkward platform can point elsewhere. In the head, the working
+  directory is the `.app` directory itself, and the sandbox denies every path
+  outside the application's container: `File.Exists` on the repository's
+  `recordings/aircraft-sample.ndjson` answers true, and `File.OpenRead` on the
+  same path throws `UnauthorizedAccessException`. `RecordingLibrary.Open`
+  swallows that as it should (B-026) and `CheckedRecording.Check` reports the
+  recording as unreadable, so the replay strategy is not registered and the
+  selector starts on live — which, with no credential, polls and fails every
+  fifteen seconds. The only root the head can read is its own container,
+  `~/Library/Containers/com.companyname.gui/Data/`, which neither the
+  specification, `adr/0001`, nor the stage-day runbook names. A rehearsal
+  recording written by the same head lands in that container too, so
+  `adr/0001` item 2 — rehearsal writes and replay reads the same place —
+  holds only if both sides know where the place is.
+
+  **The startup report never runs.** B-026 is honoured by
+  `ReplayStartupReport`, an `IHostedService` (`0012`'s second decision). MAUI
+  builds a service collection but does not start hosted services, so in the
+  head the report is registered and never executed. The condition above was
+  therefore silent: no log line, no indicator, an empty grid that reads as
+  live traffic not having arrived yet. The claim says the defect is reported
+  when the application starts; in the one application that exists, it is not.
+
+  The reproduction, for whoever takes this: name the recording in
+  `appsettings.json` with `Recording:Root` pointing at the repository's
+  `recordings/` and run the head — the fleet stays at zero while the same
+  configuration under a plain console host fills twelve rows in a second.
+  Pointing the root at `Data/Documents/recordings/` inside the container,
+  with the file copied there, fills the grid; that is the workaround and not
+  the fix, because it puts an absolute, per-machine, per-bundle-id path in a
+  settings file the repository ships.
+
+acceptance_criteria:
+  - "B-025 — the default root resolves to a location the sandboxed Mac Catalyst
+    head can read and write, so a rehearsal recorded by the head and a replay
+    read by it meet in one place with no absolute path in configuration
+    (`adr/0001` item 2). The override stays, for the platforms the default
+    does not fit."
+  - "B-026 — the startup report runs in the MAUI head, not only under a generic
+    host, so an absent, unreadable or too-short recording is reported at
+    launch there. Whether a hosted service is started or the report is
+    reached another way is architecture's; the claim is that it fires."
+  - "The report distinguishes a file that cannot be opened from one that holds
+    no readable line, since the two are one `RecordingDefect` today and the
+    first is the sandbox's signature."
+  - "The stage-day runbook (`docs/runbook.md`) says where a recording lives on
+    the Mac and how a presenter checks the report before the talk."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above, and
+    § 10 carries the delta if `adr/0001` item 2's wording moves."
+
+decisions:
+  - "2026-10-07 — the person — filed as a bug under `0008` rather than folded
+    into `0039`: the swap control is what selects replay, and this is what
+    makes replay registrable at all on the platform the demo runs on. Separate
+    failures, separate items. Risk is 2 because the mechanism is small and
+    fully understood — the trace that found it is in the summary; value is 4
+    because without it the stage fallback is unavailable on stage and nothing
+    says so. Rejected: disabling the sandbox in `Entitlements.plist`, which
+    changes the shipped head to suit a developer path and still leaves B-026
+    unreported in the head."
+
+out_of_scope:
+  - "The swap control that selects replay from the screen — `fleet-dashboard`
+    `0039`."
+  - "A recording picker or any discovery of recordings — rejected in
+    `adr/0001`."
+  - "Performing a rehearsal recording — § 5 row 3."

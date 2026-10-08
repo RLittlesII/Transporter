@@ -15,6 +15,7 @@ children: []
 depends_on:
   - "0036"
   - "0006"
+  - "0012"
 blocks:
   - "0001"
 spikes: []
@@ -30,7 +31,7 @@ claims:
   - B-022
 
 created: "2026-10-05"
-updated: "2026-10-06"
+updated: "2026-10-07"
 closed: null
 
 summary: |
@@ -71,8 +72,31 @@ acceptance_criteria:
     depends on `IFleetTracker` and on nothing below it — is proven here under
     B-020, and that Feature's § 9 row names the test. Taken from its `0007`,
     which has no view model to build."
+  - "Every registered strategy is a target this control reaches, and the
+    recorded aircraft source is one of them: a run that names `Replay:Aircraft`
+    can be swapped to the recording from the screen, with no rebuild, no
+    restart and no second control (`replay-source` B-015; hot-swap-source
+    § \"Never add\"). A run naming no recording offers no such target rather
+    than a wrong one (`replay-source` `adr/0001` item 1)."
 
 decisions:
+  - "2026-10-07 — the person — the control reaches the recorded aircraft source,
+    not only the closing act's ships. Raised when `0052`'s generated recording
+    could not be seen on screen: the recording was named, `0012` had registered
+    the replay strategy, and nothing in the head sends `SwapSource`, so the only
+    way to watch replay run was to put its registration before the live one so
+    the selector started on it — a local edit that makes registration order
+    decide what is live, which `replay-source` B-015 and its `adr/0001` item 3
+    exist to forbid, and which was not committed. `depends_on` gains `0012`,
+    the item the strategy this control must reach comes from; `0012`'s `blocks`
+    and rank move with it. Rejected: a replay-only control or an offline toggle
+    (hot-swap-source § \"Never add\"; `replay-source` § 5 row 8), and a
+    configuration key naming the starting source, which is the second control
+    hiding in a file that `adr/0001` item 3 rules out. Whether the control is a
+    picker over the registered sources or one button per source is
+    architecture's; the item records only that replay is among the targets, and
+    `fleet-dashboard` § 2 need 5 still reads planes-for-ships — a § 2 / § 3
+    amendment is `spec-author`'s."
   - "2026-10-07 — `0055` — `blocks` now names `0001`, and the rank moves 68 to 73 with it. `aircraft-source` B-041's \"what view models depend on\" half needs a container-built view model and is owed here under B-020, which that row already said in prose; the field says it now, so this item unblocks one and the formula reads it. `value` and `risk` are untouched — 4 and 4, as authored."
   - "2026-10-06 — the person — this item takes `aircraft-source` B-041's
     view-model half from that Feature's `0007`, which has no view model to build
