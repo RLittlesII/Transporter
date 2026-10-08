@@ -2,7 +2,7 @@
 title: "Specification: Aircraft source"
 description: "Poll OpenSky through a typed API contract, cache snapshots per client, project them to domain vehicles in a per-type strategy, and swap strategies behind a decorator the fleet tracker wraps."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Aircraft source
@@ -1289,12 +1289,21 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 6-7   | implementer | 🟡 Draft    |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
+
+**Reopened 2026-10-08.** B-054 and B-055 were added from `fleet-dashboard` decisions/0002 and
+the answers to its open questions, so the approval above was given to an
+agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
+§§ 6-7 on a § 7 that says how they are built — it says nothing yet. Until both
+rows are re-earned, no item cut from them (`0068`) moves to `in-progress`
+unless the person waives this for that named item. `spec_status` is
+`in-review` meanwhile. §§ 8-9 keeps its 🟢 for now; § 8 has no strategy for
+the new claims either, so that row is the next to reopen if review agrees.
 
 ## Decisions
 

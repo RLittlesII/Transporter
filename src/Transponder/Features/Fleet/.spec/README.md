@@ -2,7 +2,7 @@
 title: "Specification: Fleet dashboard"
 description: "One MAUI page in C# markup that binds the fleet tracker's collection, builds its columns from the live source's description, turns a keystroke into a predicate and a header tap into a comparer, and shows the selected vehicle in the only surface allowed to know which kind it is."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Fleet dashboard
@@ -743,8 +743,8 @@ code, not ahead of it.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 6-7   | implementer | 🟡 Draft    |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
@@ -788,6 +788,15 @@ Feature: the tracker holds no subscription of its own and its notice derivation
 is built per subscription, so a view model may assume nothing is live until it
 subscribes, and that disposing the tracker completes the stream its collection is
 bound to.
+
+**Reopened 2026-10-08.** B-029 – B-038 were added, B-006, B-008, B-017 and B-036 amended from `fleet-dashboard` decisions/0002 and
+the answers to its open questions, so the approval above was given to an
+agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
+§§ 6-7 on a § 7 that says how they are built — it says nothing yet. Until both
+rows are re-earned, no item cut from them (`0069` – `0073`) moves to `in-progress`
+unless the person waives this for that named item. `spec_status` is
+`in-review` meanwhile. §§ 8-9 keeps its 🟢 for now; § 8 has no strategy for
+the new claims either, so that row is the next to reopen if review agrees.
 
 ## Decisions
 

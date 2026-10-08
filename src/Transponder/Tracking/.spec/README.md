@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Fleet pipeline
@@ -933,8 +933,8 @@ the draft it replaced.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 6-7   | implementer | 🟡 Draft    |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
@@ -1011,6 +1011,15 @@ approval waiting on coverage, coverage waiting on implementation, implementation
 waiting on approval. The role file is corrected to match the template and the
 lesson. Nothing on this Feature depended on the wrong reading, because the
 findings above would have blocked it anyway.
+
+**Reopened 2026-10-08.** B-032 – B-042 were added and B-038 amended from `fleet-dashboard` decisions/0002 and
+the answers to its open questions, so the approval above was given to an
+agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
+§§ 6-7 on a § 7 that says how they are built — it says nothing yet. Until both
+rows are re-earned, no item cut from them (`0062` – `0067`) moves to `in-progress`
+unless the person waives this for that named item. `spec_status` is
+`in-review` meanwhile. §§ 8-9 keeps its 🟢 for now; § 8 has no strategy for
+the new claims either, so that row is the next to reopen if review agrees.
 
 ## Decisions
 
