@@ -142,6 +142,14 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      Then each is reported at the member that holds it
       And the diagnostic names what owns that concern instead
 
+  @B-017
+  Scenario: A view animating toward a bound value holds no timer
+    Given a view whose ring empties toward the next poll's due instant
+      And a view model exposing that instant and nothing that ticks
+     When the project is built
+     Then nothing is reported, because the animation fetches, derives and polls nothing
+      And the same ring driven by a timer in the view model is reported
+
   # ─────────────────────────── Validation failure ───────────────────────────
 
   @B-001
@@ -342,7 +350,8 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
   Scenario: The page shows when the next poll is due, and a refusal
     Given the tracker's poll status says the next poll is due at 14:32:25
      When the page is projected
-     Then it shows the next poll due at 14:32:25
+     Then it counts down to 14:32:25 by a view animation toward that instant
+      And the view model holds no timer to do it
      When the status carries a refusal asking for 42 seconds
      Then it shows "Throttled" with its icon, and "retry in 42s"
       And nothing on the page started a timer to say so
@@ -359,3 +368,25 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When the banner is projected
      Then it shows the latest notice's counts beside the added, updated and removed counts of all twenty
       And the view model holds no list of notices of its own
+
+  @B-038
+  Scenario: A changed readout shows its change and pulses once
+    Given a description whose altitude readout names a delta
+      And SYN101's element carries the vehicle its last update replaced, at 12,180 ft
+     When an update reports SYN101 at 12,300 ft
+     Then its altitude readout shows "▲ +120 ft", as the description formatted it
+      And the readout pulses once
+      And no view model subtracted anything
+
+  @B-038
+  Scenario: Reduced motion keeps the change and drops the pulse
+    Given the platform asks for reduced motion
+     When SYN101's altitude readout changes
+     Then the change is shown
+      And nothing on the card moves
+
+  @B-038
+  Scenario: A vehicle just added shows no change
+    Given SYN104 enters the fleet in this changeset
+     When its card is projected
+     Then no readout shows a change, and none pulses

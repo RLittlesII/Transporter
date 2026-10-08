@@ -84,7 +84,11 @@ while nothing is bound — `fleet-pipeline` B-004's teardown, defeated for a lab
   narrowed to a light theme, a theme switch and accessibility beyond B-032 and
   B-033.
 - **§ 11**: rows 7 and 8 opened — whether anything may count down, and whether a
-  readout shows its change.
-- **`fleet-pipeline`**: B-032 – B-040, § 4 rows 15 – 17, § 5 rows 3 and 10 – 12,
+  readout shows its change — and answered the same day: a view may animate
+  toward a bound value, so B-017 and B-036 were amended and B-038 added; the
+  delta is the description's (`fleet-pipeline` B-041 and B-042).
+- **`fleet-pipeline`**: B-032 – B-042, § 4 rows 15 – 17, § 5 rows 3 and 10 – 12,
   § 11 rows 7 and 8.
 - **`aircraft-source`**: B-054 and B-055, § 4 row 21, § 5 row 14.
+- **ADR-0013**: the read-side seam the poll status travels on, from
+  `fleet-pipeline` § 11 row 7.

@@ -385,12 +385,39 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      Then it yields the position's coordinates
       And neither read made a network call or opened a file
 
+  @B-038
+  Scenario: An aircraft's place is bounded at ten kilometres
+    Given the aircraft description, whose place table holds one entry, "Pasadena"
+     When its place column is read for a position 9.5 km from Pasadena
+     Then it yields "Pasadena"
+     When it is read for a position 10.5 km from Pasadena
+     Then it yields the position's coordinates rather than "Pasadena"
+
   @B-039
   Scenario: The recent notices are a window the tracker keeps
     Given twenty-five changesets that each changed something
      When the window of recent notices is observed
      Then it holds the last twenty, oldest first
       And a consumer pacing its own notices at one minute does not thin it
+
+  @B-041
+  Scenario: The element carries the vehicle its last update replaced
+    Given a bound fleet holding SYN101 at 9,000 m
+     When a changeset updates SYN101 to 9,036.6 m
+     Then SYN101's element carries the vehicle at 9,000 m as the one replaced
+     When the next changeset updates it to 9,100 m
+     Then the one replaced is the vehicle at 9,036.6 m, and the one at 9,000 m is kept nowhere
+      And SYN103, entering the fleet in that changeset, carries none
+
+  @B-042
+  Scenario: A readout names the change it shows
+    Given the aircraft description, whose altitude readout names a delta
+      And SYN101's element replaced a vehicle at 9,000 m with one at 9,036.6 m
+     When the altitude readout's delta is read
+     Then it yields "▲ +120 ft", formatted by the description
+     When an update leaves the altitude unchanged
+     Then the delta yields none
+      And no view model or view subtracted one value from another
 
   # ───────────────────────── The poll status ─────────────────────────
 
