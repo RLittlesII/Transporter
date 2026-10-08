@@ -275,6 +275,25 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And a poll is demanded
      Then one call is made and its snapshot reaches the cache
 
+  @B-054
+  Scenario: The poller says when its next poll is due
+    Given an aircraft source polling on a fifteen-second interval
+     When a poll is made at 14:32:10 on the poller's scheduler
+     Then the next poll is reported due at 14:32:25, on the read-side seam beside the tracker source
+      And nothing about it arrives through the changeset stream
+     When a poll is demanded at 14:32:20 and the interval has elapsed since the last
+     Then the next poll is reported due at 14:32:35
+
+  @B-055
+  Scenario: A refusal is reported with the interval OpenSky asked for
+    Given OpenSky answers the next poll with 429 and X-Rate-Limit-Retry-After-Seconds of 42
+     When the response is handled
+     Then a refusal carrying 42 seconds is reported on the same seam
+      And the next poll is reported due no earlier than 42 seconds on
+      And no exception reaches a subscriber of the client's stream
+     When the next poll is applied
+     Then the refusal is cleared
+
   # B-010 is Withdrawn (README.md § 3, § 4 row 18, § 11 row 4), so its scenario
   # is gone rather than kept as documentation of a rule this repository does not
   # follow. The contract's double is NSubstitute's, like every other double here.
