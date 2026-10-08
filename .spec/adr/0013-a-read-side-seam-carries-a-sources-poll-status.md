@@ -6,7 +6,7 @@ type: adr
 
 # ADR-0013: A read-side seam carries a source's poll status
 
-**Status:** proposed
+**Status:** accepted
 
 ## Context
 

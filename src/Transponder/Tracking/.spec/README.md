@@ -335,6 +335,9 @@ each (B-013).
 | `FleetGroup.Vehicles`              | `IObservable<IChangeSet<TrackedVehicle, string>>` | The group's rows as a stream, so a consumer rendering one group binds it and one that needs only the counts does not. Not a second store of items (B-002, ADR-0009).                                   |
 | `TrackedVehicle.Vehicle`           | `TransportVehicle`                                | What the published element carries: the vehicle and whether it is currently stale. The flag is **not** stored on the vehicle — `domain-model` § "Never add" forbids that, and the clock moves.         |
 | `TrackedVehicle.IsStale`           | `bool`                                            | Derived at the moment the pipeline evaluated it, from `TransportVehicle.IsStale(asOf, threshold)` (B-016, B-018).                                                                                      |
+| `TrackedVehicle.Replaced`          | `Option<TransportVehicle>`                        | The vehicle the last update replaced (B-041). The _vehicle_, never the element that carried it, so nothing older than one update is reachable. `None` on an add.                                       |
+| `TrackedVehicle.Leg`               | `Option<double>`                                  | Metres, great-circle, from the replaced vehicle's position to this one's (B-032). `None` on an add and where either side has no position; `Some(0)` where both have one and it did not move.           |
+| `TrackedVehicle.Travelled`         | `double`                                          | Metres, the sum of every leg since the vehicle entered the fleet (B-033). Zero on an add, so zero again on re-entry.                                                                                   |
 | `FleetNotice.Kind`                 | `FleetNoticeKind`                                 | `Updated`, `Quiet` or `Resumed` (B-025, B-027). An enum rather than three types, because every consumer handles all three and a hierarchy would be matched on.                                         |
 | `FleetNotice.Instant`              | `DateTimeOffset`                                  | The observed instant the notice reports, read from the clock (B-018). Never a wall-clock read.                                                                                                         |
 | `FleetNotice.Tracked`              | `int`                                             | Vehicles in the fleet when the notice was raised.                                                                                                                                                      |
@@ -413,7 +416,8 @@ interrupting someone for is a judgement, and it is made in
 
 ```mermaid
 flowchart LR
-    src["ITrackerSource.Connect()<br/>IChangeSet&lt;TransportVehicle, string&gt;"] --> filter
+    src["ITrackerSource.Connect()<br/>IChangeSet&lt;TransportVehicle, string&gt;"] --> move
+    move["Move()<br/>replaced, leg, travelled"] --> filter
     predicate(["Filter(predicate)<br/>a subject the tracker owns"]) --> filter
     filter["Filter"] --> stale
     comparer(["SortBy(comparer)<br/>chosen from the description"]) --> order
@@ -442,7 +446,7 @@ sequenceDiagram
     participant View as its bound collection
     Consumer->>Tracker: subscribe to Fleet and Order, ObserveOn(UI), SortAndBind
     Source->>Tracker: changeset — one aircraft updated
-    Tracker->>Tracker: filter, mark, share
+    Tracker->>Tracker: move, filter, mark, share
     Tracker->>Consumer: one change, on the stream
     Consumer->>View: one update, in place
     Ticks-->>Tracker: instant advances, no data arrived
@@ -604,6 +608,79 @@ rather than only here.
   notice per re-marked vehicle would announce the passage of time as new data,
   and worse, it would make a quiet spell undetectable — the clock tick that
   detects silence would itself be producing the changesets that disprove it.
+
+**Movement on the element (B-032, B-033, B-041), designed for `0062`**
+
+Three values ride on `TrackedVehicle` (the rows above): the vehicle the last
+update replaced, the leg between the two, and the distance travelled since the
+vehicle entered. They are derived in **one new stage, `Move()`, first in the
+chain** — between the seam and the filter — and nowhere else.
+
+**It is a stage of its own because `Transform` cannot fold.** DynamicData's
+`Transform` overload with a previous value hands the factory the previous
+_source_ (`Optional<TransportVehicle>`), never the previous _destination_. That
+is enough for B-041 and B-032 and not for B-033, which is a sum: the total for
+this update is the last element's total plus this leg. So `Move()` is written
+the way DynamicData writes its own operators — `Observable.Create` over the
+changeset stream, with a `ChangeAwareCache` per subscription — and per change:
+
+- **Add**: the element with `Replaced` and `Leg` empty and `Travelled` zero.
+- **Update**: `Replaced` is the change's `Previous`; `Leg` is
+  `GreatCircle.Metres` between the two positions when both have one; and
+  `Travelled` is the cached element's plus the leg.
+- **Remove**: the element goes from the cache, and its total with it.
+- **Refresh**: passed through with the cached element unchanged.
+
+**The cache is the stage's output, not a store beside the fleet.** It holds
+exactly the elements the stage last emitted, one per key, which is what
+`Transform` holds internally too. Nothing outside the operator reads it, and it
+dies with the subscription. That is how B-002 stays true, and how `0063`'s trail
+can fold into the same element later without adding a store.
+
+**First, because the stages after it would corrupt it.**
+
+- The stale mark is a `Transform` forced on every clock tick (B-018). If the
+  movement were derived there, a tick would re-run it with the previous source
+  equal to the current one: every leg would read zero and every `Replaced` would
+  read as itself. Above the mark, a tick re-marks an element whose movement is
+  already settled. The mark now copies the three values onto `TrackedVehicle`
+  and derives `IsStale` beside them.
+- `Filter` turns a predicate change into removes and adds. Below it, a vehicle
+  filtered out and back would restart its total. Above it, the total keeps
+  counting while the vehicle is hidden, because it is a fact about the vehicle
+  and not about the view. The predicate still takes a `TransportVehicle`; the
+  stage adapts it to the moved element.
+- The notices are counted from the filtered stage, as before. Counting is
+  unchanged, so B-025 – B-027 do not move.
+
+**`Replaced` is a vehicle, not an element.** If the stage stored the previous
+element, each element would point at the one before, and an aircraft tracked for
+an hour would hold a chain of 240 elements. Storing the replaced vehicle keeps
+the chain one link long, which is what B-041's "nothing older than one update"
+asks.
+
+**`GreatCircle` is an internal static class in `Tracking/`.**
+`Metres(GeoPosition from, GeoPosition to)` is the haversine distance on a sphere
+of the mean Earth radius, 6,371,008.8 m. That is within half a percent of the
+ellipsoid, which is invisible at a tenth of a kilometre. It is not a member of
+`GeoPosition`: the model is `aircraft-source`'s and ADR-0005's, and the two
+callers are both here — this stage, and `0065`'s place column, which measures
+its ten-kilometre bound with the same function. Values stay in metres, the
+canonical unit (ADR-0005 item 7), and kilometres are a display conversion in
+the description (B-019).
+
+**What restarts a total, so nobody mistakes it for a bug:**
+
+- **A vehicle leaving and returning.** This is B-033's own rule.
+- **A swap.** `SwappingTrackerSource` switches with DynamicData's `Switch`, so the
+  outgoing fleet leaves as removes and the incoming one arrives as adds, and no
+  leg is drawn from a live position to a recorded one.
+- **The last subscriber leaving.** That is § 4 row 15: the stages are torn down
+  (B-028), and the next subscription reads the source's current fleet as adds.
+
+**No clock and no scheduler.** The stage reads the changeset and nothing else, so
+replay and live derive the same legs from the same positions. A test drives it
+with a `SourceCache` and no virtual time.
 
 **No open decisions.**
 
