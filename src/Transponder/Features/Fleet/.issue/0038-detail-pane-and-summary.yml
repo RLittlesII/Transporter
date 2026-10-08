@@ -1,13 +1,13 @@
 id: "0038"
 type: task
-title: Show the selected vehicle, the stale mark and the projected counts
+title: Show the selected vehicle and the projected counts
 
 status: ready-for-architecture
 
 priority: high
 value: 4
 risk: 3
-rank: 71
+rank: 76
 
 parent: "0035"
 children: []
@@ -15,28 +15,28 @@ children: []
 depends_on:
   - "0036"
   - "0034"
-blocks: []
+blocks:
+  - "0071"
 spikes: []
 
 spec: src/Transponder/Features/Fleet/.spec/README.md
 
 claims:
-  - B-008
   - B-013
   - B-014
   - B-015
   - B-019
 
 created: "2026-10-05"
-updated: "2026-10-05"
+updated: "2026-10-08"
 closed: null
 
 summary: |
   The detail pane is the one surface in the application allowed to name a
   concrete `TransportVehicle` subclass (ADR-0005 item 6), and the one place a
   canonical unit is converted for display — in an explicitly named member, never
-  inline in a binding. A stale row carries its mark and keeps its place, and the
-  summary projects what the tracker derived rather than recomputing it.
+  inline in a binding. The summary projects what the tracker derived rather
+  than recomputing it.
 
   Runs after `0036`, which builds the pane, and after `fleet-pipeline` `0034`,
   which derives the mark this item displays. B-015 additionally binds what
@@ -49,7 +49,6 @@ summary: |
   with nothing erroring.
 
 acceptance_criteria:
-  - "B-008 — a stale row is marked and keeps its place."
   - "B-013 — the pane shows fields only a concrete vehicle reports, and no
     other surface named one to do it."
   - "B-014 — a selection does not outlive its vehicle; the pane empties."
@@ -58,7 +57,12 @@ acceptance_criteria:
     unchanged."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-08 — spec-author — B-008 moved to `0070`. The claim was amended
+    from a row to a card (`fleet-dashboard` decisions/0002), and `0070` builds
+    the card; nothing here had been built against it. `0071` now waits on this
+    item for the pane it draws the trail in, which moves the rank from 71 to
+    76."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

@@ -18,6 +18,7 @@ children:
   - "0006"
   - "0007"
   - "0057"
+  - "0068"
 
 depends_on:
   - "0039"
@@ -80,9 +81,11 @@ claims:
   - B-051
   - B-052
   - B-053
+  - B-054
+  - B-055
 
 created: "2026-10-04"
-updated: "2026-10-07"
+updated: "2026-10-08"
 closed: null
 
 summary: |

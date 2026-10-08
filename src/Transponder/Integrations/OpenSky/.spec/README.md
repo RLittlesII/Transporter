@@ -870,7 +870,7 @@ row 17.
 
 **This is the gate, and three of the fifty-four rows read `Missing`** — B-041's
 "what view models depend on" half, owed by `fleet-dashboard` `0039`, and B-054
-and B-055, added on 2026-10-08 with no item yet.
+and B-055, added on 2026-10-08 and cut into `0068`.
 Fifty-one are `Verified`, and they arrived three different ways.
 Thirty-four came from
 items: `0002` built the contract, its envelope, the positional row's converter
@@ -991,8 +991,8 @@ is B-049 and the clause waiting on `0005`.
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-052    | `@B-052` | `TransponderCompositionTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-053    | `@B-053` | `AircraftPollActorTests.GivenAPollPerformedInsideTheInterval_WhenAPollIsDemanded_ThenItIsRefusedSilentlyAndNothingFaults`, `AircraftPollActorTests.GivenTheIntervalHasElapsedSinceTheLastPoll_WhenAPollIsDemanded_ThenOneCallIsMadeAndItsSnapshotsReachTheCache` and `AircraftSnapshotClientTests.GivenAPollDemandedBetweenTwoScheduledOnes_WhenTheCadenceRuns_ThenItWaitsOutTheIntervalFromTheDemandedPoll`                                                                                                                                                                                                                                                   | Verified |
-| B-054    | `@B-054` | None yet — no item is cut, and none is until the claim is agreed (`fleet-dashboard` decisions/0002)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Missing  |
-| B-055    | `@B-055` | None yet — no item is cut, and none is until the claim is agreed (`fleet-dashboard` decisions/0002)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Missing  |
+| B-054    | `@B-054` | [`0068`](../.issue/0068-poll-status-report.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
+| B-055    | `@B-055` | [`0068`](../.issue/0068-poll-status-report.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
 
 Fifty-one rows, fifty-one live claims, each appearing once — B-010 is Withdrawn
 and has none. A scenario existing is not coverage; this section is the only place
@@ -1320,7 +1320,7 @@ for the same reason.
 
 | Item                                                     | Claims                                          |
 | -------------------------------------------------------- | ----------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)             | all 53 — the parent; its children hold the work |
+| [`0001`](../.issue/0001-aircraft-source.yml)             | all 55 — the parent; its children hold the work |
 | [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001, B-002, B-004 – B-010, B-048              |
 | [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml) | B-011 – B-014, B-030 – B-032                    |
 | [`0004`](../.issue/0004-aircraft-snapshot-client.yml)    | B-003, B-015 – B-029, B-045, B-050              |
@@ -1328,6 +1328,7 @@ for the same reason.
 | [`0006`](../.issue/0006-source-swap-decorator.yml)       | B-038 – B-040, B-052                            |
 | [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-042 – B-044, B-047, B-051                     |
 | [`0057`](../.issue/0057-poll-on-demand.yml)              | B-053                                           |
+| [`0068`](../.issue/0068-poll-status-report.yml)          | B-054, B-055                                    |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. `0002` keeps
@@ -1349,10 +1350,9 @@ lesson 0011's remedy). B-041 keeps a `Missing` § 9 row here; what changed is
 which item owes it. This is the only row in the table whose owner is an item of
 another Feature, which is why it is written out rather than put in the column.
 
-**B-054 and B-055 are carried by no item yet.** They were added on 2026-10-08
-and wait on agreement, and on the seam ADR-0013 chose, which nothing builds
-yet. `0001` still reads 53 for the reason it read 52: this map says which
-item delivered a claim, and these two have been delivered by none.
+**B-054 and B-055 were cut into `0068` on 2026-10-08**, which waits on
+`fleet-pipeline` `0067` for the seam ADR-0013 chose. `0001` now reads 55: it
+carries every claim its children carry, B-010 included as before.
 
 Each item's `depends_on` sequences the work: `0002` and `0003` have no
 prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
@@ -1384,6 +1384,8 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 | 2026-10-05 | `0002` | risk  | No change to the number — `0002` is `done` and its risk is history. The row exists because the 2026-10-04 row above calls B-010's fake "the hazard", and B-010 is now Withdrawn: the hazard is **abandoned rather than retired**. An unarranged `GetStates` on a substitute returns a null task, so a test that forgets to arrange it fails with a `NullReferenceException` instead of a named message. That is accepted, not solved. What makes it affordable is that it fails at all, loudly, in the test that forgot — the failure mode the fake was built against was a double answering a call nobody arranged with a plausible empty value, and a null task is not plausible.                                                         |
 | 2026-10-06 | `0006` | risk  | 4 → 3. The larger of the two hazards the rows above record is **retired rather than mitigated**: ADR-0011 supersedes ADR-0003, so the decorator is no longer registered with a library whose `Decorate<>` is order-sensitive and silent, and there is no call a strategy can be registered after. `0049` ran it and replaced the record. What replaces the hazard is narrower and visible — a strategy registered as `ITrackerSource` rather than as `ITrackerSourceStrategy` is handed to consumers in place of the selector, and B-052's composition test asserts what the tracker's source actually is, so the trap fails a test rather than a demo. B-040's unstopped poller stands untouched, which is what keeps this at 3.           |
 | 2026-10-05 | `0004` | risk  | 3, unchanged, and the sentence that said this item's claim list may still change is spent: § 11 row 2 answered it and row 4 answered the last open question. The four hazards the row above names are untouched. What B-010's withdrawal removes is work rather than risk — the response queue and recorded-calls list this item would have had to add to the fake, each a piece of double behaviour fifteen claims would have rested on.                                                                                                                                                                                                                                                                                                   |
+| 2026-10-08 | `0068` | value | 3. A presenter who cannot see a 429 believes the feed stopped; this is the half of the throttle display only the poller can supply.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 2026-10-08 | `0068` | risk  | 3. The due instant must come from the poller's scheduler, not the wall clock, and a refusal must stay data rather than a fault — both pass a careless test.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 Why `0001` carries a `value` and no child does: a child omits it to inherit the
 parent's, and `risk` is never inherited. The derivation of `priority` and `rank`

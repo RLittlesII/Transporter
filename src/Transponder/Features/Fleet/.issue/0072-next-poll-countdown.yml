@@ -1,0 +1,55 @@
+id: "0072"
+type: task
+title: Show when the next poll is due, and when the provider is refusing
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 3
+rank: 51
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0067"
+blocks: []
+spikes: []
+
+spec: src/Transponder/Features/Fleet/.spec/README.md
+
+claims:
+  - B-036
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  The top bar shows when the next poll is due and, while the provider refuses,
+  that the source is throttled and for how long (B-036), bound from the poll
+  status the tracker re-publishes (`fleet-pipeline` B-040). It counts down by
+  a view animation toward the bound instant — allowed under B-017 as amended on
+  2026-10-08 — and shows neither for a source that does not poll.
+
+  Waits on `fleet-pipeline` `0067`. The OpenSky status arrives with
+  `aircraft-source` `0068`, but this item is provable against the tracker's
+  member without it.
+
+  Two traps. A `DispatcherTimer` or `Observable.Interval` in the view model
+  looks like the obvious countdown and is B-017's violation; the animation
+  lives in the view and reads nothing. And the analyzer rule B-017 names
+  (`0039`) must not report a view animation toward a bound value — if it does
+  when this lands, the rule is wrong, not this item.
+
+acceptance_criteria:
+  - "B-036 — next poll and throttling shown from the tracker's status, counted down by a view animation, absent for a push source."
+  - "§ 9 Traceability Matrix carries a row naming a test or a performed review for B-036."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The poll status itself — `fleet-pipeline` `0067` and `aircraft-source` `0068`."
+  - "The analyzer rule for B-017 — `0039`."
