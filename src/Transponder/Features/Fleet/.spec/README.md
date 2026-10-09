@@ -1178,6 +1178,74 @@ The coverage lists take the eleven claims. § 9 names the planned tests for
 B-034 – B-037 and B-039, and each stays `Missing` until its item lands.
 Findings 1 – 6 are answered; the review is the `spec-reviewer`'s to re-read.
 
+**Re-read 2026-10-09 — `spec-reviewer`.** Read against §§ 1-9, the
+`.feature` file, the items `0039`, `0041`, `0071`, `0072` and `0078`, and the
+now-approved `fleet-pipeline` and `aircraft-source`.
+
+Findings 1, 2, 3, 5 and 6 hold. Finding 4 holds with one reservation, which is
+finding 7 below. Mechanically: forty claims, forty § 9 rows, forty-nine
+scenarios. The reviewer counted and records five new findings.
+
+**§§ 1-5**
+
+7. **B-040 and `aircraft-source` B-057 disagree on who publishes the targets —
+   blocking, `spec-author`.** B-040 offers "one choice per strategy
+   registration publishes". B-057, approved on 2026-10-09, says that
+   registration records a name beside each strategy, and that the swap actor
+   answers a request for the targets. B-040 should name the actor's answer,
+   reached through a timed `Ask` (B-017), so that the two Features describe one
+   route.
+8. **Two items still state the claims as they were before they were amended —
+   not blocking, `spec-author`.** Item `0071` says the trail is "extended
+   rather than redrawn", which is half of the amended B-034. Item `0041`'s
+   criterion says "the window's counts beside the latest notice's", which is
+   the wording finding 2 removed. Each item should carry its claim as amended
+   before it moves to `in-progress`.
+
+**§§ 6-7**
+
+9. **A value choice repeats the tracker's default grouping — blocking,
+   `implementer`.** "While no grouping is chosen, it reads
+   `TransportVehicle.GroupKey`, … the key the tracker seeds itself with." That
+   is a second record of the tracker's default, in the type § 7 says
+   "remembers no default". If the seed changes, every value choice matches
+   nothing, and no test fails. The view model should not need to know the key.
+   `fleet-pipeline` B-030 can publish, with each value, the predicate that
+   admits it, or the grouping in force. Either way it is a claim to write there
+   (rule 16), and § 7 then reads it.
+10. **B-040 has no design — blocking, `implementer`.** § 7 still lists
+    `SwapCommand` as an `ICommand` that only `Tell`s. It does not say how the
+    picker gets its targets: the `GetSwapTargets` `Ask` and its timeout, when
+    the view model asks, what it shows while the answer is outstanding, and
+    `SwapSource` carrying a `SwapTarget`. `aircraft-source` § 7 designed the
+    actor's half for `0080`. This Feature's half is `0039`'s, and nothing
+    describes it.
+
+**§§ 8-9**
+
+11. **The § 9 gate is miscounted, and B-040's row has no status — blocking,
+    `test-writer`.** The prose says "thirty of forty rows read `Missing`". The
+    rows show nineteen `Verified`, twenty `Missing`, and B-040 with no status
+    cell at all, so the count is twenty-one of forty once B-040 reads
+    `Missing`. § 8 also plans nothing for B-040, which finding 10's design has
+    to come before.
+
+Not blocking, and recorded so that they are not lost:
+
+- **No item carries the column chooser.** Finding 5's answer says that the
+  cards offer no control that chooses a column for B-012, and that adding one
+  is the page's job. Nothing does that job. It needs an item, or a § 5 row if
+  the person drops it.
+- **The ramp's contrast is measured against `Canvas`, but the ramp is drawn on
+  the map.** § 8 should say why `Canvas` stands in for MapKit's dark style, or
+  name that style's base colour.
+- **Section boundary.** The answer to finding 3 changed § 8's scenario count,
+  and § 8 is the `test-writer`'s section. Finding 6's answer kept the new
+  count, so the `test-writer` has adopted it. No change is needed.
+
+**Verdict: all three rows stay 🟡.** §§ 1-5 wait on finding 7, §§ 6-7 on
+findings 9 and 10, and §§ 8-9 on finding 11.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
