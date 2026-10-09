@@ -1505,6 +1505,18 @@ asserted as the changesets a consumer receives, not as a list read at the end,
 because a stage that holds the old key's values after a regroup passes a count
 and fails the removes. The cases are the `@B-030` scenarios.
 
+Each published choice is also run against vehicles, because B-030 as amended
+binds what admits a value and not only the value. Two cases hold it. First,
+each of the three country choices admits exactly the aircraft registered in
+its country and rejects the fourth, which fails a predicate that compares
+case-insensitively or reads the vehicle's filtered position. Second, a choice
+captured before a regroup is gone from the changesets after it, and is still
+run against a vehicle: it admits by country, the key that produced it, and not
+by staleness. That fails a predicate reading `_groupBy`'s current value
+instead of the stage's own grouping, which a value-only assertion passes. The
+test class is `FleetGroupingValuesTests`, first test
+`GivenFourAircraftInThreeCountries_WhenTheGroupingValuesAreRead_ThenEachChoiceAdmitsExactlyItsCountry`.
+
 **What none of them proves:** the filter control offering a value, which is
 `fleet-dashboard` `0078`.
 
@@ -1635,7 +1647,7 @@ asks for.
 | B-027    | `@B-027` | `FleetNoticeTests.GivenNoChangesetForLongerThanTheThreshold_WhenTheClockAdvances_ThenAQuietNoticeIsRaisedOnceAndTheNextChangesetResumes` — one quiet notice, none on the next advance, and a resumed notice carrying what moved — `0033`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Verified |
 | B-028    | `@B-028` | `FleetTrackerTests.GivenTwoSubscribers_WhenBothAreBound_ThenTheSeamIsConnectedOnceAndTheStagesStopWhenTheLastUnsubscribes` — one connection, one filter evaluation per changeset, and teardown on the last unsubscribe                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verified |
 | B-029    | `@B-029` | `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsFiltersAreRead_ThenEachCarriesANameAndAPredicateThatAdmitsAndRejects` — the curated choices, each admitting one synthetic vehicle and rejecting another, with an empty fleet never consulted — `0037`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Verified |
-| B-030    | `@B-030` | [`0056`](../.issue/0056-distinct-grouping-values.yml) — the distinct-value stage is not built; nothing in the repository publishes the values the current grouping key takes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
+| B-030    | `@B-030` | [`0056`](../.issue/0056-distinct-grouping-values.yml) — planned: `FleetGroupingValuesTests` for the `@B-030` scenarios and the two choice cases § 8 lists, `GivenFourAircraftInThreeCountries_WhenTheGroupingValuesAreRead_ThenEachChoiceAdmitsExactlyItsCountry` first                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
 | B-031    | `@B-031` | `ObservedInstantTests.GivenAPollThatChangedNothing_WhenItReportsAnInstant_ThenTheTrackerPublishesItAnyway` — the case the notices cannot cover, and the one a `DistinctUntilChanged` would swallow; with `GivenAnInstantFromARecording_WhenItIsPublished_ThenItIsTheProvidersValueAndNotAWallClockRead` for the replayed instant, `GivenNoPollHasHappened_WhenAConsumerSubscribes_ThenItReadsTheInstantInForceBeforeAnyAdvance` for the emission a subscription is, and `GivenASubscriberToTheObservedInstant_WhenTheTrackerIsDisposed_ThenTheStreamCompletesAndNoFurtherInstantArrives` for B-004 over this member — `0059`                                                                                                                                                                                                                                                                                             | Verified |
 | B-032    | `@B-032` | `GreatCircleTests.GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres`; `FleetMovementTests.GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`, `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`, `GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged` and `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`, on [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                                                                                                                                                                                                                                                                                                                                | Verified |
 | B-033    | `@B-033` | `FleetMovementTests.GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`, `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`, `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs` and `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`, on [`0062`](../.issue/0062-movement-on-the-element.yml). The filter test fails with the stage moved below the filter, checked on `0062`                                                                                                                                                                                                                                                                                                                                                                                                            | Verified |
@@ -1777,7 +1789,7 @@ the draft it replaced.
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟢 Approved |
 | §§ 6-7   | implementer | 🟡 Draft    |
-| §§ 8-9   | test-writer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2175,6 +2187,13 @@ by the value, with a predicate that closes over the grouping that produced it.
 the `test-writer`'s to add: each choice admits exactly its own vehicles, and
 after a regroup a choice from the old key is gone instead of admitting by the
 new key. That change lowers §§ 8-9 when it is written.
+
+**Amended 2026-10-09 — § 8's plan for `0056`, by `test-writer`, for B-030 as
+agreed.** Two cases run each published choice against vehicles: each country
+choice admits exactly its own aircraft, and a choice captured before a regroup
+is removed and still admits by the key that produced it. § 9's B-030 row
+names `FleetGroupingValuesTests` and stays `Missing` until `0056` builds it.
+§§ 8-9 are lowered to 🟡. The `spec-reviewer` re-reads §§ 6-9 next.
 
 ## Decisions
 
