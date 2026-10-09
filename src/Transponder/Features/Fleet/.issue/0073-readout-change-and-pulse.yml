@@ -2,7 +2,7 @@ id: "0073"
 type: task
 title: Show the change on a readout that moved, and pulse it once
 
-status: in-progress
+status: in-review
 
 priority: medium
 value: 3

@@ -2,7 +2,7 @@ id: "0070"
 type: task
 title: Show the fleet as cards that say where each aircraft is and how far it moved
 
-status: in-progress
+status: done
 
 priority: high
 value: 5
@@ -31,7 +31,7 @@ claims:
 
 created: "2026-10-08"
 updated: "2026-10-08"
-closed: null
+closed: "2026-10-08"
 
 summary: |
   The grid becomes cards (B-029), laid out from the description's card roles
