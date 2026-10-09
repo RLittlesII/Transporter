@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Fleet pipeline
@@ -1096,14 +1096,18 @@ One member, added to `IFleetTracker` and written out because its file does not
 exist yet:
 
 ```csharp
-/// <summary>Gets the distinct values the current grouping key takes across every vehicle the source reports (fleet-pipeline B-030).</summary>
-IObservable<IChangeSet<string, string>> GroupingValues { get; }
+/// <summary>Gets a choice per distinct value the current grouping key takes across every vehicle the source reports, keyed by the value (fleet-pipeline B-030).</summary>
+IObservable<IChangeSet<FleetFilterChoice, string>> GroupingValues { get; }
 ```
 
-Each value is its own key, which is what DynamicData's `DistinctValues` emits
-(`IDistinctChangeSet<string>` is an `IChangeSet<string, string>`), so a
-consumer binds it as it binds the groups, and the filter control offers a
-choice per element (`fleet-dashboard` B-039). No new type.
+Each element is a `FleetFilterChoice`, the type a description's choices
+already are (B-029). Its `Name` is the value, and its `Matches` admits exactly
+the vehicles whose key, under the grouping that produced it, equals the value
+by ordinal comparison. Each element is keyed by the value. A consumer binds it
+as it binds the groups and offers each element as it stands
+(`fleet-dashboard` B-039), naming no key and keeping no default. No new type.
+Amended 2026-10-09 from `IChangeSet<string, string>`, which carried the value
+and not what admits it (B-030 as amended, § 12).
 
 - **It reads `_reported`, before the filter.** The split is the one the window
   of recent changes needs (`0066`, above); whichever of `0056` and `0066` lands
@@ -1116,9 +1120,19 @@ choice per element (`fleet-dashboard` B-039). No new type.
   answering differently removes it, and a vehicle updated to the same answer
   emits nothing. It emits adds and removes only, so no consumer sees an update
   to a value.
+- **The predicate closes over the grouping that produced the value.** Inside
+  the `Select` below, each value goes through `.Transform(value =>
+new FleetFilterChoice { Name = value, Matches = vehicle =>
+string.Equals(grouping.Key(vehicle), value, StringComparison.Ordinal) })`.
+  `DistinctValues` emits an `IDistinctChangeSet<string>`, which is an
+  `IChangeSet<string, string>`, so `Transform` keeps the value as its key.
+  The grouping is the stage's own argument, not `_groupBy.Value`, so a choice
+  admits by the key that produced it, even in the instant before `Switch`
+  removes it. Nothing reads the tracker's default, because the default is
+  simply the first grouping `_groupBy` carries.
 - **A new grouping key switches the stage; it does not re-read the key.**
   `_groupBy.Select(grouping => _reported.DistinctValues(moved =>
-grouping.Key(moved.Vehicle))).Switch()` — DynamicData's changeset `Switch`,
+grouping.Key(moved.Vehicle)).Transform(…)).Switch()` — DynamicData's changeset `Switch`,
   which on each new key removes every value the old stage published and then
   adds the new stage's. The new stage's values come from the snapshot the
   cache-aware `RefCount()` on `_reported` hands a stage connecting, so a
@@ -1762,7 +1776,7 @@ the draft it replaced.
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 6-7   | implementer | 🟡 Draft    |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
@@ -2151,6 +2165,16 @@ sections that have not changed.
 
 **Agreed 2026-10-09 by the person: B-030 as amended.** §§ 1-5 are back to 🟢,
 and all three rows are 🟢 again, so `spec_status` is `approved`.
+
+**Amended 2026-10-09 — § 7's `GroupingValues`, by `implementer`, for B-030 as
+agreed.** The member now publishes a `FleetFilterChoice` for each value, keyed
+by the value, with a predicate that closes over the grouping that produced it.
+§§ 6-7 are lowered to 🟡, and `spec_status` to `in-review`.
+
+§ 8's plan for `0056` asserts values, not what admits them. One more case is
+the `test-writer`'s to add: each choice admits exactly its own vehicles, and
+after a regroup a choice from the old key is gone instead of admitting by the
+new key. That change lowers §§ 8-9 when it is written.
 
 ## Decisions
 
