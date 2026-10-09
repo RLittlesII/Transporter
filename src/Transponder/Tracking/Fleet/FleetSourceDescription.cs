@@ -31,4 +31,12 @@ public sealed record FleetSourceDescription
     /// <summary>Gets which columns fill a card, every role empty when the source names none (B-036).</summary>
     /// <remarks>Here rather than on the tracker, so a swap replaces the card with the columns it names (B-021).</remarks>
     public FleetCard Card { get; init; } = new();
+
+    /// <summary>Gets the detail pane's lines, in reading order, empty when the source names none (B-043).</summary>
+    /// <remarks>
+    /// Columns like the grid's, so the pane reads a line as the search reads a cell and names no
+    /// subclass: a field only one kind of vehicle reports is read here, in the per-source file a
+    /// swap replaces (B-022).
+    /// </remarks>
+    public IReadOnlyList<FleetColumn> Detail { get; init; } = [];
 }

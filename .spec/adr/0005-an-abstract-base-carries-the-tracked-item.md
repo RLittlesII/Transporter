@@ -1,6 +1,6 @@
 ---
 title: "ADR-0005: An abstract base carries the tracked item"
-description: "TransportVehicle is an abstract class, not an interface, so shared derivation lives once and the per-source parts are compiler-enforced; one level of derivation, and no downcast outside the detail pane."
+description: "TransportVehicle is an abstract class, not an interface, so shared derivation lives once and the per-source parts are compiler-enforced; one level of derivation, and no downcast outside a source's own description."
 type: adr
 ---
 
@@ -67,10 +67,15 @@ Two facts force it:
 5. **The base carries no `virtual` member nothing overrides**, and no member
    hoisted onto it so that a view can reach it. A field only one source reports
    is not shared.
-6. **The detail pane is the only place a concrete type appears.** Everywhere
-   else — cache, filters, comparers, aggregates, bindings — is written against
-   the base, and a downcast outside that one surface is the swap breaking a line
-   at a time.
+6. **A source's own description is the only place a concrete type appears.**
+   Everywhere else — cache, filters, comparers, aggregates, bindings, the
+   detail pane — is written against the base, and a downcast outside the
+   description is the swap breaking a line at a time. _Amended 2026-10-09:_ this
+   item named the detail pane until the person's review of `fleet-dashboard`
+   `0038` found the pane's view model switching on `Aircraft` and converting
+   units `DisplayUnit` already owned; the pane now reads detail lines the
+   description names (`fleet-pipeline` B-043), the per-source file a swap
+   replaces, which `fleet-pipeline` B-022's exception already allowed to cast.
 7. **Canonical units are canonical in the model.** The model stores what the
    wire reported; display units are a view concern, converted in an explicitly
    named method, and a converted value never replaces the canonical one.

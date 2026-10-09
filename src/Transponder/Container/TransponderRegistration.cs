@@ -64,6 +64,7 @@ public static class TransponderRegistration
         services.AddAircraftReplay(configuration);
         services.AddFleetTracking();
         services.AddTransient<FleetViewModel>();
+        services.AddTransient<FleetSummaryViewModel>();
 
         return services;
     }

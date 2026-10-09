@@ -616,6 +616,15 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When it carries none of the four values
      Then each readout reads "—"
 
+  @B-043
+  Scenario: The detail pane's lines are the description's
+    Given the aircraft description
+     When its detail lines are read
+     Then they include ICAO24, squawk, category, GPS altitude, on the ground and position source
+      And each altitude, speed and rate reads in its display unit, as the card's readouts do
+     When a description names no detail lines
+     Then the list is empty, and a pane shows none
+
   # ───────────────────────── The poll status ─────────────────────────
 
   @B-040

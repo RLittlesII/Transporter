@@ -22,8 +22,8 @@ carries the traps around them, not a second copy of either.
 non-abstract on the base and the per-source answers `abstract`.
 [ADR-0005](../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)
 § Decision states the seven rules that follow from that — the members, the
-`protected` constructor, the one level, and the detail pane being the only place
-a concrete type appears. Read it rather than a summary of it; what fields a
+`protected` constructor, the one level, and a source's own description being the
+only place a concrete type appears. Read it rather than a summary of it; what fields a
 given source reports is the specification's, in `README.md` and the Feature's
 `.spec/README.md`.
 
@@ -54,7 +54,7 @@ Guinea is a real place.
 - A wire-shaped positional payload past the client boundary. That shape is a
   transport detail and dies at the converter.
 - A stored staleness flag. Derive it on the base.
-- A downcast, `is` check or `switch` on a subclass outside the detail pane. That
-  is the swap breaking, one line at a time.
+- A downcast, `is` check or `switch` on a subclass outside a source's own
+  description. That is the swap breaking, one line at a time.
 - A third level of inheritance.
 - A subclass-specific member hoisted onto the base so a view can reach it.

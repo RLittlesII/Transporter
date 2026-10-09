@@ -71,10 +71,11 @@ In practice:
 - Views bind the abstract domain type plus a **source-supplied column and label
   description** ([`domain-model`](../domain-model/SKILL.md)). No concrete
   subclass in a grid cell, no cast.
-- **The detail pane is the only place a subclass appears**
+- **No surface names a subclass, the detail pane included**
   ([ADR-0005](../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)
-  item 6). It is the one surface allowed to care which kind of item it is
-  showing, and the one place a downcast is legitimate.
+  item 6). A field only one kind of item reports reaches the pane as a line the
+  source's description names, already in its display unit; the description is
+  the one place a downcast is legitimate.
 - A sort comparer or filter predicate is supplied by the source description too,
   so swapping sources swaps the available columns without touching markup.
 - The grid, filters, sorts, groups and bindings are built once and survive the
@@ -106,7 +107,7 @@ is something only a reader can check.
 - XAML for new UI, or a markup file for something C# markup can express.
 - A fetch, poll, timer or `HttpClient` call in a view or view model.
 - A mutation of the cache from the UI.
-- A downcast or type check on the domain base outside the detail pane.
+- A downcast or type check on the domain base in a view or view model.
 - A view that must be edited to show a different source.
 - A UI test runner, a device or simulator test, or a screenshot comparison
   (ADR-0014).
