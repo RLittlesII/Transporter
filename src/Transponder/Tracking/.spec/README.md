@@ -1357,12 +1357,47 @@ findings above would have blocked it anyway.
 the answers to its open questions, so the approval above was given to an
 agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
 §§ 6-7 on a § 7 that says how they are built — it says so for `0062`'s three
-claims and for nothing else yet. Until those rows are re-earned, **no item of
+claims and `0064`'s two, and for nothing else yet. Until those rows are re-earned, **no item of
 this Feature** moves to `in-progress` — `0062` – `0067`, and `0056` with them,
 whose claims did not change — unless the person waives this for that named
 item. `spec_status` is
-`in-review` meanwhile. §§ 8-9 reopened the same day: § 8 has no strategy for
-the new claims, and § 9 names items where it will name tests.
+`in-review` meanwhile. §§ 8-9 reopened the same day: § 8 has a strategy for
+`0062`'s and `0064`'s claims and none for the rest, and § 9 names items where it
+will name tests for B-030, B-034, B-035 and B-037 – B-040.
+
+**Reviewed 2026-10-08 for `0064` — B-036, B-042, § 7's card design and § 8's
+plan.** `spec-reviewer` read them against the item, the consumer claims in
+`fleet-dashboard` (B-007, B-010, B-018, B-019, B-029, B-038) and ADR-0005, then
+read the answers to the findings again. Two findings were blocking, and both are
+closed. B-042 lost its only SHALL along with the consumer clause, which left two
+permissions that an implementation naming no delta would satisfy. It now says
+what a named delta returns. And § 8's case of 9,000 m to 9,000.1 m could not
+fail for the reason it named: a subtraction before rounding also yields none
+there. It is now labelled as the raw-comparison case, and 8,999.95 m to
+9,000.01 m, "▲ +1 ft", is the case that catches the subtraction. Seven
+non-blocking findings are closed too:
+
+- the § 3 paragraph cites `fleet-dashboard` B-019 as what forbids a view model
+  subtracting;
+- § 7 says that search now matches the readout cells (`fleet-dashboard` B-010),
+  names the two code remarks `0064` rewrites, and puts U+2212 on a negative
+  cell;
+- § 8 asserts the aircraft's empty place, has B-021's test read the card, and
+  adds a descending vertical rate;
+- § 9 names the planned tests, still `Missing`;
+- the item's acceptance criteria admit an empty role.
+
+The stale sentence about § 7 in the paragraph above is corrected. Every expected
+value in § 7 and § 8 was recomputed from 0.3048 m to the foot and 1,852 m to the
+nautical mile, and every one holds. Nothing contradicts B-010, B-020 – B-022,
+§ 5 row 12, § 11 row 3 or ADR-0005 item 7. The swap test holds, because the card
+is replaced along with the description. One wording note is non-blocking and
+left to `spec-author`: B-042's last case of none, an element with no replaced
+vehicle, belongs to the readout's `Change` and not to the delta, which never
+sees an element. The planned test holds the behaviour either way. **Verdict:
+§§ 3 (B-036 and B-042), 6-7 and 8-9 are complete for `0064`.** The rows stay
+🟡: the other new claims are unreviewed, and there is no partial status. So
+`0064` starts only if the person waives the gate for it by name.
 
 ## Decisions
 
