@@ -74,8 +74,14 @@ public sealed class FleetViewModel : RxObject, IDisposable
                 Columns = description.Columns;
                 Groupings = description.Groupings;
                 Filters = description.Filters;
+                Card = description.Card;
                 Filter();
             })
+            .DisposeWith(_garbage);
+        tracker
+            .Observed
+            .ObserveOn(schedulers.UserInterfaceThread)
+            .Subscribe(instant => Observed = instant)
             .DisposeWith(_garbage);
     }
 
@@ -104,6 +110,14 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
     /// <summary>Gets the live source's columns, in the order it published them (B-007).</summary>
     public IReadOnlyList<FleetColumn> Columns { get; private set => RaiseAndSetIfChanged(ref field, value); } = [];
+
+    /// <summary>Gets which of the live source's columns fill a card's roles (B-029, `fleet-pipeline` B-036).</summary>
+    /// <remarks>Replaced with the description, so a swap re-lays every card and no markup names a column.</remarks>
+    public FleetCard Card { get; private set => RaiseAndSetIfChanged(ref field, value); } = new();
+
+    /// <summary>Gets the instant the provider last reported, which a card's age is measured from (B-031).</summary>
+    /// <remarks>Re-published from the tracker, never read from a wall clock, so a replay shows the ages it recorded.</remarks>
+    public DateTimeOffset Observed { get; private set => RaiseAndSetIfChanged(ref field, value); } = DateTimeOffset.MinValue;
 
     /// <summary>Gets what the live source can be grouped by (B-007).</summary>
     public IReadOnlyList<FleetGrouping> Groupings { get; private set => RaiseAndSetIfChanged(ref field, value); } = [];

@@ -196,6 +196,36 @@ public class FleetViewModelTests
         groupings.Should().Equal([category], "the grouping handed over is the description's");
     }
 
+    /// <summary>
+    /// B-029 and B-031. A card is laid out from the description's roles and ages from the observed
+    /// instant, so both reach the page through this view model and neither is invented here. The
+    /// hazard is a card that names the columns it shows, or measures age against the device clock,
+    /// which a replay would show as every aircraft years silent.
+    /// </summary>
+    [Fact]
+    public void GivenADescriptionAndAnObservedInstant_WhenTheyArrive_ThenTheCardRolesAndTheInstantAreTheTrackers()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        FleetSourceDescription description = new FleetSourceDescriptionFixture();
+        var card = new FleetCard { Title = description.Columns[0] };
+        var observed = new DateTimeOffset(2026, 10, 8, 14, 32, 10, TimeSpan.Zero);
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(Observable.Never<IChangeSet<TrackedVehicle, string>>());
+        tracker.Order.Returns(Observable.Return(ByKey));
+        tracker.Description.Returns(Observable.Return(description with { Card = card }));
+        tracker.Observed.Returns(Observable.Return(observed));
+
+        // When
+        FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
+        scheduler.Start();
+
+        // Then
+        sut.Card.Should().BeSameAs(card, "the card's roles are the description's");
+        sut.Observed.Should().Be(observed, "age is measured from the instant the provider reported");
+    }
+
     /// <summary>One vehicle as the pipeline publishes it, keyed so the bound order is readable.</summary>
     /// <param name="key">The key, which is also the label while the callsign is absent.</param>
     /// <returns>The element the fleet stream carries.</returns>
