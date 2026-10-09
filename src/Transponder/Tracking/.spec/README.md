@@ -661,7 +661,9 @@ Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle, SharedLatest
+src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle, SharedLatest, NearestPlace, PlaceEntry
+src/Transponder/Tracking/Sources/  AircraftFleetDescription, GazetteerPlaces.g.cs (generated)
+tools/Transponder.Gazetteer/       the generator, run deliberately
 src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, DisplayUnit, FleetGroup, FleetSummary, FleetNotice, FleetNoticeWindow
 ```
 
@@ -1113,6 +1115,93 @@ grouping.Key(moved.Vehicle))).Switch()` — DynamicData's changeset `Switch`,
   arrives, on the thread that delivered it; staleness does not touch them,
   because a stale vehicle is still reported, and B-016 keeps it.
 
+**The place under a vehicle (B-038), designed for `0065`**
+
+Three parts, and only the first is generic: a nearest-place search any source's
+description can use, a table generated for the aircraft, and the tool that
+generates it. Declared here because none of their files exist yet:
+
+```csharp
+/// <summary>One entry in a place table compiled into the application (fleet-pipeline B-038).</summary>
+internal sealed record PlaceEntry(string Name, GeoPosition Point);
+
+/// <summary>The nearest entry in a compiled table, bounded, and the column that shows it (fleet-pipeline B-038).</summary>
+internal static class NearestPlace
+{
+    /// <summary>The entry nearest the position by great-circle distance, none when every entry is farther than the bound.</summary>
+    internal static Option<PlaceEntry> Within(IReadOnlyList<PlaceEntry> table, GeoPosition position, double boundMetres);
+
+    /// <summary>A column naming that entry, the position's coordinates past the bound, and <see cref="DisplayUnit.Missing"/> with no position.</summary>
+    internal static FleetColumn Column(string name, IReadOnlyList<PlaceEntry> table, double boundMetres);
+
+    /// <summary>A position as a cell reads it — "29.700, -95.200".</summary>
+    internal static string Coordinates(GeoPosition position);
+}
+```
+
+- **The search is generic, and the bound belongs to the description.**
+  `NearestPlace` sits in `Tracking/` beside `GreatCircle`, whose `Metres` it
+  measures with (B-032's distance, as B-038 requires). It knows no source and
+  no table: the aircraft description calls `NearestPlace.Column("Place",
+GazetteerPlaces.Table, 10_000)`, so the ten kilometres is the aircraft's, as
+  B-038 says, and another source names its own table and bound or offers no
+  place at all. Two entries at the same distance are broken on `Name`,
+  ordinally, so a cell never flickers between them.
+- **The column joins the description as its ninth, and fills the card's place
+  role.** B-036 makes a filled role one of `Columns`, the instance, so the
+  place column is added to `Columns` after "Position" and assigned to
+  `Card.Place`. It has no comparer: sorting by the nearest town is not a
+  question anyone asks of a fleet. The "Position" column's formatting moves to
+  `NearestPlace.Coordinates`, so a position past the bound reads exactly as the
+  "Position" cell does, and the two cannot drift.
+- **No position is `DisplayUnit.Missing`**, the dash the readouts use, not
+  "no fix" — that is the "Position" column's cell, and B-038 says neither a
+  place nor coordinates. Showing nothing on the card is the dashboard's choice
+  (`fleet-dashboard` `0070`).
+- **The table is source.** `GazetteerPlaces` in `Tracking/Sources/`, beside
+  `AircraftFleetDescription`, in a file named `GazetteerPlaces.g.cs`: an
+  `internal static class` whose `Table` is a collection expression of
+  `PlaceEntry` values. No `File`, `Stream`, `Assembly.GetManifestResourceStream`
+  or embedded resource is involved, which is what makes B-038's "no file or
+  resource read" a review of one file rather than a property to test, and what
+  keeps the Mac Catalyst sandbox from refusing it silently. Rejected: an
+  embedded CSV read on first use — a resource read, and the one B-038 names.
+- **The description takes the table as an argument, so a test can give it
+  another.** `AircraftFleetDescription.Offered` becomes
+  `Describe(GazetteerPlaces.Table)`, and `Describe` is `internal`. The `@B-038`
+  scenario holding one entry, "Pasadena", hands it a one-entry table; nothing
+  else in the description changes with the table.
+- **A linear scan, rejecting the far latitudes first.** The trimmed table is a
+  few hundred entries. `Within` skips an entry whose latitude differs by more
+  than the bound's arc — ten kilometres is under a tenth of a degree — before
+  measuring it, and measures the rest. Rejected: a spatial index, which buys
+  nothing at this size and is a second structure to keep in step with a
+  generated file; and remembering each vehicle's last answer, which is a store
+  keyed by vehicle beside the fleet (B-002). The cell is evaluated when a view
+  reads it, not per poll, so its cost is the cards on screen times the table.
+  The item reports the generated table's entry count and one timed scan in its
+  pull request; if either surprises, it says so there.
+- **The generator is a tool, run deliberately.** `tools/Transponder.Gazetteer`,
+  beside `0052`'s `Transponder.SampleRecording`, and referenced by
+  `UnitTests.csproj` the way that one is. It reads a Gazetteer places file the
+  person downloaded — a path argument, not a download of its own, because the
+  Census Bureau names the file by year — and a box as four arguments, since the
+  box has no compiled default (`aircraft-source` B-050). It writes
+  `GazetteerPlaces.g.cs` with CRLF line endings and an `<auto-generated/>`
+  header that names the input file, the box, the margin and the entry count,
+  and says the file is regenerated, never edited. It is never part of a build.
+- **It trims to the box plus the bound.** An aircraft inside the box near its
+  edge is nearest a town just outside it; a table trimmed to the box itself
+  would read that aircraft as coordinates while the town sits nine kilometres
+  away. So the generator keeps every entry within ten kilometres of the box.
+- **It names a place as a person says it.** The Gazetteer's `NAME` carries the
+  place's legal description — "Pasadena city", "Channelview CDP". The generator
+  drops the trailing description the `LSAD` column codes, so the entry is
+  "Pasadena". No state suffix: every place in the Houston box is in Texas, and
+  a box that crosses a state line is a regeneration this table does not
+  foresee. Every place type is kept, census-designated places included, because
+  Channelview and Mission Bend are where people live.
+
 **No open decisions.**
 
 `AutoRefresh` was the one open block here, and it is closed:
@@ -1293,6 +1382,18 @@ and fails the removes. The cases are the `@B-030` scenarios.
 **What none of them proves:** the filter control offering a value, which is
 `fleet-dashboard` `0078`.
 
+**What `0065` will prove, planned 2026-10-08.** B-038, in two places.
+`NearestPlace` and the aircraft description's place column through
+`Describe` with a synthetic table — positions set at known great-circle
+distances from an entry, which `GreatCircleTests` already arranges. The
+generator through a synthetic places file of a few rows, written by the test,
+never the Census file itself. The cases that fail a wrong implementation are
+the `@B-038` scenarios. What no test can make — that nothing reachable from the
+column reads a file or resource — is the review § 9's row already names.
+
+**What none of them proves:** how a card shows the place, which is
+`fleet-dashboard` `0070`.
+
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
 about which types may reference which is an analyzer diagnostic, and nothing is
@@ -1301,7 +1402,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — seventy-two scenarios, each tagged with the `@B-00n` it proves.
+this file — seventy-four scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason

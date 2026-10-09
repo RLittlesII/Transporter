@@ -510,6 +510,20 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When its place column is read for an aircraft with no position
      Then it yields neither a place nor coordinates
 
+  @B-038
+  Scenario: A place just outside the box names an aircraft inside it
+    Given a places file holding "Edgewater city", a synthetic entry, four kilometres east of the box's eastern edge
+     When the table is generated for the box
+     Then it holds "Edgewater"
+     When the aircraft description's place column is read for a position inside the box, five kilometres from Edgewater
+     Then it yields "Edgewater"
+
+  @B-038
+  Scenario: The table names a place as a person says it
+    Given a places file holding "Pasadena city" and "Channelview CDP"
+     When the table is generated
+     Then its entries are "Channelview" and "Pasadena"
+
   @B-039
   Scenario: The recent notices are a window the tracker keeps
     Given twenty-five changesets that each changed something
