@@ -35,15 +35,24 @@ summary: |
   Depends on nothing open: notices are raised by `0033`'s stage, on `main`.
   `fleet-dashboard` `0041` waits on this one.
 
-  One trap. A window built over a consumer's paced stream holds what that
+  The window is kept once in the shared stages, beside the trail and the
+  running total, and goes when the last consumer does (§ 4 row 15).
+
+  Two traps. A window built over a consumer's paced stream holds what that
   consumer happened to see; it is built over the notices as raised, before any
-  rate cap.
+  rate cap. And it cannot be built over `Notices()`, whose quiet timing is per
+  subscription (B-027): it is built from the shared changesets, so every entry
+  is `Updated`, and the changeset ending a silence enters with its counts.
 
 acceptance_criteria:
-  - "B-039 — the last twenty notices, oldest first, unthinned by any consumer's pacing."
+  - "B-039 — the last twenty `Updated` notices, oldest first, unthinned by any consumer's pacing, shared by every consumer subscribed at once and emptied at teardown."
   - "§ 9 Traceability Matrix carries a row naming a test for B-039."
 
-decisions: []
+decisions:
+  - "2026-10-08 — the person — the window is shared in the stages and emptied
+    at teardown, and holds `Updated` notices only (fleet-pipeline B-039, § 4
+    row 15). Rejected: a window per subscription, starting empty; a window that
+    outlives its consumers, which breaks B-004 and B-028."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

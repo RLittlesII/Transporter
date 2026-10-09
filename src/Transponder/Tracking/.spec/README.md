@@ -63,6 +63,37 @@ the cell is still a formatted string, as row 3 decided, and the arithmetic lives
 in the per-source description beside the unit conversion it needs. B-038 gained
 the bound row 8 chose.
 
+**B-035 was amended, and B-034 confirmed, on 2026-10-08**, before `0063` was
+designed, from the 2026-10-08 review's findings 4 and 3 (§ 12). B-035 measured
+a gap from the trail point before, which is the last _move_, not the last
+_report_: an aircraft parked for ten minutes and reporting every fifteen seconds
+would get a gap the moment it taxied, though the feed never fell silent. It now
+measures from the vehicle the update replaced, which is the last report
+(B-041), against the threshold in force when the point is added. B-034 already
+said a point is added only when the position moves, and its scenario agreed;
+`0063`'s summary said an update that changes the altitude alone adds one too.
+The person chose the claim: no point without a move, because a parked
+aircraft's barometric jitter would fill the bound with points of zero length and
+push the path out. The item is corrected.
+
+**B-039 was amended on 2026-10-08**, by the person, answering the first
+2026-10-08 review's finding 5, which no row recorded until now: a window of the
+last twenty is state, and B-039 said neither where it lives nor for how long.
+B-004 forbids the tracker a subscription of its own while nothing is
+subscribed, and B-028 tears the stages down when the last subscriber goes, so a
+window that outlived its consumers would have broken both — and kept polling a
+provider nobody was watching, spending the credits B-028 exists to save. The
+window is kept once in the shared stages, beside the trail and the running
+total, and goes with them (§ 4 row 15). Rejected: a window per subscription,
+starting empty, which would show two consumers two different rates. B-039 also
+names the notices it windows: `Updated` ones only, one per changeset that
+changed something. Whether a silence happened is timed per subscription
+(B-027), so a shared window cannot know it: no `Quiet` notice enters, and the
+changeset that ends a silence — which a subscription's own notices call
+`Resumed` — enters as `Updated`, with its counts, because it changed the fleet
+like any other. A change-rate sparkline has no use for a silence, which the
+toast reports already.
+
 **B-036 and B-042 were amended on 2026-10-08**, before `0064` was designed,
 because each ended in a clause obliging a consumer this Feature does not build:
 "no consumer SHALL fill it with a member of its own choosing" and "no consumer
@@ -132,50 +163,50 @@ Claim ids are scoped to this specification. This Feature's `B-001` is not
 (`transponder-conventions` § "Claim ids are `B-00n`"). Where a claim of the other
 Feature is cited it is written with its Feature's name.
 
-| ID    | Claim                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Source                                                                                        |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| B-001 | The pipeline SHALL be constructed once, from `ITrackerSource.Connect()`, and SHALL NOT be rebuilt, re-subscribed or re-bound because the live source changed.                                                                                                                                                                                                                                                                                                                                                                                                             | dynamic-data-pipeline § "The spine"; `aircraft-source` B-042                                  |
-| B-002 | The pipeline SHALL publish the fleet as a stream of changesets whose element carries the vehicle and its derived stale mark, and SHALL NOT own a bound collection; no tracker, pipeline stage or aggregate SHALL hold a second store of tracked items. What a consumer does with the stream is `fleet-dashboard` B-005's (§ 5 row 9).                                                                                                                                                                                                                                     | ADR-0009; dynamic-data-pipeline § "Never add"; mvvm § "Projecting state back"                 |
-| B-003 | Every change to that collection SHALL arrive through the pipeline; no code SHALL add to, remove from, clear or reorder it imperatively.                                                                                                                                                                                                                                                                                                                                                                                                                                   | `aircraft-source` B-044; dynamic-data-pipeline § "Never add"                                  |
-| B-004 | Disposing the tracker SHALL complete every stream it publishes and dispose everything it created; while nothing is subscribed the tracker SHALL hold no subscription of its own. A source swap SHALL dispose nothing the pipeline needs and leak nothing it replaced.                                                                                                                                                                                                                                                                                                     | dynamic-data-pipeline § "Keep the pipeline the thing that does the work"                      |
-| B-005 | Every scheduler the pipeline uses SHALL be one it was given, and it SHALL NOT read `CurrentThreadScheduler`, `TaskPoolScheduler` or any other ambient scheduler inline; it SHALL NOT marshal to a user-interface thread on a consumer's behalf, because that is the consumer's boundary.                                                                                                                                                                                                                                                                                  | ADR-0009; mvvm § "Projecting state back"; `SchedulerProvider` remarks                         |
-| B-006 | Filtering SHALL be driven by a predicate value the caller hands the tracker: a new predicate SHALL re-evaluate the existing items and SHALL NOT re-subscribe to the source or refetch anything.                                                                                                                                                                                                                                                                                                                                                                           | dynamic-data-pipeline § "The spine"; README.md § "DynamicData operators"                      |
-| B-007 | Before any caller sets a predicate, every vehicle the source reports SHALL be visible; the tracker SHALL hold that default itself rather than waiting for one, and an absent filter SHALL NOT be an empty fleet.                                                                                                                                                                                                                                                                                                                                                          | Decided call — an empty grid at startup reads as a broken feed                                |
-| B-008 | No filter SHALL be applied by enumerating or editing the bound collection, and none SHALL be re-evaluated by a UI event handler.                                                                                                                                                                                                                                                                                                                                                                                                                                          | maui-ui § "The UI reads; it never drives"                                                     |
-| B-009 | Sorting SHALL be driven by a comparer value the caller hands the tracker: a new comparer SHALL reorder the **existing item instances**, and SHALL NOT re-fetch them, rebuild a stage or re-subscribe to the seam. Which notification a bound collection raises for that reorder is the binding adapter's (amended 2026-10-06, below).                                                                                                                                                                                                                                     | dynamic-data-pipeline § "The spine"; maui-ui § "The UI reads"                                 |
-| B-010 | Every comparer SHALL come from the live source's description (B-020) and SHALL compare using members of `TransportVehicle` only.                                                                                                                                                                                                                                                                                                                                                                                                                                          | maui-ui § "The swap test"; ADR-0005 item 6                                                    |
-| B-011 | A comparer SHALL break ties on `Key`, so the order is total and two sorts of an unchanged fleet produce the same sequence.                                                                                                                                                                                                                                                                                                                                                                                                                                                | Decided call — rows swapping places on an unchanged fleet reads as churn                      |
-| B-012 | Grouping SHALL be driven by a grouping chosen from the description and handed to the tracker, and changing it SHALL regroup the existing items without rebuilding the pipeline.                                                                                                                                                                                                                                                                                                                                                                                           | README.md § "UI features"; dynamic-data-pipeline § "The spine"                                |
-| B-013 | `TransportVehicle` SHALL declare the grouping answer as an `abstract` member, so a new source cannot inherit one; `Aircraft` SHALL answer with its origin country.                                                                                                                                                                                                                                                                                                                                                                                                        | ADR-0005 item 2; README.md § "DynamicData operators"                                          |
-| B-014 | Each group SHALL carry its count of vehicles and its count of stale vehicles, derived from the same stream, and neither SHALL be computed by enumerating a collection bound from it.                                                                                                                                                                                                                                                                                                                                                                                      | README.md § "UI features"; dynamic-data-pipeline § "The spine"                                |
-| B-015 | A fleet-wide summary — vehicles tracked, vehicles stale, groups present — SHALL derive from the same stream as the collection and SHALL update as the collection does.                                                                                                                                                                                                                                                                                                                                                                                                    | README.md § "UI features"                                                                     |
-| B-016 | A vehicle silent for longer than the threshold SHALL be reported as stale **and SHALL remain in the fleet**, keyed and present in any collection bound from it.                                                                                                                                                                                                                                                                                                                                                                                                           | README.md § "UI features"; dynamic-data-pipeline § "Staleness and expiry"                     |
-| B-017 | The staleness threshold SHALL be settable on the tracker and SHALL default to five minutes, held by the tracker rather than supplied by a caller at construction.                                                                                                                                                                                                                                                                                                                                                                                                         | README.md § "UI features"                                                                     |
-| B-018 | Staleness SHALL be measured against the observed clock, SHALL NOT read `DateTime.UtcNow` or `DateTimeOffset.Now` inline, and SHALL be re-evaluated when the observed instant advances — so a vehicle becomes stale with no new data arriving for it.                                                                                                                                                                                                                                                                                                                      | `aircraft-source` B-043 and B-003; ADR-0007; ADR-0010                                         |
-| B-019 | No vehicle SHALL be removed from the fleet because it stopped reporting, and `ExpireAfter` SHALL NOT appear in this pipeline.                                                                                                                                                                                                                                                                                                                                                                                                                                             | README.md § "DynamicData operators"; see § 5 row 2                                            |
-| B-020 | The live source SHALL supply a description naming the columns, comparers, grouping keys and filter choices available for it; each column SHALL be a display name plus a selector over `TransportVehicle`.                                                                                                                                                                                                                                                                                                                                                                 | maui-ui § "The swap test"; ADR-0005 item 6                                                    |
-| B-021 | Swapping the live source SHALL swap the description, and SHALL NOT require editing the pipeline, a comparer, a predicate or a grouping key.                                                                                                                                                                                                                                                                                                                                                                                                                               | hot-swap-source; README.md § "Closing act"                                                    |
-| B-022 | No column, comparer, predicate, grouping key or aggregate SHALL downcast, type-test or `switch` on a concrete `TransportVehicle` subclass. **One exception**: a source's own description (B-029) MAY name the concrete type it was written for, and nothing else MAY — it is the per-source file a swap replaces, so a cast there cannot outlive the source it belongs to.                                                                                                                                                                                                | ADR-0005 item 6; domain-model § "Never add"; § 11 row 6                                       |
-| B-023 | Nothing in this Feature SHALL name an API contract, an API type, a client, a cache, a snapshot or a concrete `ITrackerSource`.                                                                                                                                                                                                                                                                                                                                                                                                                                            | `aircraft-source` B-047; hot-swap-source                                                      |
-| B-024 | Nothing in this Feature SHALL read a network, a file or a wall clock.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | dynamic-data-pipeline § "Testing"; see § 4 row 5                                              |
-| B-025 | The tracker SHALL publish a notice each time a changeset arrives carrying at least one change, and the notice SHALL carry the observed instant and the counts — vehicles tracked, and vehicles added, updated and removed by that changeset. A changeset carrying no change SHALL produce no notice.                                                                                                                                                                                                                                                                      | Decided call 2026-10-05; see § 7 § "The arrival notice"                                       |
-| B-026 | The notices SHALL be reachable as a stream paced by a caller-supplied minimum-interval observable, so two consumers SHALL be able to run at two different cadences at once and either SHALL be changeable while the application runs. An interval SHALL default to one second until a value arrives, and the most recent notice in a capped window SHALL be the one published.                                                                                                                                                                                            | Decided call 2026-10-05; see § 4 rows 8 and 10                                                |
-| B-027 | The notices stream SHALL report a quiet notice when no changeset has arrived for longer than the staleness threshold, and a resumed notice on the next changeset after one, so silence is reported once rather than inferred from the absence of notices. The arrival timer SHALL be built per subscription, so the tracker holds none and B-028's teardown is not defeated by it.                                                                                                                                                                                        | Decided call 2026-10-05; `aircraft-source` decision 0002 (the swap's own)                     |
-| B-028 | The stages SHALL be shared: a second subscriber SHALL NOT cause a second connection to the seam, a second diff pass or a second evaluation of the filter, the sort or the stale mark, and the stages SHALL tear down when the last subscriber unsubscribes.                                                                                                                                                                                                                                                                                                               | ADR-0009; dynamic-data-pipeline § "The spine"                                                 |
-| B-029 | The description SHALL carry the filter choices the live source offers, each a display name beside a predicate over `TransportVehicle`, and SHALL offer them whether or not any vehicle currently satisfies one — a choice is what the source admits, not what the data happens to hold.                                                                                                                                                                                                                                                                                   | § 11 row 6; `fleet-dashboard` B-009 and B-011                                                 |
-| B-030 | The tracker SHALL publish the distinct values the current grouping key takes across the fleet, as a changeset, so a choice can be offered for a value the data holds without any consumer enumerating the collection to find it.                                                                                                                                                                                                                                                                                                                                          | § 11 row 6; `fleet-dashboard` B-009                                                           |
-| B-031 | The tracker SHALL publish the observed instant and every advance of it, so a consumer can tell a poll applied a response even when the response changed nothing; it SHALL re-publish the clock's own stream rather than hold a clock or read a wall clock, and the value SHALL be the instant the provider reported.                                                                                                                                                                                                                                                      | `fleet-dashboard` B-028 and decisions/0001; ADR-0010; `aircraft-source` B-003                 |
-| B-032 | The fleet stream's element SHALL carry the distance its vehicle moved in the changeset that last updated it — the great-circle distance between its position before that update and after it, measured from `TransportVehicle.Position` alone — and SHALL carry no distance, rather than zero, when either position is absent or the vehicle has only just entered the fleet.                                                                                                                                                                                             | `fleet-dashboard` decisions/0002 and B-030; § 2 need 7                                        |
-| B-033 | The element SHALL carry the sum of every distance B-032 measured for its vehicle since the vehicle entered the fleet; a vehicle removed and later reported again SHALL start a new sum.                                                                                                                                                                                                                                                                                                                                                                                   | `fleet-dashboard` decisions/0002 and B-030                                                    |
-| B-034 | The element SHALL carry its vehicle's trail: the positions it was reported at since it entered the fleet, oldest first, each with its last contact, the trail measure (B-037) read at that point, and its distance from the point before. A point SHALL be added only when an update moves the position; the trail SHALL be bounded by a count the tracker holds, defaulting to 240 — an hour at fifteen seconds — with the oldest dropped first; and it SHALL travel with the element, so it leaves the fleet when the vehicle does and is never a store kept beside it. | `fleet-dashboard` decisions/0002, B-034 and B-035; B-002; dynamic-data-pipeline § "Never add" |
-| B-035 | A trail point whose last contact follows its predecessor's by more than the staleness threshold (B-017) SHALL be marked as following a gap, so a consumer can draw a break rather than a straight line across a silence nobody observed.                                                                                                                                                                                                                                                                                                                                  | `fleet-dashboard` B-034; B-016                                                                |
-| B-036 | The description SHALL name which of its columns fill a card's roles — a title, a subtitle, a place and an ordered list of readouts — beside the columns B-020 names; a role the source does not fill SHALL be empty.                                                                                                                                                                                                                                                                                                                                                      | `fleet-dashboard` decisions/0002 and B-029; B-020; B-021                                      |
-| B-037 | The description SHALL name a trail measure — a display name, the range a colour ramp spans, and a selector from `TransportVehicle` to an optional number (altitude in metres, for aircraft) — and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                                                                                              | `fleet-dashboard` B-034; B-022; § 4 row 16                                                    |
-| B-038 | The description MAY offer a place column, naming the nearest place to a position from a table compiled into the application; resolving one SHALL make no network call and read no file, and where no entry lies within the column's bound — ten kilometres for aircraft, over the US Census Bureau's Gazetteer places (§ 11 row 8) — it SHALL yield the position's coordinates rather than a place.                                                                                                                                                                       | `fleet-dashboard` decisions/0002; B-024; § 4 row 18; § 11 row 8                               |
-| B-039 | The tracker SHALL publish the notices B-025 raises as a window of the most recent twenty, oldest dropped first and unpaced by B-026, so a consumer can show the rate of change without keeping a list of notices itself.                                                                                                                                                                                                                                                                                                                                                  | `fleet-dashboard` B-037                                                                       |
-| B-040 | The tracker SHALL publish the live source's poll status — the instant its next poll is due, and while the provider is refusing polls, the interval it asked for — re-publishing what the source reports with no timer, clock read or provider name of its own; a source that does not poll SHALL publish none, and a swap SHALL replace the status with the new source's.                                                                                                                                                                                                 | `fleet-dashboard` B-036; `aircraft-source` B-054 and B-055; B-031; ADR-0013                   |
-| B-041 | The element SHALL carry the vehicle its last update replaced, read from the changeset that made the update, so a consumer can show what changed without keeping a copy; an element that has just entered the fleet SHALL carry none, and nothing older than one update SHALL be kept.                                                                                                                                                                                                                                                                                     | `fleet-dashboard` B-038 and § 11 row 8; B-002                                                 |
-| B-042 | A readout column in the description MAY name a delta — a selector over the vehicle B-041 carries and the current one, returning the change already formatted. A delta it names SHALL return the change at the precision its cell shows, and none where that cell did not change, where either vehicle has no value for it, or where the element carries no replaced vehicle; and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                               | `fleet-dashboard` B-038 and § 11 row 8; B-022; § 11 row 3                                     |
+| ID    | Claim                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Source                                                                                        |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| B-001 | The pipeline SHALL be constructed once, from `ITrackerSource.Connect()`, and SHALL NOT be rebuilt, re-subscribed or re-bound because the live source changed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | dynamic-data-pipeline § "The spine"; `aircraft-source` B-042                                  |
+| B-002 | The pipeline SHALL publish the fleet as a stream of changesets whose element carries the vehicle and its derived stale mark, and SHALL NOT own a bound collection; no tracker, pipeline stage or aggregate SHALL hold a second store of tracked items. What a consumer does with the stream is `fleet-dashboard` B-005's (§ 5 row 9).                                                                                                                                                                                                                                                                                                                                              | ADR-0009; dynamic-data-pipeline § "Never add"; mvvm § "Projecting state back"                 |
+| B-003 | Every change to that collection SHALL arrive through the pipeline; no code SHALL add to, remove from, clear or reorder it imperatively.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `aircraft-source` B-044; dynamic-data-pipeline § "Never add"                                  |
+| B-004 | Disposing the tracker SHALL complete every stream it publishes and dispose everything it created; while nothing is subscribed the tracker SHALL hold no subscription of its own. A source swap SHALL dispose nothing the pipeline needs and leak nothing it replaced.                                                                                                                                                                                                                                                                                                                                                                                                              | dynamic-data-pipeline § "Keep the pipeline the thing that does the work"                      |
+| B-005 | Every scheduler the pipeline uses SHALL be one it was given, and it SHALL NOT read `CurrentThreadScheduler`, `TaskPoolScheduler` or any other ambient scheduler inline; it SHALL NOT marshal to a user-interface thread on a consumer's behalf, because that is the consumer's boundary.                                                                                                                                                                                                                                                                                                                                                                                           | ADR-0009; mvvm § "Projecting state back"; `SchedulerProvider` remarks                         |
+| B-006 | Filtering SHALL be driven by a predicate value the caller hands the tracker: a new predicate SHALL re-evaluate the existing items and SHALL NOT re-subscribe to the source or refetch anything.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | dynamic-data-pipeline § "The spine"; README.md § "DynamicData operators"                      |
+| B-007 | Before any caller sets a predicate, every vehicle the source reports SHALL be visible; the tracker SHALL hold that default itself rather than waiting for one, and an absent filter SHALL NOT be an empty fleet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Decided call — an empty grid at startup reads as a broken feed                                |
+| B-008 | No filter SHALL be applied by enumerating or editing the bound collection, and none SHALL be re-evaluated by a UI event handler.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | maui-ui § "The UI reads; it never drives"                                                     |
+| B-009 | Sorting SHALL be driven by a comparer value the caller hands the tracker: a new comparer SHALL reorder the **existing item instances**, and SHALL NOT re-fetch them, rebuild a stage or re-subscribe to the seam. Which notification a bound collection raises for that reorder is the binding adapter's (amended 2026-10-06, below).                                                                                                                                                                                                                                                                                                                                              | dynamic-data-pipeline § "The spine"; maui-ui § "The UI reads"                                 |
+| B-010 | Every comparer SHALL come from the live source's description (B-020) and SHALL compare using members of `TransportVehicle` only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | maui-ui § "The swap test"; ADR-0005 item 6                                                    |
+| B-011 | A comparer SHALL break ties on `Key`, so the order is total and two sorts of an unchanged fleet produce the same sequence.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Decided call — rows swapping places on an unchanged fleet reads as churn                      |
+| B-012 | Grouping SHALL be driven by a grouping chosen from the description and handed to the tracker, and changing it SHALL regroup the existing items without rebuilding the pipeline.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | README.md § "UI features"; dynamic-data-pipeline § "The spine"                                |
+| B-013 | `TransportVehicle` SHALL declare the grouping answer as an `abstract` member, so a new source cannot inherit one; `Aircraft` SHALL answer with its origin country.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | ADR-0005 item 2; README.md § "DynamicData operators"                                          |
+| B-014 | Each group SHALL carry its count of vehicles and its count of stale vehicles, derived from the same stream, and neither SHALL be computed by enumerating a collection bound from it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | README.md § "UI features"; dynamic-data-pipeline § "The spine"                                |
+| B-015 | A fleet-wide summary — vehicles tracked, vehicles stale, groups present — SHALL derive from the same stream as the collection and SHALL update as the collection does.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | README.md § "UI features"                                                                     |
+| B-016 | A vehicle silent for longer than the threshold SHALL be reported as stale **and SHALL remain in the fleet**, keyed and present in any collection bound from it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | README.md § "UI features"; dynamic-data-pipeline § "Staleness and expiry"                     |
+| B-017 | The staleness threshold SHALL be settable on the tracker and SHALL default to five minutes, held by the tracker rather than supplied by a caller at construction.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | README.md § "UI features"                                                                     |
+| B-018 | Staleness SHALL be measured against the observed clock, SHALL NOT read `DateTime.UtcNow` or `DateTimeOffset.Now` inline, and SHALL be re-evaluated when the observed instant advances — so a vehicle becomes stale with no new data arriving for it.                                                                                                                                                                                                                                                                                                                                                                                                                               | `aircraft-source` B-043 and B-003; ADR-0007; ADR-0010                                         |
+| B-019 | No vehicle SHALL be removed from the fleet because it stopped reporting, and `ExpireAfter` SHALL NOT appear in this pipeline.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | README.md § "DynamicData operators"; see § 5 row 2                                            |
+| B-020 | The live source SHALL supply a description naming the columns, comparers, grouping keys and filter choices available for it; each column SHALL be a display name plus a selector over `TransportVehicle`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | maui-ui § "The swap test"; ADR-0005 item 6                                                    |
+| B-021 | Swapping the live source SHALL swap the description, and SHALL NOT require editing the pipeline, a comparer, a predicate or a grouping key.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | hot-swap-source; README.md § "Closing act"                                                    |
+| B-022 | No column, comparer, predicate, grouping key or aggregate SHALL downcast, type-test or `switch` on a concrete `TransportVehicle` subclass. **One exception**: a source's own description (B-029) MAY name the concrete type it was written for, and nothing else MAY — it is the per-source file a swap replaces, so a cast there cannot outlive the source it belongs to.                                                                                                                                                                                                                                                                                                         | ADR-0005 item 6; domain-model § "Never add"; § 11 row 6                                       |
+| B-023 | Nothing in this Feature SHALL name an API contract, an API type, a client, a cache, a snapshot or a concrete `ITrackerSource`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `aircraft-source` B-047; hot-swap-source                                                      |
+| B-024 | Nothing in this Feature SHALL read a network, a file or a wall clock.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | dynamic-data-pipeline § "Testing"; see § 4 row 5                                              |
+| B-025 | The tracker SHALL publish a notice each time a changeset arrives carrying at least one change, and the notice SHALL carry the observed instant and the counts — vehicles tracked, and vehicles added, updated and removed by that changeset. A changeset carrying no change SHALL produce no notice.                                                                                                                                                                                                                                                                                                                                                                               | Decided call 2026-10-05; see § 7 § "The arrival notice"                                       |
+| B-026 | The notices SHALL be reachable as a stream paced by a caller-supplied minimum-interval observable, so two consumers SHALL be able to run at two different cadences at once and either SHALL be changeable while the application runs. An interval SHALL default to one second until a value arrives, and the most recent notice in a capped window SHALL be the one published.                                                                                                                                                                                                                                                                                                     | Decided call 2026-10-05; see § 4 rows 8 and 10                                                |
+| B-027 | The notices stream SHALL report a quiet notice when no changeset has arrived for longer than the staleness threshold, and a resumed notice on the next changeset after one, so silence is reported once rather than inferred from the absence of notices. The arrival timer SHALL be built per subscription, so the tracker holds none and B-028's teardown is not defeated by it.                                                                                                                                                                                                                                                                                                 | Decided call 2026-10-05; `aircraft-source` decision 0002 (the swap's own)                     |
+| B-028 | The stages SHALL be shared: a second subscriber SHALL NOT cause a second connection to the seam, a second diff pass or a second evaluation of the filter, the sort or the stale mark, and the stages SHALL tear down when the last subscriber unsubscribes.                                                                                                                                                                                                                                                                                                                                                                                                                        | ADR-0009; dynamic-data-pipeline § "The spine"                                                 |
+| B-029 | The description SHALL carry the filter choices the live source offers, each a display name beside a predicate over `TransportVehicle`, and SHALL offer them whether or not any vehicle currently satisfies one — a choice is what the source admits, not what the data happens to hold.                                                                                                                                                                                                                                                                                                                                                                                            | § 11 row 6; `fleet-dashboard` B-009 and B-011                                                 |
+| B-030 | The tracker SHALL publish the distinct values the current grouping key takes across the fleet, as a changeset, so a choice can be offered for a value the data holds without any consumer enumerating the collection to find it.                                                                                                                                                                                                                                                                                                                                                                                                                                                   | § 11 row 6; `fleet-dashboard` B-009                                                           |
+| B-031 | The tracker SHALL publish the observed instant and every advance of it, so a consumer can tell a poll applied a response even when the response changed nothing; it SHALL re-publish the clock's own stream rather than hold a clock or read a wall clock, and the value SHALL be the instant the provider reported.                                                                                                                                                                                                                                                                                                                                                               | `fleet-dashboard` B-028 and decisions/0001; ADR-0010; `aircraft-source` B-003                 |
+| B-032 | The fleet stream's element SHALL carry the distance its vehicle moved in the changeset that last updated it — the great-circle distance between its position before that update and after it, measured from `TransportVehicle.Position` alone — and SHALL carry no distance, rather than zero, when either position is absent or the vehicle has only just entered the fleet.                                                                                                                                                                                                                                                                                                      | `fleet-dashboard` decisions/0002 and B-030; § 2 need 7                                        |
+| B-033 | The element SHALL carry the sum of every distance B-032 measured for its vehicle since the vehicle entered the fleet; a vehicle removed and later reported again SHALL start a new sum.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `fleet-dashboard` decisions/0002 and B-030                                                    |
+| B-034 | The element SHALL carry its vehicle's trail: the positions it was reported at since it entered the fleet, oldest first, each with its last contact, the trail measure (B-037) read at that point, and its distance from the point before. A point SHALL be added when the vehicle enters the fleet with a position, or when an update reports a position other than the trail's last point, and at no other time; the trail SHALL be bounded by a count the tracker holds, defaulting to 240 — an hour at fifteen seconds — with the oldest dropped first; and it SHALL travel with the element, so it leaves the fleet when the vehicle does and is never a store kept beside it. | `fleet-dashboard` decisions/0002, B-034 and B-035; B-002; dynamic-data-pipeline § "Never add" |
+| B-035 | A trail point SHALL be marked as following a gap where its last contact follows the last contact of the vehicle its update replaced (B-041) by more than the staleness threshold (B-017) in force when the point is added, so a consumer can draw a break rather than a straight line across a silence nobody observed; a trail's first point SHALL follow no gap, having no line before it to break.                                                                                                                                                                                                                                                                              | `fleet-dashboard` B-034; B-016                                                                |
+| B-036 | The description SHALL name which of its columns fill a card's roles — a title, a subtitle, a place and an ordered list of readouts — beside the columns B-020 names; a role the source does not fill SHALL be empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `fleet-dashboard` decisions/0002 and B-029; B-020; B-021                                      |
+| B-037 | The description SHALL name a trail measure — a display name, the range a colour ramp spans, and a selector from `TransportVehicle` to an optional number (altitude in metres, for aircraft) — and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                                                                                                                                                                                                       | `fleet-dashboard` B-034; B-022; § 4 row 16                                                    |
+| B-038 | The description MAY offer a place column, naming the nearest place to a position from a table compiled into the application; resolving one SHALL make no network call and read no file, and where no entry lies within the column's bound — ten kilometres for aircraft, over the US Census Bureau's Gazetteer places (§ 11 row 8) — it SHALL yield the position's coordinates rather than a place.                                                                                                                                                                                                                                                                                | `fleet-dashboard` decisions/0002; B-024; § 4 row 18; § 11 row 8                               |
+| B-039 | The tracker SHALL publish the notices B-025 raises as a window of the most recent twenty, oldest dropped first and unpaced by B-026, so a consumer can show the rate of change without keeping a list of notices itself. The window SHALL be kept once in the shared stages, so every consumer subscribed at once reads the same window, and it SHALL be emptied when they tear down (B-028). Every entry SHALL be an `Updated` notice: a `Quiet` notice (B-027) SHALL NOT enter it, and the changeset that ends a silence SHALL enter it as `Updated`, with its counts.                                                                                                           | `fleet-dashboard` B-037                                                                       |
+| B-040 | The tracker SHALL publish the live source's poll status — the instant its next poll is due, and while the provider is refusing polls, the interval it asked for — re-publishing what the source reports with no timer, clock read or provider name of its own; a source that does not poll SHALL publish none, and a swap SHALL replace the status with the new source's.                                                                                                                                                                                                                                                                                                          | `fleet-dashboard` B-036; `aircraft-source` B-054 and B-055; B-031; ADR-0013                   |
+| B-041 | The element SHALL carry the vehicle its last update replaced, read from the changeset that made the update, so a consumer can show what changed without keeping a copy; an element that has just entered the fleet SHALL carry none, and nothing older than one update SHALL be kept.                                                                                                                                                                                                                                                                                                                                                                                              | `fleet-dashboard` B-038 and § 11 row 8; B-002                                                 |
+| B-042 | A readout column in the description MAY name a delta — a selector over the vehicle B-041 carries and the current one, returning the change already formatted. A delta it names SHALL return the change at the precision its cell shows, and none where that cell did not change, where either vehicle has no value for it, or where the element carries no replaced vehicle; and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                        | `fleet-dashboard` B-038 and § 11 row 8; B-022; § 11 row 3                                     |
 
 ## 4. Constraints
 
@@ -197,9 +228,9 @@ Feature is cited it is written with its Feature's name.
 | 12  | The stages are shared by DynamicData's cache-aware `RefCount()` — not Rx's `Publish().RefCount()` pair.                                                                                                     | ADR-0009; DynamicData 9.4.33 `ObservableCacheEx.RefCount`                                    | One upstream subscription, an internal cache created on the first subscriber and disposed when the last unsubscribes. B-028 is provable by subscribing twice and counting connections to the seam. A consumer joining while another is bound reads the current fleet from that cache; the first one to arrive after every consumer has gone waits for the next changeset.                                                                                                                                                      |
 | 13  | The tracker is a container singleton, disposed by the container; the view model disposes only its own `Bind` subscription.                                                                                  | ADR-0009; item [`0040`](../../../../.issue/0040-actor-wiring-and-tracker-lifetime-spike.yml) | B-004 is proved in a unit test that constructs the tracker directly, so no container stands between the claim and the assertion. How an actor above the seam gets its collaborators, and who starts the first poll, were `0040`'s and are answered: the dependency resolver and the first subscription, written out in `fleet-dashboard` § 7. The spike closed on 2026-10-07, and its finding on this row was that the singleton was already decided here and in the registration, and recorded in neither as an answer to it. |
 | 14  | The four inputs are methods on the tracker, each ticking a `BehaviorSubject<T>` it owns and seeded with the claimed default.                                                                                | ADR-0009                                                                                     | B-007 and B-017's defaults are the pipeline's to keep, not a caller's to remember with `StartWith`. A test calls a method rather than constructing four subjects, and a view model sets a value from a property setter without owning any Rx. B-003 still holds because a method hands a value to a stage and touches no collection (§ 7).                                                                                                                                                                                     |
-| 15  | The stages are torn down when the last subscriber goes (B-028), and the trail and the running total live in them.                                                                                           | B-028; § 4 row 12                                                                            | B-033 and B-034 cover what was observed while something was bound, not since the application started. A dashboard bound for the whole run sees no difference; a second page opened later reads the trail the first one kept alive. § 5 row 10 excludes anything longer.                                                                                                                                                                                                                                                        |
+| 15  | The stages are torn down when the last subscriber goes (B-028), and the trail, the running total and the window of recent notices live in them.                                                             | B-028; § 4 row 12; decided 2026-10-08 by the person for B-039                                | One rule for every value derived across changesets: built once in the shared stages, read the same by every consumer subscribed at once, and gone when the last one leaves. B-033, B-034 and B-039 cover what was observed while something was bound, not since the application started. A dashboard bound for the whole run sees no difference; a second page opened later reads the trail and the window the first one kept alive. § 5 row 10 excludes anything longer.                                                      |
 | 16  | `GeoPosition` carries a latitude and a longitude, and `TransportVehicle` carries no altitude.                                                                                                               | `src/Transponder/Model/GeoPosition.cs`; ADR-0005 item 5                                      | B-032's distance is measured on the surface, and the value a trail is coloured by cannot be read from the base. B-037 makes it something the description names, which is the per-source file a swap replaces — promoting altitude to the base would give a ship one.                                                                                                                                                                                                                                                           |
-| 17  | A trail point is added per update that moves the position, and the poll interval is fifteen seconds (`aircraft-source` B-050).                                                                              | `aircraft-source` B-050 and decisions/0001                                                   | B-034's default of 240 points is an hour of one aircraft. Every point is a value carried on an immutable element, so a trail costs memory per vehicle and nothing per subscriber — B-028's sharing still holds, because the trail is built once in the shared stages.                                                                                                                                                                                                                                                          |
+| 17  | A trail point is added on entry with a position and per update that moves it, and the poll interval is fifteen seconds (`aircraft-source` B-050).                                                           | `aircraft-source` B-050 and decisions/0001                                                   | B-034's default of 240 points is an hour of one aircraft. Every point is a value carried on an immutable element, so a trail costs memory per vehicle and nothing per subscriber — B-028's sharing still holds, because the trail is built once in the shared stages.                                                                                                                                                                                                                                                          |
 | 18  | The US Census Bureau's Gazetteer places file is a work of the US government, and so in the public domain.                                                                                                   | § 11 row 8; `aircraft-source` decisions/0001                                                 | B-038's table for aircraft is generated from it, trimmed to the box the demo flies (`aircraft-source` decisions/0001), and compiled in: nothing is read at runtime, and no on-screen credit is owed beyond the OpenSky citation. The box is configurable (`aircraft-source` B-050), so a box moved elsewhere needs the table regenerated — and until it is, every position reads as coordinates, which is B-038's fallback rather than a failure.                                                                              |
 
 ## 5. Out of Scope
@@ -801,6 +832,109 @@ returning a number for the view to format, which is § 11 row 3 reopened and the
 decimal-comma hazard `0064` names; and the card as a second per-source file
 beside the description, which is a second thing a swap must replace.
 
+**A trail on the element (B-034, B-035, B-037), designed for `0063`**
+
+The trail folds into the element `Move()` already emits, which is what the
+movement block above left room for: one more value on `MovedVehicle` and
+`TrackedVehicle`, derived in the same stage, copied by the mark, and gone with
+the element. No store beside the fleet and no new stage. Two declarations,
+written out because their files do not exist yet:
+
+```csharp
+public sealed record TrailPoint
+{
+    public required GeoPosition Position { get; init; }
+    public required DateTimeOffset LastContact { get; init; }
+    public required Option<double> Measure { get; init; }
+    public required Option<double> Distance { get; init; }
+    public required bool FollowsGap { get; init; }
+}
+
+public sealed record FleetTrailMeasure
+{
+    public required string Name { get; init; }
+    public required double Minimum { get; init; }
+    public required double Maximum { get; init; }
+    public required Func<TransportVehicle, Option<double>> Value { get; init; }
+}
+```
+
+`TrackedVehicle.Trail` and `MovedVehicle.Trail` are `IReadOnlyList<TrailPoint>`,
+oldest first, empty by default. `FleetSourceDescription.Trail` is a `required
+FleetTrailMeasure`, because B-037 says every description names one.
+
+- **A point is added when the position moves, and only then.** On an add or an
+  update, a point is appended where the vehicle has a position and the trail is
+  empty or its last point is somewhere else. An update that changes the
+  altitude alone adds nothing (B-034, the person's call in § 3). An update with
+  no position adds nothing and keeps the trail, and the next fix is measured
+  from the last point, wherever it was.
+- **A point's distance is from the point before, not B-032's leg.** The two
+  agree whenever the replaced vehicle had a position, which is nearly always.
+  They differ after a lost fix: the leg is none, because B-032 measures between
+  consecutive reports, while the point's distance spans the lost fix, because a
+  map draws from point to point. The total stays B-033's sum of legs. The first
+  point has no distance.
+- **A gap is measured from the replaced vehicle, against the threshold in
+  force.** A point follows a gap where its last contact minus the replaced
+  vehicle's is longer than the threshold at the moment the point is made.
+  `Move()` takes a function that reads `_staleAfter.Value`, the way the mark
+  does. Both instants are the provider's, so replay marks the gaps live did and
+  no clock is read. A threshold changed later re-marks nothing: a point records
+  what was a silence when it was drawn, and the mark, which re-runs on every
+  threshold change, copies `FollowsGap` and never derives it. A trail's first
+  point follows no gap — whether it came with the add or with a first fix after
+  a silence — because there is no line before it to break.
+- **A lost fix the feed kept reporting through is not a gap.** A vehicle that
+  reported every fifteen seconds with no position, then a fix elsewhere, gets a
+  point whose distance spans the stretch and which follows no gap: B-035 is
+  about silence, and the feed was not silent. A consumer draws a straight line
+  across that stretch, which is the best the reports allow.
+- **The bound is the tracker's, at 240.** `FleetTracker.DefaultTrailBound` is
+  passed to `Move()`, and when a point would make 241 the oldest goes first. It
+  is not configurable: the item puts that out of scope, and B-034 asks only that
+  the tracker hold it. The trail is an `ImmutableList<TrailPoint>`, so appending
+  and dropping share structure with the list before, and an element never sees
+  its trail change under it.
+- **The measure is read when the point is made, from the latest description.**
+  `Move()` takes the descriptions' measures as a stream and keeps the latest
+  inside its `Observable.Create`, subscribed before the source, so a description
+  that replays is in hand for the first add. Until one arrives, a point's
+  measure is none, never zero. Storing the number rather than the vehicle is
+  B-041's "nothing older than one update", and keeps a trail of 240 points from
+  holding 240 vehicles. Rejected: `WithLatestFrom`, which drops every changeset
+  before the first description — an add lost there is a vehicle missing from
+  the fleet; and `CombineLatest`, which re-runs the fold on the last changeset
+  whenever a description arrives — the move-only rule adds no second point, but
+  the last update's leg is added to B-033's total again, and a vehicle that
+  changeset added is entered again, restarting its trail and total.
+- **`Move()` reads `Description`, and disposes it with the source.** The
+  constructor assigns `Description` before `_arrivals`, so the stage is handed
+  the shared `Replay(1)` stream rather than a null, mapped to each
+  description's `Trail.Value`. The `Observable.Create` returns a
+  `CompositeDisposable` of both subscriptions, so B-028's teardown releases the
+  description's as it releases the source's.
+- **A swap restarts the trail**, as it restarts the total: the outgoing fleet
+  leaves as removes. Points made after a new description read its measure. If a
+  new source's first changeset arrives before its description, those points read
+  the old measure. The order between the two belongs to whoever publishes the
+  description, and today nothing does on a swap: the description is a
+  `BehaviorSubject` registered once in `OpenSkyRegistration`, and
+  `SwappingTrackerSource` publishes none. It is noted rather than guarded, for
+  the item that makes a swap publish one.
+
+**The aircraft's measure** is "Altitude", 0 to 12,500 m, read by the
+barometric-altitude reader the altitude readout already uses — the same cast,
+under B-022's exception, so a card and its trail cannot disagree about how high
+the aircraft is. 12,500 m is about 41,000 ft, the ceiling of the airliners over
+Houston; a value above it takes the ramp's last colour, which is the consumer's
+to clamp (`fleet-dashboard` B-034). The range is in metres, like the vehicle.
+
+Rejected: keeping each point's vehicle for the consumer to measure, which is the
+chain B-041 forbids; marking gaps at read time from consecutive points, which is
+finding 4's false gap; and a trail store keyed by vehicle beside the fleet,
+which is B-002's second store and outlives the vehicle.
+
 **No open decisions.**
 
 `AutoRefresh` was the one open block here, and it is closed:
@@ -907,63 +1041,19 @@ what a `DistinctUntilChanged` would have swallowed. Writing them turned up the
 fact § 7 now records — subscribing is itself an emission — which is a defect
 waiting for `fleet-dashboard` `0058` rather than one here.
 
-**What `0062` proves — planned and delivered 2026-10-08.** B-032, B-033 and B-041, in
-two new classes and the arrangement every staleness test already uses: a
-`SourceCache<TransportVehicle, string>` the test writes to, `FleetTrackerFixture`,
-and an `ObservedClock` the test advances where a tick matters. There is no
-scheduler at all, because `Move()` reads the changeset and nothing else (§ 7).
-Positions are synthetic points inside the Houston box, and every expected
-distance is computed from the formula (R × the central angle, R = 6,371,008.8 m)
-rather than copied from a map. That keeps each expected value checkable by hand.
-
-`GreatCircleTests` (B-032), data-driven:
-
-- `GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres` uses
-  a `[ClassData]` theory over `GreatCircleCases`: the same point twice is zero,
-  0.1° of latitude is 11,119.5 m, 1° of longitude on the equator is
-  111,195.1 m, 0.1° of longitude at 29.70° N is 9,658.8 m, and the diagonal
-  from 29.70, -95.40 to 29.80, -95.30 is 14,725.6 m. The last two are the
-  cases that catch a wrong cos(latitude) term, a squared one, or a latitude
-  left in degrees — every other case either moves in latitude alone or sits
-  where the cosine is one. Each case is asserted to within a metre, and in both directions,
-  because a formula with its arguments swapped in one term passes a one-way
-  check.
-
-`FleetMovementTests`:
-
-- **B-032** — `GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`
-  moves `SYN101` 0.1° north and reads 11,119.5 m off the element.
-  `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`
-  asserts `None`, not `Some(0)`, and adds `SYN103` in the same changeset to show
-  an add carries none either. **`GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged`
-  is the test the design exists for.** It advances the clock with no
-  changeset and reads the element again: the leg, `Replaced` and `Travelled` are
-  all unchanged. Movement derived in the mark's forced `Transform` would read a
-  zero leg and a `Replaced` that is the vehicle itself here, and no other test
-  would notice. `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`
-  is the other direction: present to absent is no leg, not a leg to 0, 0.
-- **B-033** — `GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`.
-  `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`
-  covers the claim's reset. `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs`
-  is § 7's ordering decision, asserted: below the filter, the total would restart.
-  `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`
-  uses B-001's arrangement — a substitute `ITrackerSource` whose `Connect()` is
-  DynamicData's `Switch` over two caches reporting the same key at two
-  positions — and asserts the incoming element carries no leg and a total of
-  zero. It names no concrete source, which B-023 forbids this Feature's tests as
-  much as its code; the operator under test is the one `SwappingTrackerSource`
-  uses.
-- **B-041** — `GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced`
-  asserts that `Replaced` is the second vehicle, by reference.
-  `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`.
-  **"Nothing older than one update kept" is a review, not a test.** It holds by
-  type — `Replaced` is a `TransportVehicle`, and a vehicle references no
-  element — and a test over `typeof(...)` is neither mechanism (below). A
-  `WeakReference` and a forced collection would test it at runtime, but that is
-  a test whose result depends on the JIT's view of a local's lifetime, so it
-  fails on a debug build for reasons that have nothing to do with the claim.
-  The review is performed on `0062`'s pull request and re-done by any change to
-  `TrackedVehicle`.
+**What `0062` proved, 2026-10-08.** B-032, B-033 and B-041, in `GreatCircleTests`
+and `FleetMovementTests`, with the arrangement every staleness test already uses
+— a `SourceCache` the test writes to, `FleetTrackerFixture`, and an
+`ObservedClock` advanced where a tick matters — and no scheduler, because
+`Move()` reads the changeset and nothing else (§ 7). Every expected distance is
+computed from the formula (R × the central angle, R = 6,371,008.8 m) rather than
+copied from a map, so each is checkable by hand. The test the design exists for
+advances the clock with no changeset and reads the leg unchanged: movement
+derived in the mark's forced `Transform` would read a zero leg there and
+nowhere else. B-041's "nothing older kept" is a review rather than a test, and
+§ 9 records it: the only runtime test, a `WeakReference` and a forced
+collection, depends on the JIT's view of a local's lifetime and fails on a
+debug build for reasons that have nothing to do with the claim.
 
 **What none of them proves:** a leg's display in kilometres. That is the
 description's (`0064`) and the dashboard's (`fleet-dashboard` `0070`), under
@@ -976,72 +1066,32 @@ B-025's wording should say "a changeset the seam reported" rather than "a
 changeset arrives" is that section's author's call, and the claim is unamended
 here.
 
-**What `0064` proves — planned and delivered 2026-10-08.** B-036 and B-042, with no stage and
-no scheduler: a description is a value, and a readout's change is a function of
-one element. The arrangement is the description itself, `AircraftFixture` for
-every vehicle, and `TrackedVehicleFixture` for an element. Both fixtures gain
-builders the plan needs — `WithVelocity`, `WithTrueTrack` and `WithVerticalRate`
-on the first, `WithReplaced` on the second. Every expected cell is computed from
-the factors § 7 names (0.3048 m to the foot, 1,852 m to the nautical mile), so
-each is checkable by hand.
-
-`FleetSourceDescriptionTests` (B-036):
-
-- `GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns`
-  reads the callsign as the title, the origin country as the subtitle, and
-  altitude, ground speed, heading and vertical rate as the readouts in that
-  order. Each is asserted to be the same instance as an entry in `Columns`,
-  which is what fails a role built from a fresh column that only shares a
-  name. It also asserts the place is empty, the role this description leaves
-  unfilled; `0065` changes that assertion when it adds the place column. The
-  scenario's step for a filled place is `0065`'s to prove, not this item's.
-- `GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty`
-  builds a description with no card and reads three empty roles and no
-  readouts. That is the "empty stays empty" half, and it holds for any source.
-- The card swaps with the description. B-021's test,
-  `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt`,
-  gains an assertion that the card's title is the second description's, and
-  § 9 cites it for B-036 beside the two above.
-
-`FleetReadoutTests` (B-042):
-
-- `GivenTwoAircraft_WhenAReadoutsDeltaIsRead_ThenItIsTheChangeAtTheCellsPrecision`
-  is a `[ClassData]` theory over `FleetReadoutCases`, each case a readout, a
-  replaced aircraft, a current one and the expected change:
-    - altitude 9,000 m to 9,036.6 m is "▲ +120 ft";
-    - the same pair reversed is "▼ −120 ft", the case that catches the
-      delegate's arguments swapped;
-    - 9,000 m to 9,000 m is none;
-    - 9,000 m to 9,000.1 m is none, the case that catches a comparison of the
-      raw values instead of the rounded ones;
-    - 8,999.95 m to 9,000.01 m is "▲ +1 ft", the case that catches a
-      subtraction before rounding: the raw difference is a fifth of a foot,
-      but the cells read 29,527 and 29,528;
-    - no altitude to 9,000 m, and 9,000 m to none, are each none;
-    - ground speed 200 m/s to 206.2 m/s is "▲ +12 kt".
-- `GivenAnElementJustAdded_WhenEachReadoutsChangeIsRead_ThenThereIsNone` reads
-  every aircraft readout off an element with no replaced vehicle.
-- `GivenAReadoutNamingNoDelta_WhenItsChangeIsRead_ThenThereIsNone` uses the
-  heading, on an element whose replaced vehicle flew another heading. The data
-  changed, so the none is the readout's and not the data's.
-- `GivenABoundFleet_WhenAnUpdateClimbs_ThenTheAltitudeReadoutReadsTheChangeOffTheElement`
-  runs through the tracker with the arrangement `FleetMovementTests` uses: a
-  `SourceCache` the test writes to, an update from 9,000 m to 9,036.6 m, and
-  `Change` on the bound row reading "▲ +120 ft". It is the one test that
-  fails if a readout reads some value other than B-041's replaced vehicle.
-- `GivenAnAircraft_WhenItsReadoutCellsAreRead_ThenEachIsInItsDisplayUnit` is a
-  `[ClassData]` theory over `ReadoutCellCases`: 10,000 m is "32,808 ft",
-  100 m/s is "194 kt", 90.4° is "090°", 5.08 m/s is "+1,000 ft/min",
-  −5.08 m/s is "−1,000 ft/min" with U+2212, and a missing value is "—" for
-  each. It is listed under B-042 because the delta's
-  precision is defined as the cell's, so a cell in the wrong unit makes every
-  delta wrong with it.
+**What `0064` proved, 2026-10-08.** B-036 and B-042, in
+`FleetSourceDescriptionTests` and `FleetReadoutTests`, with no stage and no
+scheduler: a description is a value, and a readout's change is a function of
+one element. Every expected cell is computed from the factors § 7 names
+(0.3048 m to the foot, 1,852 m to the nautical mile), so each is checkable by
+hand. One test runs through the tracker, because it alone fails a readout
+reading anything but B-041's replaced vehicle, and B-021's swap test carries
+B-036's card arriving with the second description.
 
 **What none of them proves:** how a card lays its roles out, which is
 `fleet-dashboard` `0070`; the pulse, which is its `0073`; and the place, which
 is `0065`. B-022's review is re-done on this item, because the four readout
 cells and the two deltas are new casts in the description, inside the
 exception.
+
+**What `0063` will prove, planned 2026-10-08.** B-034, B-035 and B-037,
+through the tracker with the arrangement `FleetMovementTests` uses, because the
+trail is the stage's output and a test of `Move()` alone would miss the mark
+dropping it. Positions are synthetic points in the Houston box, every distance
+computed from `GreatCircle` as `0062`'s were. A `required` trail measure means
+`FleetSourceDescriptionFixture` gains a default measure reading none. The cases
+that fail a wrong implementation are the `@B-034`, `@B-035` and `@B-037`
+scenarios, and the reviews no test can make are § 9's.
+
+**What none of them proves:** drawing the trail, its colour ramp and its
+breaks, which are `fleet-dashboard` `0071`.
 
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
@@ -1051,22 +1101,29 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — fifty-two scenarios, each tagged with the `@B-00n` it proves.
+this file — sixty-five scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
 after the 2026-10-05 review: disposal completes the published streams, and an
 idle tracker holds nothing at all. § 9 still gives it one row, and the
-row's tag anchors both.
+row's tag anchors both. B-031 – B-035, B-037 – B-040 and B-042 carry more than
+one for the same reason: each states a rule and the case that breaks a naive
+reading of it, such as B-035's parked aircraft. A case that fails a wrong
+implementation is written here as a scenario, not as a list of planned tests:
+the tests are the record of their own names and values, and § 9 names them.
 Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
 
 - Happy path → B-001, B-002, B-006, B-007, B-009, B-011 – B-015, B-020, B-025,
-  B-028 – B-033, B-036, B-041, B-042
+  B-028 – B-034, B-036, B-037, B-041, B-042
 - Failure mode → B-004, B-005, B-016 – B-019, B-027, B-032 (a tick zeroing a
-  leg), B-033 (a filter or a swap restarting a total)
+  leg), B-033 (a filter or a swap restarting a total), B-034 (a bound reached),
+  B-035 (a silence, a parked aircraft that was not one, and a threshold changed
+  after the point), B-037 (a description not yet arrived), B-039 (a silence
+  kept out of the window), B-042 (a change below the cell's precision)
 - Validation failure → B-003, B-008, B-010, B-021 – B-024
-- Data-driven → B-011, B-014, B-017, B-026, B-032, B-042
+- Data-driven → B-011, B-014, B-017, B-026, B-032, B-035, B-042
 
 ## 9. Traceability Matrix
 
@@ -1126,10 +1183,10 @@ asks for.
 | B-031    | `@B-031` | `ObservedInstantTests.GivenAPollThatChangedNothing_WhenItReportsAnInstant_ThenTheTrackerPublishesItAnyway` — the case the notices cannot cover, and the one a `DistinctUntilChanged` would swallow; with `GivenAnInstantFromARecording_WhenItIsPublished_ThenItIsTheProvidersValueAndNotAWallClockRead` for the replayed instant, `GivenNoPollHasHappened_WhenAConsumerSubscribes_ThenItReadsTheInstantInForceBeforeAnyAdvance` for the emission a subscription is, and `GivenASubscriberToTheObservedInstant_WhenTheTrackerIsDisposed_ThenTheStreamCompletesAndNoFurtherInstantArrives` for B-004 over this member — `0059`                                                                                                                             | Verified |
 | B-032    | `@B-032` | `GreatCircleTests.GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres`; `FleetMovementTests.GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`, `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`, `GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged` and `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`, on [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                                                                                                                                                                | Verified |
 | B-033    | `@B-033` | `FleetMovementTests.GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`, `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`, `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs` and `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`, on [`0062`](../.issue/0062-movement-on-the-element.yml). The filter test fails with the stage moved below the filter, checked on `0062`                                                                                                                                                                                                                                            | Verified |
-| B-034    | `@B-034` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
+| B-034    | `@B-034` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet, plus a **review** on `0063` that no store of trails exists beside the fleet: `TrailPoint` is held only by `MovedVehicle.Trail` and `TrackedVehicle.Trail`, and no field of `FleetTracker` or `FleetMovement` outside the per-subscription cache holds one, since a dictionary cleared on remove would pass every test. Re-done by any change to either                                                                                                                                                                                                                                                                                                                                         | Missing  |
 | B-035    | `@B-035` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
 | B-036    | `@B-036` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns`, `GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty`, and B-021's `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt` for the card swapped with the description                                                                                                                                                                                                                                                                                                         | Verified |
-| B-037    | `@B-037` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
+| B-037    | `@B-037` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet, plus a **review** that no member of `TransportVehicle` carries an altitude: `grep -i altitude` over `TransportVehicle.cs` returns nothing. Re-done by any change to the base                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Missing  |
 | B-040    | `@B-040` | [`0067`](../.issue/0067-poll-status-seam.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Missing  |
@@ -1386,6 +1443,72 @@ sees an element. The planned test holds the behaviour either way. **Verdict:
 §§ 3 (B-036 and B-042), 6-7 and 8-9 are complete for `0064`.** The rows stay
 🟡: the other new claims are unreviewed, and there is no partial status. So
 `0064` starts only if the person waives the gate for it by name.
+
+**Reviewed 2026-10-08 for `0063` — B-034, B-035, B-037, § 7's trail design and
+§ 8's plan.** `spec-reviewer` read them against the item, the code they extend
+(`FleetMovement`, `MovedVehicle`, `TrackedVehicle`, `FleetTracker`,
+`FleetSourceDescription`, `AircraftFleetDescription`, `SwappingTrackerSource`),
+the consumer claims in `fleet-dashboard` (B-034, B-035, decisions/0002),
+ADR-0005, § 4 rows 12 and 15 – 17, § 5 rows 10 and 12, and B-002, B-017, B-018,
+B-021, B-022, B-028, B-032, B-033 and B-041. It then read the answers to its
+findings again. Mechanically clean: forty-two claims, thirty-five `Verified` and
+seven `Missing` in § 9, fifty-three scenarios, each of the three claims tagged.
+The amended B-035 is sound. Both instants are the provider's, so replay marks
+what live did and no clock is read (B-018, B-043); "more than" is B-017's
+"longer than"; and measuring from the replaced vehicle rather than the trail's
+last point keeps the parked aircraft's case free of a gap. Storing points rather
+than vehicles keeps B-002's single store and B-041's one replaced vehicle. A
+point's distance spans a lost fix where B-032's leg does not, and that
+contradicts neither B-033 nor `fleet-dashboard` B-035, which asks for exactly
+that distance. Keeping the latest measure inside `Move()` rebuilds no stage and
+reconnects nothing, so B-021's test still reads one connection.
+
+One finding was blocking, and it is closed. B-035's "in force when the point is
+added" had no test that could fail it: every gap case set the threshold before
+the move, so a gap derived at read time, in the mark that re-runs on every
+threshold change, passed them all. § 8 now plans
+`GivenAPointMadeUnderOneThreshold_WhenTheThresholdChanges_ThenItsGapMarkStands`
+in both directions, § 7 says the mark copies `FollowsGap` and never derives it,
+and § 9's B-035 row names the test. Thirteen non-blocking findings are closed
+too:
+
+- § 7 rejects `CombineLatest` for the right reason now: the leg added to B-033's
+  total a second time, and a vehicle re-entered with its trail restarted, rather
+  than doubled points;
+- § 7 says the order between a swap's changeset and its description belongs to
+  whoever publishes the description, and that nothing does so on a swap today;
+- § 7 has `Description` assigned before `_arrivals` and handed to `Move()`
+  mapped to its measure, and both subscriptions disposed together, so B-028's
+  teardown covers the description's;
+- § 8 plans a tracker given a `Subject<FleetSourceDescription>` that has not
+  emitted, which fails `WithLatestFrom`;
+- B-034 and § 4 row 17 count the point made on entry with a position;
+- B-035 says a trail's first point follows no gap, and § 8 plans the case of a
+  first fix after a silence;
+- § 7 records that a lost fix the feed reported through is not a gap, and the
+  lost-fix test asserts it, with a distance of 22,239.0 m;
+- § 9's B-034 row adds a review that no store of trails exists beside the fleet;
+- § 8 re-does B-041's and B-022's reviews on `0063`;
+- § 8 no longer says `FleetTrackerFixture` gains a default it already had, and
+  gives `FleetSourceDescriptionFixture` and the vessel description a measure
+  each;
+- the bound test steps a thousandth of a degree, the first test asserts the last
+  point's altitude, and the lost-fix test asserts the distance's value;
+- the item's summary and B-034's acceptance criterion agree with the claims;
+- § 8's scenario prose names every claim carrying more than one scenario, and
+  the coverage lists place B-034, B-035 and B-037.
+
+Every distance was rechecked, including the new 22,239.0 m and 111.2 m, against
+`GreatCircle`, and every count against the files. Nothing contradicts ADR-0005
+item 5, § 4 row 16 or B-022's exception, because the measure reuses the
+readout's own reader. The swap test holds: the measure is replaced with the
+description. One note was non-blocking and left to `spec-author`: B-035's new
+clause, a trail's first point following no gap, had a planned test but no
+scenario. `spec-author` added it beside the other two `@B-035` scenarios before
+`0063` was implemented (AGENTS.md rule 1), which makes fifty-four. **Verdict: §§ 3 (B-034, B-035, B-037), 6-7 and
+8-9 are complete for `0063`.** The rows stay 🟡, because B-030 and B-038 – B-040
+are unreviewed, and there is no partial status. So `0063` starts only if the
+person waives the gate for it by name.
 
 ## Decisions
 
