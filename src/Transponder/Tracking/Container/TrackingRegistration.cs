@@ -15,11 +15,15 @@ public static class TrackingRegistration
     /// <summary>Adds the swap decorator and the fleet tracker over it, at the application's lifetime.</summary>
     /// <param name="services">The collection to register into.</param>
     /// <returns>The same collection, so registration chains.</returns>
-    /// <remarks>The decorator is one object behind two registrations: the actor names the class, consumers name the seam.</remarks>
+    /// <remarks>
+    /// The decorator is one object behind two registrations: the actor names the class, consumers name the seam.
+    /// The poll status is none until a source writes one (fleet-pipeline B-040).
+    /// </remarks>
     public static IServiceCollection AddFleetTracking(this IServiceCollection services)
     {
         services.AddSingleton<SwappingTrackerSource>();
         services.AddSingleton<ITrackerSource>(static provider => provider.GetRequiredService<SwappingTrackerSource>());
+        services.AddSingleton<IPollStatus, NoPollStatus>();
         services.AddSingleton<IFleetTracker, FleetTracker>();
 
         return services;

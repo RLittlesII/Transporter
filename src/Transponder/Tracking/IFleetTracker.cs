@@ -47,6 +47,14 @@ public interface IFleetTracker : IDisposable
     /// </remarks>
     IObservable<DateTimeOffset> Observed { get; }
 
+    /// <summary>Gets the live source's poll status, starting with the one in force (fleet-pipeline B-040).</summary>
+    /// <remarks>
+    /// Re-published from <see cref="IPollStatus"/>, never produced here: the tracker reads no clock
+    /// and runs no timer for it, so a countdown is the view's to draw (ADR-0013). A swap to a source
+    /// that does not poll is <see cref="Tracking.PollStatus.None"/> as the next value.
+    /// </remarks>
+    IObservable<PollStatus> PollStatus { get; }
+
     /// <summary>Notices, paced by the caller (fleet-pipeline B-025 - B-027).</summary>
     /// <param name="minimumInterval">
     /// The least time between notices; a new value takes effect without rebuilding anything, and
