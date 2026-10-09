@@ -49,6 +49,12 @@ acceptance_criteria:
     - "§ 9 Traceability Matrix carries a row naming a test for B-057."
 
 decisions:
+  - "2026-10-09 — the person — the targets reach a view model through the swap
+    actor, which answers `GetSwapTargets`, rather than re-published by the
+    tracker: a view model may depend on actors (`fleet-dashboard` B-020), and
+    the tracker route would reopen `fleet-pipeline` the day it was approved.
+    B-057 was amended to claim the route, and § 7 designs it. The ADR this
+    item writes records the choice and the declined route."
     - "2026-10-09 — the person — a picker over the registered sources, not one
       button per source. One button per source fails `fleet-dashboard` B-021's
       swap test, because adding a source would edit markup. The list this item
