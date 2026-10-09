@@ -1239,36 +1239,12 @@ GazetteerPlaces.Table, 10_000)`, so the ten kilometres is the aircraft's, as
   foresee. Every place type is kept, census-designated places included, because
   Channelview and Mission Bend are where people live.
 
-**The poll status (B-040), designed for `0067`**
+**The poll status (B-040), delivered by `0067`**
 
 ADR-0013 left the member names to this § 7 and the writer half to
-`aircraft-source` § 7. Three declarations in `Tracking/`, written out because
-their files do not exist yet:
-
-```csharp
-/// <summary>What a source says about its polling: when the next poll is due, and the interval a provider asked for while it refuses (fleet-pipeline B-040).</summary>
-public sealed record PollStatus
-{
-    /// <summary>Gets the status of a source that does not poll, or has not yet said when it will.</summary>
-    public static PollStatus None { get; } = new();
-
-    public Option<DateTimeOffset> NextDue { get; init; }
-    public Option<TimeSpan> RefusedFor { get; init; }
-}
-
-/// <summary>The read side of a source's poll status, starting with the status in force (ADR-0013).</summary>
-public interface IPollStatus
-{
-    IObservable<PollStatus> Status { get; }
-}
-```
-
-and on `IFleetTracker`:
-
-```csharp
-/// <summary>Gets the live source's poll status, starting with the one in force (B-040).</summary>
-IObservable<PollStatus> PollStatus { get; }
-```
+`aircraft-source` § 7. The declarations live in their files — `PollStatus`,
+`IPollStatus` and `NoPollStatus` in `Tracking/`, row in the type table above —
+and `IFleetTracker.PollStatus` beside `Observed`. What they owe:
 
 - **A value, not two streams.** The due instant and the refusal are reported
   together by one poll (`aircraft-source` B-055 moves the due instant when it
@@ -1571,9 +1547,9 @@ what execute.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate. Thirty-six of the forty-three rows read `Verified`; B-030, B-034, B-035
-and B-037 – B-040 are the seven `Missing` — `0056` builds the first, and the six left of those
-added on 2026-10-08 are cut into `0063` and `0065` – `0067`.** `fleet-dashboard` `0038` delivered B-043 on 2026-10-09. `0064` delivered B-036 and B-042
+**This is the gate. Thirty-seven of the forty-three rows read `Verified`; B-030, B-034, B-035
+and B-037 – B-039 are the six `Missing` — `0056` builds the first, and the five left of those
+added on 2026-10-08 are cut into `0063`, `0065` and `0066`.** `0067` delivered B-040 on 2026-10-09. `fleet-dashboard` `0038` delivered B-043 on 2026-10-09. `0064` delivered B-036 and B-042
 on 2026-10-08. `0062` delivered B-032, B-033 and B-041 on 2026-10-08. B-031 moved on 2026-10-07 with
 `0059`, which published the observed instant on the seam. As of 2026-10-06 every row then
 present read `Verified`: the spine `0031` delivered B-001 – B-005, B-023, B-024 and
@@ -1631,7 +1607,7 @@ asks for.
 | B-037    | `@B-037` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet, plus a **review** that no member of `TransportVehicle` carries an altitude: `grep -i altitude` over `TransportVehicle.cs` returns nothing. Re-done by any change to the base                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet, plus a **review** that resolving reads no file or resource: the table is source, and no `File`, `Stream` or manifest-resource call is reachable from the place column                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Missing  |
-| B-040    | `@B-040` | [`0067`](../.issue/0067-poll-status-seam.yml) — planned: `FleetTrackerPollStatusTests` for the five cases § 8 lists, `GivenAStatusInForce_WhenAConsumerSubscribesLate_ThenItReadsThatStatusAndNoOlder` first                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
+| B-040    | `@B-040` | delivered on [`0067`](../.issue/0067-poll-status-seam.yml) — `FleetTrackerPollStatusTests.GivenAStatusInForce_WhenAConsumerSubscribesLate_ThenItReadsThatStatusAndNoOlder`, `GivenARefusalThenAnAppliedPoll_WhenTheSeamReportsThem_ThenTheTrackerRepublishesExactlyThoseAndReadsNoClock`, `GivenAPolledSourceReportingADueInstant_WhenItIsSwappedForOneThatPushes_ThenThePollStatusIsReplacedByNone`, `GivenNoPollStatus_WhenItIsRead_ThenItIsNoneAtOnceAndNeverCompletes` and `GivenABoundConsumer_WhenTheTrackerIsDisposed_ThenThePollStatusCompletesAndNothingFollows`                                                                                                                                                                                                                                                                                                                                                | Verified |
 | B-041    | `@B-041` | `FleetMovementTests.GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced` and `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`, plus **review** on [`0062`](../.issue/0062-movement-on-the-element.yml) for "nothing older kept": `TrackedVehicle.Replaced` and `MovedVehicle.Replaced` are `Option<TransportVehicle>`, and nothing under `src/Transponder/Model/` names `TrackedVehicle` or `MovedVehicle`, so a replaced vehicle reaches no element. Re-done by any change to `TrackedVehicle`, `MovedVehicle` or a member of `TransportVehicle`                                                                                                                                                                                                                                                                                                | Verified |
 | B-042    | `@B-042` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetReadoutTests.GivenTwoAircraft_WhenAReadoutsDeltaIsRead_ThenItIsTheChangeAtTheCellsPrecision`, `GivenAnElementJustAdded_WhenEachReadoutsChangeIsRead_ThenThereIsNone`, `GivenAReadoutNamingNoDelta_WhenItsChangeIsRead_ThenThereIsNone`, `GivenABoundFleet_WhenAnUpdateClimbs_ThenTheAltitudeReadoutReadsTheChangeOffTheElement` and `GivenAnAircraft_WhenItsReadoutCellsAreRead_ThenEachIsInItsDisplayUnit`                                                                                                                                                                                                                                                                                                                                                                                                                              | Verified |
 | B-043    | `@B-043` | delivered on `fleet-dashboard` [`0038`](../../Features/Fleet/.issue/0038-detail-pane-and-summary.yml) — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsDetailIsRead_ThenItNamesTheFieldsOnlyAnAircraftReports` and `GivenADescriptionNamingNoDetail_WhenItsDetailIsRead_ThenItIsEmpty`, with B-022's review re-done for the readers it added                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Verified |
