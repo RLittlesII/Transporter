@@ -456,35 +456,39 @@ going stale
 The diagrams above keep their type names: a diagram states a relationship
 rather than a declaration, and a stale name in one is something grep finds.
 
-| Type                        | File                                                                                                | Claims it makes visible           |
-| --------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `IOpenSkyApi`               | [`Contracts/IOpenSkyApi.cs`](../Contracts/IOpenSkyApi.cs)                                           | B-005, B-006, B-024, B-048        |
-| `OpenSkyStatesResponse`     | [`Contracts/OpenSkyStatesResponse.cs`](../Contracts/OpenSkyStatesResponse.cs)                       | B-001, B-002                      |
-| `OpenSkyStateRow`           | [`Contracts/OpenSkyStateRow.cs`](../Contracts/OpenSkyStateRow.cs)                                   | B-002, B-004, B-016, B-022        |
-| `OpenSkyThrottledException` | [`Contracts/OpenSkyThrottledException.cs`](../Contracts/OpenSkyThrottledException.cs)               | B-028, transport half; ADR-0008   |
-| `OpenSkyStateRowConverter`  | [`Http/OpenSkyStateRowConverter.cs`](../Http/OpenSkyStateRowConverter.cs)                           | B-002                             |
-| `OpenSkyHttpApi`            | [`Http/OpenSkyHttpApi.cs`](../Http/OpenSkyHttpApi.cs)                                               | B-007                             |
-| `OpenSkyRegistration`       | [`Container/OpenSkyRegistration.cs`](../Container/OpenSkyRegistration.cs)                           | B-008                             |
-| `IAircraftSnapshotClient`   | [`IAircraftSnapshotClient.cs`](../IAircraftSnapshotClient.cs)                                       | B-015, what a strategy may hold   |
-| `IDemandedPoll`             | [`IDemandedPoll.cs`](../IDemandedPoll.cs)                                                           | B-053, what the actor reads       |
-| `DemandPoll`                | [`Messages/DemandPoll.cs`](../../../Messages/DemandPoll.cs)                                         | B-053, told rather than published |
-| `AircraftPollActor`         | [`Polling/AircraftPollActor.cs`](../Polling/AircraftPollActor.cs)                                   | B-053, where the throttle lives   |
-| `TransportVehicle`          | [`Model/TransportVehicle.cs`](../../../Model/TransportVehicle.cs)                                   | ADR-0005; B-037, the key's form   |
-| `Aircraft`                  | [`Model/Aircraft.cs`](../../../Model/Aircraft.cs)                                                   | B-034 – B-036                     |
-| `GeoPosition`               | [`Model/GeoPosition.cs`](../../../Model/GeoPosition.cs)                                             | B-036                             |
-| `PositionSource`            | [`Model/PositionSource.cs`](../../../Model/PositionSource.cs)                                       | B-036, the enum's absence         |
-| `ITrackerSource`            | [`Tracking/ITrackerSource.cs`](../../../Tracking/ITrackerSource.cs)                                 | B-033, B-049                      |
-| `ITrackerSourceStrategy`    | [`Tracking/ITrackerSourceStrategy.cs`](../../../Tracking/ITrackerSourceStrategy.cs)                 | B-038, the registration's shape   |
-| `IAircraftTrackerSource`    | [`Tracking/Sources/IAircraftTrackerSource.cs`](../../../Tracking/Sources/IAircraftTrackerSource.cs) | B-037, the seam's width           |
-| `AircraftTrackerSource`     | [`Tracking/Sources/AircraftTrackerSource.cs`](../../../Tracking/Sources/AircraftTrackerSource.cs)   | B-033, B-034                      |
-| `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../Tracking/Sources/AircraftSnapshotMapper.cs) | B-034 – B-037, B-046              |
-| `SwappingTrackerSource`     | [`Tracking/Sources/SwappingTrackerSource.cs`](../../../Tracking/Sources/SwappingTrackerSource.cs)   | B-038 – B-040                     |
-| `SourceSwapActor`           | [`Tracking/Sources/SourceSwapActor.cs`](../../../Tracking/Sources/SourceSwapActor.cs)               | `fleet-dashboard` B-016's half    |
-| `SwapSource`                | [`Tracking/Sources/SwapSource.cs`](../../../Tracking/Sources/SwapSource.cs)                         | B-037, how a strategy is named    |
-| `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../Tracking/IFleetTracker.cs)                                   | B-041, B-051                      |
-| `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051               |
-| `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives       |
-| `TrackingRegistration`      | [`Tracking/Container/TrackingRegistration.cs`](../../../Tracking/Container/TrackingRegistration.cs) | B-052                             |
+| Type                        | File                                                                                                | Claims it makes visible                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `IOpenSkyApi`               | [`Contracts/IOpenSkyApi.cs`](../Contracts/IOpenSkyApi.cs)                                           | B-005, B-006, B-024, B-048                      |
+| `OpenSkyStatesResponse`     | [`Contracts/OpenSkyStatesResponse.cs`](../Contracts/OpenSkyStatesResponse.cs)                       | B-001, B-002                                    |
+| `OpenSkyStateRow`           | [`Contracts/OpenSkyStateRow.cs`](../Contracts/OpenSkyStateRow.cs)                                   | B-002, B-004, B-016, B-022                      |
+| `OpenSkyThrottledException` | [`Contracts/OpenSkyThrottledException.cs`](../Contracts/OpenSkyThrottledException.cs)               | B-028, transport half; ADR-0008                 |
+| `OpenSkyStateRowConverter`  | [`Http/OpenSkyStateRowConverter.cs`](../Http/OpenSkyStateRowConverter.cs)                           | B-002                                           |
+| `OpenSkyHttpApi`            | [`Http/OpenSkyHttpApi.cs`](../Http/OpenSkyHttpApi.cs)                                               | B-007                                           |
+| `OpenSkyRegistration`       | [`Container/OpenSkyRegistration.cs`](../Container/OpenSkyRegistration.cs)                           | B-008                                           |
+| `IAircraftSnapshotClient`   | [`IAircraftSnapshotClient.cs`](../IAircraftSnapshotClient.cs)                                       | B-015, what a strategy may hold                 |
+| `IDemandedPoll`             | [`IDemandedPoll.cs`](../IDemandedPoll.cs)                                                           | B-053, what the actor reads                     |
+| `DemandPoll`                | [`Messages/DemandPoll.cs`](../../../Messages/DemandPoll.cs)                                         | B-053, told rather than published               |
+| `AircraftPollActor`         | [`Polling/AircraftPollActor.cs`](../Polling/AircraftPollActor.cs)                                   | B-053, where the throttle lives                 |
+| `TransportVehicle`          | [`Model/TransportVehicle.cs`](../../../Model/TransportVehicle.cs)                                   | ADR-0005; B-037, the key's form                 |
+| `Aircraft`                  | [`Model/Aircraft.cs`](../../../Model/Aircraft.cs)                                                   | B-034 – B-036                                   |
+| `GeoPosition`               | [`Model/GeoPosition.cs`](../../../Model/GeoPosition.cs)                                             | B-036                                           |
+| `PositionSource`            | [`Model/PositionSource.cs`](../../../Model/PositionSource.cs)                                       | B-036, the enum's absence                       |
+| `ITrackerSource`            | [`Tracking/ITrackerSource.cs`](../../../Tracking/ITrackerSource.cs)                                 | B-033, B-049                                    |
+| `ITrackerSourceStrategy`    | [`Tracking/ITrackerSourceStrategy.cs`](../../../Tracking/ITrackerSourceStrategy.cs)                 | B-038, the registration's shape                 |
+| `IAircraftTrackerSource`    | [`Tracking/Sources/IAircraftTrackerSource.cs`](../../../Tracking/Sources/IAircraftTrackerSource.cs) | B-037, the seam's width                         |
+| `AircraftTrackerSource`     | [`Tracking/Sources/AircraftTrackerSource.cs`](../../../Tracking/Sources/AircraftTrackerSource.cs)   | B-033, B-034                                    |
+| `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../Tracking/Sources/AircraftSnapshotMapper.cs) | B-034 – B-037, B-046                            |
+| `SwappingTrackerSource`     | [`Tracking/Sources/SwappingTrackerSource.cs`](../../../Tracking/Sources/SwappingTrackerSource.cs)   | B-038 – B-040                                   |
+| `SourceSwapActor`           | [`Tracking/Sources/SourceSwapActor.cs`](../../../Tracking/Sources/SourceSwapActor.cs)               | `fleet-dashboard` B-016's half; B-057; ADR-0015 |
+| `SwapSource`                | [`Tracking/Sources/SwapSource.cs`](../../../Tracking/Sources/SwapSource.cs)                         | B-057, the handle carried back                  |
+| `TrackerSourceEntry`        | [`Tracking/Sources/TrackerSourceEntry.cs`](../../../Tracking/Sources/TrackerSourceEntry.cs)         | B-057, registration's name                      |
+| `GetSwapTargets`            | [`Tracking/Sources/GetSwapTargets.cs`](../../../Tracking/Sources/GetSwapTargets.cs)                 | B-057, asked once                               |
+| `SwapTargets`               | [`Tracking/Sources/SwapTargets.cs`](../../../Tracking/Sources/SwapTargets.cs)                       | B-057, in registration order                    |
+| `SwapTarget`                | [`Tracking/Sources/SwapTarget.cs`](../../../Tracking/Sources/SwapTarget.cs)                         | B-057, a name and a handle                      |
+| `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../Tracking/IFleetTracker.cs)                                   | B-041, B-051                                    |
+| `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051                             |
+| `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives                     |
+| `TrackingRegistration`      | [`Tracking/Container/TrackingRegistration.cs`](../../../Tracking/Container/TrackingRegistration.cs) | B-052                                           |
 
 `IOpenSkyApi` carries no suffix, which is B-048 visible in the identifier. Not
 `IOpenSkyApiContract`: "contract" is the pattern's word for the role, not part
@@ -978,21 +982,22 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and three of the fifty-four rows read `Missing`** — B-041's
+**This is the gate, and four of the fifty-six rows read `Missing`** — B-041's
 "what view models depend on" half, owed by `fleet-dashboard` `0039`, and B-054
-and B-055, added on 2026-10-08 and cut into `0068`.
-Fifty-one are `Verified`, and they arrived three different ways.
-Thirty-four came from
+– B-056, added on 2026-10-08 and cut into `0068`.
+Fifty-two are `Verified`, and they arrived three different ways.
+Thirty-five came from
 items: `0002` built the contract, its envelope, the positional row's converter
 and the HTTP transport, `0003` the snapshot and its
 cache, `0004` the snapshot client, the token source, the observed clock and
 the options, `0005` the seam, the domain model and the projection, `0007`
 the tracker's pipeline, its clock and its stale mark, and `0006` the swap
 decorator, the poll the subscription owns and the chain the container
-resolves, and `0057` the poll a user demands and the window that refuses one —
+resolves, `0057` the poll a user demands and the window that refuses one, and
+`0080` the targets the swap actor answers from registration —
 the tests
 this section names against B-001, B-003, B-011 – B-013,
-B-015 – B-029, B-033 – B-040, B-042, B-043, B-050 – B-053 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
+B-015 – B-029, B-033 – B-040, B-042, B-043, B-050 – B-053, B-057 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
 second contract interface would have to be and B-049 what a push provider's
 strategy may not be given, so for each there is no value to compute and
 no declaration to analyze, and the row records what was looked at and when it is
@@ -1104,12 +1109,12 @@ is B-049 and the clause waiting on `0005`.
 | B-054    | `@B-054` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `AircraftPollStatusTests.GivenAPollAtAnInstant_WhenTheLoopSchedulesTheNext_ThenItIsReportedDueOneIntervalLater`, with the demanded-poll case beside it                                                                                                                                                                                                                                                                                                                                                                                                                                              | Missing  |
 | B-055    | `@B-055` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `AircraftPollStatusTests.GivenAThrottledPoll_WhenItIsHandled_ThenARefusalOfItsSecondsIsReportedAndNextDueIsExactlyThatLater`, with the clearing case beside it                                                                                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
 | B-056    | `@B-056` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `SwappingTrackerSourceTests.GivenTwoStrategiesWithStatuses_WhenTheSourceSwaps_ThenTheIncomingStatusIsReadAtOnceAndNothingOutgoingFollows`                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
-| B-057    | `@B-057` | [`0080`](../.issue/0080-swap-targets-from-registration.yml) — planned: `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
+| B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's analyzer rule                                                                                                                                                                                                                                         | Verified |
 
 Fifty-six rows, fifty-six live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
-only place a claim's build state is written, and five of its rows still say
-their claim is not proven: B-054 – B-056 wait on `0068`, B-057 on `0080`, and B-041 does not wait
+only place a claim's build state is written, and four of its rows still say
+their claim is not proven: B-054 – B-056 wait on `0068`, and B-041 does not wait
 on a mechanism: the analyzer is complete, and
 B-041's remaining half waits on `fleet-dashboard` `0039` building the view model
 whose dependencies it is about. The Feature cannot reach `done` until it does.
