@@ -74,10 +74,7 @@ internal static class FleetMovement
         }
 
         var replaced = change.Previous.HasValue ? change.Previous.Value : last.Value.Vehicle;
-        var leg =
-            from before in replaced.Position
-            from after in change.Current.Position
-            select GreatCircle.Metres(before, after);
+        var leg = replaced.Position.Bind(before => change.Current.Position.Map(after => GreatCircle.Metres(before, after)));
 
         return new()
         {

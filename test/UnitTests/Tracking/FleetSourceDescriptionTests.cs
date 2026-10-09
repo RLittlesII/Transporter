@@ -1,7 +1,9 @@
 using AwesomeAssertions;
 using Transponder.Model;
+using Transponder.Tracking.Fleet;
 using Transponder.Tracking.Sources;
 using Transponder.UnitTests.Model.Fixtures;
+using Transponder.UnitTests.Tracking.Fixtures;
 
 namespace Transponder.UnitTests.Tracking;
 
@@ -62,5 +64,53 @@ public class FleetSourceDescriptionTests
         onTheGround.Matches(grounded).Should().BeTrue();
         onTheGround.Matches(airborne).Should().BeFalse();
         reporting.Matches(grounded).Should().BeFalse("the aircraft reports no fix, and absent is a fact rather than 0,0");
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-036. Each filled role is one of the description's own columns — the same
+    /// instance, not one sharing its name — so a role and the column it names cannot disagree on a
+    /// selector. A role built from a fresh column passes a name check and fails here. The place is
+    /// the role this description leaves empty until it offers a place column.
+    /// </summary>
+    [Fact]
+    public void GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns()
+    {
+        // Given
+        var offered = AircraftFleetDescription.Offered;
+
+        // When
+        var card = offered.Card;
+
+        // Then
+        var title = card.Title.IfNoneUnsafe((FleetColumn?) null);
+        var subtitle = card.Subtitle.IfNoneUnsafe((FleetColumn?) null);
+        var readouts = card.Readouts.Select(static readout => readout.Column).ToList();
+        title.Should().BeSameAs(offered.Columns.Single(static column => column.Name == "Callsign"));
+        subtitle.Should().BeSameAs(offered.Columns.Single(static column => column.Name == "Origin country"));
+        readouts.Select(static column => column.Name).Should().Equal(["Altitude", "Ground speed", "Heading", "Vertical rate"]);
+        readouts.Should().OnlyContain(
+            column => offered.Columns.Any(held => ReferenceEquals(held, column)),
+            "a readout is a column the description holds");
+        card.Place.IsNone.Should().BeTrue("this description offers no place column yet");
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-036. A description that names no card has every role empty and no readouts,
+    /// rather than a role a consumer has to guess at — which holds for any source.
+    /// </summary>
+    [Fact]
+    public void GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty()
+    {
+        // Given
+        FleetSourceDescription offered = new FleetSourceDescriptionFixture();
+
+        // When
+        var card = offered.Card;
+
+        // Then
+        card.Title.IsNone.Should().BeTrue();
+        card.Subtitle.IsNone.Should().BeTrue();
+        card.Place.IsNone.Should().BeTrue();
+        card.Readouts.Should().BeEmpty();
     }
 }

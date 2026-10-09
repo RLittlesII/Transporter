@@ -285,6 +285,7 @@ public class FleetTrackerTests
         offered.Should().HaveCount(2);
         offered[1].Columns.Select(static column => column.Name).Should().Equal(["Vessel"]);
         offered[1].Groupings.Select(static grouping => grouping.Name).Should().Equal(["Flag"]);
+        offered[1].Card.Title.IfNoneUnsafe((FleetColumn?) null).Should().BeSameAs(Vessel, "the card swaps with the description that names it (B-036)");
         orders.Should().HaveCount(2, "the order follows the description, because no caller had chosen a comparer");
         source.Connections.Should().Be(1, "a swap of the description rebuilds no stage and reconnects nothing");
     }
@@ -309,19 +310,20 @@ public class FleetTrackerTests
             .Select(static change => change.Current.IsStale)
             .Last();
 
+    /// <summary>A second source's one column, which also titles its card.</summary>
+    private static readonly FleetColumn Vessel = new()
+    {
+        Name = "Vessel",
+        Value = static vehicle => vehicle.Label,
+        Comparer = Comparer<TransportVehicle>.Create(static (left, right) => string.CompareOrdinal(left.Label, right.Label)),
+    };
+
     /// <summary>A second source's description, which is all a swap changes (B-021).</summary>
     private static readonly FleetSourceDescription Vessels = new()
     {
-        Columns =
-        [
-            new FleetColumn
-            {
-                Name = "Vessel",
-                Value = static vehicle => vehicle.Label,
-                Comparer = Comparer<TransportVehicle>.Create(static (left, right) => string.CompareOrdinal(left.Label, right.Label)),
-            },
-        ],
+        Columns = [Vessel],
         Groupings = [new FleetGrouping { Name = "Flag", Key = static vehicle => vehicle.GroupKey }],
+        Card = new FleetCard { Title = Vessel },
     };
 
     /// <summary>The instant every vehicle here was last heard from, and the only one the clock is told about.</summary>

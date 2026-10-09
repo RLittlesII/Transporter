@@ -55,6 +55,11 @@ A functional-style tour is not the point, and the boundaries are deliberate:
   wrapped.
 - One idiom per situation, used consistently, beats three clever ones.
 - If a reader would need to look up an operator, pick the plainer form.
+- **Method form, not query syntax.** Compose options with `Bind`, `Map` and
+  `Filter`, never `from … in … select`. Query syntax over an `Option` reads as
+  a collection query to a line-of-business reader and hides which operator
+  runs; the method names are the ones this file already asks for (PR #62's
+  review, [lesson 0024](../../.spec/lessons/0024-query-syntax-hides-the-operator.md)).
 
 ## Never add
 
@@ -62,3 +67,4 @@ A functional-style tour is not the point, and the boundaries are deliberate:
 - `Option<T>` in an actor message, a cache key, or a binding target.
 - `.Value` on an `Option` without handling the empty case.
 - An `Either` standing in for a programming error that should throw.
+- LINQ query syntax (`from … in … select`) over an `Option` or `Either`.

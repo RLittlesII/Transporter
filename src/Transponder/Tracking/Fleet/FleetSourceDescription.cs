@@ -27,4 +27,8 @@ public sealed record FleetSourceDescription
     /// here.
     /// </remarks>
     public IReadOnlyList<FleetFilterChoice> Filters { get; init; } = [];
+
+    /// <summary>Gets which columns fill a card, every role empty when the source names none (B-036).</summary>
+    /// <remarks>Here rather than on the tracker, so a swap replaces the card with the columns it names (B-021).</remarks>
+    public FleetCard Card { get; init; } = new();
 }

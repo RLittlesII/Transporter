@@ -1,3 +1,4 @@
+using LanguageExt;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transponder.Model;
 using Transponder.Tracking;
@@ -24,12 +25,18 @@ internal sealed class TrackedVehicleFixture : AutoFixtureBase<TrackedVehicleFixt
     /// <returns>The fixture, so building chains.</returns>
     public TrackedVehicleFixture WithIsStale(bool isStale) => With(ref _isStale, isStale);
 
+    /// <summary>Sets the vehicle the last update replaced, absent when the element has just entered (B-041).</summary>
+    /// <param name="replaced">The replaced vehicle, or absent.</param>
+    /// <returns>The fixture, so building chains.</returns>
+    public TrackedVehicleFixture WithReplaced(Option<TransportVehicle> replaced) => With(ref _replaced, replaced);
+
     /// <summary>Takes the subject, as every fixture here is taken.</summary>
     /// <param name="fixture">The fixture to build.</param>
     public static implicit operator TrackedVehicle(TrackedVehicleFixture fixture) => fixture.Build();
 
-    private TrackedVehicle Build() => new() { Vehicle = _vehicle, IsStale = _isStale };
+    private TrackedVehicle Build() => new() { Vehicle = _vehicle, IsStale = _isStale, Replaced = _replaced };
 
     private TransportVehicle _vehicle = new AircraftFixture();
     private bool _isStale;
+    private Option<TransportVehicle> _replaced = Option<TransportVehicle>.None;
 }
