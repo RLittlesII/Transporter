@@ -6,6 +6,7 @@ using LanguageExt;
 using NSubstitute;
 using Transponder.Model;
 using Transponder.Tracking;
+using Transponder.UnitTests.Model.Fixtures;
 
 namespace Transponder.UnitTests.Tracking;
 
@@ -29,10 +30,10 @@ public class FleetMovementTests
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.70, -95.40)));
 
         // When
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.80, -95.40)));
 
         // Then
         rows.Single().Leg.IfNone(double.NaN).Should().BeApproximately(11_119.5, 1);
@@ -52,13 +53,13 @@ public class FleetMovementTests
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        cache.AddOrUpdate(new Aircraft("SYN102", LastContact));
+        cache.AddOrUpdate(new AircraftFixture().WithKey("SYN102"));
 
         // When
         cache.Edit(static updater =>
         {
-            updater.AddOrUpdate(new Aircraft("SYN102", LastContact) { Position = new GeoPosition(29.70, -95.40) });
-            updater.AddOrUpdate(new Aircraft("SYN103", LastContact) { Position = new GeoPosition(29.80, -95.40) });
+            updater.AddOrUpdate(new AircraftFixture().WithKey("SYN102").WithPosition(new GeoPosition(29.70, -95.40)));
+            updater.AddOrUpdate(new AircraftFixture().WithKey("SYN103").WithPosition(new GeoPosition(29.80, -95.40)));
         });
 
         // Then
@@ -81,14 +82,15 @@ public class FleetMovementTests
         var source = Substitute.For<ITrackerSource>();
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source).WithClock(clock).WithTicks(clock);
+        var heard = new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        ((IObservedClockWriter) clock).Observe(LastContact);
-        var departed = new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) };
+        ((IObservedClockWriter) clock).Observe(heard);
+        Aircraft departed = new AircraftFixture().WithLastContact(heard).WithPosition(new GeoPosition(29.70, -95.40));
         cache.AddOrUpdate(departed);
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithLastContact(heard).WithPosition(new GeoPosition(29.80, -95.40)));
 
         // When
-        ((IObservedClockWriter) clock).Observe(LastContact + TimeSpan.FromMinutes(6));
+        ((IObservedClockWriter) clock).Observe(heard + TimeSpan.FromMinutes(6));
 
         // Then
         var row = rows.Single();
@@ -111,11 +113,11 @@ public class FleetMovementTests
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.70, -95.40)));
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.80, -95.40)));
 
         // When
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact));
+        cache.AddOrUpdate(new AircraftFixture());
 
         // Then
         rows.Single().Leg.IsNone.Should().BeTrue("there is no position to fly to");
@@ -135,12 +137,12 @@ public class FleetMovementTests
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.70, -95.40)));
 
         // When
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) });
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.90, -95.40) });
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(30.00, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.80, -95.40)));
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.90, -95.40)));
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(30.00, -95.40)));
 
         // Then
         rows.Single().Travelled.Should().BeApproximately(33_358.5, 1);
@@ -159,12 +161,12 @@ public class FleetMovementTests
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithKey("SYN101").WithPosition(new GeoPosition(29.70, -95.40)));
+        cache.AddOrUpdate(new AircraftFixture().WithKey("SYN101").WithPosition(new GeoPosition(29.80, -95.40)));
         cache.RemoveKey("SYN101");
 
         // When
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.90, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithKey("SYN101").WithPosition(new GeoPosition(29.90, -95.40)));
 
         // Then
         var row = rows.Single();
@@ -187,10 +189,10 @@ public class FleetMovementTests
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithKey("SYN101").WithPosition(new GeoPosition(29.70, -95.40)));
+        cache.AddOrUpdate(new AircraftFixture().WithKey("SYN101").WithPosition(new GeoPosition(29.80, -95.40)));
         sut.Filter(static vehicle => vehicle.Key != "SYN101");
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.90, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithKey("SYN101").WithPosition(new GeoPosition(29.90, -95.40)));
         rows.Should().BeEmpty("the vehicle is hidden while it flies the second leg");
 
         // When
@@ -213,15 +215,15 @@ public class FleetMovementTests
         // Given
         var live = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
         var replay = new SourceCache<TransportVehicle, string>(static vehicle => vehicle.Key);
-        live.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
-        live.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) });
-        replay.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(30.50, -95.00) });
+        live.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.70, -95.40)));
+        live.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.80, -95.40)));
+        replay.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(30.50, -95.00)));
         var selected = new BehaviorSubject<SourceCache<TransportVehicle, string>>(live);
         var source = Substitute.For<ITrackerSource>();
         source.Connect().Returns(selected.Select(static cache => cache.Connect()).Switch());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        live.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.90, -95.40) });
+        live.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.90, -95.40)));
         rows.Single().Travelled.Should().BeApproximately(11_119.5, 1, "one leg flown on the live source after binding");
 
         // When
@@ -246,12 +248,12 @@ public class FleetMovementTests
         source.Connect().Returns(cache.Connect());
         FleetTracker sut = new FleetTrackerFixture().WithSource(source);
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
-        var second = new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.80, -95.40) };
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
+        Aircraft second = new AircraftFixture().WithPosition(new GeoPosition(29.80, -95.40));
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.70, -95.40)));
         cache.AddOrUpdate(second);
 
         // When
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.90, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.90, -95.40)));
 
         // Then
         rows.Single().Replaced.IfNone(rows.Single().Vehicle).Should().BeSameAs(second);
@@ -269,12 +271,9 @@ public class FleetMovementTests
         using var subscription = sut.Fleet.Bind(out var rows).Subscribe();
 
         // When
-        cache.AddOrUpdate(new Aircraft("SYN101", LastContact) { Position = new GeoPosition(29.70, -95.40) });
+        cache.AddOrUpdate(new AircraftFixture().WithPosition(new GeoPosition(29.70, -95.40)));
 
         // Then
         rows.Single().Replaced.IsNone.Should().BeTrue();
     }
-
-    /// <summary>The instant every vehicle here was last heard from.</summary>
-    private static readonly DateTimeOffset LastContact = new(2026, 10, 8, 12, 0, 0, TimeSpan.Zero);
 }
