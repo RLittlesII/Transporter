@@ -41,9 +41,12 @@ internal sealed class SwappingTrackerSource : ITrackerSource
   Adding a source is one registration line. **A strategy registered as the
   consumer seam is handed to consumers in place of the decorator**, and the swap
   then silently does nothing.
-- **Selection names a strategy by its per-type seam**, so no member carrying a
-  name or a kind is added to the seam to support the swap. The decorator is
-  _told_ what is live by the actor behind the control; nothing asks it.
+- **Selection names a strategy by its registration**, so no member carrying a
+  name or a kind is added to the seam to support the swap. Each registration
+  pairs its strategy with the name a swap control shows; the actor behind the
+  control answers those names with opaque handles and is told one back
+  ([ADR-0015](../../.spec/adr/0015-the-swap-actor-answers-the-registered-targets.md)).
+  The decorator is _told_ what is live; nothing asks it.
 - **Every source is a swap target, live or recorded**, because all of them reach
   the seam. **One switch, not two**: there is no separate offline mode and no
   second seam to bridge. They do not all reach the seam at the same depth, and
