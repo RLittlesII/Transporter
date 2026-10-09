@@ -1,4 +1,35 @@
-# Transponder
+<p align="center">
+  <img src=".assets/screenshots/fleet-grid.png" width="760" alt="The fleet dashboard: a grid of aircraft cards with altitude, ground speed, heading and freshness" />
+</p>
+
+<h1 align="center">Transponder</h1>
+
+<p align="center">
+  Polled data can still be reactive — a DynamicData and .NET MAUI fleet dashboard over aircraft above Houston.
+</p>
+
+<p align="center">
+  <a href="https://github.com/RLittlesII/Transporter/actions/workflows/ci.yml"><img src="https://github.com/RLittlesII/Transporter/actions/workflows/ci.yml/badge.svg" alt="ci" /></a>
+  <img src="https://img.shields.io/badge/.NET-10-512BD4?style=flat&logo=dotnet&logoColor=white" alt=".NET 10" />
+  <img src="https://img.shields.io/badge/UI-.NET%20MAUI-512BD4?style=flat" alt=".NET MAUI" />
+  <img src="https://img.shields.io/badge/reactive-DynamicData-1e1e1e?style=flat" alt="DynamicData" />
+  <img src="https://img.shields.io/badge/status-pre--release-orange?style=flat" alt="pre-release" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat" alt="MIT" /></a>
+</p>
+
+<p align="center">
+  <a href="#audience">Audience</a> •
+  <a href="#core-idea">Core idea</a> •
+  <a href="#the-app-fleet-tracking-dashboard">The app</a> •
+  <a href="#dynamicdata-operators-to-demonstrate">Operators</a> •
+  <a href="#data-source-opensky-network">Data source</a> •
+  <a href="#demo-resilience">Demo resilience</a> •
+  <a href="#closing-act-optional-swap-in-a-push-source">Closing act</a> •
+  <a href="#open-items">Open items</a> •
+  <a href="#build">Build</a>
+</p>
+
+---
 
 ## Audience
 
@@ -22,6 +53,21 @@ UI features:
 - Summary counts and aggregates per group
 - "Stale" indicator for aircraft that stop reporting — marked and kept, never removed, at a configurable five minutes
 - Optional: map view
+
+### Screenshots
+
+Taken on the Mac Catalyst head against a recorded replay, so the aircraft are synthetic.
+
+<table>
+  <tr>
+    <td width="50%"><img src=".assets/screenshots/fleet-grid.png" alt="The live grid: one card per aircraft, each marked updated or fresh, with the change since the last poll under altitude and ground speed" /></td>
+    <td width="50%"><img src=".assets/screenshots/fleet-detail.png" alt="An aircraft selected: its card highlighted, and the detail pane below showing ICAO24, callsign, squawk, category, position and last contact" /></td>
+  </tr>
+  <tr>
+    <td align="center">Live grid, updating in place, with summary counts</td>
+    <td align="center">Master-detail: the selected aircraft in the detail pane</td>
+  </tr>
+</table>
 
 ## DynamicData operators to demonstrate
 
@@ -150,3 +196,17 @@ Replace the polled source with a push source and show that everything downstream
 - [Akka](https://github.com/akkadotnet/akka.net)
 - [Mapperly](https://github.com/riok/mapperly)
 - [Flurl](https://flurl.dev) — the polled HTTP client ([ADR-0001](.spec/adr/0001-flurl-for-http.md))
+
+## Build
+
+Requires the .NET SDK pinned in [`global.json`](global.json).
+
+```sh
+dotnet tool restore
+./build.sh                  # what CI runs: compile, format, test
+dotnet test test/UnitTests  # the tests alone
+```
+
+## License
+
+[MIT](LICENSE) © 2026 Rodney Littles, II.
