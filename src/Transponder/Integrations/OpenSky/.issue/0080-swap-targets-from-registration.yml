@@ -2,7 +2,7 @@ id: "0080"
 type: task
 title: Publish what a swap can select, from registration
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -25,7 +25,7 @@ claims:
 
 created: "2026-10-09"
 updated: "2026-10-09"
-closed: null
+closed: "2026-10-09"
 
 summary: |
     The person chose a picker over the registered sources for `fleet-dashboard`'s
