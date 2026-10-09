@@ -63,6 +63,18 @@ the cell is still a formatted string, as row 3 decided, and the arithmetic lives
 in the per-source description beside the unit conversion it needs. B-038 gained
 the bound row 8 chose.
 
+**B-036 and B-042 were amended on 2026-10-08**, before `0064` was designed,
+because each ended in a clause obliging a consumer this Feature does not build:
+"no consumer SHALL fill it with a member of its own choosing" and "no consumer
+SHALL compute a delta itself". That is the defect the 2026-10-05 review took out
+of B-002 (§ 12): a claim here is proved by a test here, and no test here can see
+a view model. Both halves already stand on the consumer's side —
+`fleet-dashboard` B-029 lays a card out from the roles and leaves an empty one
+absent, and its B-038 shows the change the description names — so the clauses
+are dropped rather than moved. Rejected: keeping them as a review, which
+would be a review of another Feature's code with nothing in this Feature to
+re-do it.
+
 B-029 and B-030 were added on 2026-10-07, from § 11 row 5: the filter control's
 choices are of two kinds, and the pipeline is what each must come from. B-029
 carries the choices the source declares — curated, offered whether or not a
@@ -154,13 +166,13 @@ Feature is cited it is written with its Feature's name.
 | B-033 | The element SHALL carry the sum of every distance B-032 measured for its vehicle since the vehicle entered the fleet; a vehicle removed and later reported again SHALL start a new sum.                                                                                                                                                                                                                                                                                                                                                                                   | `fleet-dashboard` decisions/0002 and B-030                                                    |
 | B-034 | The element SHALL carry its vehicle's trail: the positions it was reported at since it entered the fleet, oldest first, each with its last contact, the trail measure (B-037) read at that point, and its distance from the point before. A point SHALL be added only when an update moves the position; the trail SHALL be bounded by a count the tracker holds, defaulting to 240 — an hour at fifteen seconds — with the oldest dropped first; and it SHALL travel with the element, so it leaves the fleet when the vehicle does and is never a store kept beside it. | `fleet-dashboard` decisions/0002, B-034 and B-035; B-002; dynamic-data-pipeline § "Never add" |
 | B-035 | A trail point whose last contact follows its predecessor's by more than the staleness threshold (B-017) SHALL be marked as following a gap, so a consumer can draw a break rather than a straight line across a silence nobody observed.                                                                                                                                                                                                                                                                                                                                  | `fleet-dashboard` B-034; B-016                                                                |
-| B-036 | The description SHALL name which of its columns fill a card's roles — a title, a subtitle, a place and an ordered list of readouts — beside the columns B-020 names; a role the source does not fill SHALL be empty, and no consumer SHALL fill it with a member of its own choosing.                                                                                                                                                                                                                                                                                     | `fleet-dashboard` decisions/0002 and B-029; B-020; B-021                                      |
+| B-036 | The description SHALL name which of its columns fill a card's roles — a title, a subtitle, a place and an ordered list of readouts — beside the columns B-020 names; a role the source does not fill SHALL be empty.                                                                                                                                                                                                                                                                                                                                                      | `fleet-dashboard` decisions/0002 and B-029; B-020; B-021                                      |
 | B-037 | The description SHALL name a trail measure — a display name, the range a colour ramp spans, and a selector from `TransportVehicle` to an optional number (altitude in metres, for aircraft) — and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                                                                                              | `fleet-dashboard` B-034; B-022; § 4 row 16                                                    |
 | B-038 | The description MAY offer a place column, naming the nearest place to a position from a table compiled into the application; resolving one SHALL make no network call and read no file, and where no entry lies within the column's bound — ten kilometres for aircraft, over the US Census Bureau's Gazetteer places (§ 11 row 8) — it SHALL yield the position's coordinates rather than a place.                                                                                                                                                                       | `fleet-dashboard` decisions/0002; B-024; § 4 row 18; § 11 row 8                               |
 | B-039 | The tracker SHALL publish the notices B-025 raises as a window of the most recent twenty, oldest dropped first and unpaced by B-026, so a consumer can show the rate of change without keeping a list of notices itself.                                                                                                                                                                                                                                                                                                                                                  | `fleet-dashboard` B-037                                                                       |
 | B-040 | The tracker SHALL publish the live source's poll status — the instant its next poll is due, and while the provider is refusing polls, the interval it asked for — re-publishing what the source reports with no timer, clock read or provider name of its own; a source that does not poll SHALL publish none, and a swap SHALL replace the status with the new source's.                                                                                                                                                                                                 | `fleet-dashboard` B-036; `aircraft-source` B-054 and B-055; B-031; ADR-0013                   |
 | B-041 | The element SHALL carry the vehicle its last update replaced, read from the changeset that made the update, so a consumer can show what changed without keeping a copy; an element that has just entered the fleet SHALL carry none, and nothing older than one update SHALL be kept.                                                                                                                                                                                                                                                                                     | `fleet-dashboard` B-038 and § 11 row 8; B-002                                                 |
-| B-042 | A readout column in the description MAY name a delta — a selector over the vehicle B-041 carries and the current one, returning the change already formatted, or none where nothing changed — and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider; no consumer SHALL compute a delta itself.                                                                                                                                                                                                                    | `fleet-dashboard` B-038 and § 11 row 8; B-022; § 11 row 3                                     |
+| B-042 | A readout column in the description MAY name a delta — a selector over the vehicle B-041 carries and the current one, returning the change already formatted, or none where nothing changed — and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                                                                                              | `fleet-dashboard` B-038 and § 11 row 8; B-022; § 11 row 3                                     |
 
 ## 4. Constraints
 
@@ -560,8 +572,9 @@ found:
 | `IObservedClock`                                          | [`src/Transponder/Tracking/IObservedClock.cs`](../IObservedClock.cs)                                     | B-018                                                                    |
 | `IObservedClockTicks`                                     | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../IObservedClockTicks.cs)                           | B-018, B-031                                                             |
 | `FleetColumn`, `FleetGrouping`, `FleetSourceDescription`  | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-020 – B-022, B-029                                                     |
+| `FleetCard`, `FleetReadout`, `FleetDelta`                 | `src/Transponder/Tracking/Fleet/`                                                                        | B-036, B-042                                                             |
 | `FleetFilterChoice`                                       | [`src/Transponder/Tracking/Fleet/FleetFilterChoice.cs`](../Fleet/FleetFilterChoice.cs)                   | B-029                                                                    |
-| `AircraftFleetDescription`                                | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021, B-029                                                      |
+| `AircraftFleetDescription`                                | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021, B-029, B-036, B-042                                        |
 | `TrackedVehicle`, `FleetTracker`                          | [`src/Transponder/Tracking/`](..)                                                                        | B-001 – B-005, B-009 – B-011, B-016 – B-019, B-028, B-031 – B-033, B-041 |
 | `MovedVehicle`, `FleetMovement`, `GreatCircle` (internal) | `src/Transponder/Tracking/`                                                                              | B-032, B-033, B-041                                                      |
 | `FleetGroup`                                              | [`src/Transponder/Tracking/Fleet/FleetGroup.cs`](../Fleet/FleetGroup.cs)                                 | B-012, B-014                                                             |
@@ -573,7 +586,7 @@ structure":
 
 ```
 src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle
-src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetGroup, FleetSummary, FleetNotice
+src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, FleetGroup, FleetSummary, FleetNotice
 ```
 
 The description lives under `Tracking/` rather than `Model/` deliberately: it
@@ -689,6 +702,101 @@ the description (`fleet-dashboard` B-019).
 **No clock and no scheduler.** The stage reads the changeset and nothing else, so
 replay and live derive the same legs from the same positions. A test drives it
 with a `SourceCache` and no virtual time.
+
+**Card roles and readout deltas (B-036, B-042), designed for `0064`**
+
+The card rides on the description the tracker already publishes. A swap
+replaces it with the columns (B-021), and `IFleetTracker` gains no member. Four
+declarations, in `Tracking/Fleet/` beside the description, written out because
+their files do not exist yet:
+
+```csharp
+public sealed record FleetSourceDescription
+{
+    // Columns, Groupings and Filters unchanged.
+
+    /// <summary>Gets which columns fill a card, every role empty when the source names none (B-036).</summary>
+    public FleetCard Card { get; init; } = new();
+}
+
+public sealed record FleetCard
+{
+    public Option<FleetColumn> Title { get; init; }
+    public Option<FleetColumn> Subtitle { get; init; }
+    public Option<FleetColumn> Place { get; init; }
+    public IReadOnlyList<FleetReadout> Readouts { get; init; } = [];
+}
+
+public sealed record FleetReadout
+{
+    public required FleetColumn Column { get; init; }
+    public Option<FleetDelta> Delta { get; init; }
+
+    /// <summary>The change this readout shows on an element, none when there is none to show (B-042).</summary>
+    public Option<string> Change(TrackedVehicle element);
+}
+
+public delegate Option<string> FleetDelta(TransportVehicle replaced, TransportVehicle current);
+```
+
+- **A role holds the column itself, not its name.** Each filled role is one of
+  the instances in `Columns`, so a role and the column it names cannot disagree
+  on a selector. A name looked up at runtime makes a typo into an empty role,
+  which B-036 calls legal, so the failure would be a card with no title and
+  nothing reporting it. The type cannot say "one of its columns"; a test asserts
+  each filled role is the same instance as an entry in `Columns`.
+- **A readout is its own type, and the delta lives on it.** A delta on
+  `FleetColumn` would admit one on a sort or filter column, which § 5 row 12
+  excludes. The type keeps it to readouts.
+- **The delta is a named delegate, `(replaced, current)`.** Two arguments of one
+  type in a `Func` swap without a compile error, and the sign flips: a climb
+  reads as a descent. Named parameters put the order in the signature, and a
+  test asserts the direction.
+- **`Change` is where the three ways to have no change meet.** It yields none
+  when the readout names no delta, when the element carries no replaced vehicle
+  (B-041: it has just entered), or when the delta yields none. A consumer calls
+  it the way it reads `Column.Value`, so no view model matches on `Replaced`.
+- **"Nothing changed" is decided at the precision the cell shows.** A delta
+  rounds both sides to the unit its cell displays before subtracting, so
+  9,000 m to 9,000.1 m is no change rather than "▲ +0 ft". A side with no value
+  is no change either, since a change from nothing is not a number.
+- **A change is an arrow and a signed magnitude**: "▲ +120 ft", "▼ −120 ft",
+  the minus being U+2212. Formatted in the invariant culture like every cell
+  here, so no locale writes a decimal comma into it.
+
+**The aircraft's card.** The title is the callsign column and the subtitle the
+origin-country column. The place is empty until `0065` adds the place column
+(B-038) and fills it; the empty role is B-036's own case, and the dashboard
+leaves it off the card meanwhile (`fleet-dashboard` B-029). The readouts, in
+order:
+
+| Readout       | Reads                   | Cell              | Delta                                                                             |
+| ------------- | ----------------------- | ----------------- | --------------------------------------------------------------------------------- |
+| Altitude      | `BarometricAltitude`, m | `"29,528 ft"`     | to the whole foot                                                                 |
+| Ground speed  | `Velocity`, m/s         | `"389 kt"`        | to the whole knot                                                                 |
+| Heading       | `TrueTrack`, degrees    | `"090°"`          | none: a heading wraps at 360, so a subtraction reads 359° to 1° as a turn of 358° |
+| Vertical rate | `VerticalRate`, m/s     | `"+1,000 ft/min"` | none: it is already a rate of change                                              |
+
+A missing value reads "—". The four join `Columns` with no comparer: B-010
+keeps every comparer on base members, and none of the four is one. Each reads
+`Aircraft` through a pattern match in the description, which is B-022's
+exception and no wider. The conversions are named static members of
+`AircraftFleetDescription` — `Feet`, `Knots` and `FeetPerMinute`, over
+0.3048 m to the foot and 1,852 m to the nautical mile — because the unit is a
+display choice and the description is where display lives (§ 11 row 3); the
+vehicle keeps metres (ADR-0005 item 7). Barometric rather than geometric
+altitude, because it is the one B-037's trail measure reads, and a card and its
+trail should not disagree about how high the aircraft is.
+
+**One consequence before `0070`.** The grid builds its columns from `Columns`
+(`fleet-dashboard` B-007), so until the cards replace it the grid shows four
+more columns. That is B-021 working, not a defect, and it lasts one item.
+
+Rejected: a role flag on `FleetColumn`, which cannot order the readouts apart
+from the grid's column order and makes every column carry the card; a delta
+returning a number for the view to format, which is § 11 row 3 reopened and the
+decimal-comma hazard `0064` names; and the card as a second per-source file
+beside the description, which is a second thing a swap must replace.
 
 **No open decisions.**
 
@@ -865,6 +973,66 @@ B-025's wording should say "a changeset the seam reported" rather than "a
 changeset arrives" is that section's author's call, and the claim is unamended
 here.
 
+**What `0064` proves — planned 2026-10-08.** B-036 and B-042, with no stage and
+no scheduler: a description is a value, and a readout's change is a function of
+one element. The arrangement is the description itself, `AircraftFixture` for
+every vehicle, and `TrackedVehicleFixture` for an element. Both fixtures gain
+builders the plan needs — `WithVelocity`, `WithTrueTrack` and `WithVerticalRate`
+on the first, `WithReplaced` on the second. Every expected cell is computed from
+the factors § 7 names (0.3048 m to the foot, 1,852 m to the nautical mile), so
+each is checkable by hand.
+
+`FleetSourceDescriptionTests` (B-036):
+
+- `GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns`
+  reads the callsign as the title, the origin country as the subtitle, and
+  altitude, ground speed, heading and vertical rate as the readouts in that
+  order. Each is asserted to be the same instance as an entry in `Columns`,
+  which is what fails a role built from a fresh column that only shares a
+  name.
+- `GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty`
+  builds a description with no card and reads three empty roles and no
+  readouts. That is the "empty stays empty" half, and it holds for any source.
+- The card swaps with the description and needs no test of its own. It is a
+  member of the value B-021's test already shows replaced whole, and § 9 cites
+  that test beside the two above.
+
+`FleetReadoutTests` (B-042):
+
+- `GivenTwoAircraft_WhenAReadoutsDeltaIsRead_ThenItIsTheChangeAtTheCellsPrecision`
+  is a `[ClassData]` theory over `FleetReadoutCases`, each case a readout, a
+  replaced aircraft, a current one and the expected change:
+    - altitude 9,000 m to 9,036.6 m is "▲ +120 ft";
+    - the same pair reversed is "▼ −120 ft", the case that catches the
+      delegate's arguments swapped;
+    - 9,000 m to 9,000 m is none;
+    - 9,000 m to 9,000.1 m is none, the case that catches a subtraction of
+      metres before rounding;
+    - no altitude to 9,000 m, and 9,000 m to none, are each none;
+    - ground speed 200 m/s to 206.2 m/s is "▲ +12 kt".
+- `GivenAnElementJustAdded_WhenEachReadoutsChangeIsRead_ThenThereIsNone` reads
+  every aircraft readout off an element with no replaced vehicle.
+- `GivenAReadoutNamingNoDelta_WhenItsChangeIsRead_ThenThereIsNone` uses the
+  heading, on an element whose replaced vehicle flew another heading. The data
+  changed, so the none is the readout's and not the data's.
+- `GivenABoundFleet_WhenAnUpdateClimbs_ThenTheAltitudeReadoutReadsTheChangeOffTheElement`
+  runs through the tracker with the arrangement `FleetMovementTests` uses: a
+  `SourceCache` the test writes to, an update from 9,000 m to 9,036.6 m, and
+  `Change` on the bound row reading "▲ +120 ft". It is the one test that
+  fails if a readout reads some value other than B-041's replaced vehicle.
+- `GivenAnAircraft_WhenItsReadoutCellsAreRead_ThenEachIsInItsDisplayUnit` is a
+  `[ClassData]` theory over `ReadoutCellCases`: 10,000 m is "32,808 ft",
+  100 m/s is "194 kt", 90.4° is "090°", 5.08 m/s is "+1,000 ft/min", and a
+  missing value is "—" for each. It is listed under B-042 because the delta's
+  precision is defined as the cell's, so a cell in the wrong unit makes every
+  delta wrong with it.
+
+**What none of them proves:** how a card lays its roles out, which is
+`fleet-dashboard` `0070`; the pulse, which is its `0073`; and the place, which
+is `0065`. B-022's review is re-done on this item, because the four readout
+cells and the two deltas are new casts in the description, inside the
+exception.
+
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
 about which types may reference which is an analyzer diagnostic, and nothing is
@@ -884,11 +1052,11 @@ Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
 
 - Happy path → B-001, B-002, B-006, B-007, B-009, B-011 – B-015, B-020, B-025,
-  B-028 – B-033, B-041
+  B-028 – B-033, B-036, B-041, B-042
 - Failure mode → B-004, B-005, B-016 – B-019, B-027, B-032 (a tick zeroing a
   leg), B-033 (a filter or a swap restarting a total)
 - Validation failure → B-003, B-008, B-010, B-021 – B-024
-- Data-driven → B-011, B-014, B-017, B-026, B-032
+- Data-driven → B-011, B-014, B-017, B-026, B-032, B-042
 
 ## 9. Traceability Matrix
 
