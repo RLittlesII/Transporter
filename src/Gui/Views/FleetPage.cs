@@ -1,4 +1,6 @@
 using System;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using CommunityToolkit.Maui.Markup;
 using Gui.Components;
 using Gui.Theme;
@@ -6,6 +8,7 @@ using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
+using ReactiveMarbles.ObservableEvents;
 using Transponder.Features.Fleet.ViewModels;
 using Transponder.Tracking.Fleet;
 
@@ -40,7 +43,11 @@ public class FleetPage : ContentPage
                 .Bind(AircraftCard.CardProperty, nameof(FleetViewModel.Card), source: viewModel)
                 .Bind(AircraftCard.ObservedProperty, nameof(FleetViewModel.Observed), source: viewModel)),
         }.Bind(ItemsView.ItemsSourceProperty, static (FleetViewModel model) => model.Fleet);
-        fleet.SizeChanged += (_, _) => Span(fleet.Width);
+        fleet
+            .Events()
+            .SizeChanged
+            .Subscribe(_ => Span(fleet.Width))
+            .DisposeWith(_garbage);
 
         Content = new Grid
         {
@@ -63,6 +70,17 @@ public class FleetPage : ContentPage
 
     /// <summary>Gets the view model this page was handed.</summary>
     public FleetViewModel ViewModel { get; }
+
+    /// <inheritdoc/>
+    /// <remarks>The page's subscriptions end with its handler, so nothing outlives the view it was made for.</remarks>
+    protected override void OnHandlerChanged()
+    {
+        base.OnHandlerChanged();
+        if (Handler is null)
+        {
+            _garbage.Dispose();
+        }
+    }
 
     /// <summary>The search box, the filter and grouping choosers and the refresh control, on one panel (B-001, B-028).</summary>
     /// <returns>The controls bar.</returns>
@@ -154,5 +172,6 @@ public class FleetPage : ContentPage
         }
     }
 
+    private readonly CompositeDisposable _garbage = [];
     private readonly GridItemsLayout _layout;
 }

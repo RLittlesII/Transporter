@@ -78,10 +78,12 @@ public sealed class FleetViewModel : RxObject, IDisposable
                 Filter();
             })
             .DisposeWith(_garbage);
-        tracker
+        _observed = tracker
             .Observed
-            .ObserveOn(schedulers.UserInterfaceThread)
-            .Subscribe(instant => Observed = instant)
+            .AsValue(
+                _ => RaisePropertyChanged(nameof(Observed)),
+                schedulers.UserInterfaceThread,
+                static () => DateTimeOffset.MinValue)
             .DisposeWith(_garbage);
     }
 
@@ -116,8 +118,11 @@ public sealed class FleetViewModel : RxObject, IDisposable
     public FleetCard Card { get; private set => RaiseAndSetIfChanged(ref field, value); } = new();
 
     /// <summary>Gets the instant the provider last reported, which a card's age is measured from (B-031).</summary>
-    /// <remarks>Re-published from the tracker, never read from a wall clock, so a replay shows the ages it recorded.</remarks>
-    public DateTimeOffset Observed { get; private set => RaiseAndSetIfChanged(ref field, value); } = DateTimeOffset.MinValue;
+    /// <remarks>
+    /// Derived, never assigned: read from the tracker through <c>AsValue</c>, never from a wall clock,
+    /// so a replay shows the ages it recorded. Reads the minimum until the first poll lands.
+    /// </remarks>
+    public DateTimeOffset Observed => _observed.Value;
 
     /// <summary>Gets what the live source can be grouped by (B-007).</summary>
     public IReadOnlyList<FleetGrouping> Groupings { get; private set => RaiseAndSetIfChanged(ref field, value); } = [];
@@ -211,6 +216,7 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
     private readonly CompositeDisposable _garbage = [];
     private readonly IValueBinder<bool> _isRefreshing;
+    private readonly IValueBinder<DateTimeOffset> _observed;
     private readonly ReadOnlyObservableCollection<TrackedVehicle> _fleet;
     private readonly IFleetTracker _tracker;
 }
