@@ -573,28 +573,30 @@ found:
   the recording, which is the whole of ADR-0007 and what makes a replayed fleet
   age correctly rather than being stale on load.
 
-| Type                                                      | File                                                                                                     | Claims it makes visible                                                  |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `TransportVehicle`                                        | [`src/Transponder/Model/TransportVehicle.cs`](../../Model/TransportVehicle.cs)                           | B-013                                                                    |
-| `Aircraft`                                                | [`src/Transponder/Model/Aircraft.cs`](../../Model/Aircraft.cs)                                           | B-013                                                                    |
-| `IObservedClock`                                          | [`src/Transponder/Tracking/IObservedClock.cs`](../IObservedClock.cs)                                     | B-018                                                                    |
-| `IObservedClockTicks`                                     | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../IObservedClockTicks.cs)                           | B-018, B-031                                                             |
-| `FleetColumn`, `FleetGrouping`, `FleetSourceDescription`  | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-020 – B-022, B-029                                                     |
-| `FleetCard`, `FleetReadout`, `FleetDelta`                 | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-036, B-042                                                             |
-| `FleetFilterChoice`                                       | [`src/Transponder/Tracking/Fleet/FleetFilterChoice.cs`](../Fleet/FleetFilterChoice.cs)                   | B-029                                                                    |
-| `AircraftFleetDescription`                                | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021, B-029, B-036, B-042                                        |
-| `TrackedVehicle`, `FleetTracker`                          | [`src/Transponder/Tracking/`](..)                                                                        | B-001 – B-005, B-009 – B-011, B-016 – B-019, B-028, B-031 – B-033, B-041 |
-| `MovedVehicle`, `FleetMovement`, `GreatCircle` (internal) | `src/Transponder/Tracking/`                                                                              | B-032, B-033, B-041                                                      |
-| `FleetGroup`                                              | [`src/Transponder/Tracking/Fleet/FleetGroup.cs`](../Fleet/FleetGroup.cs)                                 | B-012, B-014                                                             |
-| `FleetSummary`                                            | [`src/Transponder/Tracking/Fleet/FleetSummary.cs`](../Fleet/FleetSummary.cs)                             | B-015                                                                    |
-| `FleetNotice`, `FleetNoticeKind`                          | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-025 – B-027                                                            |
+| Type                                                     | File                                                                           | Claims it makes visible |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------- |
+| `TransportVehicle`                                       | [`src/Transponder/Model/TransportVehicle.cs`](../../Model/TransportVehicle.cs) | B-013                   |
+| `Aircraft`                                               | [`src/Transponder/Model/Aircraft.cs`](../../Model/Aircraft.cs)                 | B-013                   |
+| `IObservedClock`                                         | [`src/Transponder/Tracking/IObservedClock.cs`](../IObservedClock.cs)           | B-018                   |
+| `IObservedClockTicks`                                    | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../IObservedClockTicks.cs) | B-018, B-031            |
+| `FleetColumn`, `FleetGrouping`, `FleetSourceDescription` | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                  | B-020 – B-022, B-029    |
+| `FleetCard`, `FleetReadout`, `FleetDelta`                | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                  | B-036, B-042            |
+
+| `DisplayUnit` | [`src/Transponder/Tracking/Fleet/DisplayUnit.cs`](../Fleet/DisplayUnit.cs) | B-042 |
+| `FleetFilterChoice` | [`src/Transponder/Tracking/Fleet/FleetFilterChoice.cs`](../Fleet/FleetFilterChoice.cs) | B-029 |
+| `AircraftFleetDescription` | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021, B-029, B-036, B-042 |
+| `TrackedVehicle`, `FleetTracker` | [`src/Transponder/Tracking/`](..) | B-001 – B-005, B-009 – B-011, B-016 – B-019, B-028, B-031 – B-033, B-041 |
+| `MovedVehicle`, `FleetMovement`, `GreatCircle` (internal) | `src/Transponder/Tracking/` | B-032, B-033, B-041 |
+| `FleetGroup` | [`src/Transponder/Tracking/Fleet/FleetGroup.cs`](../Fleet/FleetGroup.cs) | B-012, B-014 |
+| `FleetSummary` | [`src/Transponder/Tracking/Fleet/FleetSummary.cs`](../Fleet/FleetSummary.cs) | B-015 |
+| `FleetNotice`, `FleetNoticeKind` | [`src/Transponder/Tracking/Fleet/`](../Fleet) | B-025 – B-027 |
 
 Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
 src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle
-src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, FleetGroup, FleetSummary, FleetNotice
+src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, DisplayUnit, FleetGroup, FleetSummary, FleetNotice
 ```
 
 The description lives under `Tracking/` rather than `Model/` deliberately: it
@@ -760,11 +762,19 @@ order:
 A missing value reads "—". The four join `Columns` with no comparer: B-010
 keeps every comparer on base members, and none of the four is one. Each reads
 `Aircraft` through a pattern match in the description, which is B-022's
-exception and no wider. The conversions are named static members of
-`AircraftFleetDescription` — `Feet`, `Knots` and `FeetPerMinute`, over
-0.3048 m to the foot and 1,852 m to the nautical mile — because the unit is a
-display choice and the description is where display lives (§ 11 row 3); the
-vehicle keeps metres (ADR-0005 item 7). Barometric rather than geometric
+exception and no wider; the casts are four readers returning the value in the
+unit the vehicle keeps. The conversion, the rounding, the cell and the change
+are one object, `DisplayUnit` — `Feet`, `Knots` and `FeetPerMinute`, over
+0.3048 m to the foot and 1,852 m to the nautical mile — so a cell and its
+change read through one rounding and cannot disagree, and a second source that
+reports knots reuses the unit rather than copying four methods. It is internal
+to `Tracking/Fleet/` beside the description, because the unit is a display
+choice and the description is where display lives (§ 11 row 3); the vehicle
+keeps metres (ADR-0005 item 7). The person asked for the composition in PR
+#62's review on 2026-10-08; the first cut had four static conversions and
+three formatting helpers on the description. The heading is not a
+`DisplayUnit`: it wraps at 360 and has no change, so it stays a cell in the
+description. Barometric rather than geometric
 altitude, because it is the one B-037's trail measure reads, and a card and its
 trail should not disagree about how high the aircraft is.
 
