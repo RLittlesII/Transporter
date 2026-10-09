@@ -270,7 +270,8 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      Then the poll status is none
       And nothing the aircraft source reports afterwards is published
      When the aircraft source is swapped back in
-     Then the poll status is the one it reports next
+     Then the poll status reads none at once, because its poller had stopped
+      And the due instant of the next poll it schedules follows
 
   @B-053
   Scenario: A demanded poll inside the interval is refused
@@ -298,7 +299,7 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
     Given OpenSky answers the next poll with 429 and X-Rate-Limit-Retry-After-Seconds of 42
      When the response is handled
      Then a refusal carrying 42 seconds is reported on the same seam
-      And the next poll is reported due no earlier than 42 seconds on
+      And the next poll is reported due exactly 42 seconds after the refused one
       And no exception reaches a subscriber of the client's stream
      When the next poll is applied
      Then the refusal is cleared
@@ -504,10 +505,11 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And no strategy is registered as the seam consumers resolve
 
   @B-057
-  Scenario: Registration publishes what a swap can select, and the seam carries no name
-    Given the live aircraft source and a recorded aircraft source are registered
-     When the published swap targets are read
-     Then there is one target per registered strategy, in registration order
-      And each carries a display name and what selecting it needs
+  Scenario: The swap actor answers what a swap can select, and the seam carries no name
+    Given the live aircraft source and a recorded aircraft source are registered, each with a name
+     When the swap actor is asked for the targets
+     Then it answers one target per registered strategy, in registration order
+      And each carries its registered name and a handle, and no strategy type
+      And telling the actor to swap to a handle makes that strategy live
       And no target names a strategy that was not registered
       And the seam a consumer resolves declares no name or kind
