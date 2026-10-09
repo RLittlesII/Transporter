@@ -115,9 +115,17 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
   Scenario: The swap control offers every registered source, and only those
     Given a run registering the live aircraft source and a recorded one
      When the swap control is opened
-     Then it offers one choice per published target, by its published name
-      And choosing the recording tells the actor as any swap does
+     Then it offers one choice per target the swap actor answered, by the name it answered
+      And choosing the recording tells the actor as any swap does, carrying that target
       And a run naming no recording offers no recorded choice
+
+  @B-040
+  Scenario: The swap control offers nothing until the actor answers
+    Given the swap actor has not yet answered the request for its targets
+     When the swap control is opened
+     Then it offers no choice
+     When the actor fails to answer within the timeout
+     Then it still offers no choice, and nothing is retried
 
   @B-028
   Scenario: The refresh control tells an actor a poll is wanted
@@ -347,13 +355,22 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And every other label at least 4.5:1
 
   @B-034
-  Scenario: The detail map draws the trail, and extends it
+  Scenario: The detail map draws the trail, and extends it at its head
     Given SYN101 is selected and its element carries a trail of 30 points
      When the detail pane is shown
      Then the map draws one line through the 30 points, coloured along the trail measure's range
       And the ramp stays in order under protan, deutan and tritan vision
      When a changeset adds a 31st point
      Then the line is extended by one segment and not redrawn from empty
+
+  @B-034
+  Scenario: A full trail trims the line at its tail
+    Given the tracker bounds a trail at 240 points
+      And SYN101 is selected and its element carries a full trail of 240 points
+     When a changeset adds a 241st point and the trail drops its oldest
+     Then the line is extended by one segment at its head
+      And its first segment is removed from its tail
+      And the line holds the same 240 points the trail does, and is not redrawn from empty
 
   @B-034
   Scenario: A gap in the trail is a break in the line
@@ -387,10 +404,12 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      Then it shows no next poll and no throttling
 
   @B-037
-  Scenario: The banner shows the recent window, not a list it keeps
-    Given the tracker's window of recent notices holds twenty
+  Scenario: The banner labels the latest notice's counts apart from the window's totals
+    Given a search that hides some of the fleet
+      And the tracker's window of recent notices holds twenty, counted across the whole fleet
      When the banner is projected
-     Then it shows the latest notice's counts beside the added, updated and removed counts of all twenty
+     Then it shows the latest notice's added, updated and removed counts, counted after the search, under their own label
+      And it shows the added, updated and removed totals of all twenty, counted before it, under a label of their own
       And the view model holds no list of notices of its own
 
   @B-038
