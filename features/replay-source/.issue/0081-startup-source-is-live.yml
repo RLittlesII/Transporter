@@ -1,0 +1,51 @@
+id: "0081"
+type: task
+title: Start on the live source, and make registration order a tested rule
+
+status: ready-for-implementation
+
+priority: medium
+value: 3
+risk: 1
+rank: 57
+
+parent: "0008"
+children: []
+
+depends_on:
+    - "0012"
+blocks: []
+spikes: []
+
+spec: features/replay-source/.spec/README.md
+
+claims:
+    - B-028
+
+created: "2026-10-09"
+updated: "2026-10-09"
+closed: null
+
+summary: |
+    The swap decorator starts on the first registered strategy
+    (`SwappingTrackerSource`), and `AddOpenSky` happens to be called before
+    `AddAircraftReplay`. Nothing says so and nothing tests it, which is why
+    swapping two lines in `TransponderRegistration` was enough to start on a
+    recording — the local edit `0039`'s 2026-10-07 decision describes. This item
+    makes the order a claim with a test, so that edit fails the build instead of
+    quietly working.
+
+    Waits on `0012`, which registered the replay strategy whose position this
+    asserts. No production change is expected; if the test finds one needed, it
+    is a registration change only.
+
+acceptance_criteria:
+    - "B-028 — the live source first; nothing in configuration chooses."
+    - "§ 9 Traceability Matrix carries a row naming a test for B-028."
+
+decisions: []
+
+out_of_scope:
+    - "Everything in § 5 of the replay spec."
+    - "Swapping to the recording from the screen — `fleet-dashboard` `0039`."
+    - "The recordings root in the sandboxed head — `0061`."

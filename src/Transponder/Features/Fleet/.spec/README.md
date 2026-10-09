@@ -33,10 +33,10 @@ spec_status: in-review
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
-Thirty-nine claims, in eight groups: **B-001 – B-004** the surfaces and how they
+Forty claims, in eight groups: **B-001 – B-004** the surfaces and how they
 are wired; **B-005 – B-008** the grid, including the stale mark; **B-009 –
 B-012 and B-039** the user's input; **B-013 – B-015** the detail pane and the summary;
-**B-016 – B-019 and B-028** the controls that tell an actor, and what a view
+**B-016 – B-019, B-028 and B-040** the controls that tell an actor, and what a view
 model may not hold; **B-020 – B-022** the swap test and the boundaries;
 **B-023 – B-027** the arrival notice's two surfaces; **B-029 – B-038** the cards,
 the trail map, and how a status is shown.
@@ -154,6 +154,7 @@ B-020.
 | B-037 | The banner SHALL show the added, updated and removed counts across the window of recent notices the tracker publishes (`fleet-pipeline` B-039) beside the latest notice's, and SHALL keep no list of notices of its own.                                                                                                                                                                                                                                                               | decisions/0002; B-023; B-018                                                                  |
 | B-038 | A readout whose cell changed in the last update SHALL show the change the description names for it (`fleet-pipeline` B-042) and SHALL pulse once, by a view animation (B-017); where the platform asks for reduced motion the change SHALL be shown and nothing SHALL move, and a vehicle just added SHALL show no change.                                                                                                                                                             | decisions/0002; § 11 row 8; B-006; B-019                                                      |
 | B-039 | The filter control SHALL offer, beside the description's choices (`fleet-pipeline` B-029), a choice for each value the tracker publishes for the current grouping key (`fleet-pipeline` B-030), adding and withdrawing each as the published changeset does, and SHALL enumerate no collection to find one. When the grouping key changes, a selection of a value the old key took SHALL be cleared; a selection of one of the description's choices and the search text SHALL NOT be. | `fleet-pipeline` B-030; B-009; B-011; B-018                                                   |
+| B-040 | The swap control SHALL be a picker offering one choice per strategy registration publishes (`aircraft-source` B-057), named as published, and choosing one SHALL be the message B-016 sends; a run that registered no recording SHALL offer no replay choice, and adding a source SHALL edit no view or markup (B-021).                                                                                                                                                                |
 
 ## 4. Constraints
 
@@ -558,7 +559,7 @@ executes.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-dashboard.feature`](fleet-dashboard.feature)
-beside this file — forty-seven scenarios, each tagged with the `@B-00n` it
+beside this file — forty-eight scenarios, each tagged with the `@B-00n` it
 proves. B-028 carries two: the press and its `Tell`, and what ends the window it
 opens. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
@@ -572,7 +573,7 @@ diagnostics are what execute.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and thirty of thirty-nine rows read `Missing`** —
+**This is the gate, and thirty-one of forty rows read `Missing`** —
 nineteen from before, and the ten added on 2026-10-08 by decisions/0002, cut
 into `0069` – `0073` and `0041`.
 `0036` landed the page, the view model and the two tests on 2026-10-06, and
@@ -628,6 +629,7 @@ repository with no UI test runner is that item's to decide.
 | B-037    | `@B-037` | [`0041`](../.issue/0041-arrival-banner-and-toast.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
 | B-038    | `@B-038` | `FleetCardMotionTests.GivenANewerReadingOfTheShownVehicle_WhenTheAltitudeChanged_ThenTheReadoutPulses` — with `GivenACardsFirstBind_WhenTheElementCarriesAChange_ThenNothingPulses`, `GivenARecycledCard_WhenItIsBoundToAnotherVehicle_ThenNothingPulses`, `GivenTheSameReadingRepublishedAsStale_WhenItIsBound_ThenNothingPulses` and `GivenAVehicleJustAdded_WhenItIsBound_ThenNothingPulses` for when it does not; the change text is `fleet-pipeline` B-042's `FleetReadoutTests`. **Review owed** on `0073`: `Readout.Pulse()` returns before animating when `Motion.IsReduced()`, and `AircraftCard.Fill` sets `Change` whether or not it pulses — watched with Reduce Motion on and off                                                                                                                                                                                           | Missing  |
 | B-039    | `@B-039` | [`0078`](../.issue/0078-grouping-values-as-filter-choices.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
+| B-040    | `@B-040` | [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 10. Lessons / Spec Deltas
 
@@ -907,6 +909,10 @@ row above was 🟡 already, so nothing is lowered. The review above read B-013
 and B-022 before this amendment; the re-read owed on its findings covers them
 as amended.
 
+**B-040 added 2026-10-09**, when the person chose a picker over one button per
+source for the swap control `0039` builds. Every row above was 🟡, so nothing
+is lowered; the review owed on the findings above covers it.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
@@ -941,11 +947,11 @@ whose item 6 is why the detail pane exists as a named exception.
 
 | Item                                                           | Claims                                             |
 | -------------------------------------------------------------- | -------------------------------------------------- |
-| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 39 — the parent; its children hold the work    |
+| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 40 — the parent; its children hold the work    |
 | [`0036`](../.issue/0036-fleet-page-and-grid.yml)               | B-001 – B-007                                      |
 | [`0037`](../.issue/0037-search-sort-and-grouping-input.yml)    | B-009 – B-012                                      |
 | [`0038`](../.issue/0038-detail-pane-and-summary.yml)           | B-013 – B-015, B-019                               |
-| [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022                       |
+| [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022, B-040                |
 | [`0041`](../.issue/0041-arrival-banner-and-toast.yml)          | B-023 – B-027, B-037                               |
 | [`0044`](../.issue/0044-page-level-claim-proof.yml)            | B-003, B-004, B-006 — their proof, not their build |
 | [`0058`](../.issue/0058-refresh-control.yml)                   | B-028                                              |

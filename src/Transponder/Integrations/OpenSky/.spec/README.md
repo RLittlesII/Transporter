@@ -30,12 +30,12 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
-Fifty-six claims, in nine groups — one per component, plus the boundary rules:
+Fifty-seven claims, in nine groups — one per component, plus the boundary rules:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
 types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029 and
 B-050** the snapshot client — except **B-026 – B-028**, re-subjected to the HTTP
 transport when § 11 row 2 was answered, and still delivered by `0004`; **B-030 – B-032** the cache; **B-033 – B-037** the
-tracker source strategy; **B-038 – B-040 and B-056** the swap decorator; **B-041 – B-044,
+tracker source strategy; **B-038 – B-040, B-056 and B-057** the swap decorator; **B-041 – B-044,
 B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries.
 
 B-054 and B-055 were added on 2026-10-08, from
@@ -47,6 +47,12 @@ OpenSky and the window B-050 and B-028 put around it. What they claim is the
 report; the seam it leaves by is
 [ADR-0013](../../../../../.spec/adr/0013-a-read-side-seam-carries-a-sources-poll-status.md),
 because `ITrackerSource` carries changesets and nothing else (B-033).
+
+B-057 was added on 2026-10-09, when the person chose a picker over the
+registered sources for `fleet-dashboard`'s swap control (`0039`). The picker
+needs a list of what it can select, and the seam may not carry a name (B-037),
+so the list is registration's to publish, beside the strategies — the shape
+ADR-0013 gave the poll status.
 
 **B-056 was added on 2026-10-08**, from the review of `fleet-pipeline` B-040,
 which had claimed that a swap replaces the poll status and that a source that
@@ -127,6 +133,7 @@ than being slotted into the sequence.
 | B-039 | The decorator SHALL be substitutable for any strategy it wraps, and no consumer SHALL be able to observe from its stream that a swap occurred.                                                                                                                                                                                                                                                                                                                                                                                                | hot-swap-source § "The mechanism"                                                   |
 | B-040 | Swapping SHALL stop the outgoing source, so a swapped-out poller stops spending OpenSky credits and a swapped-out socket stops reading.                                                                                                                                                                                                                                                                                                                                                                                                       | hot-swap-source § "Disposal discipline"                                             |
 | B-056 | The decorator SHALL select the poll status (B-054, B-055) with the live strategy: a swap SHALL replace the status with the incoming strategy's, a strategy registered with no poll status SHALL contribute none, and nothing the outgoing strategy reports SHALL be published after the swap completes.                                                                                                                                                                                                                                       | `fleet-pipeline` B-040; ADR-0013; B-038; B-040                                      |
+| B-057 | Registration SHALL publish the strategies a swap can select, read-side and beside them, one entry per registered strategy in registration order, each carrying a display name and what selecting it needs; a strategy not registered SHALL NOT be offered, and no member SHALL be added to the seam to carry a name or a kind (B-037).                                                                                                                                                                                                        |
 | B-041 | `IFleetTracker` SHALL wrap `ITrackerSource` and SHALL be what view models depend on; no view model SHALL depend on a strategy, a client, a cache or the decorator.                                                                                                                                                                                                                                                                                                                                                                            | Decided call; mvvm                                                                  |
 | B-042 | `IFleetTracker` SHALL own the collection pipeline — filtering, sorting, grouping, aggregates, property-change refresh and expiry — and that pipeline SHALL be constructed once and SHALL NOT be rebuilt because the live source changed. Binding is **not** among what it owns: the bind and the marshal to a user-interface thread belong to whoever consumes the stream, and `fleet-dashboard` B-005 claims them (§ 5 row 18, ADR-0009).                                                                                                    | Decided call; hot-swap-source § "What must not be rebuilt"                          |
 | B-043 | `IFleetTracker` SHALL own the injected clock: staleness SHALL derive from a vehicle's last contact against it, and no staleness or expiry decision anywhere SHALL read `DateTime.UtcNow` inline.                                                                                                                                                                                                                                                                                                                                              | dynamic-data-pipeline § "Staleness and expiry"; test-from-scenarios                 |
@@ -842,7 +849,7 @@ clause names.
 **Scenarios**
 
 Full Gherkin lives in [`aircraft-source.feature`](aircraft-source.feature)
-beside this file — fifty-three scenarios, each tagged with the `@B-00n` it
+beside this file — fifty-four scenarios, each tagged with the `@B-00n` it
 proves. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
@@ -1004,11 +1011,12 @@ is B-049 and the clause waiting on `0005`.
 | B-054    | `@B-054` | [`0068`](../.issue/0068-poll-status-report.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
 | B-055    | `@B-055` | [`0068`](../.issue/0068-poll-status-report.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
 | B-056    | `@B-056` | [`0068`](../.issue/0068-poll-status-report.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
+| B-057    | `@B-057` | [`0080`](../.issue/0080-swap-targets-from-registration.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
-Fifty-five rows, fifty-five live claims, each appearing once — B-010 is
+Fifty-six rows, fifty-six live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
-only place a claim's build state is written, and four of its rows still say
-their claim is not proven: B-054 – B-056 wait on `0068`, and B-041 does not wait
+only place a claim's build state is written, and five of its rows still say
+their claim is not proven: B-054 – B-056 wait on `0068`, B-057 on `0080`, and B-041 does not wait
 on a mechanism: the analyzer is complete, and
 B-041's remaining half waits on `fleet-dashboard` `0039` building the view model
 whose dependencies it is about. The Feature cannot reach `done` until it does.
@@ -1316,6 +1324,10 @@ agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
 `in-review` meanwhile. §§ 8-9 reopened the same day: § 8 has no strategy for
 the new claims, and § 9 names items where it will name tests.
 
+**B-057 added 2026-10-09**, while every row above was already 🟡, so nothing is
+lowered; the review owed for B-054 – B-056 covers it too, and `0080` waits on
+it like `0068`.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
@@ -1338,17 +1350,18 @@ for the same reason.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Tasks -->
 
-| Item                                                     | Claims                                          |
-| -------------------------------------------------------- | ----------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)             | all 56 — the parent; its children hold the work |
-| [`0002`](../.issue/0002-opensky-api-contract.yml)        | B-001, B-002, B-004 – B-010, B-048              |
-| [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml) | B-011 – B-014, B-030 – B-032                    |
-| [`0004`](../.issue/0004-aircraft-snapshot-client.yml)    | B-003, B-015 – B-029, B-045, B-050              |
-| [`0005`](../.issue/0005-aircraft-tracker-source.yml)     | B-033 – B-037, B-046, B-049                     |
-| [`0006`](../.issue/0006-source-swap-decorator.yml)       | B-038 – B-040, B-052                            |
-| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)       | B-042 – B-044, B-047, B-051                     |
-| [`0057`](../.issue/0057-poll-on-demand.yml)              | B-053                                           |
-| [`0068`](../.issue/0068-poll-status-report.yml)          | B-054 – B-056                                   |
+| Item                                                        | Claims                                          |
+| ----------------------------------------------------------- | ----------------------------------------------- |
+| [`0001`](../.issue/0001-aircraft-source.yml)                | all 57 — the parent; its children hold the work |
+| [`0002`](../.issue/0002-opensky-api-contract.yml)           | B-001, B-002, B-004 – B-010, B-048              |
+| [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml)    | B-011 – B-014, B-030 – B-032                    |
+| [`0004`](../.issue/0004-aircraft-snapshot-client.yml)       | B-003, B-015 – B-029, B-045, B-050              |
+| [`0005`](../.issue/0005-aircraft-tracker-source.yml)        | B-033 – B-037, B-046, B-049                     |
+| [`0006`](../.issue/0006-source-swap-decorator.yml)          | B-038 – B-040, B-052                            |
+| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)          | B-042 – B-044, B-047, B-051                     |
+| [`0057`](../.issue/0057-poll-on-demand.yml)                 | B-053                                           |
+| [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056                                   |
+| [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                           |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. `0002` keeps
@@ -1374,6 +1387,9 @@ another Feature, which is why it is written out rather than put in the column.
 `fleet-pipeline` `0067` for the seam ADR-0013 chose. B-056 was cut into it the
 same day. `0001` now reads 56: it carries every claim its children carry, B-010
 included as before.
+
+**B-057 was cut into `0080` on 2026-10-09**, which `fleet-dashboard` `0039`
+waits on for the list its picker offers. `0001` reads 57.
 
 Each item's `depends_on` sequences the work: `0002` and `0003` have no
 prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and

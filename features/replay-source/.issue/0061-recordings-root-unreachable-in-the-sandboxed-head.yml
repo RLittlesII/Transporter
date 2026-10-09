@@ -7,13 +7,14 @@ status: ready-for-architecture
 priority: high
 value: 4
 risk: 2
-rank: 74
+rank: 79
 
 parent: "0008"
 children: []
 
 depends_on: []
-blocks: []
+blocks:
+  - "0079"
 spikes: []
 
 spec: features/replay-source/.spec/README.md
@@ -23,7 +24,7 @@ claims:
   - B-026
 
 created: "2026-10-07"
-updated: "2026-10-07"
+updated: "2026-10-09"
 closed: null
 
 summary: |
@@ -87,6 +88,16 @@ acceptance_criteria:
     § 10 carries the delta if `adr/0001` item 2's wording moves."
 
 decisions:
+  - "2026-10-09 — the-architect, agreed by the person — the default root half:
+    the head layers `Recording:Root` as its application-data directory's
+    `recordings/` (`FileSystem.AppDataDirectory`) beneath the packaged
+    `appsettings.json`, so the settings file still overrides it and no
+    absolute path is committed (`adr/0001` item 2's override, finally given a
+    platform value). `Transponder.csproj` names no MAUI type; `FileSystem` is
+    named only in `src/Gui`, so that one expression is a § 9 review rather
+    than a test. `0079` writes the sample recording to the same root. The
+    B-026 half — reaching the startup report in a head that starts no hosted
+    service — stays architecture's, so the status does not move."
   - "2026-10-07 — the person — filed as a bug under `0008` rather than folded
     into `0039`: the swap control is what selects replay, and this is what
     makes replay registrable at all on the platform the demo runs on. Separate

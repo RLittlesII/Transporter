@@ -237,3 +237,12 @@ Feature: Replay source — recording, playback, and selection
      When the replay source is inspected
      Then it declares no vehicle, record or snapshot type of its own
       And each recording produces the types that recorded provider's own feature defines
+
+  @B-028
+  Scenario: A run starts on a live source even when a recording is named
+    Given a live aircraft source is registered
+      And an aircraft recording is named in configuration
+     When the application starts
+     Then the live source is the one selected
+      And the recorded source is registered after it, reachable only by a swap
+      And no configuration, environment or launch value changes which is selected

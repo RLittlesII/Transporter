@@ -17,6 +17,7 @@ children:
   - "0012"
   - "0013"
   - "0061"
+  - "0081"
 
 depends_on: []
 blocks: []
@@ -52,9 +53,10 @@ claims:
   - B-025
   - B-026
   - B-027
+  - B-028
 
 created: "2026-10-04"
-updated: "2026-10-07"
+updated: "2026-10-09"
 closed: null
 
 summary: |
@@ -74,7 +76,7 @@ summary: |
   different claims, per spec-and-traceability § "Claim IDs are `B-00n`".
 
 acceptance_criteria:
-  - "All 27 claims in § 3 of the replay spec, carried once each. Which child
+  - "All 28 claims in § 3 of the replay spec, carried once each. Which child
     takes which is each child's own `claims:` list, indexed in the
     specification's `## Tasks`."
   - "§ 9 has no Missing row once every child is done."

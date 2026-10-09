@@ -502,3 +502,12 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      Then it is returned with every dependency it needs already satisfied
       And the source behind it is the swap decorator rather than a strategy
       And no strategy is registered as the seam consumers resolve
+
+  @B-057
+  Scenario: Registration publishes what a swap can select, and the seam carries no name
+    Given the live aircraft source and a recorded aircraft source are registered
+     When the published swap targets are read
+     Then there is one target per registered strategy, in registration order
+      And each carries a display name and what selecting it needs
+      And no target names a strategy that was not registered
+      And the seam a consumer resolves declares no name or kind
