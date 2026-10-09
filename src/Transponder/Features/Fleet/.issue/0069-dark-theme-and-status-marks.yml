@@ -25,7 +25,7 @@ claims:
   - B-033
 
 created: "2026-10-08"
-updated: "2026-10-08"
+updated: "2026-10-09"
 closed: null
 
 summary: |
@@ -58,6 +58,12 @@ decisions:
   - "2026-10-08 — the person — build the theme in `src/Gui` now, as
     `ContentView` components, and let `0075` move it later; the token tests
     wait for `0075`. JetBrains Mono is bundled for the ticking numbers."
+  - "2026-10-09 — the person — defer the on-the-ground status; the detail
+    screen, the toast and the card's updated mark come first. B-032 stays
+    `Missing` on that clause alone, and this item stays `in-review`."
+  - "2026-10-09 — implementer — the card says updated when the last update
+    changed a value one of its readouts shows, decided by `FleetCardStatus`
+    so it is tested. The card had only ever said fresh, stale or no fix."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
