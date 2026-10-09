@@ -510,6 +510,20 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When its place column is read for an aircraft with no position
      Then it yields neither a place nor coordinates
 
+  @B-038
+  Scenario: A place just outside the box names an aircraft inside it
+    Given a places file holding "Edgewater city", a synthetic entry, four kilometres east of the box's eastern edge
+     When the table is generated for the box
+     Then it holds "Edgewater"
+     When the aircraft description's place column is read for a position inside the box, five kilometres from Edgewater
+     Then it yields "Edgewater"
+
+  @B-038
+  Scenario: The table names a place as a person says it
+    Given a places file holding "Pasadena city" and "Channelview CDP"
+     When the table is generated
+     Then its entries are "Channelview" and "Pasadena"
+
   @B-039
   Scenario: The recent notices are a window the tracker keeps
     Given twenty-five changesets that each changed something
@@ -523,6 +537,21 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
     Given a window holding two notices
      When a filter hides half the fleet, and is then cleared
      Then the window still holds the two notices
+
+  @B-039
+  Scenario: A window opened while the fleet is bound starts empty
+    Given a bound fleet of three aircraft
+     When a consumer subscribes to the window of recent notices
+     Then it reads an empty window at once
+     When a changeset adds a fourth aircraft
+     Then the window holds one notice, adding one, with four tracked
+
+  @B-039
+  Scenario: The first poll after an empty start is a change
+    Given a source that reports no vehicles yet
+      And a consumer subscribed to the window of recent notices
+     When the first poll adds three aircraft
+     Then the window holds one notice, adding three
 
   @B-039
   Scenario: Two consumers read one window, and it goes with them

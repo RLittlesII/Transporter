@@ -661,8 +661,10 @@ Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle
-src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, DisplayUnit, FleetGroup, FleetSummary, FleetNotice
+src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle, SharedLatest, NearestPlace, PlaceEntry
+src/Transponder/Tracking/Sources/  AircraftFleetDescription, GazetteerPlaces.g.cs (generated)
+tools/Transponder.Gazetteer/       the generator, run deliberately
+src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, DisplayUnit, FleetGroup, FleetSummary, FleetNotice, FleetNoticeWindow
 ```
 
 The description lives under `Tracking/` rather than `Model/` deliberately: it
@@ -970,6 +972,236 @@ chain B-041 forbids; marking gaps at read time from consecutive points, which is
 finding 4's false gap; and a trail store keyed by vehicle beside the fleet,
 which is B-002's second store and outlives the vehicle.
 
+**The window of recent changes (B-039), designed for `0066`**
+
+The window is a stage of its own beside the notices, not built from them:
+`Notices()` is per subscription and paced, and `_arrivals` sits after the
+filter, so neither can be what B-039 counts. Two declarations, written out
+because their files do not exist yet:
+
+```csharp
+public sealed record FleetNoticeWindow
+{
+    public IReadOnlyList<FleetNotice> Notices { get; init; } = [];
+    public int Added { get; init; }
+    public int Updated { get; init; }
+    public int Removed { get; init; }
+}
+
+/// <summary>Gets the twenty most recent changes the source made, and their totals (fleet-pipeline B-039).</summary>
+IObservable<FleetNoticeWindow> Recent { get; }
+```
+
+`FleetNoticeWindow` goes in `Tracking/Fleet/` beside `FleetNotice`, and `Recent`
+on `IFleetTracker`. `Notices` is oldest first, and the totals are summed over it
+in the stage, so the banner sums nothing (`fleet-dashboard` B-023, B-037).
+
+- **The seam's stream is split in two, so the window reads before the
+  filter.** Today `_arrivals` is `source.Connect().Move().Filter(…).RefCount()`.
+  It becomes `_reported = source.Connect().Move().RefCount()`, with `_arrivals
+= _reported.Filter(…).RefCount()` over it. The window subscribes to
+  `_reported`, so it sees what the source reported and nothing a search did,
+  and DynamicData's cache-aware `RefCount()` keeps it one connection to the seam
+  and one `Move()` state however many stages read it (B-028). `0063`'s block
+  says `Move()` is handed the description beside `_arrivals`; whichever of the
+  two items lands second follows this split, and the description goes to
+  `_reported`'s `Move()`.
+- **The fleet a stage is handed as it connects is counted, not entered.** The
+  cache-aware `RefCount()` gives a stage that subscribes while the seam is
+  connected the current fleet as one changeset of adds, and a seam connecting
+  afresh does the same with whatever its cache holds. Both arrive while the
+  window's subscribe call is still running, so the stage marks the changeset
+  delivered during subscription as connecting: it moves the tracked count —
+  B-039's tracked count is every vehicle the source reports — and enters
+  nothing. Rejected: DynamicData's `SkipInitial()`, which is
+  `DeferUntilLoaded().Skip(1)`: on a seam whose cache is empty when the window
+  connects, the first changeset that is not empty is the first poll, and it
+  would be skipped.
+- **Every entry is `Updated`, raised by the stage's own fold.** A `Scan` over
+  `_reported` carries the tracked count and an `ImmutableQueue<FleetNotice>`.
+  A changeset with at least one change adds a notice: kind `Updated`, the
+  instant `_clock.Current` — as `Raised()` reads it, so replay and live agree
+  — the tracked count after it, and its adds, updates and removes. The
+  twenty-first drops the oldest. An empty changeset adds nothing (B-025's rule,
+  applied here too). There is no quiet state, so a changeset after a silence
+  is `Updated` with its counts, and no `Quiet` notice can enter (B-027).
+- **One window for every subscriber, emptied when the last one leaves.** The
+  window is shared by a small operator, `ShareLatest()`, in
+  `Tracking/SharedLatest.cs`: the first subscriber connects the fold and every
+  later one receives the latest window at once, then each new one. When the
+  last unsubscribes, the connection and the latest window are both dropped, so
+  the next subscriber connects afresh and reads an empty window first — the
+  fold starts with one. Rejected:
+    - Rx's `Replay(1).RefCount()`, which keeps its `ReplaySubject` across a
+      reconnection: the next first subscriber reads the window the last ones
+      left before the new connection replaces it, which is the "emptied" clause
+      failing for one emission;
+    - `Publish().RefCount()` with `StartWith`, where a second subscriber reads
+      nothing until the next change, which fails "read at once";
+    - a one-entry DynamicData cache, which makes a single value a changeset a
+      consumer has to bind;
+    - a window per subscription, starting empty, which the person rejected on
+      2026-10-08 (§ 3).
+- **Its lifetime is its own** (§ 4 row 15). A subscriber to `Recent` keeps
+  `_reported`, and so the seam, connected even while nothing binds the fleet —
+  B-028's teardown runs when the last subscriber to any stage goes, and that
+  includes this one. An idle tracker still holds nothing (B-004):
+  `ShareLatest()` holds no subscription until it has a subscriber.
+  `TakeUntil(_shutdown)` completes it on disposal, like every published stream.
+- **No scheduler, and no pacing.** The window changes when a changeset
+  arrives, synchronously, on the thread that delivered it (B-005); B-026's cap
+  is for the notices a consumer paces, and a window paced by one consumer would
+  be thinned for every other.
+- **A swap enters the window** as the removes and adds the decorator's switch
+  produces. That is a change the source made, and the banner shows it as one;
+  nothing marks it as a swap, because nothing downstream may know one occurred
+  (`aircraft-source` B-039).
+
+The size is `FleetTracker.RecentWindowSize`, twenty, held like the trail's
+bound: B-039 fixes it, and nothing configures it.
+
+**The values the grouping key takes (B-030), designed for `0056`**
+
+One member, added to `IFleetTracker` and written out because its file does not
+exist yet:
+
+```csharp
+/// <summary>Gets the distinct values the current grouping key takes across every vehicle the source reports (fleet-pipeline B-030).</summary>
+IObservable<IChangeSet<string, string>> GroupingValues { get; }
+```
+
+Each value is its own key, which is what DynamicData's `DistinctValues` emits
+(`IDistinctChangeSet<string>` is an `IChangeSet<string, string>`), so a
+consumer binds it as it binds the groups, and the filter control offers a
+choice per element (`fleet-dashboard` B-039). No new type.
+
+- **It reads `_reported`, before the filter.** The split is the one the window
+  of recent changes needs (`0066`, above); whichever of `0056` and `0066` lands
+  first makes it, and the second reads the field the first added. Reading
+  `Groups` instead would be the trap the item names: the groups are formed
+  after the filter, so choosing "Germany" would withdraw every other country
+  the moment it was chosen.
+- **`DistinctValues` counts, and nothing here does.** It reference-counts each
+  value: the first vehicle answering it adds it, the last one leaving or
+  answering differently removes it, and a vehicle updated to the same answer
+  emits nothing. It emits adds and removes only, so no consumer sees an update
+  to a value.
+- **A new grouping key switches the stage; it does not re-read the key.**
+  `_groupBy.Select(grouping => _reported.DistinctValues(moved =>
+grouping.Key(moved.Vehicle))).Switch()` — DynamicData's changeset `Switch`,
+  which on each new key removes every value the old stage published and then
+  adds the new stage's. The new stage's values come from the snapshot the
+  cache-aware `RefCount()` on `_reported` hands a stage connecting, so a
+  regroup needs no poll. Rejected: one `DistinctValues` whose selector reads
+  `_groupBy.Value`, as `Grouped` does for the groups. `GroupWithImmutableState`
+  has a regrouper to tell it the key moved; `DistinctValues` has none, so it
+  would go on holding the old key's values, and would count a vehicle's removal
+  under a key it was never added under — the corrupted reference count its
+  documentation warns of.
+- **A value both keys take is removed and added back.** `Switch` resets in
+  full, so a consumer sees each of the old values go and each of the new ones
+  arrive. That is what "replace" in B-030 means, and it is why
+  `fleet-dashboard` B-039 clears a selected value on a regroup from the
+  control's own call to `GroupBy`, not from watching a value disappear.
+- **Shared, and read at once.** `.RefCount()` — DynamicData's, cache-aware —
+  then `.TakeUntil(_shutdown)`: one stage however many consumers bind, and a
+  consumer subscribing late is handed the values in force as adds. Its
+  lifetime is B-028's: while anything binds it the seam stays connected, and
+  when the last consumer leaves it is torn down. Unlike the window (§ 4 row
+  15), nothing is lost by that — the values are a function of the fleet the
+  source reports now, so a stage built again reads the same values from the
+  snapshot.
+- **No scheduler, no clock** (B-005). The values change when a changeset
+  arrives, on the thread that delivered it; staleness does not touch them,
+  because a stale vehicle is still reported, and B-016 keeps it.
+
+**The place under a vehicle (B-038), designed for `0065`**
+
+Three parts, and only the first is generic: a nearest-place search any source's
+description can use, a table generated for the aircraft, and the tool that
+generates it. Declared here because none of their files exist yet:
+
+```csharp
+/// <summary>One entry in a place table compiled into the application (fleet-pipeline B-038).</summary>
+internal sealed record PlaceEntry(string Name, GeoPosition Point);
+
+/// <summary>The nearest entry in a compiled table, bounded, and the column that shows it (fleet-pipeline B-038).</summary>
+internal static class NearestPlace
+{
+    /// <summary>The entry nearest the position by great-circle distance, none when every entry is farther than the bound.</summary>
+    internal static Option<PlaceEntry> Within(IReadOnlyList<PlaceEntry> table, GeoPosition position, double boundMetres);
+
+    /// <summary>A column naming that entry, the position's coordinates past the bound, and <see cref="DisplayUnit.Missing"/> with no position.</summary>
+    internal static FleetColumn Column(string name, IReadOnlyList<PlaceEntry> table, double boundMetres);
+
+    /// <summary>A position as a cell reads it — "29.700, -95.200".</summary>
+    internal static string Coordinates(GeoPosition position);
+}
+```
+
+- **The search is generic, and the bound belongs to the description.**
+  `NearestPlace` sits in `Tracking/` beside `GreatCircle`, whose `Metres` it
+  measures with (B-032's distance, as B-038 requires). It knows no source and
+  no table: the aircraft description calls `NearestPlace.Column("Place",
+GazetteerPlaces.Table, 10_000)`, so the ten kilometres is the aircraft's, as
+  B-038 says, and another source names its own table and bound or offers no
+  place at all. Two entries at the same distance are broken on `Name`,
+  ordinally, so a cell never flickers between them.
+- **The column joins the description as its ninth, and fills the card's place
+  role.** B-036 makes a filled role one of `Columns`, the instance, so the
+  place column is added to `Columns` after "Position" and assigned to
+  `Card.Place`. It has no comparer: sorting by the nearest town is not a
+  question anyone asks of a fleet. The "Position" column's formatting moves to
+  `NearestPlace.Coordinates`, so a position past the bound reads exactly as the
+  "Position" cell does, and the two cannot drift.
+- **No position is `DisplayUnit.Missing`**, the dash the readouts use, not
+  "no fix" — that is the "Position" column's cell, and B-038 says neither a
+  place nor coordinates. Showing nothing on the card is the dashboard's choice
+  (`fleet-dashboard` `0070`).
+- **The table is source.** `GazetteerPlaces` in `Tracking/Sources/`, beside
+  `AircraftFleetDescription`, in a file named `GazetteerPlaces.g.cs`: an
+  `internal static class` whose `Table` is a collection expression of
+  `PlaceEntry` values. No `File`, `Stream`, `Assembly.GetManifestResourceStream`
+  or embedded resource is involved, which is what makes B-038's "no file or
+  resource read" a review of one file rather than a property to test, and what
+  keeps the Mac Catalyst sandbox from refusing it silently. Rejected: an
+  embedded CSV read on first use — a resource read, and the one B-038 names.
+- **The description takes the table as an argument, so a test can give it
+  another.** `AircraftFleetDescription.Offered` becomes
+  `Describe(GazetteerPlaces.Table)`, and `Describe` is `internal`. The `@B-038`
+  scenario holding one entry, "Pasadena", hands it a one-entry table; nothing
+  else in the description changes with the table.
+- **A linear scan, rejecting the far latitudes first.** The trimmed table is a
+  few hundred entries. `Within` skips an entry whose latitude differs by more
+  than the bound's arc — ten kilometres is under a tenth of a degree — before
+  measuring it, and measures the rest. Rejected: a spatial index, which buys
+  nothing at this size and is a second structure to keep in step with a
+  generated file; and remembering each vehicle's last answer, which is a store
+  keyed by vehicle beside the fleet (B-002). The cell is evaluated when a view
+  reads it, not per poll, so its cost is the cards on screen times the table.
+  The item reports the generated table's entry count and one timed scan in its
+  pull request; if either surprises, it says so there.
+- **The generator is a tool, run deliberately.** `tools/Transponder.Gazetteer`,
+  beside `0052`'s `Transponder.SampleRecording`, and referenced by
+  `UnitTests.csproj` the way that one is. It reads a Gazetteer places file the
+  person downloaded — a path argument, not a download of its own, because the
+  Census Bureau names the file by year — and a box as four arguments, since the
+  box has no compiled default (`aircraft-source` B-050). It writes
+  `GazetteerPlaces.g.cs` with CRLF line endings and an `<auto-generated/>`
+  header that names the input file, the box, the margin and the entry count,
+  and says the file is regenerated, never edited. It is never part of a build.
+- **It trims to the box plus the bound.** An aircraft inside the box near its
+  edge is nearest a town just outside it; a table trimmed to the box itself
+  would read that aircraft as coordinates while the town sits nine kilometres
+  away. So the generator keeps every entry within ten kilometres of the box.
+- **It names a place as a person says it.** The Gazetteer's `NAME` carries the
+  place's legal description — "Pasadena city", "Channelview CDP". The generator
+  drops the trailing description the `LSAD` column codes, so the entry is
+  "Pasadena". No state suffix: every place in the Houston box is in Texas, and
+  a box that crosses a state line is a regeneration this table does not
+  foresee. Every place type is kept, census-designated places included, because
+  Channelview and Mission Bend are where people live.
+
 **No open decisions.**
 
 `AutoRefresh` was the one open block here, and it is closed:
@@ -1128,6 +1360,40 @@ scenarios, and the reviews no test can make are § 9's.
 **What none of them proves:** drawing the trail, its colour ramp and its
 breaks, which are `fleet-dashboard` `0071`.
 
+**What `0066` will prove, planned 2026-10-08.** B-039, through the tracker with
+the arrangement `FleetNoticeTests` uses — a `SourceCache` the test writes to and
+an `ObservedClock` — and no scheduler, because the window is unpaced and
+nothing in it waits. `ShareLatest()` is tested on its own as well as through
+`Recent`, because its one property no fleet arrangement shows by accident is
+what a subscriber reads after a reconnection, and that is the property `Replay`
+gets wrong. The cases that fail a wrong implementation are the `@B-039`
+scenarios: a search, a silence, a stage connecting while the fleet is bound,
+and a first poll after an empty start.
+
+**What none of them proves:** the banner, which is `fleet-dashboard` `0041`.
+
+**What `0056` will prove, planned 2026-10-08.** B-030, through the tracker with
+the arrangement `FleetGroupTests` uses — a `SourceCache` the test writes to, and
+`GroupBy` called with a second grouping — and no scheduler. The values are
+asserted as the changesets a consumer receives, not as a list read at the end,
+because a stage that holds the old key's values after a regroup passes a count
+and fails the removes. The cases are the `@B-030` scenarios.
+
+**What none of them proves:** the filter control offering a value, which is
+`fleet-dashboard` `0078`.
+
+**What `0065` will prove, planned 2026-10-08.** B-038, in two places.
+`NearestPlace` and the aircraft description's place column through
+`Describe` with a synthetic table — positions set at known great-circle
+distances from an entry, which `GreatCircleTests` already arranges. The
+generator through a synthetic places file of a few rows, written by the test,
+never the Census file itself. The cases that fail a wrong implementation are
+the `@B-038` scenarios. What no test can make — that nothing reachable from the
+column reads a file or resource — is the review § 9's row already names.
+
+**What none of them proves:** how a card shows the place, which is
+`fleet-dashboard` `0070`.
+
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
 about which types may reference which is an analyzer diagnostic, and nothing is
@@ -1136,7 +1402,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — seventy scenarios, each tagged with the `@B-00n` it proves.
+this file — seventy-four scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
