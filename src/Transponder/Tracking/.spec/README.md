@@ -645,6 +645,7 @@ found:
 | `Aircraft`                                               | [`src/Transponder/Model/Aircraft.cs`](../../Model/Aircraft.cs)                 | B-013                   |
 | `IObservedClock`                                         | [`src/Transponder/Tracking/IObservedClock.cs`](../IObservedClock.cs)           | B-018                   |
 | `IObservedClockTicks`                                    | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../IObservedClockTicks.cs) | B-018, B-031            |
+| `IPollStatus`, `PollStatus`, `NoPollStatus`              | [`src/Transponder/Tracking/`](..)                                              | B-040                   |
 | `FleetColumn`, `FleetGrouping`, `FleetSourceDescription` | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                  | B-020 – B-022, B-029    |
 | `FleetCard`, `FleetReadout`, `FleetDelta`                | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                  | B-036, B-042            |
 
@@ -661,7 +662,7 @@ Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle, SharedLatest, NearestPlace, PlaceEntry
+src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, IPollStatus, PollStatus, NoPollStatus, TrackedVehicle, MovedVehicle, GreatCircle, SharedLatest, NearestPlace, PlaceEntry
 src/Transponder/Tracking/Sources/  AircraftFleetDescription, GazetteerPlaces.g.cs (generated)
 tools/Transponder.Gazetteer/       the generator, run deliberately
 src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, DisplayUnit, FleetGroup, FleetSummary, FleetNotice, FleetNoticeWindow
@@ -1177,8 +1178,15 @@ GazetteerPlaces.Table, 10_000)`, so the ten kilometres is the aircraft's, as
   measuring it, and measures the rest. Rejected: a spatial index, which buys
   nothing at this size and is a second structure to keep in step with a
   generated file; and remembering each vehicle's last answer, which is a store
-  keyed by vehicle beside the fleet (B-002). The cell is evaluated when a view
-  reads it, not per poll, so its cost is the cards on screen times the table.
+  keyed by vehicle beside the fleet (B-002). The cell is evaluated when
+  something reads it, not per poll — and the search reads it:
+  `FleetSearch.AnyCell` tries every column's cell, so once the place column
+  joins `Columns` the filter runs `Within` for every vehicle the source
+  reports, on every keystroke and on every update to a vehicle. That is a few
+  hundred vehicles times a few hundred entries less the latitude skip, which
+  is small; it is also why a search for "Pasadena" admits the aircraft over
+  Pasadena, which `fleet-dashboard` B-010 asks for, since it matches any
+  column's cell.
   The item reports the generated table's entry count and one timed scan in its
   pull request; if either surprises, it says so there.
 - **The generator is a tool, run deliberately.** `tools/Transponder.Gazetteer`,
@@ -1201,6 +1209,81 @@ GazetteerPlaces.Table, 10_000)`, so the ten kilometres is the aircraft's, as
   a box that crosses a state line is a regeneration this table does not
   foresee. Every place type is kept, census-designated places included, because
   Channelview and Mission Bend are where people live.
+
+**The poll status (B-040), designed for `0067`**
+
+ADR-0013 left the member names to this § 7 and the writer half to
+`aircraft-source` § 7. Three declarations in `Tracking/`, written out because
+their files do not exist yet:
+
+```csharp
+/// <summary>What a source says about its polling: when the next poll is due, and the interval a provider asked for while it refuses (fleet-pipeline B-040).</summary>
+public sealed record PollStatus
+{
+    /// <summary>Gets the status of a source that does not poll, or has not yet said when it will.</summary>
+    public static PollStatus None { get; } = new();
+
+    public Option<DateTimeOffset> NextDue { get; init; }
+    public Option<TimeSpan> RefusedFor { get; init; }
+}
+
+/// <summary>The read side of a source's poll status, starting with the status in force (ADR-0013).</summary>
+public interface IPollStatus
+{
+    IObservable<PollStatus> Status { get; }
+}
+```
+
+and on `IFleetTracker`:
+
+```csharp
+/// <summary>Gets the live source's poll status, starting with the one in force (B-040).</summary>
+IObservable<PollStatus> PollStatus { get; }
+```
+
+- **A value, not two streams.** The due instant and the refusal are reported
+  together by one poll (`aircraft-source` B-055 moves the due instant when it
+  refuses), so one record keeps a consumer from pairing a refusal with the
+  wrong instant. Absence is `Option`, and a source with no status is
+  `PollStatus.None`, a value a consumer reads, not a stream that never emits —
+  "the tracker publishes none" has to be readable at once.
+- **The seam starts with the status in force,** as `IObservedClockTicks` starts
+  with the instant in force. That is the seam's contract, not the tracker's
+  work: whatever writes it holds the latest, which is where `aircraft-source`
+  § 7 puts the writer half.
+- **`PollStatus` is the seam re-published, with the tracker's shutdown and no
+  operator between,** the move `Observed` made (above). No `Replay` — a second
+  copy of the latest, kept by the tracker, is a status that can outlive the
+  seam replacing it, which is the "nothing older" clause failing for a late
+  subscriber; the seam's own contract already answers "read at once". No
+  `DistinctUntilChanged`, because two reports of one status are the writer's to
+  make. No timer, no clock and no scheduler: the countdown is
+  `fleet-dashboard` B-036's view animation toward `NextDue`, and the tracker
+  never computes "seconds left". No `ObserveOn`, because the consumer marshals
+  (B-005).
+- **Its lifetime is the seam's, not the fleet's.** Subscribing to `PollStatus`
+  connects nothing of `ITrackerSource`, so B-028's teardown is untouched, and an
+  idle tracker holds nothing (B-004). `TakeUntil(_shutdown)` completes it on
+  disposal, like every published stream.
+- **`NoPollStatus` is what is registered until `0068`.** An internal class
+  whose `Status` is `Observable.Never<PollStatus>().StartWith(PollStatus.None)`:
+  it reads none at once and never completes on its own, so completion stays
+  B-004's signal and nothing else's. `0068` replaces the registration with the
+  status the swap decorator selects (`aircraft-source` B-056), and a source
+  that does not poll is registered with `NoPollStatus`. The tracker takes
+  `IPollStatus` by constructor, and nothing in `Features/` or `src/Gui` names
+  it — a view model reads `IFleetTracker.PollStatus` (`fleet-dashboard` B-020,
+  ADR-0013).
+- **A swap is invisible here.** The tracker cannot tell a status the decorator
+  switched from one a poller replaced, and does not need to: both are the next
+  value. That is the swap test holding for status, and why B-040's swap
+  scenario is proven with a double that reports a status and then none.
+
+Rejected: a `TimeSpan` "seconds until the next poll" on the status, which is a
+value that changes with no report and so needs a timer somewhere — the clause
+B-040 and `fleet-dashboard` B-017 forbid; a `Refused` flag beside an interval,
+which lets the two disagree; and `PollStatus` as `Option<PollStatus>`, which
+puts a binding-hostile type on the one stream a view model binds straight from.
 
 **No open decisions.**
 
@@ -1387,12 +1470,39 @@ and fails the removes. The cases are the `@B-030` scenarios.
 `Describe` with a synthetic table — positions set at known great-circle
 distances from an entry, which `GreatCircleTests` already arranges. The
 generator through a synthetic places file of a few rows, written by the test,
-never the Census file itself. The cases that fail a wrong implementation are
+never the Census file itself. Those generator tests trace to no claim here:
+B-038 says the table is source and leaves the generator outside the Feature.
+They exist because the table is the input B-038's cells read, and a wrong trim
+or a name left as "Pasadena city" would ship in a generated file nobody reads;
+§ 9 does not list them. The cases that fail a wrong implementation are
 the `@B-038` scenarios. What no test can make — that nothing reachable from the
 column reads a file or resource — is the review § 9's row already names.
 
 **What none of them proves:** how a card shows the place, which is
 `fleet-dashboard` `0070`.
+
+**What `0067` will prove, planned 2026-10-09.** B-040, through the tracker,
+with a double for `IPollStatus` that is a `BehaviorSubject<PollStatus>` the test
+writes — the double the item names, standing in for the poller and the
+decorator alike. No scheduler, because nothing in the tracker waits, and the
+arrangement's `IObservedClock` is a substitute, so "no clock read" is asserted
+as no call to it. The cases:
+
+- the status in force read at once by a consumer that subscribes after it was
+  reported, and only that one — a tracker that buffered would hand the late
+  subscriber the earlier status too, which is the "nothing older" clause;
+- a refusal of 42 seconds, then an applied poll clearing it, re-published in
+  that order and nothing between, with the clock substitute never read — a
+  timer or a countdown in the tracker adds values the double never wrote;
+- a status and then `PollStatus.None`, the decorator's swap to a push source,
+  re-published as none;
+- `NoPollStatus` read at once as `PollStatus.None`, with no completion;
+- disposal completing `PollStatus`, as B-004's test does for every other
+  stream.
+
+**What none of them proves:** what OpenSky reports and the decorator's
+selection, which are `aircraft-source` `0068`; the countdown, which is
+`fleet-dashboard` `0072`.
 
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
@@ -1486,13 +1596,13 @@ asks for.
 | B-031    | `@B-031` | `ObservedInstantTests.GivenAPollThatChangedNothing_WhenItReportsAnInstant_ThenTheTrackerPublishesItAnyway` — the case the notices cannot cover, and the one a `DistinctUntilChanged` would swallow; with `GivenAnInstantFromARecording_WhenItIsPublished_ThenItIsTheProvidersValueAndNotAWallClockRead` for the replayed instant, `GivenNoPollHasHappened_WhenAConsumerSubscribes_ThenItReadsTheInstantInForceBeforeAnyAdvance` for the emission a subscription is, and `GivenASubscriberToTheObservedInstant_WhenTheTrackerIsDisposed_ThenTheStreamCompletesAndNoFurtherInstantArrives` for B-004 over this member — `0059`                                                                                                                             | Verified |
 | B-032    | `@B-032` | `GreatCircleTests.GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres`; `FleetMovementTests.GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`, `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`, `GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged` and `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`, on [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                                                                                                                                                                | Verified |
 | B-033    | `@B-033` | `FleetMovementTests.GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`, `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`, `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs` and `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`, on [`0062`](../.issue/0062-movement-on-the-element.yml). The filter test fails with the stage moved below the filter, checked on `0062`                                                                                                                                                                                                                                            | Verified |
-| B-034    | `@B-034` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet, plus a **review** on `0063` that no store of trails exists beside the fleet: `TrailPoint` is held only by `MovedVehicle.Trail` and `TrackedVehicle.Trail`, and no field of `FleetTracker` or `FleetMovement` outside the per-subscription cache holds one, since a dictionary cleared on remove would pass every test. Re-done by any change to either                                                                                                                                                                                                                                                                                                                                         | Missing  |
-| B-035    | `@B-035` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
+| B-034    | `@B-034` | [`0063`](../.issue/0063-bounded-trail.yml) — planned: `FleetMovementTests.GivenAVehicleHiddenByAFilter_WhenItMovesAndTheFilterClears_ThenItsTrailHoldsEveryPoint` for the filter scenario, beside the bound and lost-fix cases § 8 plans; plus a **review** on `0063` that no store of trails exists beside the fleet: `TrailPoint` is held only by `MovedVehicle.Trail` and `TrackedVehicle.Trail`, and no field of `FleetTracker` or `FleetMovement` outside the per-subscription cache holds one, since a dictionary cleared on remove would pass every test. Re-done by any change to either                                                                                                                                                         | Missing  |
+| B-035    | `@B-035` | [`0063`](../.issue/0063-bounded-trail.yml) — planned: `FleetMovementTests.GivenAPointMadeUnderOneThreshold_WhenTheThresholdChanges_ThenItsGapMarkStands`, in both directions, beside the gap and first-point cases § 8 plans                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
 | B-036    | `@B-036` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns`, `GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty`, and B-021's `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt` for the card swapped with the description                                                                                                                                                                                                                                                                                                         | Verified |
 | B-037    | `@B-037` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet, plus a **review** that no member of `TransportVehicle` carries an altitude: `grep -i altitude` over `TransportVehicle.cs` returns nothing. Re-done by any change to the base                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet, plus a **review** that resolving reads no file or resource: the table is source, and no `File`, `Stream` or manifest-resource call is reachable from the place column                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Missing  |
-| B-040    | `@B-040` | [`0067`](../.issue/0067-poll-status-seam.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Missing  |
+| B-040    | `@B-040` | [`0067`](../.issue/0067-poll-status-seam.yml) — planned: `FleetTrackerPollStatusTests` for the five cases § 8 lists, `GivenAStatusInForce_WhenAConsumerSubscribesLate_ThenItReadsThatStatusAndNoOlder` first                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
 | B-041    | `@B-041` | `FleetMovementTests.GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced` and `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`, plus **review** on [`0062`](../.issue/0062-movement-on-the-element.yml) for "nothing older kept": `TrackedVehicle.Replaced` and `MovedVehicle.Replaced` are `Option<TransportVehicle>`, and nothing under `src/Transponder/Model/` names `TrackedVehicle` or `MovedVehicle`, so a replaced vehicle reaches no element. Re-done by any change to `TrackedVehicle`, `MovedVehicle` or a member of `TransportVehicle`                                                                                                                                | Verified |
 | B-042    | `@B-042` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetReadoutTests.GivenTwoAircraft_WhenAReadoutsDeltaIsRead_ThenItIsTheChangeAtTheCellsPrecision`, `GivenAnElementJustAdded_WhenEachReadoutsChangeIsRead_ThenThereIsNone`, `GivenAReadoutNamingNoDelta_WhenItsChangeIsRead_ThenThereIsNone`, `GivenABoundFleet_WhenAnUpdateClimbs_ThenTheAltitudeReadoutReadsTheChangeOffTheElement` and `GivenAnAircraft_WhenItsReadoutCellsAreRead_ThenEachIsInItsDisplayUnit`                                                                                                                                                                                                                                                              | Verified |
 
@@ -1757,7 +1867,7 @@ B-021, B-022, B-028, B-032, B-033 and B-041. It then read the answers to its
 findings again. Mechanically clean: forty-two claims, thirty-five `Verified` and
 seven `Missing` in § 9, fifty-three scenarios, each of the three claims tagged.
 The amended B-035 is sound. Both instants are the provider's, so replay marks
-what live did and no clock is read (B-018, B-043); "more than" is B-017's
+what live did and no clock is read (B-018, `aircraft-source` B-043); "more than" is B-017's
 "longer than"; and measuring from the replaced vehicle rather than the trail's
 last point keeps the parked aircraft's case free of a gap. Storing points rather
 than vehicles keeps B-002's single store and B-041's one replaced vehicle. A
@@ -1942,6 +2052,42 @@ its bound are the description's. Two findings are blocking and four are not.
 
 **Verdict: §§ 6-7 and 8-9 stay 🟡** until findings 1 and 2 are answered and
 re-read. Findings 3 – 6 do not hold the rows back on their own.
+
+**Answered 2026-10-09, by the owning roles.**
+
+1. `implementer`: § 7 gains "The poll status (B-040), designed for `0067`" —
+   a `PollStatus` record with an optional due instant and an optional refusal
+   interval, the read-side seam `IPollStatus` starting with the status in
+   force, `IFleetTracker.PollStatus` as the seam with the tracker's shutdown and
+   no operator between, and `NoPollStatus` registered until `0068`. The
+   declarations are in "Interface changes", the types in the type table and the
+   location tree. A `Replay` in the tracker is rejected because it is a second
+   copy of the latest that can hand a late subscriber something older.
+2. `test-writer`: § 8 gains "What `0067` will prove", through the tracker with
+   a `BehaviorSubject<PollStatus>` for the seam and no scheduler, and § 9's
+   B-040 row names `FleetTrackerPollStatusTests`, still `Missing`.
+3. `test-writer`: § 9's B-034 and B-035 rows name the tests `0063` will add,
+   still `Missing`.
+4. `spec-author`: the review of 2026-10-08 for `0063` now reads
+   "(B-018, `aircraft-source` B-043)". A correction to a review's citation, not
+   to a claim, so §§ 1-5 are not reopened by it.
+5. `implementer`: the cost sentence says the search reads the place cell for
+   every vehicle on every keystroke and update, why that is still small, and
+   that a search matches a place name, as `fleet-dashboard` B-010 asks.
+6. `test-writer`: § 8 says the generator's tests trace to no claim, exist to
+   guard the generated table B-038 reads, and are not listed in § 9.
+
+**Re-read 2026-10-09 by `spec-reviewer`.** Findings 1 – 6 are answered. The
+B-040 design satisfies each clause of the claim: the tracker re-publishes the
+seam's latest and keeps none of its own, so "nothing older" holds for a late
+subscriber; it reads no clock, owns no timer and names no provider; a source
+that does not poll is `PollStatus.None` read at once; a swap is the seam's next
+value; and the stream ends on disposal (B-004) and holds no fleet connection
+(B-028). The plan's cases each fail a wrong implementation — a buffering
+tracker, a countdown, a tracker that ignores none, or one that never completes.
+Mechanically unchanged: forty-two claims, forty-two § 9 rows, seventy-four
+scenarios. No new finding. **Recommended: §§ 6-7 and 8-9 to 🟢**, which is the
+person's to agree; the rows above stay 🟡 until they do.
 
 ## Decisions
 
