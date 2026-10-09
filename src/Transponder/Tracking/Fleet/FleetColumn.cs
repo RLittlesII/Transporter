@@ -11,8 +11,9 @@ namespace Transponder.Tracking.Fleet;
 /// </summary>
 /// <remarks>
 /// The cell is a selector over the abstract vehicle, which is what replaces the downcast ADR-0005
-/// item 6 forbids: a value only one source reports reaches a column as a member on the base, never
-/// as a cast inside the selector (B-010, B-022).
+/// item 6 forbids: a value only one source reports reaches a sortable, grouped or filtered column as
+/// a member on the base (B-010, B-022). A selector casts only under B-022's exception, inside the
+/// per-source description a swap replaces — a card readout's cell is one (B-042).
 /// </remarks>
 public sealed record FleetColumn
 {

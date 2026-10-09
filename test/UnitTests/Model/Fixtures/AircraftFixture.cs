@@ -72,6 +72,21 @@ internal sealed class AircraftFixture : AutoFixtureBase<AircraftFixture>
     /// <returns>The fixture, so building chains.</returns>
     public AircraftFixture WithGeometricAltitude(Option<double> altitude) => With(ref _geometricAltitude, altitude);
 
+    /// <summary>Sets the ground speed in metres per second.</summary>
+    /// <param name="velocity">The speed, or absent.</param>
+    /// <returns>The fixture, so building chains.</returns>
+    public AircraftFixture WithVelocity(Option<double> velocity) => With(ref _velocity, velocity);
+
+    /// <summary>Sets the track in degrees clockwise from true north.</summary>
+    /// <param name="trueTrack">The track, or absent.</param>
+    /// <returns>The fixture, so building chains.</returns>
+    public AircraftFixture WithTrueTrack(Option<double> trueTrack) => With(ref _trueTrack, trueTrack);
+
+    /// <summary>Sets the vertical rate in metres per second, negative descending.</summary>
+    /// <param name="verticalRate">The rate, or absent.</param>
+    /// <returns>The fixture, so building chains.</returns>
+    public AircraftFixture WithVerticalRate(Option<double> verticalRate) => With(ref _verticalRate, verticalRate);
+
     /// <summary>Takes the subject, as every fixture here is taken.</summary>
     /// <param name="fixture">The fixture to build.</param>
     public static implicit operator Aircraft(AircraftFixture fixture) => fixture.Build();
@@ -91,6 +106,9 @@ internal sealed class AircraftFixture : AutoFixtureBase<AircraftFixture>
             Category = _category,
             BarometricAltitude = _barometricAltitude,
             GeometricAltitude = _geometricAltitude,
+            Velocity = _velocity,
+            TrueTrack = _trueTrack,
+            VerticalRate = _verticalRate,
         };
 
     private string _key = "a1b2c3";
@@ -103,4 +121,7 @@ internal sealed class AircraftFixture : AutoFixtureBase<AircraftFixture>
     private Option<int> _category = 1;
     private Option<double> _barometricAltitude = 1234.5;
     private Option<double> _geometricAltitude = 1250.0;
+    private Option<double> _velocity = Option<double>.None;
+    private Option<double> _trueTrack = Option<double>.None;
+    private Option<double> _verticalRate = Option<double>.None;
 }

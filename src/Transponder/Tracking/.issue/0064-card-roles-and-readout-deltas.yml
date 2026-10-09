@@ -2,7 +2,7 @@ id: "0064"
 type: task
 title: Name what fills a card, and the change each readout shows, in the description
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -27,7 +27,7 @@ claims:
 
 created: "2026-10-08"
 updated: "2026-10-08"
-closed: null
+closed: "2026-10-08"
 
 summary: |
   The description gains two things a card needs. Card roles (B-036): which
@@ -61,6 +61,27 @@ decisions:
     them complete for this item after its two blocking findings were fixed. The
     waiver covers this item only. Rejected: flipping §§ 6-9 to 🟢 for the whole
     Feature, which would approve seven claims with no design."
+
+  - "2026-10-08 — implementer — each readout reads its value through one
+    private reader that converts and rounds to the cell's unit, and the cell
+    and the delta both call it. That is what makes § 7's precision rule hold by
+    construction: the delta subtracts the two numbers the cells show, so it
+    cannot disagree with them. Rounding is midpoint-away-from-zero, written
+    once, rather than left to each format string. The four readers are the
+    only new casts, so B-022's re-run `grep` finds six lines, all in the
+    aircraft description."
+  - "2026-10-08 — implementer — the description is built in a private
+    `Describe()` rather than a property initializer, because a role must be the
+    same instance as a column, and an initializer has no local to share. A
+    heading of 359.6° reads `000°`, not `360°`. A zero vertical rate reads
+    `0 ft/min`, with no sign; § 7 names the sign of a climb and a descent and
+    nothing for level flight."
+  - "2026-10-08 — implementer — mutants run against the new tests, each
+    caught: the altitude delta's arguments swapped (4 failed), subtraction
+    before rounding (1), the title built from a fresh column with the same
+    name (1), a delta added to the heading (1), a hyphen in place of U+2212
+    (2), and `Change` reading the vehicle itself in place of the replaced one
+    (5)."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
