@@ -553,25 +553,26 @@ found:
   the recording, which is the whole of ADR-0007 and what makes a replayed fleet
   age correctly rather than being stale on load.
 
-| Type                                                     | File                                                                                                     | Claims it makes visible                                   |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `TransportVehicle`                                       | [`src/Transponder/Model/TransportVehicle.cs`](../../Model/TransportVehicle.cs)                           | B-013                                                     |
-| `Aircraft`                                               | [`src/Transponder/Model/Aircraft.cs`](../../Model/Aircraft.cs)                                           | B-013                                                     |
-| `IObservedClock`                                         | [`src/Transponder/Tracking/IObservedClock.cs`](../IObservedClock.cs)                                     | B-018                                                     |
-| `IObservedClockTicks`                                    | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../IObservedClockTicks.cs)                           | B-018, B-031                                              |
-| `FleetColumn`, `FleetGrouping`, `FleetSourceDescription` | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-020 – B-022, B-029                                      |
-| `FleetFilterChoice`                                      | [`src/Transponder/Tracking/Fleet/FleetFilterChoice.cs`](../Fleet/FleetFilterChoice.cs)                   | B-029                                                     |
-| `AircraftFleetDescription`                               | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021, B-029                                       |
-| `TrackedVehicle`, `FleetTracker`                         | [`src/Transponder/Tracking/`](..)                                                                        | B-001 – B-005, B-009 – B-011, B-016 – B-019, B-028, B-031 |
-| `FleetGroup`                                             | [`src/Transponder/Tracking/Fleet/FleetGroup.cs`](../Fleet/FleetGroup.cs)                                 | B-012, B-014                                              |
-| `FleetSummary`                                           | [`src/Transponder/Tracking/Fleet/FleetSummary.cs`](../Fleet/FleetSummary.cs)                             | B-015                                                     |
-| `FleetNotice`, `FleetNoticeKind`                         | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-025 – B-027                                             |
+| Type                                                        | File                                                                                                     | Claims it makes visible                                                  |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `TransportVehicle`                                          | [`src/Transponder/Model/TransportVehicle.cs`](../../Model/TransportVehicle.cs)                           | B-013                                                                    |
+| `Aircraft`                                                  | [`src/Transponder/Model/Aircraft.cs`](../../Model/Aircraft.cs)                                           | B-013                                                                    |
+| `IObservedClock`                                            | [`src/Transponder/Tracking/IObservedClock.cs`](../IObservedClock.cs)                                     | B-018                                                                    |
+| `IObservedClockTicks`                                       | [`src/Transponder/Tracking/IObservedClockTicks.cs`](../IObservedClockTicks.cs)                           | B-018, B-031                                                             |
+| `FleetColumn`, `FleetGrouping`, `FleetSourceDescription`    | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-020 – B-022, B-029                                                     |
+| `FleetFilterChoice`                                         | [`src/Transponder/Tracking/Fleet/FleetFilterChoice.cs`](../Fleet/FleetFilterChoice.cs)                   | B-029                                                                    |
+| `AircraftFleetDescription`                                  | [`src/Transponder/Tracking/Sources/AircraftFleetDescription.cs`](../Sources/AircraftFleetDescription.cs) | B-020, B-021, B-029                                                      |
+| `TrackedVehicle`, `FleetTracker`                            | [`src/Transponder/Tracking/`](..)                                                                        | B-001 – B-005, B-009 – B-011, B-016 – B-019, B-028, B-031 – B-033, B-041 |
+| `MovedVehicle`, `GreatCircle` (internal, planned in `0062`) | `src/Transponder/Tracking/`                                                                              | B-032, B-033, B-041                                                      |
+| `FleetGroup`                                                | [`src/Transponder/Tracking/Fleet/FleetGroup.cs`](../Fleet/FleetGroup.cs)                                 | B-012, B-014                                                             |
+| `FleetSummary`                                              | [`src/Transponder/Tracking/Fleet/FleetSummary.cs`](../Fleet/FleetSummary.cs)                             | B-015                                                                    |
+| `FleetNotice`, `FleetNoticeKind`                            | [`src/Transponder/Tracking/Fleet/`](../Fleet)                                                            | B-025 – B-027                                                            |
 
 Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle
+src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle
 src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetGroup, FleetSummary, FleetNotice
 ```
 
@@ -626,10 +627,17 @@ changeset stream, with a `ChangeAwareCache` per subscription — and per change:
 
 - **Add**: the element with `Replaced` and `Leg` empty and `Travelled` zero.
 - **Update**: `Replaced` is the change's `Previous`; `Leg` is
-  `GreatCircle.Metres` between the two positions when both have one; and
-  `Travelled` is the cached element's plus the leg.
+  `GreatCircle.Metres` between the two positions when both have one; and `Travelled` is the cached element's plus the leg, or the cached element's
+  unchanged where there is no leg.
 - **Remove**: the element goes from the cache, and its total with it.
 - **Refresh**: passed through with the cached element unchanged.
+
+**`Move()` emits an internal `MovedVehicle`** — `Vehicle`, `Replaced`, `Leg`,
+`Travelled` — and the stale mark's `Transform` projects it onto
+`TrackedVehicle`, deriving `IsStale` beside the three values it copies. The
+filter and the notices carry `MovedVehicle` between the two. Rejected: emitting
+`TrackedVehicle` with a placeholder `IsStale` for the mark to overwrite, which
+would put an element carrying a wrong mark on the stream the notices read.
 
 **The cache is the stage's output, not a store beside the fleet.** It holds
 exactly the elements the stage last emitted, one per key, which is what
@@ -667,7 +675,7 @@ ellipsoid, which is invisible at a tenth of a kilometre. It is not a member of
 callers are both here — this stage, and `0065`'s place column, which measures
 its ten-kilometre bound with the same function. Values stay in metres, the
 canonical unit (ADR-0005 item 7), and kilometres are a display conversion in
-the description (B-019).
+the description (`fleet-dashboard` B-019).
 
 **What restarts a total, so nobody mistakes it for a bug:**
 
@@ -788,6 +796,68 @@ what a `DistinctUntilChanged` would have swallowed. Writing them turned up the
 fact § 7 now records — subscribing is itself an emission — which is a defect
 waiting for `fleet-dashboard` `0058` rather than one here.
 
+**What `0062` will prove — planned 2026-10-08.** B-032, B-033 and B-041, in
+two new classes and the arrangement every staleness test already uses: a
+`SourceCache<TransportVehicle, string>` the test writes to, `FleetTrackerFixture`,
+and an `ObservedClock` the test advances where a tick matters. There is no
+scheduler at all, because `Move()` reads the changeset and nothing else (§ 7).
+Positions are synthetic points inside the Houston box, and every expected
+distance is computed from the formula (R × the central angle, R = 6,371,008.8 m)
+rather than copied from a map. That keeps each expected value checkable by hand.
+
+`GreatCircleTests` (B-032), data-driven:
+
+- `GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres` uses
+  a `[ClassData]` theory over `GreatCircleCases`: the same point twice is zero,
+  0.1° of latitude is 11,119.5 m, 1° of longitude on the equator is
+  111,195.1 m, 0.1° of longitude at 29.70° N is 9,658.8 m, and the diagonal
+  from 29.70, -95.40 to 29.80, -95.30 is 14,725.6 m. The last two are the
+  cases that catch a wrong cos(latitude) term, a squared one, or a latitude
+  left in degrees — every other case either moves in latitude alone or sits
+  where the cosine is one. Each case is asserted to within a metre, and in both directions,
+  because a formula with its arguments swapped in one term passes a one-way
+  check.
+
+`FleetMovementTests`:
+
+- **B-032** — `GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`
+  moves `SYN101` 0.1° north and reads 11,119.5 m off the element.
+  `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`
+  asserts `None`, not `Some(0)`, and adds `SYN103` in the same changeset to show
+  an add carries none either. **`GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged`
+  is the test the design exists for.** It advances the clock with no
+  changeset and reads the element again: the leg, `Replaced` and `Travelled` are
+  all unchanged. Movement derived in the mark's forced `Transform` would read a
+  zero leg and a `Replaced` that is the vehicle itself here, and no other test
+  would notice. `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`
+  is the other direction: present to absent is no leg, not a leg to 0, 0.
+- **B-033** — `GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`.
+  `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`
+  covers the claim's reset. `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs`
+  is § 7's ordering decision, asserted: below the filter, the total would restart.
+  `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`
+  uses B-001's arrangement — a substitute `ITrackerSource` whose `Connect()` is
+  DynamicData's `Switch` over two caches reporting the same key at two
+  positions — and asserts the incoming element carries no leg and a total of
+  zero. It names no concrete source, which B-023 forbids this Feature's tests as
+  much as its code; the operator under test is the one `SwappingTrackerSource`
+  uses.
+- **B-041** — `GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced`
+  asserts that `Replaced` is the second vehicle, by reference.
+  `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`.
+  **"Nothing older than one update kept" is a review, not a test.** It holds by
+  type — `Replaced` is a `TransportVehicle`, and a vehicle references no
+  element — and a test over `typeof(...)` is neither mechanism (below). A
+  `WeakReference` and a forced collection would test it at runtime, but that is
+  a test whose result depends on the JIT's view of a local's lifetime, so it
+  fails on a debug build for reasons that have nothing to do with the claim.
+  The review is performed on `0062`'s pull request and re-done by any change to
+  `TrackedVehicle`.
+
+**What none of them proves:** a leg's display in kilometres. That is the
+description's (`0064`) and the dashboard's (`fleet-dashboard` `0070`), under
+`fleet-dashboard` B-019.
+
 **One finding for `spec-author`.** The notices' derivation sits above the stale
 mark rather than on the published fleet stream, which is not what § 7's sketch
 showed (`_fleet.WithArrivalInstants(_ticks)`). § 7 now records why; whether
@@ -803,7 +873,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — forty-nine scenarios, each tagged with the `@B-00n` it proves.
+this file — fifty-two scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
@@ -814,10 +884,11 @@ Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
 
 - Happy path → B-001, B-002, B-006, B-007, B-009, B-011 – B-015, B-020, B-025,
-  B-028 – B-031
-- Failure mode → B-004, B-005, B-016 – B-019, B-027
+  B-028 – B-033, B-041
+- Failure mode → B-004, B-005, B-016 – B-019, B-027, B-032 (a tick zeroing a
+  leg), B-033 (a filter or a swap restarting a total)
 - Validation failure → B-003, B-008, B-010, B-021 – B-024
-- Data-driven → B-011, B-014, B-017, B-026
+- Data-driven → B-011, B-014, B-017, B-026, B-032
 
 ## 9. Traceability Matrix
 
@@ -873,8 +944,8 @@ asks for.
 | B-029    | `@B-029` | `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsFiltersAreRead_ThenEachCarriesANameAndAPredicateThatAdmitsAndRejects` — the curated choices, each admitting one synthetic vehicle and rejecting another, with an empty fleet never consulted — `0037`                                                                                                                                                                                                                                                                                                                                                        | Verified |
 | B-030    | `@B-030` | [`0056`](../.issue/0056-distinct-grouping-values.yml) — the distinct-value stage is not built; nothing in the repository publishes the values the current grouping key takes                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
 | B-031    | `@B-031` | `ObservedInstantTests.GivenAPollThatChangedNothing_WhenItReportsAnInstant_ThenTheTrackerPublishesItAnyway` — the case the notices cannot cover, and the one a `DistinctUntilChanged` would swallow; with `GivenAnInstantFromARecording_WhenItIsPublished_ThenItIsTheProvidersValueAndNotAWallClockRead` for the replayed instant, `GivenNoPollHasHappened_WhenAConsumerSubscribes_ThenItReadsTheInstantInForceBeforeAnyAdvance` for the emission a subscription is, and `GivenASubscriberToTheObservedInstant_WhenTheTrackerIsDisposed_ThenTheStreamCompletesAndNoFurtherInstantArrives` for B-004 over this member — `0059` | Verified |
-| B-032    | `@B-032` | [`0062`](../.issue/0062-movement-on-the-element.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
-| B-033    | `@B-033` | [`0062`](../.issue/0062-movement-on-the-element.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
+| B-032    | `@B-032` | `GreatCircleTests.GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres`; `FleetMovementTests.GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`, `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg` `GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged` and `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands` — planned in [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                            | Missing  |
+| B-033    | `@B-033` | `FleetMovementTests.GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`, `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`, `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs` and `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap` — planned in [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                                                                                                                       | Missing  |
 | B-034    | `@B-034` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
 | B-035    | `@B-035` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
 | B-036    | `@B-036` | [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
@@ -882,7 +953,7 @@ asks for.
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Missing  |
 | B-040    | `@B-040` | [`0067`](../.issue/0067-poll-status-seam.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
-| B-041    | `@B-041` | [`0062`](../.issue/0062-movement-on-the-element.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
+| B-041    | `@B-041` | `FleetMovementTests.GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced` and `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`; "nothing older kept" is a review of `TrackedVehicle` on `0062`'s pull request — planned in [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                                                                                                                                                                                                       | Missing  |
 | B-042    | `@B-042` | [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
 
 ## 10. Lessons / Spec Deltas
@@ -1019,7 +1090,8 @@ is [the template's § 12](../../../../.spec/templates/feature.md) and
 [lesson 0007](../../../../.spec/lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md):
 § 9 is the ship gate and blocks an item reaching `done`, not the agreement
 reaching `approved`. All twenty-eight rows then present read `Missing`, and the sections are
-written and agreed, so the rows above are 🟢 and `spec_status` is `approved`.
+written and agreed, so the rows above were 🟢 and `spec_status` was `approved` —
+until 2026-10-08, below.
 
 **Review of 2026-10-05.** Mechanically clean: 28 claims, 28 § 9 rows, 30
 scenarios, every `@B-00n` tagged exactly once, ids contiguous and unduplicated,
@@ -1092,9 +1164,11 @@ findings above would have blocked it anyway.
 **Reopened 2026-10-08.** B-032 – B-042 were added and B-038 amended from `fleet-dashboard` decisions/0002 and
 the answers to its open questions, so the approval above was given to an
 agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
-§§ 6-7 on a § 7 that says how they are built — it says nothing yet. Until those
-rows are re-earned, no item cut from them (`0062` – `0067`) moves to `in-progress`
-unless the person waives this for that named item. `spec_status` is
+§§ 6-7 on a § 7 that says how they are built — it says so for `0062`'s three
+claims and for nothing else yet. Until those rows are re-earned, **no item of
+this Feature** moves to `in-progress` — `0062` – `0067`, and `0056` with them,
+whose claims did not change — unless the person waives this for that named
+item. `spec_status` is
 `in-review` meanwhile. §§ 8-9 reopened the same day: § 8 has no strategy for
 the new claims, and § 9 names items where it will name tests.
 

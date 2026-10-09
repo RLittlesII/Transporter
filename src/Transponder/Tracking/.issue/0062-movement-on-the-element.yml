@@ -2,7 +2,7 @@ id: "0062"
 type: task
 title: Carry the vehicle replaced, the leg flown and the running total on the element
 
-status: ready-for-architecture
+status: ready
 
 priority: high
 value: 4
@@ -59,7 +59,15 @@ acceptance_criteria:
   - "B-041 — the vehicle one update back, none for a vehicle just added."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-08 — the person — § 12's 🟡 gate waived for this item by name
+    (`transponder-conventions` delivery: the waiver is a row here). All three
+    rows of `fleet-pipeline` § 12 are 🟡 because claims B-034 – B-040 and B-042
+    are unreviewed or undesigned; this item's three claims are designed in § 7
+    and planned in § 8, and an independent spec-reviewer pass found that design
+    sound and its two blocking findings were fixed before the waiver. The waiver
+    covers this item only. Rejected: flipping §§ 6-9 to 🟢 for the whole
+    Feature, which would approve eight claims with no design."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
