@@ -2,7 +2,7 @@ id: "0063"
 type: task
 title: Carry a bounded trail on the element, broken at a gap and measured by the description
 
-status: in-progress
+status: ready-for-architecture
 
 priority: high
 value: 4
