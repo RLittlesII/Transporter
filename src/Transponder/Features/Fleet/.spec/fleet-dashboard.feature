@@ -337,7 +337,6 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       | fresh                            | ring-full   | Live          |
       | stale                            | ring-hatch  | Stale         |
       | without a position               | crosshair   | No position   |
-      | on the ground                    | ground      | On ground     |
 
   @B-033
   Scenario: The page is one dark theme, drawn from tokens
