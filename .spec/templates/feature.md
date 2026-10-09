@@ -239,7 +239,9 @@ and the implementation was supposed to wait on approval — so a Feature whose
 proves itself, could never be approved at all.
 [Lesson 0007](../lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)
 is that incident. The rule that an item does not start against 🟡 rows is
-`.skills/transponder-conventions/references/delivery.md`, not here.
+`.skills/transponder-conventions/references/delivery.md`, and the rule that a
+change to a signed section reopens its row is
+`.skills/transponder-conventions/references/specs.md`, not here.
 
 ## Decisions
 

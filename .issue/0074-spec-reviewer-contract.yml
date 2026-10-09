@@ -1,0 +1,77 @@
+id: "0074"
+type: chore
+title: Give the reviewer a contract for a specification-only review, and reopen a sign-off when its sections change
+
+status: done
+
+priority: medium
+value: 3
+risk: 1
+rank: 57
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: "2026-10-08"
+
+summary: |
+  On 2026-10-08 all three Features touched by `fleet-dashboard` decision 0002 —
+  `fleet-dashboard`, `fleet-pipeline` and `aircraft-source` — gained or amended
+  claims while their § 12 rows read 🟢 and `spec_status` read `approved`. Nobody
+  reopened them: the author of the change may not write § 12, and the reviewer
+  is present only when asked. The rows approved twenty-three new claims no
+  reviewer had read, and the stale sign-off was reported to the person as an
+  unsigned one before it was caught.
+
+  The review that followed was of a specification with no code, and
+  `.agents/spec-reviewer.md` had no checklist for one: its question, its reading
+  list and every "Look for" row assume a diff. It also had no way to say a
+  section covers one item's claims and no others — the verdict the person's
+  per-item waiver for `0062` needed — no row for a claim that obligates another
+  Feature's consumers, and no rule that the reviewer is not the author.
+
+  Separately, every `.agents/` file carried `model` and `effort` in its
+  frontmatter since `cf5a67a`, against the rule in `AGENTS.md` and
+  `transponder-conventions` references/coding.md that agent files declare
+  `name` and `description` only. The repository ships no loadable agents, so
+  the two fields configured nothing.
+
+acceptance_criteria:
+  - "A change to a section whose § 12 row reads 🟢 reopens that row to 🟡, and
+    `spec_status` to `in-review`, in the same commit — written once, in
+    `transponder-conventions` references/specs.md § \"Section ownership\", and
+    checked by `spec-reviewer`."
+  - "`spec-reviewer` reads and checks a specification-only change: claims
+    testable and sourced, claims and scenarios and items agreeing, prose counts
+    true, and a § 8 plan whose tests can fail."
+  - "`spec-reviewer` reports which items' claims a 🟡 section is complete for,
+    with no new § 12 status."
+  - "`spec-reviewer` checks for a claim that obligates another Feature's
+    consumers, and refuses to sign off a section it wrote."
+  - "No `.agents/` file carries `model` or `effort`."
+  - "A root process lesson records the stale sign-off and names the rule's
+    home."
+
+decisions:
+  - "2026-10-08 — the person — filed as its own item on its own branch rather
+    than as a commit on PR #56, and `model` and `effort` dropped from every
+    `.agents/` file rather than the frontmatter rule widened to admit them."
+
+out_of_scope:
+  - "Re-reviewing any Feature's §§ 1-9, or flipping any § 12 row. The six
+    blocking findings of the 2026-10-08 review stay open in the specifications
+    that hold them."
+  - "A fourth § 12 status for partial coverage. The waiver is the person's and
+    stays a row in the named item's `decisions` (references/delivery.md)."
+  - "A hook or script that detects a stale sign-off. Nothing checks
+    specification files today; `0042` is where that tooling belongs."

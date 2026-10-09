@@ -1,8 +1,6 @@
 ---
 name: implementer
 description: Make a failing test pass against the specification claims it cites, and own the Concern Separation and Technical Design sections. Use when claims and tests exist but the behavior is not built; writes production code only, never the claims.
-model: sonnet
-effort: medium
 ---
 
 # Implementer
