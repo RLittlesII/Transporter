@@ -2,7 +2,7 @@ id: "0069"
 type: task
 title: Put the page on one dark theme, with every status told by icon and word
 
-status: ready-for-architecture
+status: in-progress
 
 priority: medium
 value: 3
@@ -55,6 +55,9 @@ decisions:
     and undrawn (ADR-0014), so `0069` waits on `0075`, which moves the pages
     and tokens to a project a test can reference. Rank unchanged: it counts
     what this item unblocks, not what it waits on."
+  - "2026-10-08 — the person — build the theme in `src/Gui` now, as
+    `ContentView` components, and let `0075` move it later; the token tests
+    wait for `0075`. JetBrains Mono is bundled for the ticking numbers."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

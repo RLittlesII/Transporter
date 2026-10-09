@@ -2,7 +2,7 @@ id: "0070"
 type: task
 title: Show the fleet as cards that say where each aircraft is and how far it moved
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 value: 5
@@ -66,6 +66,8 @@ acceptance_criteria:
 
 decisions:
   - "2026-10-08 — spec-author — B-008 moved from `0038` to this item. The claim now names a card, and the card is built here; `0038` had built nothing against it. Rejected: leaving it on `0038`, which would have had `0038` mark a card it does not build."
+  - "2026-10-08 — the person — start with `0069`, before `0065` lands: the
+    place role stays empty until the description fills it."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

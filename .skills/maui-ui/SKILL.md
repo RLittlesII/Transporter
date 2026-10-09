@@ -44,7 +44,12 @@ specification's to say, not this file's.
   rather than rebuilding a list in a handler.
 - Rows update **in place**. A list that re-creates its items on every snapshot
   flickers, and loses the point of binding a changeset at all.
-- **A view subscribes through an observable, never with `+=`.** Where a view
+- **A view subscribes through an observable, never with `+=`** — any event,
+  not only a view model's: a child control's `SizeChanged` or `SelectionChanged`
+  is the same `+=`, and a layout event on the page's own child is no exception
+  ([lesson 0004](../../src/Transponder/Features/Fleet/.spec/lessons/0004-two-written-rules-read-as-not-applying.md)).
+  The page keeps a `CompositeDisposable`, and `OnHandlerChanged` disposes it
+  when `Handler` is null. Where a view
   must react to a view-model property — rebuilding a column template from a new
   description, say — take the generated `Events()` observable over
   `PropertyChanged` (`ReactiveMarbles.ObservableEvents.SourceGenerator`),
