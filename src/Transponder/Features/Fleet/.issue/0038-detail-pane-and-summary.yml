@@ -2,7 +2,7 @@ id: "0038"
 type: task
 title: Show the selected vehicle and the projected counts
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 value: 4
@@ -28,7 +28,7 @@ claims:
   - B-019
 
 created: "2026-10-05"
-updated: "2026-10-08"
+updated: "2026-10-09"
 closed: null
 
 summary: |
@@ -63,6 +63,8 @@ decisions:
     the card; nothing here had been built against it. `0071` now waits on this
     item for the pane it draws the trail in, which moves the rank from 71 to
     76."
+  - "2026-10-09 — the person — § 12 waived for this item: `fleet-dashboard`
+    §§ 1-9 are still 🟡 Draft, and the work starts against them as written."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
