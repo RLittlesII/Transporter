@@ -1058,6 +1058,61 @@ in the stage, so the banner sums nothing (`fleet-dashboard` B-023, B-037).
 The size is `FleetTracker.RecentWindowSize`, twenty, held like the trail's
 bound: B-039 fixes it, and nothing configures it.
 
+**The values the grouping key takes (B-030), designed for `0056`**
+
+One member, added to `IFleetTracker` and written out because its file does not
+exist yet:
+
+```csharp
+/// <summary>Gets the distinct values the current grouping key takes across every vehicle the source reports (fleet-pipeline B-030).</summary>
+IObservable<IChangeSet<string, string>> GroupingValues { get; }
+```
+
+Each value is its own key, which is what DynamicData's `DistinctValues` emits
+(`IDistinctChangeSet<string>` is an `IChangeSet<string, string>`), so a
+consumer binds it as it binds the groups, and the filter control offers a
+choice per element (`fleet-dashboard` B-039). No new type.
+
+- **It reads `_reported`, before the filter.** The split is the one the window
+  of recent changes needs (`0066`, above); whichever of `0056` and `0066` lands
+  first makes it, and the second reads the field the first added. Reading
+  `Groups` instead would be the trap the item names: the groups are formed
+  after the filter, so choosing "Germany" would withdraw every other country
+  the moment it was chosen.
+- **`DistinctValues` counts, and nothing here does.** It reference-counts each
+  value: the first vehicle answering it adds it, the last one leaving or
+  answering differently removes it, and a vehicle updated to the same answer
+  emits nothing. It emits adds and removes only, so no consumer sees an update
+  to a value.
+- **A new grouping key switches the stage; it does not re-read the key.**
+  `_groupBy.Select(grouping => _reported.DistinctValues(moved =>
+grouping.Key(moved.Vehicle))).Switch()` — DynamicData's changeset `Switch`,
+  which on each new key removes every value the old stage published and then
+  adds the new stage's. The new stage's values come from the snapshot the
+  cache-aware `RefCount()` on `_reported` hands a stage connecting, so a
+  regroup needs no poll. Rejected: one `DistinctValues` whose selector reads
+  `_groupBy.Value`, as `Grouped` does for the groups. `GroupWithImmutableState`
+  has a regrouper to tell it the key moved; `DistinctValues` has none, so it
+  would go on holding the old key's values, and would count a vehicle's removal
+  under a key it was never added under — the corrupted reference count its
+  documentation warns of.
+- **A value both keys take is removed and added back.** `Switch` resets in
+  full, so a consumer sees each of the old values go and each of the new ones
+  arrive. That is what "replace" in B-030 means, and it is why
+  `fleet-dashboard` B-039 clears a selected value on a regroup from the
+  control's own call to `GroupBy`, not from watching a value disappear.
+- **Shared, and read at once.** `.RefCount()` — DynamicData's, cache-aware —
+  then `.TakeUntil(_shutdown)`: one stage however many consumers bind, and a
+  consumer subscribing late is handed the values in force as adds. Its
+  lifetime is B-028's: while anything binds it the seam stays connected, and
+  when the last consumer leaves it is torn down. Unlike the window (§ 4 row
+  15), nothing is lost by that — the values are a function of the fleet the
+  source reports now, so a stage built again reads the same values from the
+  snapshot.
+- **No scheduler, no clock** (B-005). The values change when a changeset
+  arrives, on the thread that delivered it; staleness does not touch them,
+  because a stale vehicle is still reported, and B-016 keeps it.
+
 **No open decisions.**
 
 `AutoRefresh` was the one open block here, and it is closed:
@@ -1227,6 +1282,16 @@ scenarios: a search, a silence, a stage connecting while the fleet is bound,
 and a first poll after an empty start.
 
 **What none of them proves:** the banner, which is `fleet-dashboard` `0041`.
+
+**What `0056` will prove, planned 2026-10-08.** B-030, through the tracker with
+the arrangement `FleetGroupTests` uses — a `SourceCache` the test writes to, and
+`GroupBy` called with a second grouping — and no scheduler. The values are
+asserted as the changesets a consumer receives, not as a list read at the end,
+because a stage that holds the old key's values after a regroup passes a count
+and fails the removes. The cases are the `@B-030` scenarios.
+
+**What none of them proves:** the filter control offering a value, which is
+`fleet-dashboard` `0078`.
 
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
