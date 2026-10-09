@@ -64,6 +64,22 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And clearing the filter leaves the search applied
       And clearing the search leaves the filter applied
 
+  @B-039
+  Scenario: The values the data holds are offered as filter choices
+    Given the fleet grouped by country, and the on-ground choice the description offers
+     When the tracker publishes Germany, France and Brazil for the grouping key
+     Then the filter control offers the on-ground choice, Germany, France and Brazil
+     When the last aircraft from Brazil leaves
+     Then Brazil is no longer offered
+      And no view model enumerated a collection to learn any of it
+
+  @B-039
+  Scenario: Changing the grouping clears a selection only the old grouping meant
+    Given Germany and the on-ground choice selected, and the search text "FLT"
+     When the fleet is grouped by staleness instead
+     Then Germany is no longer selected
+      And the on-ground choice and the search text still apply
+
   @B-012
   Scenario: A header tap sorts, a second reverses, and a grouping is published
     Given a description whose altitude column carries a comparer

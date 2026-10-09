@@ -7,14 +7,15 @@ status: ready-for-architecture
 priority: medium
 value: 3
 risk: 2
-rank: 54
+rank: 59
 
 parent: "0030"
 children: []
 
 depends_on:
   - "0033"
-blocks: []
+blocks:
+  - "0078"
 spikes: []
 
 spec: src/Transponder/Tracking/.spec/README.md
@@ -30,12 +31,14 @@ summary: |
   The filter control offers two kinds of choice, and this item builds the second
   (§ 11 row 6). B-029 carries the choices the source declares — "On the ground",
   "Airborne" — and they ship with the description. This one carries the choices
-  the data holds: the distinct values the current grouping key takes across the
-  fleet, so the control can offer "Germany" because a German aircraft is being
-  tracked, and withdraw it when the last one leaves.
+  the data holds: the distinct values the current grouping key takes across
+  every vehicle the source reports, so the control can offer "Germany" because a
+  German aircraft is being tracked, and withdraw it when the last one leaves.
 
-  It is a stage over the same stream the groups come from, published as a
-  changeset. Runs after `0033`, which is what introduced the grouping the key is
+  It is a stage over what the source reports, before the filter, published as a
+  changeset. One trap: the groups come from the fleet after the filter, so a
+  stage over the same stream withdraws every other country the moment one is
+  chosen. Runs after `0033`, which is what introduced the grouping the key is
   read from.
 
   The reason it is here rather than in the dashboard is `fleet-dashboard` B-009
@@ -46,11 +49,16 @@ summary: |
 
 acceptance_criteria:
   - "B-030 — the distinct grouping-key values, published as a changeset that
-    adds a value on the first vehicle carrying it and removes it on the last."
+    adds a value on the first vehicle carrying it and removes it on the last,
+    taken before the filter, replaced when the grouping key changes, and read at
+    once by a consumer subscribing."
   - "§ 9 Traceability Matrix carries a row naming a test for B-030, replacing
     the row that names this item."
 
-decisions: []
+decisions:
+  - "2026-10-08 — the person — the values are taken before the filter, so
+    choosing one never withdraws the others (fleet-pipeline B-030). Rejected:
+    after the filter, which narrows the control as it is used."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
