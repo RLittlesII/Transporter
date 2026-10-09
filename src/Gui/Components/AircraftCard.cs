@@ -71,7 +71,7 @@ public sealed class AircraftCard : ContentView
         nameof(Vehicle),
         typeof(TrackedVehicle),
         typeof(AircraftCard),
-        propertyChanged: static (card, _, _) => ((AircraftCard) card).Fill());
+        propertyChanged: static (card, before, _) => ((AircraftCard) card).Fill(before as TrackedVehicle));
 
     /// <summary>Which columns fill the card's roles.</summary>
     public static readonly BindableProperty CardProperty = BindableProperty.Create(
@@ -142,7 +142,7 @@ public sealed class AircraftCard : ContentView
         _readouts.Clear();
         foreach (var readout in card.Readouts)
         {
-            _readouts.Add((readout.Column, new Readout { Caption = readout.Column.Name }));
+            _readouts.Add((readout, new Readout { Caption = readout.Column.Name }));
         }
 
         var values = new Grid
@@ -199,11 +199,13 @@ public sealed class AircraftCard : ContentView
         row.Add(body, 1, 0);
         _frame.Content = row;
 
-        Fill();
+        Fill(before: null);
     }
 
     /// <summary>Sets every text from the element; creates nothing.</summary>
-    private void Fill()
+    /// <param name="before">The element the card showed until now, or none.</param>
+    /// <remarks>Whether a readout pulses is <see cref="FleetCardMotion"/>'s decision; a re-lay passes none, so a swap moves nothing (B-038).</remarks>
+    private void Fill(TrackedVehicle? before)
     {
         var card = Card ?? new FleetCard();
         var tracked = Vehicle;
@@ -216,10 +218,17 @@ public sealed class AircraftCard : ContentView
         _title.Text = card.Title.Match(column => column.Value(vehicle), () => vehicle.Label);
         _subtitle.Text = card.Subtitle.Match(column => column.Value(vehicle), static () => string.Empty);
         _place.Text = card.Place.Match(column => column.Value(vehicle), static () => string.Empty);
-        foreach (var (column, view) in _readouts)
+        var shown = Prelude.Optional(before);
+        foreach (var (readout, view) in _readouts)
         {
-            view.Value = column.Value(vehicle);
+            var change = readout.Change(tracked);
+            view.Value = readout.Column.Value(vehicle);
+            view.Change = change.IfNone(string.Empty);
             view.Dim(tracked.IsStale);
+            if (FleetCardMotion.Pulses(readout, shown, tracked))
+            {
+                view.Pulse();
+            }
         }
 
         _leg.Value = FleetCardText.Distance(tracked.Leg);
@@ -246,7 +255,7 @@ public sealed class AircraftCard : ContentView
         _frame.Background = IsChosen ? FlightDeck.AccentSoft : FlightDeck.SurfaceRaised;
     }
 
-    private readonly List<(FleetColumn Column, Readout View)> _readouts = [];
+    private readonly List<(FleetReadout Readout, Readout View)> _readouts = [];
     private readonly Border _frame;
     private readonly BoxView _edge;
     private readonly Label _title;
