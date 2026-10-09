@@ -26,7 +26,7 @@ public sealed class Readout : ContentView
         };
         _cell = new Border
         {
-            Background = Colors.Transparent,
+            Background = FlightDeck.Clear,
             StrokeThickness = 0,
             StrokeShape = new RoundRectangle { CornerRadius = FlightDeck.RadiusSmall },
             Padding = new(FlightDeck.Space1, 2),
@@ -96,13 +96,13 @@ public sealed class Readout : ContentView
         this.AbortAnimation(PulseName);
         if (Motion.IsReduced())
         {
-            _cell.Background = Colors.Transparent;
+            _cell.Background = FlightDeck.Clear;
             return;
         }
 
         var from = FlightDeck.AccentSoft;
         new Animation(fraction => _cell.Background = from.WithAlpha((float) fraction), 1, 0)
-            .Commit(this, PulseName, length: PulseLength, easing: Easing.CubicOut, finished: (_, _) => _cell.Background = Colors.Transparent);
+            .Commit(this, PulseName, length: PulseLength, easing: Easing.CubicOut, finished: (_, _) => _cell.Background = FlightDeck.Clear);
     }
 
     private void Show(string change)

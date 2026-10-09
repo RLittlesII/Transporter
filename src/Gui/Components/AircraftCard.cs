@@ -57,7 +57,7 @@ public sealed class AircraftCard : ContentView
                         Setters =
                         {
                             new Setter { Property = IsChosenProperty, Value = true },
-                            new Setter { Property = BackgroundColorProperty, Value = Microsoft.Maui.Graphics.Colors.Transparent },
+                            new Setter { Property = BackgroundColorProperty, Value = FlightDeck.Clear },
                         },
                     },
                 },
