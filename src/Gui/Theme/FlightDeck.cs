@@ -73,14 +73,17 @@ public static class FlightDeck
     /// <summary>Gets secondary text: country, units, captions.</summary>
     public static Color InkSecondary { get; } = Color.FromArgb("#aab4bf");
 
-    /// <summary>Gets labels above readouts and placeholder text.</summary>
-    public static Color InkMuted { get; } = Color.FromArgb("#8b96a3");
+    /// <summary>Gets labels above readouts and placeholder text: at least 4.5:1 on every surface, the selected card's fill included (B-033).</summary>
+    public static Color InkMuted { get; } = Color.FromArgb("#939eab");
 
     /// <summary>Gets the one interactive hue: focus, selection, the primary button.</summary>
     public static Color Accent { get; } = Color.FromArgb("#6cbcf0");
 
     /// <summary>Gets the selected card's fill and the update tint.</summary>
     public static Color AccentSoft { get; } = Color.FromArgb("#16344a");
+
+    /// <summary>Gets no fill at all: what a cell returns to once its tint has faded, named so no view writes a colour (B-033).</summary>
+    public static Color Clear { get; } = Colors.Transparent;
 
     /// <summary>Gets text on an accent fill.</summary>
     public static Color OnAccent { get; } = Color.FromArgb("#0f1318");
