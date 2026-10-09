@@ -374,11 +374,18 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   @B-035
   Scenario: A silence longer than the threshold is a gap in the trail
     Given a staleness threshold of five minutes
-      And SYN101's last trail point has a last contact of 14:00:00
+      And SYN101 was last reported at 14:00:00
      When a changeset moves it with a last contact of 14:07:30
      Then the new point is marked as following a gap
      When the next changeset moves it with a last contact of 14:07:45
      Then that point is not
+
+  @B-035
+  Scenario: A parked aircraft that reported throughout follows no gap when it moves
+    Given a staleness threshold of five minutes
+      And SYN101 reported every fifteen seconds from 14:00:00 to 14:10:00 without moving
+     When a changeset moves it with a last contact of 14:10:15
+     Then the new point is not marked as following a gap
 
   @B-036
   Scenario: The description names what fills each role on a card

@@ -63,6 +63,19 @@ the cell is still a formatted string, as row 3 decided, and the arithmetic lives
 in the per-source description beside the unit conversion it needs. B-038 gained
 the bound row 8 chose.
 
+**B-035 was amended, and B-034 confirmed, on 2026-10-08**, before `0063` was
+designed, from the 2026-10-08 review's findings 4 and 3 (§ 12). B-035 measured
+a gap from the trail point before, which is the last _move_, not the last
+_report_: an aircraft parked for ten minutes and reporting every fifteen seconds
+would get a gap the moment it taxied, though the feed never fell silent. It now
+measures from the vehicle the update replaced, which is the last report
+(B-041), against the threshold in force when the point is added. B-034 already
+said a point is added only when the position moves, and its scenario agreed;
+`0063`'s summary said an update that changes the altitude alone adds one too.
+The person chose the claim: no point without a move, because a parked
+aircraft's barometric jitter would fill the bound with points of zero length and
+push the path out. The item is corrected.
+
 **B-036 and B-042 were amended on 2026-10-08**, before `0064` was designed,
 because each ended in a clause obliging a consumer this Feature does not build:
 "no consumer SHALL fill it with a member of its own choosing" and "no consumer
@@ -168,7 +181,7 @@ Feature is cited it is written with its Feature's name.
 | B-032 | The fleet stream's element SHALL carry the distance its vehicle moved in the changeset that last updated it — the great-circle distance between its position before that update and after it, measured from `TransportVehicle.Position` alone — and SHALL carry no distance, rather than zero, when either position is absent or the vehicle has only just entered the fleet.                                                                                                                                                                                             | `fleet-dashboard` decisions/0002 and B-030; § 2 need 7                                        |
 | B-033 | The element SHALL carry the sum of every distance B-032 measured for its vehicle since the vehicle entered the fleet; a vehicle removed and later reported again SHALL start a new sum.                                                                                                                                                                                                                                                                                                                                                                                   | `fleet-dashboard` decisions/0002 and B-030                                                    |
 | B-034 | The element SHALL carry its vehicle's trail: the positions it was reported at since it entered the fleet, oldest first, each with its last contact, the trail measure (B-037) read at that point, and its distance from the point before. A point SHALL be added only when an update moves the position; the trail SHALL be bounded by a count the tracker holds, defaulting to 240 — an hour at fifteen seconds — with the oldest dropped first; and it SHALL travel with the element, so it leaves the fleet when the vehicle does and is never a store kept beside it. | `fleet-dashboard` decisions/0002, B-034 and B-035; B-002; dynamic-data-pipeline § "Never add" |
-| B-035 | A trail point whose last contact follows its predecessor's by more than the staleness threshold (B-017) SHALL be marked as following a gap, so a consumer can draw a break rather than a straight line across a silence nobody observed.                                                                                                                                                                                                                                                                                                                                  | `fleet-dashboard` B-034; B-016                                                                |
+| B-035 | A trail point SHALL be marked as following a gap where its last contact follows the last contact of the vehicle its update replaced (B-041) by more than the staleness threshold (B-017) in force when the point is added, so a consumer can draw a break rather than a straight line across a silence nobody observed.                                                                                                                                                                                                                                                   | `fleet-dashboard` B-034; B-016                                                                |
 | B-036 | The description SHALL name which of its columns fill a card's roles — a title, a subtitle, a place and an ordered list of readouts — beside the columns B-020 names; a role the source does not fill SHALL be empty.                                                                                                                                                                                                                                                                                                                                                      | `fleet-dashboard` decisions/0002 and B-029; B-020; B-021                                      |
 | B-037 | The description SHALL name a trail measure — a display name, the range a colour ramp spans, and a selector from `TransportVehicle` to an optional number (altitude in metres, for aircraft) — and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                                                                                              | `fleet-dashboard` B-034; B-022; § 4 row 16                                                    |
 | B-038 | The description MAY offer a place column, naming the nearest place to a position from a table compiled into the application; resolving one SHALL make no network call and read no file, and where no entry lies within the column's bound — ten kilometres for aircraft, over the US Census Bureau's Gazetteer places (§ 11 row 8) — it SHALL yield the position's coordinates rather than a place.                                                                                                                                                                       | `fleet-dashboard` decisions/0002; B-024; § 4 row 18; § 11 row 8                               |
@@ -801,6 +814,91 @@ returning a number for the view to format, which is § 11 row 3 reopened and the
 decimal-comma hazard `0064` names; and the card as a second per-source file
 beside the description, which is a second thing a swap must replace.
 
+**A trail on the element (B-034, B-035, B-037), designed for `0063`**
+
+The trail folds into the element `Move()` already emits, which is what the
+movement block above left room for: one more value on `MovedVehicle` and
+`TrackedVehicle`, derived in the same stage, copied by the mark, and gone with
+the element. No store beside the fleet and no new stage. Two declarations,
+written out because their files do not exist yet:
+
+```csharp
+public sealed record TrailPoint
+{
+    public required GeoPosition Position { get; init; }
+    public required DateTimeOffset LastContact { get; init; }
+    public required Option<double> Measure { get; init; }
+    public required Option<double> Distance { get; init; }
+    public required bool FollowsGap { get; init; }
+}
+
+public sealed record FleetTrailMeasure
+{
+    public required string Name { get; init; }
+    public required double Minimum { get; init; }
+    public required double Maximum { get; init; }
+    public required Func<TransportVehicle, Option<double>> Value { get; init; }
+}
+```
+
+`TrackedVehicle.Trail` and `MovedVehicle.Trail` are `IReadOnlyList<TrailPoint>`,
+oldest first, empty by default. `FleetSourceDescription.Trail` is a `required
+FleetTrailMeasure`, because B-037 says every description names one.
+
+- **A point is added when the position moves, and only then.** On an add or an
+  update, a point is appended where the vehicle has a position and the trail is
+  empty or its last point is somewhere else. An update that changes the
+  altitude alone adds nothing (B-034, the person's call in § 3). An update with
+  no position adds nothing and keeps the trail, and the next fix is measured
+  from the last point, wherever it was.
+- **A point's distance is from the point before, not B-032's leg.** The two
+  agree whenever the replaced vehicle had a position, which is nearly always.
+  They differ after a lost fix: the leg is none, because B-032 measures between
+  consecutive reports, while the point's distance spans the lost fix, because a
+  map draws from point to point. The total stays B-033's sum of legs. The first
+  point has no distance.
+- **A gap is measured from the replaced vehicle, against the threshold in
+  force.** A point follows a gap where its last contact minus the replaced
+  vehicle's is longer than the threshold at the moment the point is made.
+  `Move()` takes a function that reads `_staleAfter.Value`, the way the mark
+  does. Both instants are the provider's, so replay marks the gaps live did and
+  no clock is read. A threshold changed later re-marks nothing: a point records
+  what was a silence when it was drawn. The first point after an add follows no
+  gap, because there was nothing to be silent after.
+- **The bound is the tracker's, at 240.** `FleetTracker.DefaultTrailBound` is
+  passed to `Move()`, and when a point would make 241 the oldest goes first. It
+  is not configurable: the item puts that out of scope, and B-034 asks only that
+  the tracker hold it. The trail is an `ImmutableList<TrailPoint>`, so appending
+  and dropping share structure with the list before, and an element never sees
+  its trail change under it.
+- **The measure is read when the point is made, from the latest description.**
+  `Move()` takes the descriptions' measures as a stream and keeps the latest
+  inside its `Observable.Create`, subscribed before the source, so a description
+  that replays is in hand for the first add. Until one arrives, a point's
+  measure is none, never zero. Storing the number rather than the vehicle is
+  B-041's "nothing older than one update", and keeps a trail of 240 points from
+  holding 240 vehicles. Rejected: `WithLatestFrom`, which drops every changeset
+  before the first description — an add lost there is a vehicle missing from
+  the fleet; and `CombineLatest`, which re-runs the fold whenever a description
+  arrives and doubles the points.
+- **A swap restarts the trail**, as it restarts the total: the outgoing fleet
+  leaves as removes. Points made after a new description read its measure. If a
+  new source's first changeset arrives before its description, those points read
+  the old measure; the order between the two is the swap decorator's, not this
+  stage's, so it is noted rather than guarded.
+
+**The aircraft's measure** is "Altitude", 0 to 12,500 m, read by the
+barometric-altitude reader the altitude readout already uses — the same cast,
+under B-022's exception, so a card and its trail cannot disagree about how high
+the aircraft is. 12,500 m is about 41,000 ft, the ceiling of the airliners over
+Houston; a value above it takes the ramp's last colour, which is the consumer's
+to clamp (`fleet-dashboard` B-034). The range is in metres, like the vehicle.
+
+Rejected: keeping each point's vehicle for the consumer to measure, which is the
+chain B-041 forbids; marking gaps at read time from consecutive points, which is
+finding 4's false gap; and a trail store keyed by vehicle beside the fleet,
+which is B-002's second store and outlives the vehicle.
+
 **No open decisions.**
 
 `AutoRefresh` was the one open block here, and it is closed:
@@ -1043,6 +1141,56 @@ is `0065`. B-022's review is re-done on this item, because the four readout
 cells and the two deltas are new casts in the description, inside the
 exception.
 
+**What `0063` proves — planned 2026-10-08.** B-034, B-035 and B-037, through
+the tracker with the arrangement `FleetMovementTests` uses — a `SourceCache` the
+test writes to, `FleetTrackerFixture`, and no scheduler — because the trail is
+the stage's output, and a test of `Move()` alone would miss the mark dropping
+it. Vehicles come from `AircraftFixture`, positions are synthetic points in the
+Houston box a tenth of a degree of latitude apart (11,119.5 m, as `0062`'s plan
+computed), and instants are local to each test. `FleetTrackerFixture` gains the
+aircraft description as its default, so every point has a measure to read.
+
+`FleetTrailTests` (B-034, B-035, B-037):
+
+- `GivenAVehicleMovedThreeTimes_WhenAnUpdateChangesOnlyItsAltitude_ThenItsTrailHoldsFourPointsOldestFirst`:
+  the positions in order, each point's last contact and altitude its update's,
+  the first distance none and the rest 11,119.5 m. The altitude-only update is
+  what fails a point added on any change.
+- `GivenAVehicleWithATrail_WhenItIsRemovedAndReportedAgain_ThenItsTrailStartsAgain`:
+  one point after re-entry, so nothing of the old trail survived the remove.
+- `GivenATrailAtTheBound_WhenTheVehicleMovesOnceMore_ThenTheOldestPointGoes`:
+  241 positions give 240 points, the first being the second position reported.
+- `GivenAVehicleThatLostItsFix_WhenItReportsOneElsewhere_ThenTheNewPointMeasuresFromThePointBefore`:
+  the point's distance is some while the element's leg is none.
+- `GivenASilence_WhenTheVehicleMoves_ThenTheNewPointFollowsAGapOnlyPastTheThreshold`
+  is a `[ClassData]` theory over `TrailGapCases` — the threshold, the silence,
+  and whether the point follows a gap:
+    - five minutes and 7 min 30 s is a gap;
+    - five minutes and 15 s is not;
+    - five minutes and exactly five is not, B-017's "longer than";
+    - ten minutes, set through `StaleAfter`, and 7 min 30 s is not — the case
+      that fails a stage reading the default rather than the threshold in force.
+- `GivenAParkedVehicleReportingEveryFifteenSeconds_WhenItMoves_ThenTheNewPointFollowsNoGap`:
+  ten minutes of reports at one position, then a move. Finding 4's case: it
+  fails a gap measured from the point before.
+- `GivenASecondDescription_WhenAVehicleMovesAfterIt_ThenTheNewPointCarriesTheNewMeasure`:
+  the vessel description gains a measure reading a fixed number; the points
+  before it arrives carry the altitude and the point after carries the number.
+  It fails a measure read once at construction.
+
+`FleetSourceDescriptionTests` (B-037):
+
+- `GivenTheAircraftDescription_WhenItsTrailMeasureIsRead_ThenItIsBarometricAltitudeInMetres`:
+  a name, a minimum below the maximum, 9,000 m read as 9,000, and an aircraft
+  with no altitude read as none.
+
+B-037's "no member of `TransportVehicle` carries an altitude" is a review:
+`grep -i altitude` over `TransportVehicle.cs` returns nothing. It is re-done by
+`0063` and by any change to the base.
+
+**What none of them proves:** drawing the trail, its colour ramp and its
+breaks, which are `fleet-dashboard` `0071`.
+
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
 about which types may reference which is an analyzer diagnostic, and nothing is
@@ -1051,7 +1199,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — fifty-two scenarios, each tagged with the `@B-00n` it proves.
+this file — fifty-three scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
@@ -1126,10 +1274,10 @@ asks for.
 | B-031    | `@B-031` | `ObservedInstantTests.GivenAPollThatChangedNothing_WhenItReportsAnInstant_ThenTheTrackerPublishesItAnyway` — the case the notices cannot cover, and the one a `DistinctUntilChanged` would swallow; with `GivenAnInstantFromARecording_WhenItIsPublished_ThenItIsTheProvidersValueAndNotAWallClockRead` for the replayed instant, `GivenNoPollHasHappened_WhenAConsumerSubscribes_ThenItReadsTheInstantInForceBeforeAnyAdvance` for the emission a subscription is, and `GivenASubscriberToTheObservedInstant_WhenTheTrackerIsDisposed_ThenTheStreamCompletesAndNoFurtherInstantArrives` for B-004 over this member — `0059`                                                                                                                             | Verified |
 | B-032    | `@B-032` | `GreatCircleTests.GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres`; `FleetMovementTests.GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`, `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`, `GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged` and `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`, on [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                                                                                                                                                                | Verified |
 | B-033    | `@B-033` | `FleetMovementTests.GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`, `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`, `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs` and `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`, on [`0062`](../.issue/0062-movement-on-the-element.yml). The filter test fails with the stage moved below the filter, checked on `0062`                                                                                                                                                                                                                                            | Verified |
-| B-034    | `@B-034` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
-| B-035    | `@B-035` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
+| B-034    | `@B-034` | planned on [`0063`](../.issue/0063-bounded-trail.yml), not yet written — `FleetTrailTests.GivenAVehicleMovedThreeTimes_WhenAnUpdateChangesOnlyItsAltitude_ThenItsTrailHoldsFourPointsOldestFirst`, `GivenAVehicleWithATrail_WhenItIsRemovedAndReportedAgain_ThenItsTrailStartsAgain`, `GivenATrailAtTheBound_WhenTheVehicleMovesOnceMore_ThenTheOldestPointGoes` and `GivenAVehicleThatLostItsFix_WhenItReportsOneElsewhere_ThenTheNewPointMeasuresFromThePointBefore`                                                                                                                                                                                                                                                                                   | Missing  |
+| B-035    | `@B-035` | planned on [`0063`](../.issue/0063-bounded-trail.yml), not yet written — `FleetTrailTests.GivenASilence_WhenTheVehicleMoves_ThenTheNewPointFollowsAGapOnlyPastTheThreshold` and `GivenAParkedVehicleReportingEveryFifteenSeconds_WhenItMoves_ThenTheNewPointFollowsNoGap`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Missing  |
 | B-036    | `@B-036` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns`, `GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty`, and B-021's `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt` for the card swapped with the description                                                                                                                                                                                                                                                                                                         | Verified |
-| B-037    | `@B-037` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
+| B-037    | `@B-037` | planned on [`0063`](../.issue/0063-bounded-trail.yml), not yet written — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsTrailMeasureIsRead_ThenItIsBarometricAltitudeInMetres`, `FleetTrailTests.GivenASecondDescription_WhenAVehicleMovesAfterIt_ThenTheNewPointCarriesTheNewMeasure`, and a **review** that `TransportVehicle` carries no altitude                                                                                                                                                                                                                                                                                                                                                                                    | Missing  |
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Missing  |
 | B-040    | `@B-040` | [`0067`](../.issue/0067-poll-status-seam.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Missing  |
