@@ -1,0 +1,51 @@
+---
+id: "0083"
+type: chore
+title: Give the README a centered header and screenshots of the app
+
+status: in-progress
+
+priority: low
+value: 2
+risk: 1
+rank: 90
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-09"
+updated: "2026-10-09"
+closed: null
+
+summary: |
+    The README opens straight into its first section, with no picture of what
+    the demo looks like. specht's README opens with a centered image, a
+    tagline, a badge row and an anchor nav; this item gives Transponder the
+    same header, with screenshots of the running app in place of a logo.
+
+    The README is the design authority, so this is presentation only: every
+    section and sentence stays as written. The screenshots are taken against
+    the recorded replay, because there is no OpenSky client yet, and say so.
+
+acceptance_criteria:
+    - "The README opens with a centered screenshot, title, tagline, badges and
+      an anchor nav to its sections."
+    - "Screenshots of the grid, grouping, filter and detail pane live under
+      `.assets/screenshots/` and are captioned as recorded replay."
+    - "No existing section of the README loses or changes a sentence."
+
+decisions: []
+
+out_of_scope:
+    - "Any change to the specification's content."
+    - "A logo — none exists."
+    - "Committing the local edits used to start the app on replay —
+      `0061`, `0081`."
