@@ -27,6 +27,9 @@ public static class OpenSkyReplayRegistration
     /// <summary>The key every replay registration carries, so the live chain's own registrations stay the unkeyed ones.</summary>
     internal const string Chain = "aircraft-replay";
 
+    /// <summary>The name a swap control shows for the aircraft recording (B-057).</summary>
+    internal const string RecordedAircraft = "Recorded aircraft";
+
     /// <summary>
     /// The replay chain's own options: no interval, because the recorded spacing is the whole
     /// cadence (B-007), and a box that satisfies the client's guard and reaches no request.
@@ -155,6 +158,8 @@ public static class OpenSkyReplayRegistration
         // in place of the selector and the swap then silently does nothing (ADR-0011).
         services.AddSingleton<ITrackerSourceStrategy>(
             static provider => provider.GetRequiredService<IAircraftReplayTrackerSource>());
+        services.AddSingleton(static provider =>
+            new TrackerSourceEntry(provider.GetRequiredService<IAircraftReplayTrackerSource>(), RecordedAircraft));
 
         return services;
     }

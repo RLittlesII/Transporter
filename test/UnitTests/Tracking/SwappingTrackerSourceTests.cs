@@ -17,7 +17,7 @@ public class SwappingTrackerSourceTests
 {
     /// <summary>
     /// B-038. Two strategies reach the decorator as the container's enumerable, and the live one is
-    /// named by its per-type seam rather than by a kind the seam carries. The second clause is the
+    /// named by its registration entry rather than by a kind the seam carries. The second clause is the
     /// absence of a resolver: no member anywhere in the assembly answers "which source is live",
     /// because the decorator is told and nothing asks it.
     /// </summary>
@@ -32,7 +32,7 @@ public class SwappingTrackerSourceTests
 
         // When
         strategies.Aircraft.Report("a1b2c3");
-        sut.Select<ISecondTrackerSource>();
+        sut.Select(sut.Entries[1]);
         strategies.Vessels.Report("imo9074729");
 
         // Then
@@ -62,7 +62,7 @@ public class SwappingTrackerSourceTests
         strategies.Aircraft.Report("a1b2c3");
 
         // When
-        sut.Select<ISecondTrackerSource>();
+        sut.Select(sut.Entries[1]);
         strategies.Vessels.Report("imo9074729");
 
         // Then
@@ -91,9 +91,9 @@ public class SwappingTrackerSourceTests
 
         // When
         var beforeTheSwap = (strategies.Aircraft.Started, strategies.Aircraft.Stopped, strategies.Vessels.Started);
-        sut.Select<ISecondTrackerSource>();
+        sut.Select(sut.Entries[1]);
         var afterTheSwap = (strategies.Aircraft.Started, strategies.Aircraft.Stopped, strategies.Vessels.Started);
-        sut.Select<IFirstTrackerSource>();
+        sut.Select(sut.Entries[0]);
 
         // Then
         beforeTheSwap.Should().Be((1, 0, 0), "the first subscription starts the first poll");
@@ -104,10 +104,15 @@ public class SwappingTrackerSourceTests
 
     /// <summary>Every member in the production assembly that would answer which source is live.</summary>
     /// <returns>The offending methods, which is the empty set.</returns>
-    /// <remarks>Compiler-generated types are excluded: a registration lambda returning the seam is one.</remarks>
+    /// <remarks>
+    /// Compiler-generated types are excluded: a registration lambda returning the seam is one. So is
+    /// <see cref="TrackerSourceEntry"/>, which names the strategy registration paired with a name,
+    /// not the one that is live (ADR-0015).
+    /// </remarks>
     private static IEnumerable<string> Resolvers() =>
         typeof(ITrackerSource).Assembly.GetTypes()
             .Where(static type => !Attribute.IsDefined(type, typeof(CompilerGeneratedAttribute)))
+            .Where(static type => type != typeof(TrackerSourceEntry))
             .SelectMany(static type => type.GetMethods())
             .Where(static method => typeof(ITrackerSource).IsAssignableFrom(method.ReturnType))
             .Select(static method => $"{method.DeclaringType!.Name}.{method.Name}");
@@ -118,7 +123,8 @@ public class SwappingTrackerSourceTests
 [AutoFixture(typeof(SwappingTrackerSource))]
 internal partial class SwappingTrackerSourceFixture
 {
-    public SwappingTrackerSourceFixture() => WithEnumerable([Aircraft, Vessels]);
+    public SwappingTrackerSourceFixture() =>
+        WithEnumerable([new TrackerSourceEntry(Aircraft, "Aircraft"), new TrackerSourceEntry(Vessels, "Vessels")]);
 
     /// <summary>Gets the strategy that is live until something selects the other.</summary>
     public FirstTrackerSource Aircraft { get; } = new();

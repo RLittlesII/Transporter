@@ -12,10 +12,9 @@ namespace Transponder.Tracking.Sources;
 /// <para>
 /// It projects nothing, polls nothing and holds no cache — B-022 forbids a projection, a client or
 /// a cache of replay's own, and what this delegates to is the live class over the replay contract
-/// (B-013). The seam is the only thing it adds, and the reason is
-/// <see cref="SwappingTrackerSource.Select(Type)"/>: a strategy is resolved by
-/// <c>Single(seam.IsInstanceOfType)</c>, which a second <see cref="AircraftTrackerSource"/>
-/// registered beside the live one would make ambiguous rather than selectable.
+/// (B-013). The seam is the only thing it adds, and the reason is registration: its strategy alias
+/// and its <see cref="TrackerSourceEntry"/> each resolve this instance by its seam, which a second
+/// <see cref="AircraftTrackerSource"/> registered beside the live one would make ambiguous.
 /// </para>
 /// <para>
 /// Rejected: making <see cref="AircraftTrackerSource"/> implement both seams, which puts both

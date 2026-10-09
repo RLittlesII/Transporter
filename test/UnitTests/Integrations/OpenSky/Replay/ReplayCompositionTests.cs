@@ -79,7 +79,7 @@ public class ReplayCompositionTests
         using var subscription = composed.GetRequiredService<ITrackerSource>().Connect().Bind(out var rows).Subscribe();
 
         // When
-        selector.Select<IAircraftReplayTrackerSource>();
+        selector.Select(selector.Entries.Single(static entry => entry.Source is IAircraftReplayTrackerSource));
         scheduler.AdvanceBy(1);
 
         // Then
