@@ -39,8 +39,9 @@ own API, see
 - The bound property surface, and the commands the view invokes.
 - Turning a keystroke, a selection, or a tap into **one message or one
   observable value**.
-- Projecting domain values into display form — a canonical unit into a display
-  unit, an instant into local time, an empty `Option` into an empty string.
+- Projecting domain values into display form — an instant into local time, an
+  empty `Option` into an empty string, a description's line name beside its
+  cell.
 - View state: which row is selected, which group is expanded, which source the
   indicator shows.
 
@@ -56,6 +57,11 @@ own API, see
 - Any write to the cache.
 - Mapping wire payloads ([`mapping`](../mapping/SKILL.md)).
 - Staleness arithmetic. Derive it on the domain type, bind the result.
+- What a source's values are called, which of them a kind of item has, and the
+  unit each reads in. Those are the source's description; a view model that
+  switches on a subclass to label its fields or converts a canonical unit is a
+  second place a swap must edit, and a second rounding of a value the card
+  already shows.
 
 A useful test: **if a rule would still be true with no UI at all, it does not
 belong in the view model.**
@@ -138,6 +144,13 @@ observe it, so there is no continuation at all.
   view model remembers, which is an input to the domain rather than a projection
   of it. The two live side by side on one view model, and which one a property
   uses says which way its value flows.
+- **A setter sets its own field and nothing else.** No raising another
+  property's change, no writing another object, no call into the domain. A value
+  that depends on a settable property observes it — `WhenChanged(x => x.Selected)`
+  from `ReactiveMarbles.PropertyChanged` — and is read through `AsValue`; a child
+  view model takes that observable by constructor rather than being assigned to
+  from its parent's setter. A setter with side effects is a second place each
+  dependent value is decided, and the order of its statements becomes behaviour.
 - **Marshal to the UI scheduler at the view model boundary**, not deep inside
   the pipeline, and take the scheduler by constructor so a test can substitute
   it.
@@ -149,8 +162,8 @@ observe it, so there is no continuation at all.
   anything else already holds: two collections of the same items is the bug this
   rule prevents
   ([ADR-0009](../../.spec/adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md)).
-- A view model exposes the abstract domain type, not a subclass — the detail
-  pane is the only exception ([`maui-ui`](../maui-ui/SKILL.md) "The swap test").
+- A view model exposes the abstract domain type, not a subclass, the detail pane
+  included ([`maui-ui`](../maui-ui/SKILL.md) "The swap test").
 
 ## Testing
 
@@ -169,6 +182,8 @@ be tested, it is doing something that belongs elsewhere.
 ## Never add
 
 - A domain rule, validation, or calculation that is not display formatting.
+- A unit conversion or a `switch` on a subclass. The description does both.
+- A setter that raises another property, assigns another object, or calls out.
 - `HttpClient`, a socket, a timer, or a poll in a view model.
 - A cache write from a view model.
 - A blocking call — no `.Result`, no `.Wait()`, no `GetAwaiter().GetResult()`.

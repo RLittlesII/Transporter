@@ -10,6 +10,7 @@ using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
 using ReactiveMarbles.ObservableEvents;
 using Transponder.Features.Fleet.ViewModels;
+using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
 
 namespace Gui.Views;
@@ -23,7 +24,8 @@ public class FleetPage : ContentPage
 {
     /// <summary>Initializes a new instance of the <see cref="FleetPage"/> class.</summary>
     /// <param name="viewModel">The page's view model, by constructor and resolved from nothing (B-003).</param>
-    public FleetPage(FleetViewModel viewModel)
+    /// <param name="summary">The summary strip's view model, which projects the tracker's counts (B-015).</param>
+    public FleetPage(FleetViewModel viewModel, FleetSummaryViewModel summary)
     {
         BindingContext = ViewModel = viewModel;
         Title = "Fleet";
@@ -42,7 +44,13 @@ public class FleetPage : ContentPage
                 .Bind(AircraftCard.VehicleProperty, ".")
                 .Bind(AircraftCard.CardProperty, nameof(FleetViewModel.Card), source: viewModel)
                 .Bind(AircraftCard.ObservedProperty, nameof(FleetViewModel.Observed), source: viewModel)),
-        }.Bind(ItemsView.ItemsSourceProperty, static (FleetViewModel model) => model.Fleet);
+        }
+            .Bind(ItemsView.ItemsSourceProperty, static (FleetViewModel model) => model.Fleet)
+            .Bind(
+                SelectableItemsView.SelectedItemProperty,
+                static (FleetViewModel model) => model.Selected,
+                static (FleetViewModel model, TrackedVehicle? selected) => model.Selected = selected,
+                BindingMode.TwoWay);
         fleet
             .Events()
             .SizeChanged
@@ -61,9 +69,9 @@ public class FleetPage : ContentPage
             Children =
             {
                 Controls().Row(0),
-                Summary().Row(1),
+                Summary(summary).Row(1),
                 fleet.Row(2),
-                Detail().Row(3),
+                Detail(viewModel.Detail).Row(3),
             },
         };
     }
@@ -116,15 +124,50 @@ public class FleetPage : ContentPage
             },
         });
 
-    /// <summary>The summary surface; item 0038 projects the tracker's counts into it (B-001, B-015).</summary>
+    /// <summary>The summary strip: three counts the tracker derived, bound and never recounted here (B-015).</summary>
+    /// <param name="summary">The strip's view model.</param>
     /// <returns>The summary panel.</returns>
-    private static Border Summary() =>
-        Panel(new Label { Text = "Summary", Style = FlightDeckStyles.Caption });
+    private static Border Summary(FleetSummaryViewModel summary) =>
+        Panel(new HorizontalStackLayout
+        {
+            Spacing = FlightDeck.Space6,
+            Children =
+            {
+                new Readout { Caption = "Tracked" }.Bind(Readout.ValueProperty, nameof(FleetSummaryViewModel.Tracked), source: summary, stringFormat: "{0:N0}"),
+                new Readout { Caption = "Stale" }.Bind(Readout.ValueProperty, nameof(FleetSummaryViewModel.Stale), source: summary, stringFormat: "{0:N0}"),
+                new Readout { Caption = "Groups" }.Bind(Readout.ValueProperty, nameof(FleetSummaryViewModel.Groups), source: summary, stringFormat: "{0:N0}"),
+            },
+        });
 
-    /// <summary>The detail pane, the one surface allowed to name a subclass; item 0038 fills it (B-001, B-013).</summary>
+    /// <summary>The detail pane: the selected vehicle's own fields, or a prompt when nothing is selected (B-013, B-014).</summary>
+    /// <param name="detail">The pane's view model.</param>
     /// <returns>The detail panel.</returns>
-    private static Border Detail() =>
-        Panel(new Label { Text = "Select an aircraft", Style = FlightDeckStyles.Caption });
+    /// <remarks>The rows are the view model's; this names no subclass and converts no unit (B-019).</remarks>
+    private static Border Detail(FleetDetailViewModel detail)
+    {
+        var rows = new FlexLayout { Wrap = FlexWrap.Wrap, AlignItems = FlexAlignItems.Start }
+            .Bind(BindableLayout.ItemsSourceProperty, nameof(FleetDetailViewModel.Rows), source: detail);
+        BindableLayout.SetItemTemplate(rows, new DataTemplate(static () => new Readout
+        {
+            WidthRequest = DetailCellWidth,
+            Margin = new Thickness(0, 0, FlightDeck.Space4, FlightDeck.Space2),
+        }
+            .Bind(Readout.CaptionProperty, nameof(FleetDetailRow.Label))
+            .Bind(Readout.ValueProperty, nameof(FleetDetailRow.Value))));
+
+        return Panel(new VerticalStackLayout
+        {
+            Spacing = FlightDeck.Space3,
+            Children =
+            {
+                new Label { Text = "Select an aircraft", Style = FlightDeckStyles.Caption }
+                    .Bind(IsVisibleProperty, nameof(FleetDetailViewModel.IsEmpty), source: detail),
+                new Label { Style = FlightDeckStyles.Heading }
+                    .Bind(Label.TextProperty, nameof(FleetDetailViewModel.Title), source: detail),
+                rows,
+            },
+        });
+    }
 
     /// <summary>What the grid shows before the first poll lands, or when a filter admits nothing.</summary>
     /// <returns>The empty state.</returns>
@@ -171,6 +214,8 @@ public class FleetPage : ContentPage
             _layout.Span = span;
         }
     }
+
+    private const double DetailCellWidth = 150;
 
     private readonly CompositeDisposable _garbage = [];
     private readonly GridItemsLayout _layout;

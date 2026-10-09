@@ -9,8 +9,8 @@ namespace Transponder.Tracking.Sources;
 
 /// <summary>
 /// What the aircraft source offers a view: eight columns, three of them sortable, one grouping,
-/// three filter choices, and a card titled by the callsign with four readouts (fleet-pipeline
-/// B-020, B-029, B-036, B-042).
+/// three filter choices, a card titled by the callsign with four readouts, and fourteen detail lines
+/// (fleet-pipeline B-020, B-029, B-036, B-042, B-043).
 /// </summary>
 /// <remarks>
 /// Every comparer, every grouping key and the first four selectors read <see cref="TransportVehicle"/>
@@ -20,7 +20,7 @@ namespace Transponder.Tracking.Sources;
 /// column sorts, groups or filters.
 /// <para>
 /// B-022's one exception holds the casts in this file, and nothing else does: the filter choices,
-/// the four readout cells and the two deltas. <see cref="Aircraft.OnGround"/>, the altitude, the
+/// the readout cells, the two deltas and the detail lines. <see cref="Aircraft.OnGround"/>, the altitude, the
 /// speed, the track and the vertical rate reach no member of the base, and promoting them would
 /// invent a semantic every future source has to answer, so what needs them is built here — in the
 /// per-source file a swap replaces, where a cast cannot outlive the source that needed it. A consumer
@@ -69,6 +69,19 @@ internal static class AircraftFleetDescription
             Name = "Vertical rate",
             Value = static vehicle => DisplayUnit.FeetPerMinute.Cell(Rate(vehicle)),
         };
+        var lastContact = new FleetColumn
+        {
+            Name = "Last contact",
+            Value = static vehicle => vehicle.LastContact.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
+            Comparer = Comparer<TransportVehicle>.Create(static (left, right) => left.LastContact.CompareTo(right.LastContact)),
+        };
+        var position = new FleetColumn
+        {
+            Name = "Position",
+            Value = static vehicle => vehicle.Position.Match(
+                static fix => string.Create(CultureInfo.InvariantCulture, $"{fix.Latitude:0.000}, {fix.Longitude:0.000}"),
+                static () => "no fix"),
+        };
 
         return new FleetSourceDescription
         {
@@ -76,19 +89,8 @@ internal static class AircraftFleetDescription
             [
                 callsign,
                 originCountry,
-                new FleetColumn
-                {
-                    Name = "Last contact",
-                    Value = static vehicle => vehicle.LastContact.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
-                    Comparer = Comparer<TransportVehicle>.Create(static (left, right) => left.LastContact.CompareTo(right.LastContact)),
-                },
-                new FleetColumn
-                {
-                    Name = "Position",
-                    Value = static vehicle => vehicle.Position.Match(
-                        static fix => string.Create(CultureInfo.InvariantCulture, $"{fix.Latitude:0.000}, {fix.Longitude:0.000}"),
-                        static () => "no fix"),
-                },
+                lastContact,
+                position,
                 altitude,
                 groundSpeed,
                 heading,
@@ -124,6 +126,37 @@ internal static class AircraftFleetDescription
                     new FleetReadout { Column = verticalRate },
                 ],
             },
+            Detail =
+            [
+                new FleetColumn { Name = "ICAO24", Value = static vehicle => vehicle.Key },
+                callsign,
+                originCountry,
+                new FleetColumn { Name = "Squawk", Value = static vehicle => Squawk(vehicle).IfNone(DisplayUnit.Missing) },
+                new FleetColumn
+                {
+                    Name = "Category",
+                    Value = static vehicle => Category(vehicle).Match(
+                        static category => category.ToString(CultureInfo.InvariantCulture),
+                        static () => DisplayUnit.Missing),
+                },
+                altitude,
+                new FleetColumn { Name = "GPS altitude", Value = static vehicle => DisplayUnit.Feet.Cell(GeometricAltitude(vehicle)) },
+                groundSpeed,
+                heading,
+                verticalRate,
+                new FleetColumn
+                {
+                    Name = "On the ground",
+                    Value = static vehicle => OnGround(vehicle).Match(static grounded => grounded ? "Yes" : "No", static () => DisplayUnit.Missing),
+                },
+                position,
+                new FleetColumn
+                {
+                    Name = "Position source",
+                    Value = static vehicle => Source(vehicle).Match(static source => source.ToString(), static () => DisplayUnit.Missing),
+                },
+                lastContact,
+            ],
         };
     }
 
@@ -140,6 +173,21 @@ internal static class AircraftFleetDescription
 
     private static Option<double> Rate(TransportVehicle vehicle) =>
         vehicle is Aircraft aircraft ? aircraft.VerticalRate : Option<double>.None;
+
+    private static Option<double> GeometricAltitude(TransportVehicle vehicle) =>
+        vehicle is Aircraft aircraft ? aircraft.GeometricAltitude : Option<double>.None;
+
+    private static Option<string> Squawk(TransportVehicle vehicle) =>
+        vehicle is Aircraft aircraft ? aircraft.Squawk : Option<string>.None;
+
+    private static Option<int> Category(TransportVehicle vehicle) =>
+        vehicle is Aircraft aircraft ? aircraft.Category : Option<int>.None;
+
+    private static Option<bool> OnGround(TransportVehicle vehicle) =>
+        vehicle is Aircraft aircraft ? aircraft.OnGround : Option<bool>.None;
+
+    private static Option<PositionSource> Source(TransportVehicle vehicle) =>
+        vehicle is Aircraft aircraft ? aircraft.PositionSource : Option<PositionSource>.None;
 
     private const double DegreesInATurn = 360;
 }

@@ -21,6 +21,7 @@ public sealed class WindowServiceCases : TheoryData<Type>
     public WindowServiceCases()
     {
         Add(typeof(FleetViewModel));
+        Add(typeof(FleetSummaryViewModel));
         Add(typeof(IFleetTracker));
         Add(typeof(ITrackerSource));
         Add(typeof(IObservable<FleetSourceDescription>));

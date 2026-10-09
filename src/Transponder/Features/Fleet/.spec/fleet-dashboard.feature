@@ -89,11 +89,12 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And the grouping published is the description's category grouping
 
   @B-013
-  Scenario: The detail pane is the one surface that knows it has an aircraft
-    Given an aircraft reporting squawk "0021", category 3 and a geometric altitude
+  Scenario: The detail pane shows the lines the description names
+    Given a description naming the detail lines "Key" and "Label"
+      And an aircraft keyed "a1b2c3" with the callsign "ZULU"
      When it is selected and the detail pane's rows are read
-     Then the rows include fields only an aircraft reports
-      And the grid, the filters, the comparers and the summary named no concrete type to produce them
+     Then the rows are "Key" reading "a1b2c3" and "Label" reading "ZULU", in that order
+      And the pane named no concrete vehicle type to produce them
 
   @B-015
   Scenario: The summary is projected, never recomputed
@@ -233,11 +234,11 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And no view, markup or comparer was edited to make it happen
 
   @B-022
-  Scenario: Only the detail pane asks which kind of vehicle it has
-    Given a cast, an "is" check or a switch on a concrete vehicle type outside the detail pane
+  Scenario: No surface asks which kind of vehicle it has
+    Given a cast, an "is" check or a switch on a concrete vehicle type in this Feature
      When the project is built
-     Then it is reported at the expression
-      And the same expression inside the detail pane is not
+     Then it is reported at the expression, the detail pane included
+      And the same expression in a source's own description is not
 
   # ──────────────────────── The arrival notice on screen ────────────────────────
 
