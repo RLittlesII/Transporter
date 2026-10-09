@@ -149,6 +149,16 @@ writes the code. A design decision bigger than the item in hand stops and goes
 to the person, with the options and the tradeoff named, rather than being
 settled inside an implementation pull request.
 
+**A change to a signed section reopens its row.** When §§ 1-5, 6-7 or 8-9
+change after their § 12 row reads 🟢 — a claim added, amended or withdrawn, a
+design or a test plan rewritten — the commit that changes them also sets that
+row to 🟡 and `spec_status` to `in-review`. It is the one write to § 12 a role
+other than `spec-reviewer` makes, and it only lowers a row: raising one stays
+the reviewer's. A correction that changes no claim, design or plan — a typo, a
+link — reopens nothing. Nobody else is present when signed text changes, so a
+row the author leaves 🟢 approves text no reviewer read
+([lesson 0023](../../../.spec/lessons/0023-a-sign-off-that-outlives-its-text-approves-text-nobody-read.md)).
+
 ## Never add
 
 - A GitHub issue, label or milestone as part of this workflow. An `.issue/` is the

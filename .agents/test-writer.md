@@ -1,8 +1,6 @@
 ---
 name: test-writer
 description: Turn a specification claim into a failing xUnit test before any implementation exists, and own the Testing Strategy and Traceability Matrix sections. Use when a claim is written and needs a test; writes test code only, never production code.
-model: sonnet
-effort: medium
 ---
 
 # Test writer
