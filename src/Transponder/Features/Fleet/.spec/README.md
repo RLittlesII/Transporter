@@ -1183,8 +1183,8 @@ Findings 1 – 6 are answered; the review is the `spec-reviewer`'s to re-read.
 now-approved `fleet-pipeline` and `aircraft-source`.
 
 Findings 1, 2, 3, 5 and 6 hold. Finding 4 holds with one reservation, which is
-finding 7 below. Mechanically: forty claims, forty § 9 rows, forty-nine
-scenarios. The reviewer counted and records five new findings.
+finding 9 below. Mechanically: forty claims, forty § 9 rows, forty-nine
+scenarios. Five new findings follow.
 
 **§§ 1-5**
 
