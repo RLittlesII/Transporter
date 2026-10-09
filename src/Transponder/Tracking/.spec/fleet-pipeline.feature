@@ -133,7 +133,19 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      Then three values are published, one per country
       And a fourth aircraft from a fourth country adds one value
       And the last aircraft from a country leaving removes its value
-      And no consumer enumerated the collection to learn any of it
+
+  @B-030
+  Scenario: Filtering never withdraws a choice
+    Given a bound fleet of four aircraft registered in three countries
+     When a filter admits only the aircraft from Germany
+     Then the three values are still published
+
+  @B-030
+  Scenario: A new grouping key replaces the values
+    Given the distinct values of the grouping by country are observed
+     When the fleet is grouped by staleness instead
+     Then the country values are replaced by the staleness values
+      And a consumer subscribing now reads the staleness values at once
 
   # ────────────────────────────── Failure mode ──────────────────────────────
 
@@ -483,12 +495,25 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When it is read for a position 10.5 km from Pasadena
      Then it yields the position's coordinates rather than "Pasadena"
 
+  @B-038
+  Scenario: A vehicle with no position has no place
+    Given the aircraft description
+     When its place column is read for an aircraft with no position
+     Then it yields neither a place nor coordinates
+
   @B-039
   Scenario: The recent notices are a window the tracker keeps
     Given twenty-five changesets that each changed something
      When the window of recent notices is observed
      Then it holds the last twenty, oldest first
+      And it carries the added, updated and removed totals across those twenty
       And a consumer pacing its own notices at one minute does not thin it
+
+  @B-039
+  Scenario: A search is not a change the source made
+    Given a window holding two notices
+     When a filter hides half the fleet, and is then cleared
+     Then the window still holds the two notices
 
   @B-039
   Scenario: Two consumers read one window, and it goes with them
@@ -497,7 +522,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When a second consumer subscribes
      Then it reads the same three notices at once
      When both unsubscribe and a third consumer subscribes
-     Then its window is empty until the next changeset
+     Then its window is empty until the next changeset, though the source still reports every aircraft
 
   @B-039
   Scenario: A silence does not enter the window
@@ -563,6 +588,8 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When the source reports a refusal asking for 42 seconds
      Then the status carries the refusal and the 42 seconds
       And the tracker started no timer and read no clock to say so
+     When the source reports the next poll applied
+     Then the status carries no refusal
 
   @B-040
   Scenario: A source that does not poll has no poll status

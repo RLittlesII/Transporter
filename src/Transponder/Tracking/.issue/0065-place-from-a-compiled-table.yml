@@ -45,7 +45,7 @@ summary: |
   generator does, and its output is what is committed.
 
 acceptance_criteria:
-  - "B-038 — a place within ten kilometres, coordinates beyond it; no network call and no file read."
+  - "B-038 — the aircraft description offers a place: within ten kilometres by great-circle distance, coordinates beyond it, neither for a vehicle with no position; no network call, and no file or resource read."
   - "§ 9 Traceability Matrix carries a row naming a test for B-038."
 
 decisions: []

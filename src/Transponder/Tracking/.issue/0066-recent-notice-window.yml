@@ -40,12 +40,17 @@ summary: |
 
   Two traps. A window built over a consumer's paced stream holds what that
   consumer happened to see; it is built over the notices as raised, before any
-  rate cap. And it cannot be built over `Notices()`, whose quiet timing is per
-  subscription (B-027): it is built from the shared changesets, so every entry
-  is `Updated`, and the changeset ending a silence enters with its counts.
+  rate cap. And it cannot be built over `Notices()` or `_arrivals`: the first
+  times quiet per subscription (B-027), and the second sits after the filter,
+  where a search reads as adds and removes. It is built from what the seam
+  delivered, before the filter, so every entry is `Updated`, the changeset
+  ending a silence enters with its counts, and the fleet handed to a stage
+  connecting late is not an entry. It publishes the totals across the window
+  beside the entries, because `fleet-dashboard` B-037 shows totals and its
+  B-023 forbids the banner summing them.
 
 acceptance_criteria:
-  - "B-039 — the last twenty `Updated` notices, oldest first, unthinned by any consumer's pacing, shared by every consumer subscribed at once and emptied at teardown."
+  - "B-039 — the last twenty changes the source made, counted before the filter, oldest first, with their totals, unthinned by any consumer's pacing, read at once by a consumer subscribing, shared by every consumer subscribed at once and emptied when the last unsubscribes."
   - "§ 9 Traceability Matrix carries a row naming a test for B-039."
 
 decisions:
@@ -53,6 +58,11 @@ decisions:
     at teardown, and holds `Updated` notices only (fleet-pipeline B-039, § 4
     row 15). Rejected: a window per subscription, starting empty; a window that
     outlives its consumers, which breaks B-004 and B-028."
+  - "2026-10-08 — the person — the window counts only changes the source made,
+    before the filter, and B-025's notices stay as they are; and the tracker
+    publishes the window's totals rather than the banner summing them.
+    Rejected: changing B-025 with it; rewording `fleet-dashboard` B-037 to show
+    entries instead of totals."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

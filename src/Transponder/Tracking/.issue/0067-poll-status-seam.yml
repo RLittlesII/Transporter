@@ -41,7 +41,10 @@ summary: |
 
   B-040's second scenario — a push source swapped in reports none — is proven
   here against a test double that writes the seam; `0068` proves the OpenSky
-  poller writes it.
+  poller writes it. B-040 binds only what the tracker re-publishes: that the
+  decorator switches the status with the live strategy, and registers none for
+  one that does not poll, is a claim `aircraft-source` owes, and it is written
+  there before this item starts.
 
   Two traps. The tracker re-publishes and produces nothing: no timer, no clock
   read, no countdown — a ticking value would be the timer `fleet-dashboard`
@@ -50,7 +53,7 @@ summary: |
   failing on screen.
 
 acceptance_criteria:
-  - "B-040 — the poll status re-published on the tracker; none for a source that does not poll; replaced on a swap."
+  - "B-040 — the latest status the seam reports, re-published on the tracker and read at once by a consumer subscribing; none while the seam reports none; replaced when the seam replaces it."
   - "§ 9 Traceability Matrix carries a row naming a test for B-040."
 
 decisions: []
