@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Fleet pipeline
@@ -1759,11 +1759,11 @@ the draft it replaced.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2130,6 +2130,11 @@ are the description's and a swap replaces them with the rest. Mechanically
 clean: forty-three claims, forty-three § 9 rows, seventy-five scenarios. No new
 finding. **Recommended: all three rows to 🟢**, which is the person's to
 agree; the rows above stay 🟡 until they do.
+
+**Agreed 2026-10-09 by the person.** All three rows are 🟢 and `spec_status`
+is `approved`. § 9 still has seven `Missing` rows — B-030, B-034, B-035 and
+B-037 – B-040 — which block those items reaching `done`, not this agreement
+(lesson 0007). A change to a signed section lowers its row again.
 
 ## Decisions
 
