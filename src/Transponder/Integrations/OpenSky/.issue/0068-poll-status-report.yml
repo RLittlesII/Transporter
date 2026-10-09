@@ -22,6 +22,7 @@ spec: src/Transponder/Integrations/OpenSky/.spec/README.md
 claims:
   - B-054
   - B-055
+  - B-056
 
 created: "2026-10-08"
 updated: "2026-10-08"
@@ -34,8 +35,11 @@ summary: |
   poll that is performed (B-053) moves it. When OpenSky answers `429` it reports
   the refusal and the interval `X-Rate-Limit-Retry-After-Seconds` gave (B-055).
 
-  Waits on `fleet-pipeline` `0067`, which builds the seam and its selection by
-  the decorator.
+  The swap decorator selects the status with the live strategy (B-056), so a
+  swap replaces it and a strategy with no poller contributes none.
+
+  Waits on `fleet-pipeline` `0067`, which builds the seam and the tracker's
+  re-publication of it.
 
   Two traps. The due instant is computed on the poller's scheduler, never from
   `DateTimeOffset.UtcNow`, or a test on a virtual scheduler passes and the demo
@@ -46,6 +50,7 @@ summary: |
 acceptance_criteria:
   - "B-054 — the next-due instant reported each time a poll is scheduled; a performed demand moves it."
   - "B-055 — a 429 reported with its retry-after, and cleared by the next poll that lands."
+  - "B-056 — the status selected with the live strategy: replaced on a swap, none for a strategy with no poller, nothing from the outgoing one after the swap."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions: []

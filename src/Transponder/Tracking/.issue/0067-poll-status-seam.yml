@@ -30,10 +30,8 @@ closed: null
 summary: |
   ADR-0013's seam, built. A provider-agnostic stream in `Tracking/` carrying
   an optional instant the next poll is due and an optional refusal with the
-  interval the provider asked for. The swap decorator selects it with the
-  source, so a swap replaces the status and a source that does not poll
-  contributes none; the tracker re-publishes it on `IFleetTracker` (B-040), the
-  move `0059` made for the observed instant.
+  interval the provider asked for. The tracker re-publishes it on
+  `IFleetTracker` (B-040), the move `0059` made for the observed instant.
 
   Depends on nothing open: the decorator (`SwappingTrackerSource`) and the
   tracker are on `main`. `aircraft-source` `0068` writes the seam for OpenSky,
@@ -41,10 +39,9 @@ summary: |
 
   B-040's second scenario — a push source swapped in reports none — is proven
   here against a test double that writes the seam; `0068` proves the OpenSky
-  poller writes it. B-040 binds only what the tracker re-publishes: that the
-  decorator switches the status with the live strategy, and registers none for
-  one that does not poll, is a claim `aircraft-source` owes, and it is written
-  there before this item starts.
+  poller writes it. B-040 binds only what the tracker re-publishes: the
+  decorator switching the status with the live strategy is `aircraft-source`
+  B-056, delivered by `0068`.
 
   Two traps. The tracker re-publishes and produces nothing: no timer, no clock
   read, no countdown — a ticking value would be the timer `fleet-dashboard`

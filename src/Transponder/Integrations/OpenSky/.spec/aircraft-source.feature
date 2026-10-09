@@ -263,6 +263,15 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And it spends no further credits
       And its in-flight result does not reach any cache after the swap
 
+  @B-056
+  Scenario: The poll status is swapped with the source
+    Given an aircraft source reporting a refusal asking for 42 seconds
+     When the live source is swapped to one registered with no poll status
+     Then the poll status is none
+      And nothing the aircraft source reports afterwards is published
+     When the aircraft source is swapped back in
+     Then the poll status is the one it reports next
+
   @B-053
   Scenario: A demanded poll inside the interval is refused
     Given an aircraft source polling on a fifteen-second interval
