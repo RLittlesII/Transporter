@@ -9,6 +9,7 @@ using DynamicData;
 using LanguageExt;
 using ReactiveMarbles.Command;
 using ReactiveMarbles.Mvvm;
+using ReactiveMarbles.PropertyChanged;
 using Rocket.Surgery.Airframe;
 using Transponder.Messages;
 using Transponder.Model;
@@ -78,6 +79,11 @@ public sealed class FleetViewModel : RxObject, IDisposable
                 Filter();
             })
             .DisposeWith(_garbage);
+        Detail = new FleetDetailViewModel(
+                this.WhenChanged(static model => model.Selected).Select(Prelude.Optional),
+                tracker.Description,
+                schedulers)
+            .DisposeWith(_garbage);
         _observed = tracker
             .Observed
             .AsValue(
@@ -126,27 +132,21 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
     /// <summary>Gets the detail pane's view model, which the selection drives and nothing else does (B-013, B-014).</summary>
     /// <remarks>
-    /// Built here rather than injected: it has no dependency of its own, and its one input is this
-    /// view model's selection, so a second owner could only disagree with this one.
+    /// Built here rather than injected: its inputs are this view model's selection, observed rather
+    /// than pushed from a setter, and the tracker's description, so a second owner could only
+    /// disagree with this one. Disposed with this view model.
     /// </remarks>
-    public FleetDetailViewModel Detail { get; } = new();
+    public FleetDetailViewModel Detail { get; }
 
     /// <summary>Gets or sets the element the grid has selected, null when nothing is (B-013, B-014).</summary>
     /// <remarks>
     /// A binding target, so a plain reference rather than an <c>Option</c> (`language-ext-usage`
-    /// § "Where it stops"); the pane receives it as an <c>Option</c> of the abstract vehicle. The
-    /// pipeline moves it too: a newer reading replaces it, and the vehicle leaving the collection
-    /// clears it, so a selection never outlives what it selected.
+    /// § "Where it stops"); the pane observes it through <c>WhenChanged</c> and receives an
+    /// <c>Option</c>, so this setter sets one value and nothing else. The pipeline moves it too: a
+    /// newer reading replaces it, and the vehicle leaving the collection clears it, so a selection
+    /// never outlives what it selected.
     /// </remarks>
-    public TrackedVehicle? Selected
-    {
-        get;
-        set
-        {
-            RaiseAndSetIfChanged(ref field, value);
-            Detail.Vehicle = Prelude.Optional(value).Map(static element => element.Vehicle);
-        }
-    }
+    public TrackedVehicle? Selected { get; set => RaiseAndSetIfChanged(ref field, value); }
 
     /// <summary>Gets what the live source can be grouped by (B-007).</summary>
     public IReadOnlyList<FleetGrouping> Groupings { get; private set => RaiseAndSetIfChanged(ref field, value); } = [];

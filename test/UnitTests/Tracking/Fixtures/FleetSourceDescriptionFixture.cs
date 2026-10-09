@@ -11,7 +11,7 @@ namespace Transponder.UnitTests.Tracking.Fixtures;
 /// <remarks>
 /// Hand-written for the reason the other fixtures here are, and its defaults are the shape every
 /// consumer test needs: two columns whose cells differ, one grouping, and no filter choices, so a
-/// test that is about filters is the one that says so.
+/// test that is about filters is the one that says so. No detail lines either, for the same reason.
 /// </remarks>
 internal sealed class FleetSourceDescriptionFixture : AutoFixtureBase<FleetSourceDescriptionFixture>
 {
@@ -30,6 +30,11 @@ internal sealed class FleetSourceDescriptionFixture : AutoFixtureBase<FleetSourc
     /// <returns>The fixture, so building chains.</returns>
     public FleetSourceDescriptionFixture WithFilters(IReadOnlyList<FleetFilterChoice> filters) => With(ref _filters, filters);
 
+    /// <summary>Sets the detail pane's lines (B-043).</summary>
+    /// <param name="detail">The lines, in reading order.</param>
+    /// <returns>The fixture, so building chains.</returns>
+    public FleetSourceDescriptionFixture WithDetail(IReadOnlyList<FleetColumn> detail) => With(ref _detail, detail);
+
     /// <summary>Takes the subject, as every fixture here is taken.</summary>
     /// <param name="fixture">The fixture to build.</param>
     public static implicit operator FleetSourceDescription(FleetSourceDescriptionFixture fixture) => fixture.Build();
@@ -40,6 +45,7 @@ internal sealed class FleetSourceDescriptionFixture : AutoFixtureBase<FleetSourc
             Columns = _columns,
             Groupings = _groupings,
             Filters = _filters,
+            Detail = _detail,
         };
 
     private IReadOnlyList<FleetColumn> _columns =
@@ -54,4 +60,6 @@ internal sealed class FleetSourceDescriptionFixture : AutoFixtureBase<FleetSourc
     ];
 
     private IReadOnlyList<FleetFilterChoice> _filters = [];
+
+    private IReadOnlyList<FleetColumn> _detail = [];
 }

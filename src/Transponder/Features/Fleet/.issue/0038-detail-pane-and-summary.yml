@@ -65,6 +65,13 @@ decisions:
     76."
   - "2026-10-09 — the person — § 12 waived for this item: `fleet-dashboard`
     §§ 1-9 are still 🟡 Draft, and the work starts against them as written."
+  - "2026-10-09 — the person — from the review of pull request #69, the detail
+    pane's lines move to the description: `fleet-pipeline` B-043 is added and
+    delivered here, and B-013 and B-022 are amended so no surface names a
+    subclass. The pane's values are derived through `AsValue` from the
+    selection, observed with `ReactiveMarbles.PropertyChanged`'s `WhenChanged`,
+    rather than pushed from setters — a package the person chose over
+    `FromEventPattern`. Lesson 0005."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

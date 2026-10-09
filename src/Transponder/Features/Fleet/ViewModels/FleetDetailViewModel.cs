@@ -1,116 +1,74 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using LanguageExt;
 using ReactiveMarbles.Mvvm;
+using Rocket.Surgery.Airframe;
 using Transponder.Model;
+using Transponder.Tracking;
+using Transponder.Tracking.Fleet;
 
 namespace Transponder.Features.Fleet.ViewModels;
 
-/// <summary>The detail pane: the one surface that learns which kind of vehicle it has (B-013, B-019).</summary>
+/// <summary>The detail pane: the selected vehicle, read through the lines the description names (B-013, B-014).</summary>
 /// <remarks>
-/// Everything else in the application reads a <see cref="TransportVehicle"/> through its
-/// description; this type alone matches on the subclass, because a pane worth opening shows what
-/// only that kind of vehicle reports (ADR-0005 item 6). Each canonical unit is converted by a member
-/// named for the unit it produces, never inside a binding or a format string (B-019), and the
-/// vehicle it reads is never written.
+/// Thin by construction: every value is derived from two streams through <c>AsValue</c>, so no setter
+/// raises another property and nothing here is assigned. Which fields a vehicle has, what they are
+/// called and which unit each reads in are the description's (`fleet-pipeline` B-043), so this type
+/// names no subclass and converts nothing (B-019, B-022); it pairs a line's name with its cell.
 /// </remarks>
-public sealed class FleetDetailViewModel : RxObject
+public sealed class FleetDetailViewModel : RxObject, IDisposable
 {
-    /// <summary>Gets or sets the vehicle the pane shows, absent when nothing is selected (B-014).</summary>
-    /// <remarks>Set by <see cref="FleetViewModel.Selected"/> and by nothing else; not a binding target, so it stays an <c>Option</c>.</remarks>
-    public Option<TransportVehicle> Vehicle
+    /// <summary>Initializes a new instance of the <see cref="FleetDetailViewModel"/> class.</summary>
+    /// <param name="selected">The element the fleet has selected, absent when nothing is (B-014).</param>
+    /// <param name="description">The live source's description, whose detail lines the pane reads (`fleet-pipeline` B-043).</param>
+    /// <param name="schedulers">Where the values are marshalled, by constructor so a test advances it.</param>
+    public FleetDetailViewModel(
+        IObservable<Option<TrackedVehicle>> selected,
+        IObservable<FleetSourceDescription> description,
+        ISchedulerProvider schedulers)
     {
-        get;
-        set
-        {
-            RaiseAndSetIfChanged(ref field, value);
-            RaisePropertyChanged(nameof(IsEmpty));
-            RaisePropertyChanged(nameof(Title));
-            RaisePropertyChanged(nameof(Rows));
-        }
+        var shown = selected.Select(static element => element.Map(static tracked => tracked.Vehicle));
+
+        _isEmpty = shown
+            .Select(static vehicle => vehicle.IsNone)
+            .AsValue(_ => RaisePropertyChanged(nameof(IsEmpty)), schedulers.UserInterfaceThread, static () => true)
+            .DisposeWith(_garbage);
+        _title = shown
+            .Select(static vehicle => vehicle.Match(static some => some.Label, static () => string.Empty))
+            .AsValue(_ => RaisePropertyChanged(nameof(Title)), schedulers.UserInterfaceThread, static () => string.Empty)
+            .DisposeWith(_garbage);
+        _rows = shown
+            .CombineLatest(
+                description.Select(static described => described.Detail),
+                static (vehicle, lines) => vehicle.Match(some => Lines(some, lines), static () => []))
+            .AsValue(_ => RaisePropertyChanged(nameof(Rows)), schedulers.UserInterfaceThread, static () => [])
+            .DisposeWith(_garbage);
     }
 
     /// <summary>Gets a value indicating whether the pane has nothing to show (B-014).</summary>
-    public bool IsEmpty => Vehicle.IsNone;
+    public bool IsEmpty => _isEmpty.Value;
 
     /// <summary>Gets the pane's heading: the vehicle's label, empty when there is none.</summary>
-    public string Title => Vehicle.Match(static vehicle => vehicle.Label, static () => string.Empty);
+    public string Title => _title.Value;
 
-    /// <summary>Gets the pane's lines, derived from <see cref="Vehicle"/> each time it is read and empty when there is none (B-013).</summary>
-    public IReadOnlyList<FleetDetailRow> Rows => Vehicle.Match(Project, static () => []);
+    /// <summary>Gets the pane's lines, one per detail line the description names, empty when nothing is selected (B-013).</summary>
+    public IReadOnlyList<FleetDetailRow> Rows => _rows.Value;
 
-    /// <summary>The lines for one vehicle: the subclass's own fields where it is one this pane knows.</summary>
-    /// <param name="vehicle">The vehicle.</param>
-    /// <returns>Its lines, in reading order.</returns>
-    private static IReadOnlyList<FleetDetailRow> Project(TransportVehicle vehicle) => vehicle switch
-    {
-        Aircraft aircraft =>
-        [
-            new("ICAO24", aircraft.Key),
-            new("Callsign", aircraft.Callsign.IfNone(FleetCardText.Missing)),
-            new("Country", aircraft.OriginCountry),
-            new("Squawk", aircraft.Squawk.IfNone(FleetCardText.Missing)),
-            new("Category", aircraft.Category.Match(static category => category.ToString(CultureInfo.InvariantCulture), static () => FleetCardText.Missing)),
-            new("Baro altitude", Feet(aircraft.BarometricAltitude)),
-            new("GPS altitude", Feet(aircraft.GeometricAltitude)),
-            new("Ground speed", Knots(aircraft.Velocity)),
-            new("Heading", Degrees(aircraft.TrueTrack)),
-            new("Vertical rate", FeetPerMinute(aircraft.VerticalRate)),
-            new("On ground", aircraft.OnGround ? "Yes" : "No"),
-            new("Position", Position(aircraft.Position)),
-            new("Position source", aircraft.PositionSource.Match(static source => source.ToString(), static () => FleetCardText.Missing)),
-            new("Last contact", Instant(aircraft)),
-        ],
-        _ =>
-        [
-            new("Key", vehicle.Key),
-            new("Position", Position(vehicle.Position)),
-            new("Last contact", Instant(vehicle)),
-        ],
-    };
+    /// <inheritdoc/>
+    public void Dispose() => _garbage.Dispose();
 
-    /// <summary>Metres to feet, for an altitude (B-019).</summary>
-    /// <param name="metres">The canonical altitude.</param>
-    /// <returns>"35,000 ft", or the missing mark.</returns>
-    private static string Feet(Option<double> metres) => Whole(metres.Map(static value => value / MetresPerFoot), "ft");
+    /// <summary>Each line's name beside its cell for one vehicle; the cell is the description's, already formatted.</summary>
+    /// <param name="vehicle">The vehicle shown.</param>
+    /// <param name="lines">The description's detail lines.</param>
+    /// <returns>The pane's rows, in the description's order.</returns>
+    private static IReadOnlyList<FleetDetailRow> Lines(TransportVehicle vehicle, IReadOnlyList<FleetColumn> lines) =>
+        [.. lines.Select(line => new FleetDetailRow(line.Name, line.Value(vehicle)))];
 
-    /// <summary>Metres per second to knots, for a ground speed (B-019).</summary>
-    /// <param name="metresPerSecond">The canonical speed.</param>
-    /// <returns>"452 kt", or the missing mark.</returns>
-    private static string Knots(Option<double> metresPerSecond) =>
-        Whole(metresPerSecond.Map(static value => value * SecondsPerHour / MetresPerNauticalMile), "kt");
-
-    /// <summary>Metres per second to feet per minute, for a vertical rate (B-019).</summary>
-    /// <param name="metresPerSecond">The canonical rate, negative when descending.</param>
-    /// <returns>"−1,200 ft/min", or the missing mark.</returns>
-    private static string FeetPerMinute(Option<double> metresPerSecond) =>
-        Whole(metresPerSecond.Map(static value => value * SecondsPerMinute / MetresPerFoot), "ft/min");
-
-    /// <summary>A track in whole degrees; no conversion, only display.</summary>
-    /// <param name="degrees">The track clockwise from north.</param>
-    /// <returns>"275°", or the missing mark.</returns>
-    private static string Degrees(Option<double> degrees) =>
-        degrees.Match(
-            static value => Math.Round(value, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture) + "°",
-            static () => FleetCardText.Missing);
-
-    private static string Position(Option<GeoPosition> position) =>
-        position.Match(
-            static fix => string.Create(CultureInfo.InvariantCulture, $"{fix.Latitude:0.0000}, {fix.Longitude:0.0000}"),
-            static () => FleetCardText.Missing);
-
-    private static string Instant(TransportVehicle vehicle) =>
-        vehicle.LastContact.UtcDateTime.ToString("HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-
-    private static string Whole(Option<double> value, string unit) =>
-        value.Match(
-            number => Math.Round(number, MidpointRounding.AwayFromZero).ToString(WholeFormat, CultureInfo.InvariantCulture) + " " + unit,
-            static () => FleetCardText.Missing);
-
-    private const double MetresPerFoot = 0.3048;
-    private const double MetresPerNauticalMile = 1852;
-    private const double SecondsPerHour = 3600;
-    private const double SecondsPerMinute = 60;
-    private const string WholeFormat = "#,0;−#,0;0";
+    private readonly CompositeDisposable _garbage = [];
+    private readonly IValueBinder<bool> _isEmpty;
+    private readonly IValueBinder<string> _title;
+    private readonly IValueBinder<IReadOnlyList<FleetDetailRow>> _rows;
 }

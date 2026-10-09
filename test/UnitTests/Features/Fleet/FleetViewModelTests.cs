@@ -12,6 +12,7 @@ using Transponder.Model;
 using Transponder.Scheduling;
 using Transponder.Tracking;
 using Transponder.Tracking.Fleet;
+using Transponder.Tracking.Sources;
 using Transponder.UnitTests.Model.Fixtures;
 using Transponder.UnitTests.Scheduling;
 using Transponder.UnitTests.Tracking.Fixtures;
@@ -272,7 +273,7 @@ public class FleetViewModelTests
         var tracker = Substitute.For<IFleetTracker>();
         tracker.Fleet.Returns(fleet.Connect());
         tracker.Order.Returns(Observable.Return(ByKey));
-        tracker.Description.Returns(Observable.Never<FleetSourceDescription>());
+        tracker.Description.Returns(Observable.Return(AircraftFleetDescription.Offered));
         FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
         fleet.AddOrUpdate(Tracked("a1b2c3"));
         scheduler.Start();
