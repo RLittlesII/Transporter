@@ -226,6 +226,68 @@ public class FleetViewModelTests
         sut.Observed.Should().Be(observed, "age is measured from the instant the provider reported");
     }
 
+    /// <summary>
+    /// B-014. A selection does not outlive its vehicle: when the vehicle leaves the collection the
+    /// selection goes and the pane empties. The hazard is a pane still showing an aircraft the grid
+    /// no longer has, with nothing erroring.
+    /// </summary>
+    [Fact]
+    public void GivenASelectionThatLeavesTheFleet_WhenTheSelectionIsRead_ThenItIsAbsentAndThePaneIsEmpty()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var fleet = new SourceCache<TrackedVehicle, string>(static tracked => tracked.Vehicle.Key);
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(fleet.Connect());
+        tracker.Order.Returns(Observable.Return(ByKey));
+        tracker.Description.Returns(Observable.Never<FleetSourceDescription>());
+        FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
+        fleet.AddOrUpdate(Tracked("a1b2c3"));
+        fleet.AddOrUpdate(Tracked("d4e5f6"));
+        scheduler.Start();
+        sut.Selected = sut.Fleet[0];
+
+        // When
+        fleet.RemoveKey("a1b2c3");
+        scheduler.Start();
+
+        // Then
+        sut.Selected.Should().BeNull("the vehicle it selected is no longer in the collection");
+        sut.Detail.IsEmpty.Should().BeTrue("the pane shows nothing for a vehicle the grid does not have");
+    }
+
+    /// <summary>
+    /// B-014. A newer reading of the selected vehicle moves the selection onto it, so the pane shows
+    /// what the card shows. The hazard is a selection held on the first instance, which keeps the
+    /// pane on a reading the grid replaced polls ago.
+    /// </summary>
+    [Fact]
+    public void GivenASelectedVehicle_WhenANewerReadingArrives_ThenTheSelectionAndThePaneFollowIt()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var fleet = new SourceCache<TrackedVehicle, string>(static tracked => tracked.Vehicle.Key);
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(fleet.Connect());
+        tracker.Order.Returns(Observable.Return(ByKey));
+        tracker.Description.Returns(Observable.Never<FleetSourceDescription>());
+        FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
+        fleet.AddOrUpdate(Tracked("a1b2c3"));
+        scheduler.Start();
+        sut.Selected = sut.Fleet[0];
+        TrackedVehicle newer = new TrackedVehicleFixture().WithVehicle(new AircraftFixture().WithSquawk("7700"));
+
+        // When
+        fleet.AddOrUpdate(newer);
+        scheduler.Start();
+
+        // Then
+        sut.Selected.Should().BeSameAs(newer, "the selection is the instance the collection now holds");
+        sut.Detail.Rows.Should().Contain(new FleetDetailRow("Squawk", "7700"));
+    }
+
     /// <summary>One vehicle as the pipeline publishes it, keyed so the bound order is readable.</summary>
     /// <param name="key">The key, which is also the label while the callsign is absent.</param>
     /// <returns>The element the fleet stream carries.</returns>

@@ -64,7 +64,7 @@ public sealed class FleetViewModel : RxObject, IDisposable
             .Fleet
             .ObserveOn(schedulers.UserInterfaceThread)
             .SortAndBind(out _fleet, tracker.Order)
-            .Subscribe()
+            .Subscribe(Follow)
             .DisposeWith(_garbage);
         tracker
             .Description
@@ -123,6 +123,30 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// so a replay shows the ages it recorded. Reads the minimum until the first poll lands.
     /// </remarks>
     public DateTimeOffset Observed => _observed.Value;
+
+    /// <summary>Gets the detail pane's view model, which the selection drives and nothing else does (B-013, B-014).</summary>
+    /// <remarks>
+    /// Built here rather than injected: it has no dependency of its own, and its one input is this
+    /// view model's selection, so a second owner could only disagree with this one.
+    /// </remarks>
+    public FleetDetailViewModel Detail { get; } = new();
+
+    /// <summary>Gets or sets the element the grid has selected, null when nothing is (B-013, B-014).</summary>
+    /// <remarks>
+    /// A binding target, so a plain reference rather than an <c>Option</c> (`language-ext-usage`
+    /// § "Where it stops"); the pane receives it as an <c>Option</c> of the abstract vehicle. The
+    /// pipeline moves it too: a newer reading replaces it, and the vehicle leaving the collection
+    /// clears it, so a selection never outlives what it selected.
+    /// </remarks>
+    public TrackedVehicle? Selected
+    {
+        get;
+        set
+        {
+            RaiseAndSetIfChanged(ref field, value);
+            Detail.Vehicle = Prelude.Optional(value).Map(static element => element.Vehicle);
+        }
+    }
 
     /// <summary>Gets what the live source can be grouped by (B-007).</summary>
     public IReadOnlyList<FleetGrouping> Groupings { get; private set => RaiseAndSetIfChanged(ref field, value); } = [];
@@ -201,6 +225,26 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// <returns>Its reverse.</returns>
     private static IComparer<TransportVehicle> Reversed(IComparer<TransportVehicle> comparer) =>
         Comparer<TransportVehicle>.Create((left, right) => comparer.Compare(right, left));
+
+    /// <summary>Keeps the selection on the element the collection now holds for it, or clears it (B-014).</summary>
+    /// <param name="changes">The changes just bound, so the collection already reflects them.</param>
+    /// <remarks>
+    /// Read after the bind rather than before it, so a newer reading is selected only once it is
+    /// the instance the grid holds. A filter that hides the vehicle removes it from the collection,
+    /// and that clears the selection the same way its leaving the fleet does.
+    /// </remarks>
+    private void Follow(IChangeSet<TrackedVehicle, string> changes)
+    {
+        foreach (var change in changes)
+        {
+            if (Selected is not { } selected || !string.Equals(change.Key, selected.Vehicle.Key, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            Selected = change.Reason == ChangeReason.Remove ? null : change.Current;
+        }
+    }
 
     /// <summary>Hands the tracker the one predicate the two inputs compose into (B-009).</summary>
     private void Filter() => _tracker.Filter(FleetSearch.Composed(SearchText, Columns, SelectedFilter));

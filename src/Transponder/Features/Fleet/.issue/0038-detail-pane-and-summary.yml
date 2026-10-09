@@ -2,7 +2,7 @@ id: "0038"
 type: task
 title: Show the selected vehicle and the projected counts
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -29,7 +29,7 @@ claims:
 
 created: "2026-10-05"
 updated: "2026-10-09"
-closed: null
+closed: "2026-10-09"
 
 summary: |
   The detail pane is the one surface in the application allowed to name a
