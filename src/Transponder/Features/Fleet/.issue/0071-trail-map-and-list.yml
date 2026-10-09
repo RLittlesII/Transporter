@@ -32,7 +32,9 @@ summary: |
   The detail pane draws the selected vehicle's trail on a map (B-034),
   coloured across the trail measure's range by a ramp that stays ordered
   under protan, deutan and tritan vision, broken where a point follows a gap,
-  and extended as the trail grows rather than redrawn from empty. Beside it, a
+  and following the trail rather than redrawn from empty: extended at its
+  head as a point is added, and trimmed at its tail as the trail's bound drops
+  one. Beside it, a
   list of the same trail newest first (B-035), each point with its last contact
   and its distance from the point before.
 
@@ -50,7 +52,7 @@ summary: |
   view model is B-018's violation.
 
 acceptance_criteria:
-  - "B-034 — the trail on a map, ramped across the measure, broken at gaps, extended rather than redrawn."
+  - "B-034 — the trail on a map, ramped across the measure, broken at gaps, extended at its head and trimmed at its tail, never redrawn from empty."
   - "B-035 — the trail listed newest first, bound and computing nothing."
   - "§ 9 Traceability Matrix carries a row naming a test or a performed review for each id above."
 

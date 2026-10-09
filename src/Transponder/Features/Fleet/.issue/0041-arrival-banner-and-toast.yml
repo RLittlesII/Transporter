@@ -56,9 +56,10 @@ summary: |
   if the toolkit addition is refused.
 
   Runs after `0036`, which builds the page, and `fleet-pipeline` `0033`, which
-  raises the notices. The banner also shows the counts across the window of
-  recent notices the tracker keeps (B-037), so it waits on `fleet-pipeline`
-  `0066` for the window — and keeps no list of its own.
+  raises the notices. The banner also shows the totals across the window of
+  recent notices the tracker keeps, under a label of their own apart from the
+  latest notice's (B-037), so it waits on `fleet-pipeline` `0066` for the
+  window — and keeps no list of its own.
 
 acceptance_criteria:
   - "B-023 — the banner shows the instant and the counts, and computes none of
@@ -70,8 +71,8 @@ acceptance_criteria:
     while running."
   - "B-027 — no view model names a toast, snackbar or alert type. Analyzer
     rule."
-  - "B-037 — the window's counts beside the latest notice's; no list kept
-    here."
+  - "B-037 — the latest notice's counts, after the filter, and the window's
+    totals, before it, each under its own label; no list kept here."
   - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule or a
     performed review for each id above."
 
