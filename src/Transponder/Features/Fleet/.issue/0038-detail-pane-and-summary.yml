@@ -2,7 +2,7 @@ id: "0038"
 type: task
 title: Show the selected vehicle and the projected counts
 
-status: ready-for-architecture
+status: done
 
 priority: high
 value: 4
@@ -28,8 +28,8 @@ claims:
   - B-019
 
 created: "2026-10-05"
-updated: "2026-10-08"
-closed: null
+updated: "2026-10-09"
+closed: "2026-10-09"
 
 summary: |
   The detail pane is the one surface in the application allowed to name a
@@ -63,6 +63,15 @@ decisions:
     the card; nothing here had been built against it. `0071` now waits on this
     item for the pane it draws the trail in, which moves the rank from 71 to
     76."
+  - "2026-10-09 — the person — § 12 waived for this item: `fleet-dashboard`
+    §§ 1-9 are still 🟡 Draft, and the work starts against them as written."
+  - "2026-10-09 — the person — from the review of pull request #69, the detail
+    pane's lines move to the description: `fleet-pipeline` B-043 is added and
+    delivered here, and B-013 and B-022 are amended so no surface names a
+    subclass. The pane's values are derived through `AsValue` from the
+    selection, observed with `ReactiveMarbles.PropertyChanged`'s `WhenChanged`,
+    rather than pushed from setters — a package the person chose over
+    `FromEventPattern`. Lesson 0005."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

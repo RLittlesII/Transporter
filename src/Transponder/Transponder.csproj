@@ -19,6 +19,7 @@
       <PackageReference Include="System.Reactive" />
       <PackageReference Include="ReactiveMarbles.Command" />
       <PackageReference Include="ReactiveMarbles.Mvvm" />
+      <PackageReference Include="ReactiveMarbles.PropertyChanged" />
       <PackageReference Include="Riok.Mapperly" />
       <PackageReference Include="Rocket.Surgery.Airframe.Core" />
     </ItemGroup>

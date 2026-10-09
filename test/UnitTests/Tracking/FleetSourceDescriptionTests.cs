@@ -1,3 +1,4 @@
+using System.Linq;
 using AwesomeAssertions;
 using Transponder.Model;
 using Transponder.Tracking.Fleet;
@@ -112,5 +113,45 @@ public class FleetSourceDescriptionTests
         card.Subtitle.IsNone.Should().BeTrue();
         card.Place.IsNone.Should().BeTrue();
         card.Readouts.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-043. The aircraft description names the fields only an aircraft reports as
+    /// detail lines, each read in the unit a person reads. The hazard is a pane that can show them only
+    /// by naming <see cref="Aircraft"/> itself, which is the cast the description exists to hold.
+    /// 10,972.8 m is exactly 36,000 ft.
+    /// </summary>
+    [Fact]
+    public void GivenTheAircraftDescription_WhenItsDetailIsRead_ThenItNamesTheFieldsOnlyAnAircraftReports()
+    {
+        // Given
+        var offered = AircraftFleetDescription.Offered;
+        TransportVehicle aircraft = new AircraftFixture().WithSquawk("0021").WithCategory(3).WithGeometricAltitude(10_972.8).WithOnGround(true);
+
+        // When
+        var lines = offered.Detail.Select(line => (line.Name, Cell: line.Value(aircraft)));
+
+        // Then
+        lines.Should().Contain(("Squawk", "0021"))
+            .And.Contain(("Category", "3"))
+            .And.Contain(("GPS altitude", "36,000 ft"))
+            .And.Contain(("On the ground", "Yes"));
+    }
+
+    /// <summary>
+    /// fleet-pipeline B-043. A description that names no detail lines has none, so a source that
+    /// offers no pane is legal and a pane shows nothing for it rather than lines it guessed at.
+    /// </summary>
+    [Fact]
+    public void GivenADescriptionNamingNoDetail_WhenItsDetailIsRead_ThenItIsEmpty()
+    {
+        // Given
+        FleetSourceDescription offered = new FleetSourceDescriptionFixture();
+
+        // When
+        var lines = offered.Detail;
+
+        // Then
+        lines.Should().BeEmpty();
     }
 }
