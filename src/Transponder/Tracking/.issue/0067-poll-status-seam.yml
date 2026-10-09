@@ -2,7 +2,7 @@ id: "0067"
 type: task
 title: Carry a source's poll status on a read-side seam, and re-publish it on the tracker
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 value: 3
@@ -24,7 +24,7 @@ claims:
   - B-040
 
 created: "2026-10-08"
-updated: "2026-10-08"
+updated: "2026-10-09"
 closed: null
 
 summary: |
