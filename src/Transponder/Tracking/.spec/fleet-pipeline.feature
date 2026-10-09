@@ -387,6 +387,13 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When a changeset moves it with a last contact of 14:10:15
      Then the new point is not marked as following a gap
 
+  @B-035
+  Scenario: A trail's first point follows no gap, whatever came before it
+    Given a staleness threshold of five minutes
+      And SYN101 entered the fleet with no position at 14:00:00
+     When a changeset gives it a fix with a last contact of 14:07:30
+     Then its first trail point is not marked as following a gap
+
   @B-036
   Scenario: The description names what fills each role on a card
     Given the aircraft description
