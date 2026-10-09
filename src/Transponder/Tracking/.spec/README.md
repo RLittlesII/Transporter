@@ -55,8 +55,8 @@ description names. B-032 – B-035 are the movement — a leg, a running total, 
 trail and the gaps in it — and they ride on the fleet element rather than in a
 store beside it, which is what keeps B-002's "no second store" true. B-036 – B-038
 extend the description: the roles a card fills, the measure a trail is coloured
-by, and a place resolved from a table compiled in. B-039 windows the notices
-B-025 already raises. B-040 is B-031's move again — a value from below the seam
+by, and a place resolved from a table compiled in. B-039 windows the changes
+the source made, which B-025's notices count after the filter. B-040 is B-031's move again — a value from below the seam
 re-published on it — and the seam it needs from the source is
 [ADR-0013](../../../../.spec/adr/0013-a-read-side-seam-carries-a-sources-poll-status.md).
 
@@ -96,7 +96,7 @@ changed something. Whether a silence happened is timed per subscription
 (B-027), so a shared window cannot know it: no `Quiet` notice enters, and the
 changeset that ends a silence — which a subscription's own notices call
 `Resumed` — enters as `Updated`, with its counts, because it changed the fleet
-like any other. A change-rate sparkline has no use for a silence, which the
+like any other. A window of changes has no use for a silence, which the
 toast reports already.
 
 **B-030 and B-038 – B-040 were amended on 2026-10-08**, by the review that
@@ -114,14 +114,18 @@ description to offer a place, which "MAY" alone did not, and says what a
 vehicle with no position yields. B-040's clauses about a non-polling source and
 a swap bound the swap decorator, which § 5 row 5 places in `aircraft-source`;
 they now bind only what the tracker re-publishes, and the decorator's half is
-owed by `aircraft-source` as a claim of its own: that it switches the poll
-status with the live strategy and registers none for a strategy that does not
-poll. Likewise `fleet-dashboard` owes the claim that offers B-030's values as
-filter choices beside B-029's, and says what becomes of a selection when the
-grouping key changes. Generating B-038's table from the Gazetteer is a
-build-time step outside this Feature; B-024 binds what runs. B-033 and B-042
-were reworded without changing what they require: B-033's sum runs from the
-source's first report, which is what its filter test already proves, and B-042's
+`aircraft-source` B-056, filed the same day: that it switches the poll status
+with the live strategy and registers none for a strategy that does not poll.
+Likewise `fleet-dashboard` B-039 offers B-030's values as filter choices beside
+B-029's, and clears a selected value of the old key when the grouping changes.
+**B-025 also counts the fleet a late subscriber is handed**, as one add: that
+subscriber's bind receives the same add, so the notice reports what its fleet
+just did, and the reading above covers it. Generating B-038's table from the Gazetteer is a
+build-time step outside this Feature; B-024 binds what runs. B-032 – B-034, B-041 and B-042
+were reworded without changing what they require: their movement, sum, trail
+and replaced vehicle run from when the source last began reporting the vehicle,
+not from when it entered the published fleet, which is what B-033's filter test
+already proves, and B-042's
 "no replaced vehicle" case is the readout's change, not the delta's, which never
 sees an element.
 
@@ -227,16 +231,16 @@ Feature is cited it is written with its Feature's name.
 | B-029 | The description SHALL carry the filter choices the live source offers, each a display name beside a predicate over `TransportVehicle`, and SHALL offer them whether or not any vehicle currently satisfies one — a choice is what the source admits, not what the data happens to hold.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | § 11 row 6; `fleet-dashboard` B-009 and B-011                                                 |
 | B-030 | The tracker SHALL publish, as a changeset, the distinct values the current grouping key takes across every vehicle the source reports, before the filter (B-006), so a choice can be offered for a value the data holds without any consumer enumerating the collection to find it, and choosing one never withdraws the others. A change of grouping key SHALL replace the values with the new key's, and a consumer subscribing SHALL read the values in force at once.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | § 11 row 6; `fleet-dashboard` B-009                                                           |
 | B-031 | The tracker SHALL publish the observed instant and every advance of it, so a consumer can tell a poll applied a response even when the response changed nothing; it SHALL re-publish the clock's own stream rather than hold a clock or read a wall clock, and the value SHALL be the instant the provider reported.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `fleet-dashboard` B-028 and decisions/0001; ADR-0010; `aircraft-source` B-003                 |
-| B-032 | The fleet stream's element SHALL carry the distance its vehicle moved in the changeset that last updated it — the great-circle distance between its position before that update and after it, measured from `TransportVehicle.Position` alone — and SHALL carry no distance, rather than zero, when either position is absent or the vehicle has only just entered the fleet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `fleet-dashboard` decisions/0002 and B-030; § 2 need 7                                        |
-| B-033 | The element SHALL carry the sum of every distance B-032 measured for its vehicle since the source first reported it; a vehicle removed and later reported again SHALL start a new sum.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `fleet-dashboard` decisions/0002 and B-030                                                    |
-| B-034 | The element SHALL carry its vehicle's trail: the positions it was reported at since it entered the fleet, oldest first, each with its last contact, the trail measure (B-037) read at that point, and its distance from the point before. A point SHALL be added when the vehicle enters the fleet with a position, or when an update reports a position other than the trail's last point, and at no other time; the trail SHALL be bounded by a count the tracker holds, defaulting to 240 — an hour at fifteen seconds — with the oldest dropped first; and it SHALL travel with the element, so it leaves the fleet when the vehicle does and is never a store kept beside it.                                                                                                                                                                                                                                                                                                                       | `fleet-dashboard` decisions/0002, B-034 and B-035; B-002; dynamic-data-pipeline § "Never add" |
+| B-032 | The fleet stream's element SHALL carry the distance its vehicle moved in the changeset that last updated it — the great-circle distance between its position before that update and after it, measured from `TransportVehicle.Position` alone — and SHALL carry no distance, rather than zero, when either position is absent or the source has only just begun reporting the vehicle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `fleet-dashboard` decisions/0002 and B-030; § 2 need 7                                        |
+| B-033 | The element SHALL carry the sum of every distance B-032 measured for its vehicle since the source last began reporting it; a vehicle removed and later reported again SHALL start a new sum.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `fleet-dashboard` decisions/0002 and B-030                                                    |
+| B-034 | The element SHALL carry its vehicle's trail: the positions it was reported at since the source last began reporting it, oldest first, each with its last contact, the trail measure (B-037) read at that point, and its distance from the point before. A point SHALL be added when the source begins reporting the vehicle with a position, or when an update reports a position other than the trail's last point, and at no other time; the trail SHALL be bounded by a count the tracker holds, defaulting to 240 — an hour at fifteen seconds — with the oldest dropped first; and it SHALL travel with the element, so it goes when the source stops reporting the vehicle, is kept while a filter hides it, and is never a store kept beside it.                                                                                                                                                                                                                                                  | `fleet-dashboard` decisions/0002, B-034 and B-035; B-002; dynamic-data-pipeline § "Never add" |
 | B-035 | A trail point SHALL be marked as following a gap where its last contact follows the last contact of the vehicle its update replaced (B-041) by more than the staleness threshold (B-017) in force when the point is added, so a consumer can draw a break rather than a straight line across a silence nobody observed; a trail's first point SHALL follow no gap, having no line before it to break.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `fleet-dashboard` B-034; B-016                                                                |
 | B-036 | The description SHALL name which of its columns fill a card's roles — a title, a subtitle, a place and an ordered list of readouts — beside the columns B-020 names; a role the source does not fill SHALL be empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `fleet-dashboard` decisions/0002 and B-029; B-020; B-021                                      |
 | B-037 | The description SHALL name a trail measure — a display name, the range a colour ramp spans, and a selector from `TransportVehicle` to an optional number (altitude in metres, for aircraft) — and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `fleet-dashboard` B-034; B-022; § 4 row 16                                                    |
 | B-038 | The description MAY offer a place column, naming the nearest place to a position — by B-032's great-circle distance to an entry's recorded point — from a table compiled into the application, and the aircraft description SHALL offer one, bounded at ten kilometres over the US Census Bureau's Gazetteer places (§ 11 row 8). Resolving one SHALL make no network call and read no file or resource at runtime: the table is source. Where no entry lies within the column's bound it SHALL yield the position's coordinates rather than a place, and where the vehicle has no position it SHALL yield neither.                                                                                                                                                                                                                                                                                                                                                                                      | `fleet-dashboard` decisions/0002; B-024; § 4 row 18; § 11 row 8                               |
 | B-039 | The tracker SHALL publish a window of the twenty most recent changes the source made — one `Updated` notice for each changeset the seam delivered that changed something, counted before the filter (B-006), so its tracked count is every vehicle the source reports — oldest dropped first and unpaced by B-026, and with each window the added, updated and removed totals across it, summed in the stage, so the banner (`fleet-dashboard` B-037) keeps and sums no list itself. A changeset that reports the current fleet to a stage connecting, rather than a change the source made, SHALL NOT enter it, nor SHALL a `Quiet` notice (B-027); a changeset a subscription's own notices report as `Resumed` SHALL enter it as `Updated`, with the same counts. The window SHALL be kept once, so every consumer subscribed to it at once reads the same window; a consumer subscribing SHALL read the window in force at once; and it SHALL be emptied when the last of them unsubscribes (B-028). | `fleet-dashboard` B-037                                                                       |
 | B-040 | The tracker SHALL re-publish the latest poll status the poll-status seam reports (ADR-0013) — the instant the live source's next poll is due, and while the provider is refusing polls, the interval it asked for — and nothing older, with no timer, clock read or provider name of its own; so while the live source does not poll the tracker publishes none, and a status the seam replaces on a swap is replaced on the tracker. A consumer subscribing SHALL read the status in force at once.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `fleet-dashboard` B-036; `aircraft-source` B-054 and B-055; B-031; ADR-0013                   |
-| B-041 | The element SHALL carry the vehicle its last update replaced, read from the changeset that made the update, so a consumer can show what changed without keeping a copy; an element that has just entered the fleet SHALL carry none, and nothing older than one update SHALL be kept.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `fleet-dashboard` B-038 and § 11 row 8; B-002                                                 |
+| B-041 | The element SHALL carry the vehicle its last update replaced, read from the changeset that made the update, so a consumer can show what changed without keeping a copy; an element whose vehicle the source has just begun reporting SHALL carry none, and nothing older than one update SHALL be kept.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `fleet-dashboard` B-038 and § 11 row 8; B-002                                                 |
 | B-042 | A readout column in the description MAY name a delta — a selector over the vehicle B-041 carries and the current one, returning the change already formatted. A delta it names SHALL return the change at the precision its cell shows, and none where that cell did not change or where either vehicle has no value for it; a readout's change SHALL be none where the element carries no replaced vehicle; and that selector MAY name the concrete type its source was written for, under B-022's exception and no wider.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `fleet-dashboard` B-038 and § 11 row 8; B-022; § 11 row 3                                     |
 
 ## 4. Constraints
@@ -1132,7 +1136,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — sixty-nine scenarios, each tagged with the `@B-00n` it proves.
+this file — seventy scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
@@ -1147,9 +1151,9 @@ Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
 
 - Happy path → B-001, B-002, B-006, B-007, B-009, B-011 – B-015, B-020, B-025,
-  B-028 – B-034, B-036, B-037, B-041, B-042
+  B-028 – B-034, B-036 – B-042
 - Failure mode → B-004, B-005, B-016 – B-019, B-027, B-032 (a tick zeroing a
-  leg), B-033 (a filter or a swap restarting a total), B-034 (a bound reached),
+  leg), B-033 (a filter or a swap restarting a total), B-034 (a bound reached, a filter restarting a trail),
   B-035 (a silence, a parked aircraft that was not one, and a threshold changed
   after the point), B-030 (a filter withdrawing a choice), B-037 (a
   description not yet arrived), B-038 (a vehicle with no position), B-039 (a
@@ -1349,11 +1353,11 @@ the draft it replaced.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟡 Draft    |
+| §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -1542,6 +1546,81 @@ scenario. `spec-author` added it beside the other two `@B-035` scenarios before
 8-9 are complete for `0063`.** The rows stay 🟡, because B-030 and B-038 – B-040
 are unreviewed, and there is no partial status. So `0063` starts only if the
 person waives the gate for it by name.
+
+**Reviewed 2026-10-08 — B-030 and B-038 – B-040, for §§ 1-5.** `spec-reviewer`
+read the four claims against B-002, B-004, B-021 – B-028 and B-031, § 4 rows 12
+and 15, § 5 rows 5 and 11, ADR-0009, ADR-0013, `FleetTracker.cs`, items `0056`
+and `0065` – `0067`, and the consumer claims `fleet-dashboard` B-009, B-023 and
+B-036 – B-037. It then re-read the amended claims, with their scenarios, twice:
+B-025, B-026, B-030, B-033, B-038 – B-040 and B-042 as `63d7ae7` amended them,
+and then B-032 – B-034 and B-041 as the answer to that re-read amended them.
+Mechanically clean: forty-two claims, one § 9 row each, and seventy scenarios.
+That matches § 8's count and its list of claims carrying more than one. Six
+findings were blocking, and all six are closed:
+
+1. B-030 said "across the fleet", and the stage `0056` described sat after the
+   filter, so choosing one country withdrew every other from the control. Now
+   before the filter, by the person's call, with a scenario for it and one for
+   a new grouping key.
+2. B-039 did not say which changesets enter. `_arrivals` sits after the filter,
+   so a search read as adds and removes, and a stage connecting late is handed
+   the fleet as one large add. Now only changes the source made, before the
+   filter, with a scenario for a search; the replayed fleet is excluded and
+   still counted in the tracked total.
+3. B-039 published entries and `fleet-dashboard` B-037 shows totals, which its
+   B-023 forbids the banner computing. B-039 now publishes the totals, summed in
+   the stage, by the person's call; B-037 is unchanged.
+4. B-040's clauses about a non-polling source and a swap bound the swap
+   decorator, which § 5 row 5 places in `aircraft-source`. B-040 now binds what
+   the tracker re-publishes, and the decorator's half is `aircraft-source`
+   B-056, filed the same day and cut into `0068`.
+5. B-038 held only conditional SHALLs under a MAY. The aircraft description
+   now SHALL offer a place.
+6. B-038 gave a vehicle with no position no value. It now yields neither a
+   place nor coordinates, with a scenario.
+
+All eleven non-blocking findings are closed: B-039's lifetime and § 4 row 15;
+B-039 and B-040 read at once on subscribing; B-039's `Resumed` case worded per
+subscription, which agrees with `FleetTracker.Arrived` carrying the real
+counts; B-026's "capped interval"; B-030's scenarios; B-038's measure, its "no
+file or resource" with a review in § 9, and the generator left outside the
+Feature; B-040's seam named and its refusal clearing in a scenario; "the fleet"
+defined; B-042's no-replaced case moved to the readout; § 3's group lists and
+its § 11 row cite; and the consumer claim for B-030's values, filed as
+`fleet-dashboard` B-039 and cut into `0078`.
+
+**B-025 is not blocking.** It still counts after the filter, and a late
+subscriber to `Notices` is told of the fleet it was handed as an add. Both
+follow from the person's reading in § 3, that a notice reports what the fleet a
+consumer binds just did. That consumer's bind receives the same add, and
+B-027's per-subscription state starts from nothing. No claim contradicts it,
+and § 3 now records the late subscriber's add as a decision.
+
+The first re-read raised one new blocking finding, and the amendment had
+caused it. § 3 had just defined "the fleet" as the published stream, after the
+filter. B-032, B-034 and B-041 still said "entered" and "leaves the fleet" for
+what the source reports, which is where `Move()` runs. So a vehicle filtered
+back in would have restarted its trail and carried no leg and no replaced
+vehicle. **Closed:** the three now run from when the source begins or stops
+reporting the vehicle. B-034 says its trail is kept while a filter hides it,
+and a new `@B-034` scenario hides a vehicle while it moves. Three
+non-blocking notes from that re-read are closed too: B-033 now reads "since the
+source last began reporting it", § 3 no longer says B-039 windows B-025's
+notices or names a sparkline, and § 8's coverage lists place B-038 – B-040.
+
+Two notes remain, neither blocking §§ 1-5:
+
+- `fleet-dashboard` B-037's "beside the latest notice's" does not say which
+  notice. B-025's counts follow the filter and B-039's totals do not, so the
+  banner shows two bases side by side. Both claims here are unambiguous, so
+  that is `fleet-dashboard`'s wording to settle.
+- § 9's B-034 row names no test for the new filter scenario. That is
+  `test-writer`'s, before `0063` is implemented.
+
+**Verdict: §§ 1-5 are 🟢.** Nothing blocking remains, and no section this
+review covered contradicts B-002, B-004, B-028, ADR-0009, ADR-0013 or the
+consumer claims in `fleet-dashboard` and `aircraft-source`. §§ 6-7 and 8-9 stay
+🟡, so `spec_status` stays `in-review`.
 
 ## Decisions
 

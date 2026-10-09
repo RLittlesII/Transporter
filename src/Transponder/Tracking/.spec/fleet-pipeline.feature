@@ -402,6 +402,15 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And the first point it held is the one that went
 
   @B-034
+  Scenario: Hiding a vehicle does not restart its trail
+    Given SYN101 carries a trail of two points
+      And a filter that hides SYN101
+     When a changeset moves it
+      And the filter is cleared
+     Then SYN101's trail holds three points
+      And its element carries the vehicle that move replaced
+
+  @B-034
   Scenario: A lost fix is spanned by the next point
     Given SYN101's trail ends at 29.70, -95.40
      When a changeset reports SYN101 with no position
