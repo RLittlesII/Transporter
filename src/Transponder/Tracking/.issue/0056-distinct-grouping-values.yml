@@ -7,14 +7,15 @@ status: ready-for-architecture
 priority: medium
 value: 3
 risk: 2
-rank: 54
+rank: 59
 
 parent: "0030"
 children: []
 
 depends_on:
   - "0033"
-blocks: []
+blocks:
+  - "0078"
 spikes: []
 
 spec: src/Transponder/Tracking/.spec/README.md
