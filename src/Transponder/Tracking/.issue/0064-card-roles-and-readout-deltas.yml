@@ -48,8 +48,8 @@ summary: |
   output and breaks on the first locale that writes a decimal comma.
 
 acceptance_criteria:
-  - "B-036 — title, subtitle, place and ordered readouts each name a column; an empty role stays empty."
-  - "B-042 — a readout names its delta, formatted by the description; none where nothing changed."
+  - "B-036 — title, subtitle, place and ordered readouts each a column the description holds, or empty."
+  - "B-042 — a named delta is the change at its cell's precision, formatted by the description; none where the cell did not change."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions: []
