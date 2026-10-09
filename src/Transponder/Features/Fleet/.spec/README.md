@@ -523,20 +523,22 @@ both.
 **The data's values as filter choices (B-039), designed for `0078`**
 
 - **One bound collection, two sources.** The description's choices become a
-  changeset keyed `choice:` plus each name, and `IFleetTracker.GroupingValues`
-  (`fleet-pipeline` B-030) is transformed into one `FleetFilterChoice` per
-  value, keyed `value:` plus the value. The two are joined with DynamicData's
+  changeset keyed `choice:` plus each name. `IFleetTracker.GroupingValues`
+  (`fleet-pipeline` B-030) already publishes one `FleetFilterChoice` per value,
+  and the only change made to it here is its key, re-keyed to `value:` plus the
+  value so it cannot collide with a description's choice. The two are joined with DynamicData's
   `Or`, then `ObserveOn(UI)`, then `Bind` into `Choices`, in the order the
   changesets arrive: the description's first, because they are in force when
   the view model subscribes, and each value as the data first holds it. No
   comparer is written here, because a view model that sorts is what B-018
   forbids, and no claim orders the choices. A value comes and goes as the
   changeset says, and nothing enumerates a collection (B-039).
-- **A value's predicate reads the grouping in force.** It matches a vehicle
-  whose key, under `SelectedGrouping`, equals the value. While no grouping is
-  chosen, it reads `TransportVehicle.GroupKey`, the base type's own member and
-  the key the tracker seeds itself with. `GroupingValues` switches on a new
-  key, so each value is transformed under the key that produced it.
+- **A value's predicate is the tracker's.** Each choice arrives with the
+  predicate that admits its vehicles under the key that produced it
+  (`fleet-pipeline` B-030, as amended 2026-10-09). This view model writes no
+  predicate for a value, names no grouping key, and so keeps no record of the
+  tracker's default (finding 9). It hands the choice to `FleetSearch` exactly
+  as it hands a description's choice.
 - **A regroup clears a value and nothing else.** The `SelectedGrouping` setter
   asks the value choices' cache, by `Lookup` on the choice's key, whether
   `SelectedFilter` is one of them, and clears it if so. A description's choice
@@ -1323,6 +1325,14 @@ findings 9 and 10, and §§ 8-9 on finding 11.
 
 Finding 9 waits on `fleet-pipeline` B-030, whose amendment is drafted there for
 the person to agree.
+
+**Finding 9 answered 2026-10-09 — written by `implementer`.** The person
+agreed `fleet-pipeline` B-030 as amended, and its § 7 now publishes
+`GroupingValues` as `FleetFilterChoice`s, each carrying the predicate that
+admits its vehicles. § 7 here re-keys those choices and nothing more. The
+paragraph that fell back to `TransportVehicle.GroupKey` is gone, and with it
+the second record of the tracker's default. All of findings 7 – 11 are now
+answered; the `spec-reviewer` re-reads next.
 
 ## Decisions
 
