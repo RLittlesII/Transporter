@@ -80,9 +80,21 @@ In practice:
 View models are plain classes and get unit tests — a view model takes its data
 as an observable and its scheduler by constructor, so a test drives both. See
 [`mvvm`](../mvvm/SKILL.md) "Testing" and
-[`test-from-scenarios`](../test-from-scenarios/SKILL.md). Where a project runs
-no UI test runner, the view model test is the whole of the UI's coverage, which
-is another reason to keep the view empty of logic.
+[`test-from-scenarios`](../test-from-scenarios/SKILL.md).
+
+A view is tested **built, never drawn**
+([ADR-0014](../../.spec/adr/0014-a-view-is-built-and-asserted-without-a-platform.md)).
+Pages live in a plain `net10.0` project, so a test constructs one with its view
+model and reads the visual tree: what is bound to what, that a status carries a
+word and an icon beside its colour, that a colour comes from a token, that the
+page built against two source descriptions is the same page. A `BindableObject`
+throws on a property change with no dispatcher, so the test registers one that
+runs inline. Design tokens are tested as data — contrast and colour-vision
+distinctness are arithmetic, with no page built.
+
+What a platform draws — pixels, a map's rendering, an animation — is a review,
+recorded in its matrix row. Keep the view empty of logic: anything it computes
+is something only a reader can check.
 
 ## Never add
 
@@ -91,6 +103,9 @@ is another reason to keep the view empty of logic.
 - A mutation of the cache from the UI.
 - A downcast or type check on the domain base outside the detail pane.
 - A view that must be edited to show a different source.
+- A UI test runner, a device or simulator test, or a screenshot comparison
+  (ADR-0014).
+- A page in a project a plain `net10.0` test cannot reference.
 - An event handler attached with `+=`, or a subscription in a view with nothing
   that ends it.
 - Blocking in a binding or command path — no `.Result`, no `.Wait()`.
