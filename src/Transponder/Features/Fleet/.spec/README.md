@@ -154,7 +154,7 @@ B-020.
 | B-037 | The banner SHALL show two sets of added, updated and removed counts, each under its own label so neither reads as the other's subtotal: the latest notice's (B-023, `fleet-pipeline` B-025), counted after the filter, and the totals across the window of recent notices the tracker publishes (`fleet-pipeline` B-039), counted across every vehicle the source reports before it. It SHALL keep no list of notices of its own.                                                                                                                                 | decisions/0002; B-023; B-018                                                                  |
 | B-038 | A readout whose cell changed in the last update SHALL show the change the description names for it (`fleet-pipeline` B-042) and SHALL pulse once, by a view animation (B-017); where the platform asks for reduced motion the change SHALL be shown and nothing SHALL move, and a vehicle just added SHALL show no change.                                                                                                                                                                                                                                        | decisions/0002; § 11 row 8; B-006; B-019                                                      |
 | B-039 | The filter control SHALL offer, beside the description's choices (`fleet-pipeline` B-029), a choice for each value the tracker publishes for the current grouping key (`fleet-pipeline` B-030), adding and withdrawing each as the published changeset does, and SHALL enumerate no collection to find one. When the grouping key changes, a selection of a value the old key took SHALL be cleared; a selection of one of the description's choices and the search text SHALL NOT be.                                                                            | `fleet-pipeline` B-030; B-009; B-011; B-018                                                   |
-| B-040 | The swap control SHALL be a picker offering one choice per strategy registration publishes (`aircraft-source` B-057), named as published, and choosing one SHALL be the message B-016 sends; a run that registered no recording SHALL offer no replay choice, and adding a source SHALL edit no view or markup (B-021).                                                                                                                                                                                                                                           |
+| B-040 | The swap control SHALL be a picker offering one choice per target the swap actor answers (`aircraft-source` B-057), asked for once by an `Ask` carrying its timeout (B-017) and named as answered, and choosing one SHALL be the message B-016 sends, carrying the chosen target; until the actor answers, and if it does not answer in time, the picker SHALL offer no choice; a run that registered no recording SHALL offer no replay choice, and adding a source SHALL edit no view or markup (B-021).                                                        |
 
 ## 4. Constraints
 
@@ -281,7 +281,7 @@ No domain type is added or changed. The types below are view state.
 | `FleetViewModel.Selected`                | `TrackedVehicle?`                                 | The element whose card is selected, null for none. A binding target, so a plain reference rather than an `Option` (`language-ext-usage` § "Where it stops"). Its setter sets it and nothing else; the pane observes it through `WhenChanged` (B-013). A newer reading moves it onto the new instance and the vehicle leaving the collection clears it (B-014).                                                                          |
 | `FleetViewModel.Detail`                  | `FleetDetailViewModel`                            | Built by `FleetViewModel` from `WhenChanged(Selected)` and the tracker's `Description`, and disposed with it: its inputs are this view model's selection and the description, so a second owner could only disagree.                                                                                                                                                                                                                    |
 | `FleetViewModel.IsSwapping`              | `bool`                                            | Drives the busy indicator (B-016).                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `FleetViewModel.SwapCommand`             | `ICommand`                                        | Tells the actor; never `Ask`s it (B-016, B-017).                                                                                                                                                                                                                                                                                                                                                                                        |
+| `FleetViewModel.SwapCommand`             | `ICommand`                                        | Tells the swap actor `SwapSource` carrying `SelectedTarget`; never `Ask`s for the swap (B-016, B-040). The one `Ask` is for the targets, below.                                                                                                                                                                                                                                                                                         |
 | `FleetViewModel.RefreshCommand`          | `RxCommand<Unit, Unit>`                           | An `RxCommand`, which is also the stream of its own presses, that tells the actor a poll is wanted; never `Ask`s it and never waits (B-028, B-017). Typed as the command rather than as `ICommand`, which it implements for the binding, because the indicator is read from it. The actor decides whether to perform one — the throttle is `aircraft-source` B-053's, not a rule this view model repeats.                               |
 | `FleetViewModel.IsRefreshing`            | `bool`                                            | Drives the refresh indicator (B-028). Set by the gesture, cleared by the next observed instant — `fleet-pipeline` B-031, one per applied poll including a poll whose data was identical — with a three-second cap for the press that was refused and produced no poll at all (decisions/0001). A **derived value**, not a field the view model sets: the gesture, the instant and the cap are one stream read through `AsValue`, below. |
 | `FleetDetailViewModel(...)`              | constructor                                       | `IObservable<Option<TrackedVehicle>>` selected, `IObservable<FleetSourceDescription>`, `ISchedulerProvider`. Every property is derived from the two streams through `AsValue`; none is assigned (B-014).                                                                                                                                                                                                                                |
@@ -303,6 +303,9 @@ No domain type is added or changed. The types below are view state.
 | `FleetPollViewModel.NextDue` | `DateTimeOffset?` | `0072`: the instant the next poll is due, null for a source that does not poll (B-036). A value, not a remaining time: subtracting it from `Observed` is the view's call to `FleetCardText`, as a card's age is (B-031). |
 | `FleetPollViewModel.RefusedFor` | `TimeSpan?` | `0072`: the interval the provider asked for while it refuses, null otherwise (B-036, `aircraft-source` B-055). |
 | `FleetPollViewModel.IsPolling` | `bool` | `0072`: false while the status is `PollStatus.None`, which hides the countdown and the throttled badge together (B-036). |
+
+| `FleetViewModel.Targets` | `IReadOnlyList<SwapTarget>` | `0039`: what the swap actor answered to `GetSwapTargets`, in registration order; empty until it answers and if it does not (B-040). |
+| `FleetViewModel.SelectedTarget` | `SwapTarget?` | `0039`: the picker's choice, bound two-way; starts on the first target, which `replay-source` B-028 makes the live source. |
 
 **Diagrams**
 
@@ -376,6 +379,34 @@ What `tracker.Observed` is, and why it is on the tracker rather than
 A view model depends on `IFleetTracker` and nothing below it
 (`aircraft-source` B-041), and `0039`'s own test reads a container-built view
 model's dependencies to say so.
+
+**The swap picker (B-040), designed for `0039`**
+
+`aircraft-source` § 7 designed the actor's half: `SourceSwapActor` answers
+`GetSwapTargets` with `SwapTargets`, a list of `SwapTarget` — a name and an
+opaque handle — and `SwapSource` carries one. This is the view model's half.
+
+- **Asked once, at construction, with its timeout.** `FleetViewModel` resolves
+  the swap actor from `IActorRegistry`, the way the refresh resolves its
+  actor (B-028), and reads
+  `Observable.FromAsync(token => actor.Ask<SwapTargets>(GetSwapTargets.Instance,
+TargetsWithin, token))` through `AsValue` into `Targets`, starting empty.
+  Registration is fixed for a run, so the list is asked for once and never
+  subscribed to. `TargetsWithin` is this Feature's constant, two seconds: the
+  actor answers from what registration recorded and does no I/O, so two
+  seconds is a generous margin. Like `ClearsAfter`, the number is chosen by
+  feel and checked by the first rehearsal (B-017).
+- **No answer is an empty picker, not an error.** A timeout or a failure
+  leaves `Targets` empty and the picker disabled. Nothing retries, because a
+  list that did not arrive in two seconds from memory is a wiring fault that a
+  rehearsal sees. The dashboard still runs on the source registration made
+  live. The disposal of the view model cancels an `Ask` still outstanding.
+- **Choosing is `Tell`.** `SwapCommand` tells `SwapSource(SelectedTarget)`.
+  `IsSwapping` covers it until the new fleet arrives (B-016). No view model
+  names a strategy or a strategy type, only the handle the actor gave it
+  (B-020).
+- **The page builds one picker over `Targets`, showing each target's `Name`.**
+  A new source adds a target, not markup (B-021).
 
 **The card (B-029 – B-033, B-038), as `0069`, `0070` and `0073` built it**
 
@@ -746,6 +777,25 @@ fails.
 | B-038 | `FleetCardMotion.Pulses` and its four negative cases (built).                                                                                                                                                                                                                                | **Owed by the person** on `0073`, below.                                                                 |
 | B-039 | `FleetViewModel.Choices` follows the values' changeset in and out; a value chosen is cleared on a regroup while the search text stands; a description's choice chosen stands. Enumeration and sorting are B-018's analyzer.                                                                  | —                                                                                                        |
 
+**The swap picker (B-040).** Each test uses a `TestKit` probe as the swap
+actor, and the probe decides how the `Ask` ends:
+
+- The probe answers two targets. The picker offers both, in order, by name.
+  This fails a picker built from strategy types, or one that sorts.
+- The probe has not answered yet. The picker offers nothing. This fails a
+  picker seeded with a default.
+- The probe answers `Status.Failure`. The picker offers nothing, and the probe
+  receives no second `GetSwapTargets`. This fails a retry. A failure and a
+  timeout take the same path out of the `Ask`, so the failure stands in for
+  the timeout without a test waiting two real seconds. That the timeout is
+  present at all is B-017's analyzer.
+- A target is chosen and the swap command runs. The probe receives
+  `SwapSource` carrying that exact target. This fails a command that sends a
+  type or a fixed choice.
+
+The page's half is a review: one picker over `Targets` and no markup per
+source (B-021).
+
 **The ramp review (B-034), and the computation it records.** For each of the
 eight stops of `FlightDeck.Ramp`, the reviewer:
 
@@ -773,13 +823,13 @@ so that the plan names its own debts.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-dashboard.feature`](fleet-dashboard.feature)
-beside this file — forty-nine scenarios, each tagged with the `@B-00n` it
+beside this file — fifty scenarios, each tagged with the `@B-00n` it
 proves. B-028 carries two: the press and its `Tell`, and what ends the window it
 opens. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
-- Happy path → B-005, B-007, B-009 – B-013, B-015, B-016, B-023, B-026, B-028, B-029 – B-031, B-034 – B-039
-- Failure mode → B-006, B-008, B-014, B-017, B-024, B-025, B-030, B-036, B-038
+- Happy path → B-005, B-007, B-009 – B-013, B-015, B-016, B-023, B-026, B-028, B-029 – B-031, B-034 – B-040
+- Failure mode → B-006, B-008, B-014, B-017, B-024, B-025, B-030, B-036, B-038, B-040
 - Validation failure → B-001 – B-004, B-018 – B-022, B-027, B-033
 - Data-driven → B-010, B-011, B-026, B-032
 
@@ -787,9 +837,13 @@ diagnostics are what execute.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and thirty of forty rows read `Missing`** —
-nineteen from before, and the ten added on 2026-10-08 by decisions/0002, cut
-into `0069` – `0073` and `0041`.
+**This is the gate, and twenty-one of forty rows read `Missing`.** They are:
+
+- fourteen of B-001 – B-028;
+- six of the eleven decisions/0002 added on 2026-10-08, B-034 – B-039, which
+  were cut into `0041`, `0071` – `0073` and `0078`;
+- B-040, added for replay on 2026-10-09 and owned by `0039`.
+
 `0036` landed the page, the view model and the two tests on 2026-10-06, and
 performed the two reviews it owed. `0037` landed the inputs on 2026-10-07 and
 moved four rows — B-009 – B-012 — on four tests: two over `FleetSearch`, which
@@ -843,7 +897,7 @@ repository with no UI test runner is that item's to decide.
 | B-037    | `@B-037` | [`0041`](../.issue/0041-arrival-banner-and-toast.yml) — planned: `FleetBannerViewModelTests.GivenAWindowWhoseTotalsAreNotItsNoticesSum_WhenTheBannerIsProjected_ThenItShowsTheWindowsTotals`; plus a review that the two groups carry their headings                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
 | B-038    | `@B-038` | `FleetCardMotionTests.GivenANewerReadingOfTheShownVehicle_WhenTheAltitudeChanged_ThenTheReadoutPulses` — with `GivenACardsFirstBind_WhenTheElementCarriesAChange_ThenNothingPulses`, `GivenARecycledCard_WhenItIsBoundToAnotherVehicle_ThenNothingPulses`, `GivenTheSameReadingRepublishedAsStale_WhenItIsBound_ThenNothingPulses` and `GivenAVehicleJustAdded_WhenItIsBound_ThenNothingPulses` for when it does not; the change text is `fleet-pipeline` B-042's `FleetReadoutTests`. **Review owed** on `0073`: `Readout.Pulse()` returns before animating when `Motion.IsReduced()`, and `AircraftCard.Fill` sets `Change` whether or not it pulses — watched with Reduce Motion on and off                                                                                                                                                                                           | Missing  |
 | B-039    | `@B-039` | [`0078`](../.issue/0078-grouping-values-as-filter-choices.yml) — planned: `FleetViewModelTests.GivenGroupingValues_WhenTheyArriveAndLeave_ThenTheChoicesFollowTheChangeset`, `GivenAValueChosen_WhenTheGroupingChanges_ThenItIsClearedAndTheSearchStands` and `GivenADescriptionsChoiceChosen_WhenTheGroupingChanges_ThenItStands`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Missing  |
-| B-040    | `@B-040` | [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| B-040    | `@B-040` | [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) — planned: `FleetViewModelTests.GivenTheActorAnswersTwoTargets_WhenTheViewModelIsBuilt_ThenThePickerOffersThemInOrderByName`, `GivenTheActorHasNotAnswered_WhenThePickerIsRead_ThenItOffersNothing`, `GivenTheActorAnswersAFailure_WhenThePickerIsRead_ThenItOffersNothingAndNothingIsRetried` and `GivenATargetChosen_WhenTheSwapCommandRuns_ThenTheActorIsToldThatTarget`; plus a review that the page builds one picker over `Targets` and names no source                                                                                                                                                                                                                                                                                                                                                             | Missing  |
 
 ## 10. Lessons / Spec Deltas
 
@@ -1245,6 +1299,30 @@ Not blocking, and recorded so that they are not lost:
 
 **Verdict: all three rows stay 🟡.** §§ 1-5 wait on finding 7, §§ 6-7 on
 findings 9 and 10, and §§ 8-9 on finding 11.
+
+**Findings 7, 8, 10 and 11 answered 2026-10-09.**
+
+- **7 (`spec-author`):** B-040 now names the target list as the swap actor's
+  answer to an `Ask` carrying its timeout. A choice carries the chosen target,
+  and the picker offers no choice until the actor answers, or when it does not
+  answer in time. The scenario says so, and a second `@B-040` scenario covers
+  the empty picker. § 8 now counts fifty scenarios.
+- **8 (`spec-author`):** item `0071` now states B-034 as extended at the head
+  and trimmed at the tail. Item `0041` states B-037 as two labelled sets of
+  counts.
+- **10 (`implementer`):** § 7 gains "The swap picker (B-040)":
+    - a single `Ask` at construction, with `TargetsWithin` of two seconds;
+    - an empty, disabled picker on a timeout or a failure, with no retry;
+    - `SwapCommand` telling `SwapSource` with the chosen target;
+    - one picker over `Targets` on the page;
+    - and two new member rows.
+- **11 (`test-writer`):** B-040's row has its status cell and names four
+  planned tests. § 8 plans them, with a failure standing in for a timeout, so
+  that no test waits two real seconds. The gate now reads twenty-one of forty,
+  and lists which rows those are.
+
+Finding 9 waits on `fleet-pipeline` B-030, whose amendment is drafted there for
+the person to agree.
 
 ## Decisions
 

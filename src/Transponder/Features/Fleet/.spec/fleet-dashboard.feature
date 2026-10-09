@@ -115,9 +115,17 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
   Scenario: The swap control offers every registered source, and only those
     Given a run registering the live aircraft source and a recorded one
      When the swap control is opened
-     Then it offers one choice per published target, by its published name
-      And choosing the recording tells the actor as any swap does
+     Then it offers one choice per target the swap actor answered, by the name it answered
+      And choosing the recording tells the actor as any swap does, carrying that target
       And a run naming no recording offers no recorded choice
+
+  @B-040
+  Scenario: The swap control offers nothing until the actor answers
+    Given the swap actor has not yet answered the request for its targets
+     When the swap control is opened
+     Then it offers no choice
+     When the actor fails to answer within the timeout
+     Then it still offers no choice, and nothing is retried
 
   @B-028
   Scenario: The refresh control tells an actor a poll is wanted
