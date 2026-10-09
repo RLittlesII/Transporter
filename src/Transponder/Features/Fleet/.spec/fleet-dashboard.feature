@@ -110,6 +110,14 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And the busy indicator is showing
       And it stops showing when the new fleet's first change arrives
 
+  @B-040
+  Scenario: The swap control offers every registered source, and only those
+    Given a run registering the live aircraft source and a recorded one
+     When the swap control is opened
+     Then it offers one choice per published target, by its published name
+      And choosing the recording tells the actor as any swap does
+      And a run naming no recording offers no recorded choice
+
   @B-028
   Scenario: The refresh control tells an actor a poll is wanted
     Given a dashboard bound to a live aircraft source

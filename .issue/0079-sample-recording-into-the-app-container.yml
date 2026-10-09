@@ -1,0 +1,66 @@
+id: "0079"
+type: chore
+title: Write the sample recording where the sandboxed head reads it
+
+status: ready
+
+priority: medium
+value: 3
+risk: 1
+rank: 57
+
+parent: null
+children: []
+
+depends_on:
+    - "0061"
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-09"
+updated: "2026-10-09"
+closed: null
+
+summary: |
+    `0052`'s generator writes `recordings/aircraft-sample.ndjson` at the
+    repository root, and `--recording` already takes any output path
+    (`.build/Build.cs`). The Mac Catalyst head can read only its own container
+    (`0061`), so seeing the sample on screen today means copying the file there
+    by hand and putting the container's absolute path in `appsettings.json` — the
+    local edit that has to be re-applied on every branch and must never be
+    committed.
+
+    A build target derives the container's recordings root — the same one `0061`
+    makes the head's default — and writes the sample there, so a developer runs
+    one command and the head finds the file with nothing in configuration but
+    the recording's name. Invoked deliberately, never as part of a build.
+
+    Waits on `0061`, because the target writes to the root that item decides;
+    writing to a path the head does not default to would be the same workaround
+    with a target in front of it.
+
+acceptance_criteria:
+    - "One `nuke` target writes the sample recording into the root the head reads
+      by default, with no path typed and none committed."
+    - "The target takes the existing `--seed`, `--polls` and `--poll-interval`
+      parameters, and writes through `0052`'s generator rather than a second
+      writer of ADR-0004's format."
+    - "`docs/runbook.md` names the command beside where a recording lives on the
+      Mac (`0061`)."
+
+decisions:
+    - "2026-10-09 — the person — no recording ships inside the application, not
+      even `0052`'s synthetic one as a MAUI raw asset. Raised by `the-architect`
+      as a way to make replay work with no setup; rejected because this item
+      gets the same result with nothing in history, and it would narrow `0052`'s
+      2026-10-06 decision against a committed sample and `replay-source`
+      `adr/0001`'s rejection of an embedded recording."
+
+out_of_scope:
+    - "Where the head's default root is — `0061`."
+    - "Selecting the recording from the screen — `fleet-dashboard` `0039`."
+    - "A recording bundled with the application — rejected, decisions above."

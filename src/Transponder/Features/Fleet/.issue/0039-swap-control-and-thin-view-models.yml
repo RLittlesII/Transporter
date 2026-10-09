@@ -16,6 +16,7 @@ depends_on:
   - "0036"
   - "0006"
   - "0012"
+  - "0080"
 blocks:
   - "0001"
 spikes: []
@@ -29,9 +30,10 @@ claims:
   - B-020
   - B-021
   - B-022
+  - B-040
 
 created: "2026-10-05"
-updated: "2026-10-07"
+updated: "2026-10-09"
 closed: null
 
 summary: |
@@ -66,6 +68,7 @@ acceptance_criteria:
   - "B-021 — a swap edits no view, markup or comparer."
   - "B-022 — only the detail pane asks which kind of vehicle it has. Analyzer
     rule."
+  - "B-040 — a picker over the published targets; no markup per source."
   - "§ 9 Traceability Matrix carries a row naming a test or an analyzer rule
     for each id above."
   - "`aircraft-source` B-041's remaining half — a container-built view model
@@ -80,6 +83,14 @@ acceptance_criteria:
     than a wrong one (`replay-source` `adr/0001` item 1)."
 
 decisions:
+  - "2026-10-09 — the person — a picker over the registered sources, not one
+    button per source: one button per source fails B-021's swap test, because
+    adding a source would edit markup. `fleet-dashboard` B-040 claims it, and
+    the list the picker offers is `aircraft-source` B-057, published by
+    registration in `0080`, which `depends_on` now names — a view model
+    enumerating strategies would name one (B-020), and the seam may carry no
+    name (`aircraft-source` B-037). Also decided: no recording ships inside the
+    application (`0079`). `rank` stays 73: the new edge is inbound."
   - "2026-10-07 — the person — the control reaches the recorded aircraft source,
     not only the closing act's ships. Raised when `0052`'s generated recording
     could not be seen on screen: the recording was named, `0012` had registered

@@ -30,13 +30,16 @@ The talk's claim is that polled data can still be reactive, and it is proved by 
 
 <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
-Twenty-seven claims in six groups: **B-001 – B-006** the recording;
+Twenty-eight claims in six groups: **B-001 – B-006** the recording;
 **B-007 – B-014** playback; **B-015 – B-018** selection and swap;
 **B-019 – B-021** the vessel half; **B-022 and B-023** the substitution point
 of each half, appended as § 11 rows 1 and 2 were answered rather than
 renumbered into the groups they belong to — ids here are permanent; and
 **B-024 – B-027** which recording a run loads, answered in
-[adr/0001](adr/0001-recording-selected-by-configuration.md).
+[adr/0001](adr/0001-recording-selected-by-configuration.md); and **B-028**, added
+on 2026-10-09, which source is live when a run starts — until then decided by
+registration order with nothing saying so, and the line a local edit kept
+swapping to see a recording on screen.
 
 Claim ids are per-Feature, per spec-and-traceability § "Claims and
 traceability". `B-001` here and `B-001` in
@@ -73,6 +76,7 @@ against that spec.
 | B-025 | A named recording SHALL resolve against a single configured recordings root, defaulting to `recordings/` relative to the running application and overridable, so a rehearsal writes and a replay reads the same place without either naming an absolute path.                                                                                          | adr/0001; ADR-0004 § "Decision"                                     |
 | B-026 | A configured recording that is absent, unreadable, or shorter than the staleness threshold SHALL be reported when the application starts, and SHALL NOT first be discovered when replay is selected.                                                                                                                                                   | adr/0001; aircraft-source B-029                                     |
 | B-027 | The component that paces a recording SHALL be handed an opened payload stream rather than a path, and SHALL perform no file resolution of its own.                                                                                                                                                                                                     | adr/0001; § 4 row 8                                                 |
+| B-028 | The source live when a run starts SHALL be a live provider's: replay SHALL be registered after every live source, so the first registered strategy is never a recording, and no configuration, environment variable or launch argument SHALL change which source is live at startup (B-015, B-024). Replay is reached by a swap.                       |
 
 ## 4. Constraints
 
@@ -683,7 +687,7 @@ it.
 
 **Scenarios**
 
-Twenty-seven scenarios in [`replay-source.feature`](replay-source.feature)
+Twenty-eight scenarios in [`replay-source.feature`](replay-source.feature)
 beside this file, one per claim, each tagged with the `@B-00n` it proves.
 Scenarios are documentation; the xUnit tests are what execute, and none is
 written yet.
@@ -750,7 +754,7 @@ specifically or would have:
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and five of the twenty-seven rows read `Missing`.**
+**This is the gate, and six of the twenty-eight rows read `Missing`.**
 Twenty-two are `Verified`. Five arrived with `0009`, which built the recorder:
 B-001 – B-004 against `RecordingWriterTests` and `RecordingTapTests`, and
 B-006 as a review a reader can now perform. Three arrived with `0010`, which
@@ -816,6 +820,7 @@ scenario here, so no tag anchors two.
 | B-025    | `@B-025` | `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` — asserted against `RecordingLibrary`, the one type here that touches a file system, over a root holding nothing — `0012`                                                                                                                                                                                                                                                                                                                                | Verified |
 | B-026    | `@B-026` | `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` — the host starts, two warnings name the two recordings, and no strategy is registered for either — `0012`                                                                                                                                                                                                                                                                                                                                              | Verified |
 | B-027    | `@B-027` | `RecordingPacerTests.GivenSyntheticLinesInAMemoryStream_WhenThePacerIsDriven_ThenItReplaysThemWithNoFileSystemAndReadsNoConfiguration` — proven by a test that has no file system rather than by reading the constructor — `0010`, with `GivenAStreamThatCannotSeek_WhenThePacerIsConstructed_ThenItSaysSoRatherThanFailingAtTheLoopBoundary` for the precondition the handover carries                                                                                                                                                                                                                           | Verified |
+| B-028    | `@B-028` | [`0081`](../.issue/0081-startup-source-is-live.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **What the matrix says about the items.** Every claim has a row and a named
 mechanism, so no item is waiting on this section. Three rows are blocked on
@@ -1019,6 +1024,8 @@ say so out loud is `aircraft-source`'s `spec-author`'s call.
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../.spec/templates/feature.md).
 
+**B-028 added 2026-10-09**, while every row above was 🟡, so nothing is lowered.
+
 ## Decisions
 
 <!-- Rules: ../../../.spec/templates/feature.md § Decisions -->
@@ -1047,12 +1054,13 @@ this specification rather than a call made and reversed inside it.
 
 | Item                                                  | Claims                                          |
 | ----------------------------------------------------- | ----------------------------------------------- |
-| [`0008`](../.issue/0008-replay-source.yml)            | all 27 — the parent; its children hold the work |
+| [`0008`](../.issue/0008-replay-source.yml)            | all 28 — the parent; its children hold the work |
 | [`0009`](../.issue/0009-recording-tap.yml)            | B-001 – B-006                                   |
 | [`0010`](../.issue/0010-playback-pacer.yml)           | B-007, B-008, B-011, B-012, B-014, B-027        |
 | [`0011`](../.issue/0011-aircraft-replay-contract.yml) | B-009, B-010, B-013, B-022                      |
 | [`0012`](../.issue/0012-replay-selection.yml)         | B-015 – B-018, B-024 – B-026                    |
 | [`0013`](../.issue/0013-vessel-replay-strategy.yml)   | B-019 – B-021, B-023                            |
+| [`0081`](../.issue/0081-startup-source-is-live.yml)   | B-028                                           |
 
 Every claim is carried by exactly one child, and `0008` carries all of them
 because the children are slices of it rather than work beside it. The cut
@@ -1078,6 +1086,9 @@ and the items were amended to carry them: naming, root resolution and the
 startup report to `0012`, where a run's recording surfaces, and the stream the
 pacer is handed to `0010`, whose own open question the answer closed. The
 invariant above holds across all 27 again.
+
+B-028 was cut into `0081` on 2026-10-09, a test over a registration `0012`
+already made; the invariant holds across all 28.
 
 ## Scoring
 

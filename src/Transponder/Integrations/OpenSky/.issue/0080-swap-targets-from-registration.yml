@@ -1,0 +1,61 @@
+id: "0080"
+type: task
+title: Publish what a swap can select, from registration
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 2
+rank: 79
+
+parent: "0001"
+children: []
+
+depends_on:
+    - "0006"
+blocks:
+    - "0039"
+spikes: []
+
+spec: src/Transponder/Integrations/OpenSky/.spec/README.md
+
+claims:
+    - B-057
+
+created: "2026-10-09"
+updated: "2026-10-09"
+closed: null
+
+summary: |
+    The person chose a picker over the registered sources for `fleet-dashboard`'s
+    swap control (`0039`). A picker needs the list of what it can select, and
+    nothing publishes one: the swap decorator holds the strategies, the seam may
+    not carry a name (B-037), and a view model that enumerated strategies would
+    name one (`fleet-dashboard` B-020). So registration publishes the list,
+    read-side and beside the strategies — the shape ADR-0013 gave the poll
+    status — and an ADR records that choice beside ADR-0011.
+
+    Waits on `0006`, whose decorator and registration this list sits beside.
+    Blocks `0039`, whose picker offers it.
+
+acceptance_criteria:
+    - "B-057 — one target per registered strategy, read-side; the seam unwidened."
+    - "An ADR beside ADR-0011 records where the list lives and the rejected
+      alternatives — a name on the seam, and a view model enumerating
+      strategies."
+    - "A run naming no recording publishes no replay target, asserted through the
+      container the application builds (`replay-source` B-024)."
+    - "§ 9 Traceability Matrix carries a row naming a test for B-057."
+
+decisions:
+    - "2026-10-09 — the person — a picker over the registered sources, not one
+      button per source. One button per source fails `fleet-dashboard` B-021's
+      swap test, because adding a source would edit markup. The list this item
+      publishes is what the picker needs; the claim was written the same day."
+
+out_of_scope:
+    - "Everything in § 5 of the specification."
+    - "The picker, its busy indicator and the actor message — `fleet-dashboard`
+      `0039`."
+    - "Which source is live at startup — `replay-source` `0081`."

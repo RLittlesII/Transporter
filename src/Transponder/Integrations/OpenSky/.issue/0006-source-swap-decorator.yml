@@ -6,7 +6,7 @@ status: done
 
 priority: high
 risk: 3
-rank: 101
+rank: 106
 
 parent: "0001"
 children: []
@@ -16,6 +16,7 @@ depends_on:
 blocks:
   - "0012"
   - "0039"
+  - "0080"
 spikes: ["0049"]
 
 spec: src/Transponder/Integrations/OpenSky/.spec/README.md
@@ -27,7 +28,7 @@ claims:
   - B-052
 
 created: "2026-10-04"
-updated: "2026-10-06"
+updated: "2026-10-09"
 closed: "2026-10-06"
 
 summary: |
