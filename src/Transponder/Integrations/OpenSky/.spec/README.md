@@ -1328,6 +1328,76 @@ the new claims, and § 9 names items where it will name tests.
 lowered; the review owed for B-054 – B-056 covers it too, and `0080` waits on
 it like `0068`.
 
+**Reviewed 2026-10-09 — all three rows, for B-053 – B-057.** `spec-reviewer`
+read B-053 – B-057 against §§ 4-5, ADR-0011, ADR-0012, ADR-0013, `fleet-pipeline`
+as approved the same day (its § 7 design of `PollStatus`, `IPollStatus` and
+`NoPollStatus`), `fleet-dashboard` B-016, B-020 and B-040, `replay-source`
+B-016 and B-028, the items `0068` and `0080`, and `SwappingTrackerSource`.
+Mechanically clean: fifty-seven claims with B-010 withdrawn, fifty-six § 9
+rows, fifty-four scenarios, every live claim tagged at least once. B-053 is
+built and its design in § 7 holds. Six findings block and two do not.
+
+**§§ 1-5**
+
+1. **B-057 contradicts § 5 row 13 — blocking, `spec-author`.** Row 13 excludes
+   "any source-describing metadata — display name" and sends a source that must
+   describe itself to "a separate small type in a separate feature". B-057
+   publishes a display name per strategy, here. Either row 13 is amended to say
+   which description B-057 admits and why it is not on the seam, or B-057 moves
+   to the Feature row 13 points at.
+2. **B-057 does not say how its list reaches a view model — blocking,
+   `spec-author`, and the person's call.** B-041 lets a view model depend on
+   `IFleetTracker` and on nothing below it, and `fleet-dashboard` B-020 stops at
+   the tracker, the query and the actors. A list published "beside the
+   strategies" is below both. The routes are the tracker re-publishing it, as
+   ADR-0013 does for poll status — a new `fleet-pipeline` claim, which lowers
+   that Feature's §§ 1-5 again — or an actor answering for it. `0080`'s ADR
+   chooses; the claim must name the route it chose.
+3. **B-056 leaves the status in force unclaimed — blocking, `spec-author`.**
+   `fleet-pipeline` § 7, approved, re-publishes the seam with no buffer of its
+   own and relies on the seam starting with the status in force. B-056 never
+   says so, and its scenario's last line — swapped back in, "the poll status is
+   the one it reports next" — contradicts it: the incoming strategy's latest
+   status is what a subscriber should read at once. B-056 should claim it, and
+   the scenario should read "the status it last reported".
+4. **B-055 says "no earlier than" where B-028 says "exactly" — `spec-author`.**
+   B-028 defers the next poll by exactly the retry-after interval, so the
+   reported due instant is exactly that; "no earlier than" admits a report a
+   later poll would contradict. The claim and its scenario should say exactly.
+5. **B-057's row has no Source cell — `spec-author`.** The table has three
+   columns and the row two. It should cite `fleet-dashboard` B-040, B-037 and
+   ADR-0013.
+
+**§§ 6-7**
+
+6. **§ 7 designs none of B-054 – B-057 — blocking, `implementer`.** The
+   reopening of 2026-10-08 said so and nothing has changed. Not which component
+   writes the status — the schedule is `AircraftPollActor`'s, the `429` is read
+   in the transport (B-028), and B-054 says "the poller" — nor that the writer
+   adopts the names `fleet-pipeline` § 7 fixed (`PollStatus`, `IPollStatus`),
+   nor how the decorator selects a status (switching over the strategies'
+   statuses while holding the latest, per finding 3), nor that the replay
+   strategy is registered with `NoPollStatus`, nor the type B-057 publishes and
+   what "what selecting it needs" is — `Select(Type)` takes a strategy's type
+   today, and a view model holding one sits close to naming it. § 6 has no row
+   for the status writer or the swap targets.
+
+**§§ 8-9**
+
+7. **§ 8 has no strategy for B-054 – B-057 — blocking, `test-writer`.** They
+   appear only in the coverage lists. Unplanned: where B-055 is proven, since
+   the `429` is read in the transport, where `HttpTest` works, and the schedule
+   in the actor, where § 4 row 15 says it does not; which scheduler B-054's due
+   instant is read from in a test; B-056 through the decorator with doubles for
+   two strategies' statuses; and B-057 through the container the application
+   builds, as B-052 is.
+8. **§ 9's B-054 – B-057 rows name items, not tests — `test-writer`.** As
+   `fleet-pipeline` § 9 now does, each should name the tests its item will add,
+   staying `Missing`.
+
+**Verdict: all three rows stay 🟡.** Findings 1 – 3, 6 and 7 block; 4, 5 and 8
+do not on their own. `0068` and `0080` wait on the re-read.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
