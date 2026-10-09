@@ -2,7 +2,7 @@
 title: "Specification: Aircraft source"
 description: "Poll OpenSky through a typed API contract, cache snapshots per client, project them to domain vehicles in a per-type strategy, and swap strategies behind a decorator the fleet tracker wraps."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Aircraft source
@@ -1400,11 +1400,11 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
@@ -1541,6 +1541,11 @@ existing B-038 test and `0012`'s replay swap tests, which `0080` owns.
 Mechanically clean: fifty-seven claims with B-010 withdrawn, fifty-six § 9
 rows, fifty-four scenarios. No new finding. **Recommended: all three rows to
 🟢**, which is the person's to agree; the rows above stay 🟡 until they do.
+
+**Agreed 2026-10-09 by the person.** All three rows are 🟢 and `spec_status`
+is `approved`. § 9 still has five `Missing` rows — B-041 and B-054 – B-057 —
+which block those items reaching `done`, not this agreement (lesson 0007). A
+change to a signed section lowers its row again.
 
 ## Decisions
 
