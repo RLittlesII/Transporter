@@ -792,9 +792,9 @@ bound to.
 **Reopened 2026-10-08.** B-029 – B-038 were added, B-006, B-008, B-017 and B-036 amended from `fleet-dashboard` decisions/0002 and
 the answers to its open questions, so the approval above was given to an
 agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
-§§ 6-7 on a § 7 that says how they are built — it says nothing yet. Until those
-rows are re-earned, no item cut from them (`0069` – `0073`) moves to `in-progress`
-unless the person waives this for that named item. `spec_status` is
+§§ 6-7 on a § 7 that says how they are built — it says nothing yet. Until those rows are re-earned, **no item of this Feature** moves to
+`in-progress` — `0069` – `0073`, and `0038`, `0039`, `0041` and `0044` with them, whose claims
+were written before 2026-10-08 — unless the person waives this for that named item. `spec_status` is
 `in-review` meanwhile. §§ 8-9 reopened the same day: § 8 has no strategy for
 the new claims, and § 9 names items where it will name tests.
 

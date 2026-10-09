@@ -324,6 +324,13 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      Then SYN102's element carries no leg
       And SYN103, entering the fleet in the same changeset, carries no leg either
 
+  @B-032
+  Scenario: A clock tick re-marks a vehicle and leaves its movement alone
+    Given SYN101 moved 11.1 km in the last changeset
+     When the observed instant advances with no changeset
+     Then SYN101's element still carries a leg of 11.1 km
+      And the vehicle it replaced is still the one before that changeset, not itself
+
   @B-033
   Scenario: The running total adds every leg since the vehicle entered
     Given SYN101 entered the fleet and has flown legs of 11.1 km and 9.6 km
@@ -331,6 +338,20 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      Then SYN101's element carries a total of 30.9 km
      When SYN101 is removed and a later changeset reports it again
      Then its element carries a total of zero and no leg
+
+  @B-033
+  Scenario: Hiding a vehicle does not restart its total
+    Given SYN101 has flown 11.1 km
+      And a filter that hides SYN101
+     When a changeset moves it a further 9.6 km
+      And the filter is cleared
+     Then SYN101's element carries a total of 20.7 km
+
+  @B-033
+  Scenario: A swap draws no leg from one source to the other
+    Given the live source reports SYN101 at 29.70, -95.40
+     When the source is swapped for one reporting SYN101 at 29.90, -95.10
+     Then SYN101's element carries no leg and a total of zero
 
   @B-034
   Scenario: The trail rides on the element and leaves with it
