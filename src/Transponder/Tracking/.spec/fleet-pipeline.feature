@@ -325,6 +325,22 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And SYN103, entering the fleet in the same changeset, carries no leg either
 
   @B-032
+  Scenario: Losing a position is no leg, and the total stands
+    Given SYN101 has flown 11.1 km
+     When a changeset updates SYN101 with no position
+     Then SYN101's element carries no leg
+      And its total is still 11.1 km
+
+  @B-032
+  Scenario: The distance holds away from the equator, in both directions
+    Given positions in the Houston box, at 29.70° N
+     When the distance from 29.70, -95.40 to 29.70, -95.30 is measured
+     Then it is 9,658.8 m
+     When the distance from 29.70, -95.40 to 29.80, -95.30 is measured
+     Then it is 14,725.6 m
+      And each reads the same measured the other way
+
+  @B-032
   Scenario: A clock tick re-marks a vehicle and leaves its movement alone
     Given SYN101 moved 11.1 km in the last changeset
      When the observed instant advances with no changeset
@@ -362,6 +378,8 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And no store of trails exists beside the fleet
      When SYN101 is removed
      Then no trail of SYN101 remains anywhere downstream of the seam
+     When a later changeset reports SYN101 again at 29.70, -95.40
+     Then its trail starts again with one point
 
   @B-034
   Scenario: The trail is bounded, and the oldest point goes first
@@ -370,6 +388,15 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When a changeset moves it once more
      Then its trail still holds 240 points
       And the first point it held is the one that went
+
+  @B-034
+  Scenario: A lost fix is spanned by the next point
+    Given SYN101's trail ends at 29.70, -95.40
+     When a changeset reports SYN101 with no position
+      And the next reports it at 29.90, -95.40
+     Then the new point's distance from the one before is 22.2 km
+      And SYN101's element carries no leg
+      And the new point is not marked as following a gap, because the feed reported throughout
 
   @B-035
   Scenario: A silence longer than the threshold is a gap in the trail
@@ -394,11 +421,23 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When a changeset gives it a fix with a last contact of 14:07:30
      Then its first trail point is not marked as following a gap
 
+  @B-035
+  Scenario: The gap is judged by the threshold in force when the point is made
+    Given a staleness threshold changed while running from five minutes to ten
+      And SYN101 was last reported at 14:00:00
+     When a changeset moves it with a last contact of 14:07:30
+     Then the new point is not marked as following a gap
+     When the threshold is changed back to five minutes
+     Then that point is still not marked as following a gap
+     When a changeset moves it with a last contact of 14:12:30
+     Then that point is not marked as following a gap, because a silence of exactly the threshold is not longer than it
+
   @B-036
   Scenario: The description names what fills each role on a card
     Given the aircraft description
      When its card roles are read
      Then the title, the subtitle and an ordered list of readouts each name one of its columns
+      And each is that column itself, not a column sharing its name
       And the place names its place column once it offers one (B-038)
       And a description for a source with no place names none for that role
       And the role it left empty is empty
@@ -411,6 +450,21 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And the selector yields an aircraft's barometric altitude in metres
       And an aircraft with no altitude yields no value rather than zero
       And no member of TransportVehicle carries an altitude
+
+  @B-037
+  Scenario: A point carries the measure of the description in force when it is made
+    Given SYN101 has a trail of two points, each carrying its altitude
+     When a second description arrives naming another measure
+      And a changeset moves SYN101
+     Then the new point carries the second description's measure
+      And the two points before it still carry their altitudes
+
+  @B-037
+  Scenario: A vehicle reported before any description is kept, measuring nothing
+    Given a tracker whose description has not yet arrived
+     When a changeset adds SYN101 at 29.70, -95.40
+     Then SYN101 is in the fleet
+      And its first trail point carries no measure
 
   @B-038
   Scenario: A place is resolved from the table compiled in, or not at all
@@ -472,6 +526,32 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When an update leaves the altitude unchanged at the precision the cell shows
      Then the delta yields none
       And an element that has just entered the fleet yields none for every readout
+
+  @B-042
+  Scenario: A change is read off the cells, not the raw values
+    Given the aircraft description's altitude readout
+     When SYN101 climbs from 8,999.95 m to 9,000.01 m
+     Then the delta yields "▲ +1 ft", because the cells read 29,527 ft and 29,528 ft
+     When it climbs from 9,000 m to 9,000.1 m
+     Then the delta yields none, because both cells read 29,528 ft
+     When either vehicle has no altitude
+     Then the delta yields none
+
+  @B-042
+  Scenario: A readout naming no delta shows no change, though its value changed
+    Given the aircraft description's heading readout, which names no delta
+     When SYN101 turns from 090° to 120°
+     Then the readout's change is none
+
+  @B-042
+  Scenario: Each readout cell is in its display unit
+    Given the aircraft description
+     When an aircraft at 10,000 m, 100 m/s, a track of 90.4° and a vertical rate of 5.08 m/s is read
+     Then its readouts read "32,808 ft", "194 kt", "090°" and "+1,000 ft/min"
+     When its vertical rate is −5.08 m/s
+     Then the rate reads "−1,000 ft/min", with a true minus sign
+     When it carries none of the four values
+     Then each readout reads "—"
 
   # ───────────────────────── The poll status ─────────────────────────
 

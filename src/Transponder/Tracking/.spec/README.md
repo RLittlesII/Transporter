@@ -1041,63 +1041,19 @@ what a `DistinctUntilChanged` would have swallowed. Writing them turned up the
 fact § 7 now records — subscribing is itself an emission — which is a defect
 waiting for `fleet-dashboard` `0058` rather than one here.
 
-**What `0062` proves — planned and delivered 2026-10-08.** B-032, B-033 and B-041, in
-two new classes and the arrangement every staleness test already uses: a
-`SourceCache<TransportVehicle, string>` the test writes to, `FleetTrackerFixture`,
-and an `ObservedClock` the test advances where a tick matters. There is no
-scheduler at all, because `Move()` reads the changeset and nothing else (§ 7).
-Positions are synthetic points inside the Houston box, and every expected
-distance is computed from the formula (R × the central angle, R = 6,371,008.8 m)
-rather than copied from a map. That keeps each expected value checkable by hand.
-
-`GreatCircleTests` (B-032), data-driven:
-
-- `GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres` uses
-  a `[ClassData]` theory over `GreatCircleCases`: the same point twice is zero,
-  0.1° of latitude is 11,119.5 m, 1° of longitude on the equator is
-  111,195.1 m, 0.1° of longitude at 29.70° N is 9,658.8 m, and the diagonal
-  from 29.70, -95.40 to 29.80, -95.30 is 14,725.6 m. The last two are the
-  cases that catch a wrong cos(latitude) term, a squared one, or a latitude
-  left in degrees — every other case either moves in latitude alone or sits
-  where the cosine is one. Each case is asserted to within a metre, and in both directions,
-  because a formula with its arguments swapped in one term passes a one-way
-  check.
-
-`FleetMovementTests`:
-
-- **B-032** — `GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`
-  moves `SYN101` 0.1° north and reads 11,119.5 m off the element.
-  `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`
-  asserts `None`, not `Some(0)`, and adds `SYN103` in the same changeset to show
-  an add carries none either. **`GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged`
-  is the test the design exists for.** It advances the clock with no
-  changeset and reads the element again: the leg, `Replaced` and `Travelled` are
-  all unchanged. Movement derived in the mark's forced `Transform` would read a
-  zero leg and a `Replaced` that is the vehicle itself here, and no other test
-  would notice. `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`
-  is the other direction: present to absent is no leg, not a leg to 0, 0.
-- **B-033** — `GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`.
-  `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`
-  covers the claim's reset. `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs`
-  is § 7's ordering decision, asserted: below the filter, the total would restart.
-  `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`
-  uses B-001's arrangement — a substitute `ITrackerSource` whose `Connect()` is
-  DynamicData's `Switch` over two caches reporting the same key at two
-  positions — and asserts the incoming element carries no leg and a total of
-  zero. It names no concrete source, which B-023 forbids this Feature's tests as
-  much as its code; the operator under test is the one `SwappingTrackerSource`
-  uses.
-- **B-041** — `GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced`
-  asserts that `Replaced` is the second vehicle, by reference.
-  `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`.
-  **"Nothing older than one update kept" is a review, not a test.** It holds by
-  type — `Replaced` is a `TransportVehicle`, and a vehicle references no
-  element — and a test over `typeof(...)` is neither mechanism (below). A
-  `WeakReference` and a forced collection would test it at runtime, but that is
-  a test whose result depends on the JIT's view of a local's lifetime, so it
-  fails on a debug build for reasons that have nothing to do with the claim.
-  The review is performed on `0062`'s pull request and re-done by any change to
-  `TrackedVehicle`.
+**What `0062` proved, 2026-10-08.** B-032, B-033 and B-041, in `GreatCircleTests`
+and `FleetMovementTests`, with the arrangement every staleness test already uses
+— a `SourceCache` the test writes to, `FleetTrackerFixture`, and an
+`ObservedClock` advanced where a tick matters — and no scheduler, because
+`Move()` reads the changeset and nothing else (§ 7). Every expected distance is
+computed from the formula (R × the central angle, R = 6,371,008.8 m) rather than
+copied from a map, so each is checkable by hand. The test the design exists for
+advances the clock with no changeset and reads the leg unchanged: movement
+derived in the mark's forced `Transform` would read a zero leg there and
+nowhere else. B-041's "nothing older kept" is a review rather than a test, and
+§ 9 records it: the only runtime test, a `WeakReference` and a forced
+collection, depends on the JIT's view of a local's lifetime and fails on a
+debug build for reasons that have nothing to do with the claim.
 
 **What none of them proves:** a leg's display in kilometres. That is the
 description's (`0064`) and the dashboard's (`fleet-dashboard` `0070`), under
@@ -1110,66 +1066,14 @@ B-025's wording should say "a changeset the seam reported" rather than "a
 changeset arrives" is that section's author's call, and the claim is unamended
 here.
 
-**What `0064` proves — planned and delivered 2026-10-08.** B-036 and B-042, with no stage and
-no scheduler: a description is a value, and a readout's change is a function of
-one element. The arrangement is the description itself, `AircraftFixture` for
-every vehicle, and `TrackedVehicleFixture` for an element. Both fixtures gain
-builders the plan needs — `WithVelocity`, `WithTrueTrack` and `WithVerticalRate`
-on the first, `WithReplaced` on the second. Every expected cell is computed from
-the factors § 7 names (0.3048 m to the foot, 1,852 m to the nautical mile), so
-each is checkable by hand.
-
-`FleetSourceDescriptionTests` (B-036):
-
-- `GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns`
-  reads the callsign as the title, the origin country as the subtitle, and
-  altitude, ground speed, heading and vertical rate as the readouts in that
-  order. Each is asserted to be the same instance as an entry in `Columns`,
-  which is what fails a role built from a fresh column that only shares a
-  name. It also asserts the place is empty, the role this description leaves
-  unfilled; `0065` changes that assertion when it adds the place column. The
-  scenario's step for a filled place is `0065`'s to prove, not this item's.
-- `GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty`
-  builds a description with no card and reads three empty roles and no
-  readouts. That is the "empty stays empty" half, and it holds for any source.
-- The card swaps with the description. B-021's test,
-  `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt`,
-  gains an assertion that the card's title is the second description's, and
-  § 9 cites it for B-036 beside the two above.
-
-`FleetReadoutTests` (B-042):
-
-- `GivenTwoAircraft_WhenAReadoutsDeltaIsRead_ThenItIsTheChangeAtTheCellsPrecision`
-  is a `[ClassData]` theory over `FleetReadoutCases`, each case a readout, a
-  replaced aircraft, a current one and the expected change:
-    - altitude 9,000 m to 9,036.6 m is "▲ +120 ft";
-    - the same pair reversed is "▼ −120 ft", the case that catches the
-      delegate's arguments swapped;
-    - 9,000 m to 9,000 m is none;
-    - 9,000 m to 9,000.1 m is none, the case that catches a comparison of the
-      raw values instead of the rounded ones;
-    - 8,999.95 m to 9,000.01 m is "▲ +1 ft", the case that catches a
-      subtraction before rounding: the raw difference is a fifth of a foot,
-      but the cells read 29,527 and 29,528;
-    - no altitude to 9,000 m, and 9,000 m to none, are each none;
-    - ground speed 200 m/s to 206.2 m/s is "▲ +12 kt".
-- `GivenAnElementJustAdded_WhenEachReadoutsChangeIsRead_ThenThereIsNone` reads
-  every aircraft readout off an element with no replaced vehicle.
-- `GivenAReadoutNamingNoDelta_WhenItsChangeIsRead_ThenThereIsNone` uses the
-  heading, on an element whose replaced vehicle flew another heading. The data
-  changed, so the none is the readout's and not the data's.
-- `GivenABoundFleet_WhenAnUpdateClimbs_ThenTheAltitudeReadoutReadsTheChangeOffTheElement`
-  runs through the tracker with the arrangement `FleetMovementTests` uses: a
-  `SourceCache` the test writes to, an update from 9,000 m to 9,036.6 m, and
-  `Change` on the bound row reading "▲ +120 ft". It is the one test that
-  fails if a readout reads some value other than B-041's replaced vehicle.
-- `GivenAnAircraft_WhenItsReadoutCellsAreRead_ThenEachIsInItsDisplayUnit` is a
-  `[ClassData]` theory over `ReadoutCellCases`: 10,000 m is "32,808 ft",
-  100 m/s is "194 kt", 90.4° is "090°", 5.08 m/s is "+1,000 ft/min",
-  −5.08 m/s is "−1,000 ft/min" with U+2212, and a missing value is "—" for
-  each. It is listed under B-042 because the delta's
-  precision is defined as the cell's, so a cell in the wrong unit makes every
-  delta wrong with it.
+**What `0064` proved, 2026-10-08.** B-036 and B-042, in
+`FleetSourceDescriptionTests` and `FleetReadoutTests`, with no stage and no
+scheduler: a description is a value, and a readout's change is a function of
+one element. Every expected cell is computed from the factors § 7 names
+(0.3048 m to the foot, 1,852 m to the nautical mile), so each is checkable by
+hand. One test runs through the tracker, because it alone fails a readout
+reading anything but B-041's replaced vehicle, and B-021's swap test carries
+B-036's card arriving with the second description.
 
 **What none of them proves:** how a card lays its roles out, which is
 `fleet-dashboard` `0070`; the pulse, which is its `0073`; and the place, which
@@ -1177,81 +1081,14 @@ is `0065`. B-022's review is re-done on this item, because the four readout
 cells and the two deltas are new casts in the description, inside the
 exception.
 
-**What `0063` proves — planned 2026-10-08.** B-034, B-035 and B-037, through
-the tracker with the arrangement `FleetMovementTests` uses — a `SourceCache` the
-test writes to, `FleetTrackerFixture`, and no scheduler — because the trail is
-the stage's output, and a test of `Move()` alone would miss the mark dropping
-it. Vehicles come from `AircraftFixture`, positions are synthetic points in the
-Houston box a tenth of a degree of latitude apart (11,119.5 m, as `0062`'s plan
-computed) — except the bound test, whose 241 positions step a thousandth of a
-degree (111.2 m) so the trail stays in the box — and instants are local to
-each test. `FleetTrackerFixture` already defaults to the aircraft description.
-`FleetSourceDescriptionFixture` gains a default measure — "Measure", 0 to 1,
-reading none for every vehicle — because a `required Trail` would otherwise
-stop it compiling, and the vessel description in `FleetTrackerTests` gains one
-reading a fixed number.
-
-`FleetTrailTests` (B-034, B-035, B-037):
-
-- `GivenAVehicleMovedThreeTimes_WhenAnUpdateChangesOnlyItsAltitude_ThenItsTrailHoldsFourPointsOldestFirst`:
-  the positions in order, each point's last contact and altitude its update's,
-  the first distance none and the rest 11,119.5 m, and the last point carrying
-  the third move's altitude rather than the altitude-only update's. The
-  altitude-only update is what fails a point added on any change.
-- `GivenAVehicleWithATrail_WhenItIsRemovedAndReportedAgain_ThenItsTrailStartsAgain`:
-  one point after re-entry, so nothing of the old trail survived the remove.
-- `GivenATrailAtTheBound_WhenTheVehicleMovesOnceMore_ThenTheOldestPointGoes`:
-  241 positions give 240 points, the first being the second position reported.
-  A thousandth of a degree apart, so the trail stays in the Houston box.
-- `GivenAVehicleThatLostItsFix_WhenItReportsOneElsewhere_ThenTheNewPointMeasuresFromThePointBefore`:
-  a fix, an update with none, then a fix two tenths of a degree north: the new
-  point's distance is 22,239.0 m while the element's leg is none, and the point
-  follows no gap, because the feed reported throughout.
-- `GivenASilence_WhenTheVehicleMoves_ThenTheNewPointFollowsAGapOnlyPastTheThreshold`
-  is a `[ClassData]` theory over `TrailGapCases` — the threshold, the silence,
-  and whether the point follows a gap:
-    - five minutes and 7 min 30 s is a gap;
-    - five minutes and 15 s is not;
-    - five minutes and exactly five is not, B-017's "longer than";
-    - ten minutes, set through `StaleAfter`, and 7 min 30 s is not — the case
-      that fails a stage reading the default rather than the threshold in force.
-- `GivenAPointMadeUnderOneThreshold_WhenTheThresholdChanges_ThenItsGapMarkStands`:
-  a point made at five minutes after a 7 min 30 s silence follows a gap and
-  still does after `StaleAfter(10 min)`; one made after 15 s follows none and
-  still does after `StaleAfter(10 s)`. It fails a gap derived at read time — in
-  the mark, which re-runs on every threshold change.
-- `GivenAVehicleAddedWithNoPosition_WhenItsFirstFixFollowsASilence_ThenThatPointFollowsNoGap`:
-  a trail's first point follows no gap, whatever came before it.
-- `GivenAParkedVehicleReportingEveryFifteenSeconds_WhenItMoves_ThenTheNewPointFollowsNoGap`:
-  ten minutes of reports at one position, then a move. Finding 4's case: it
-  fails a gap measured from the point before.
-- `GivenASecondDescription_WhenAVehicleMovesAfterIt_ThenTheNewPointCarriesTheNewMeasure`:
-  the vessel description gains a measure reading a fixed number; the points
-  before it arrives carry the altitude and the point after carries the number.
-  It fails a measure read once at construction.
-- `GivenNoDescriptionYet_WhenAVehicleIsAdded_ThenItIsInTheFleetWithAPointMeasuringNone`:
-  the tracker is given a `Subject<FleetSourceDescription>` that has not
-  emitted. The vehicle must be in the fleet, its point's measure none. It fails
-  a stage built on `WithLatestFrom`, which would drop the add.
-
-`FleetSourceDescriptionTests` (B-037):
-
-- `GivenTheAircraftDescription_WhenItsTrailMeasureIsRead_ThenItIsBarometricAltitudeInMetres`:
-  a name, a minimum below the maximum, 9,000 m read as 9,000, and an aircraft
-  with no altitude read as none.
-
-B-037's "no member of `TransportVehicle` carries an altitude" is a review:
-`grep -i altitude` over `TransportVehicle.cs` returns nothing. It is re-done by
-`0063` and by any change to the base.
-
-Three reviews are re-done on `0063`. B-034's "never a store kept beside it":
-`TrailPoint` is held only by `MovedVehicle.Trail` and `TrackedVehicle.Trail`,
-and no field of `FleetTracker` or `FleetMovement` outside the per-subscription
-cache holds one — a dictionary cleared on remove would pass every test above.
-B-041's, because `0063` changes `TrackedVehicle` and `MovedVehicle`: no
-`TransportVehicle` is reachable from a `TrailPoint`. And B-022's, because the
-measure is a new selector: the `grep` still returns six lines, all in
-`AircraftFleetDescription.cs`, since the measure reuses the altitude reader.
+**What `0063` will prove, planned 2026-10-08.** B-034, B-035 and B-037,
+through the tracker with the arrangement `FleetMovementTests` uses, because the
+trail is the stage's output and a test of `Move()` alone would miss the mark
+dropping it. Positions are synthetic points in the Houston box, every distance
+computed from `GreatCircle` as `0062`'s were. A `required` trail measure means
+`FleetSourceDescriptionFixture` gains a default measure reading none. The cases
+that fail a wrong implementation are the `@B-034`, `@B-035` and `@B-037`
+scenarios, and the reviews no test can make are § 9's.
 
 **What none of them proves:** drawing the trail, its colour ramp and its
 breaks, which are `fleet-dashboard` `0071`.
@@ -1264,15 +1101,17 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — fifty-six scenarios, each tagged with the `@B-00n` it proves.
+this file — sixty-five scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
 after the 2026-10-05 review: disposal completes the published streams, and an
 idle tracker holds nothing at all. § 9 still gives it one row, and the
-row's tag anchors both. B-031 – B-035, B-038 and B-040 carry more than one for
-the same reason: each states a rule and the case that breaks a naive reading of
-it, such as B-035's parked aircraft.
+row's tag anchors both. B-031 – B-035, B-037 – B-040 and B-042 carry more than
+one for the same reason: each states a rule and the case that breaks a naive
+reading of it, such as B-035's parked aircraft. A case that fails a wrong
+implementation is written here as a scenario, not as a list of planned tests:
+the tests are the record of their own names and values, and § 9 names them.
 Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
 
@@ -1280,9 +1119,11 @@ what execute.
   B-028 – B-034, B-036, B-037, B-041, B-042
 - Failure mode → B-004, B-005, B-016 – B-019, B-027, B-032 (a tick zeroing a
   leg), B-033 (a filter or a swap restarting a total), B-034 (a bound reached),
-  B-035 (a silence, and a parked aircraft that was not one)
+  B-035 (a silence, a parked aircraft that was not one, and a threshold changed
+  after the point), B-037 (a description not yet arrived), B-039 (a silence
+  kept out of the window), B-042 (a change below the cell's precision)
 - Validation failure → B-003, B-008, B-010, B-021 – B-024
-- Data-driven → B-011, B-014, B-017, B-026, B-032, B-042
+- Data-driven → B-011, B-014, B-017, B-026, B-032, B-035, B-042
 
 ## 9. Traceability Matrix
 
@@ -1342,10 +1183,10 @@ asks for.
 | B-031    | `@B-031` | `ObservedInstantTests.GivenAPollThatChangedNothing_WhenItReportsAnInstant_ThenTheTrackerPublishesItAnyway` — the case the notices cannot cover, and the one a `DistinctUntilChanged` would swallow; with `GivenAnInstantFromARecording_WhenItIsPublished_ThenItIsTheProvidersValueAndNotAWallClockRead` for the replayed instant, `GivenNoPollHasHappened_WhenAConsumerSubscribes_ThenItReadsTheInstantInForceBeforeAnyAdvance` for the emission a subscription is, and `GivenASubscriberToTheObservedInstant_WhenTheTrackerIsDisposed_ThenTheStreamCompletesAndNoFurtherInstantArrives` for B-004 over this member — `0059`                                                                                                                             | Verified |
 | B-032    | `@B-032` | `GreatCircleTests.GivenTwoPositions_WhenMeasured_ThenTheDistanceIsTheGreatCircleInMetres`; `FleetMovementTests.GivenABoundFleet_WhenAnUpdateMovesAVehicle_ThenItsElementCarriesTheLegItFlew`, `GivenAVehicleWithNoPosition_WhenAnUpdateGivesItOne_ThenItsElementCarriesNoLeg`, `GivenAVehicleThatMoved_WhenTheObservedInstantAdvances_ThenItsLegIsUnchanged` and `GivenAVehicleThatLosesItsPosition_WhenItIsUpdated_ThenItsElementCarriesNoLegAndItsTotalStands`, on [`0062`](../.issue/0062-movement-on-the-element.yml)                                                                                                                                                                                                                                | Verified |
 | B-033    | `@B-033` | `FleetMovementTests.GivenAVehicleThatFlewThreeLegs_WhenTheFleetIsRead_ThenItsTravelledIsTheirSum`, `GivenAVehicleRemovedAndReported_WhenItReenters_ThenItsTravelledStartsAtZero`, `GivenAVehicleFilteredOutWhileItMoves_WhenItIsFilteredBackIn_ThenItsTravelledIncludesTheHiddenLegs` and `GivenTwoStrategies_WhenTheLiveOneIsSwapped_ThenNoLegIsDrawnAcrossTheSwap`, on [`0062`](../.issue/0062-movement-on-the-element.yml). The filter test fails with the stage moved below the filter, checked on `0062`                                                                                                                                                                                                                                            | Verified |
-| B-034    | `@B-034` | planned on [`0063`](../.issue/0063-bounded-trail.yml), not yet written — `FleetTrailTests.GivenAVehicleMovedThreeTimes_WhenAnUpdateChangesOnlyItsAltitude_ThenItsTrailHoldsFourPointsOldestFirst`, `GivenAVehicleWithATrail_WhenItIsRemovedAndReportedAgain_ThenItsTrailStartsAgain`, `GivenATrailAtTheBound_WhenTheVehicleMovesOnceMore_ThenTheOldestPointGoes` and `GivenAVehicleThatLostItsFix_WhenItReportsOneElsewhere_ThenTheNewPointMeasuresFromThePointBefore`, plus a **review** that no store of trails exists beside the fleet                                                                                                                                                                                                                | Missing  |
-| B-035    | `@B-035` | planned on [`0063`](../.issue/0063-bounded-trail.yml), not yet written — `FleetTrailTests.GivenASilence_WhenTheVehicleMoves_ThenTheNewPointFollowsAGapOnlyPastTheThreshold`, `GivenAParkedVehicleReportingEveryFifteenSeconds_WhenItMoves_ThenTheNewPointFollowsNoGap`, `GivenAPointMadeUnderOneThreshold_WhenTheThresholdChanges_ThenItsGapMarkStands` and `GivenAVehicleAddedWithNoPosition_WhenItsFirstFixFollowsASilence_ThenThatPointFollowsNoGap`                                                                                                                                                                                                                                                                                                  | Missing  |
+| B-034    | `@B-034` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet, plus a **review** on `0063` that no store of trails exists beside the fleet: `TrailPoint` is held only by `MovedVehicle.Trail` and `TrackedVehicle.Trail`, and no field of `FleetTracker` or `FleetMovement` outside the per-subscription cache holds one, since a dictionary cleared on remove would pass every test. Re-done by any change to either                                                                                                                                                                                                                                                                                                                                         | Missing  |
+| B-035    | `@B-035` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Missing  |
 | B-036    | `@B-036` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsCardIsRead_ThenEachFilledRoleIsOneOfItsColumns`, `GivenADescriptionNamingNoCard_WhenItsRolesAreRead_ThenEveryRoleIsEmpty`, and B-021's `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt` for the card swapped with the description                                                                                                                                                                                                                                                                                                         | Verified |
-| B-037    | `@B-037` | planned on [`0063`](../.issue/0063-bounded-trail.yml), not yet written — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsTrailMeasureIsRead_ThenItIsBarometricAltitudeInMetres`, `FleetTrailTests.GivenASecondDescription_WhenAVehicleMovesAfterIt_ThenTheNewPointCarriesTheNewMeasure`, `GivenNoDescriptionYet_WhenAVehicleIsAdded_ThenItIsInTheFleetWithAPointMeasuringNone`, and a **review** that `TransportVehicle` carries no altitude                                                                                                                                                                                                                                                                                             | Missing  |
+| B-037    | `@B-037` | [`0063`](../.issue/0063-bounded-trail.yml) — no test yet, plus a **review** that no member of `TransportVehicle` carries an altitude: `grep -i altitude` over `TransportVehicle.cs` returns nothing. Re-done by any change to the base                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Missing  |
 | B-040    | `@B-040` | [`0067`](../.issue/0067-poll-status-seam.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Missing  |

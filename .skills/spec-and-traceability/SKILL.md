@@ -175,6 +175,17 @@ not hold that, so the prose has to, or it leaves with the paste.
   _withdrawn_ claim is the exception, marked on the claim, because the matrix
   has no row for a claim that was never going to be built. Nothing else, and
   nothing implying the scenarios execute.
+- **The testing strategy is a strategy, not a list of tests.** It says how the
+  claims are proved — the arrangement, the mechanism, what no test can reach and
+  is therefore a review — and stops there. A planned test name, its values and
+  its fixture changes are a second record of what the test file will hold, and
+  once the test exists the paragraph is a copy that drifts from it. Each part of
+  such a list has a home already: **a case that fails a wrong implementation is
+  a scenario**, tagged to its claim; **a check no test can make is a review**,
+  written in the matrix row; **the test's name** is the matrix row's, once the
+  test exists. A list kept for a reviewer belongs in the pull request, which is
+  read once and then stays where it was
+  ([lesson 0025](../../.spec/lessons/0025-a-test-plan-in-the-spec-is-the-test-file-twice.md)).
 - **A mechanism classifies by what the claim names, not by where today's one
   instance lives.** A folder, a namespace or a name suffix is a proxy that holds
   until a second instance arrives, and the mechanism then reports work the claim
@@ -286,6 +297,9 @@ number and rewrite every reference; renaming is cheap.
 - **A gate reporting that it passed when nothing has been verified.** An
   unwritten gate reports that it is unwritten.
 - A cite to a file, a record or a section that does not exist.
+- **A list of planned tests in the testing strategy** — names, values, fixture
+  changes. The case is a scenario, the review is a matrix row, and the name is
+  the test file's.
 - A hand-kept index of files that a tool could generate. It falls behind.
 - **A rule imported from outside the repository, stored as a constraint.** It is
   a decision and it names what it costs here.
