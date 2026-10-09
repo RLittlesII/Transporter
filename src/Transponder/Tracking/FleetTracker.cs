@@ -29,12 +29,14 @@ internal sealed class FleetTracker : IFleetTracker
     /// <param name="ticks">Every advance of that instant, so silence alone can make a vehicle stale, and the stream <see cref="Observed"/> re-publishes (fleet-pipeline B-018, B-031, ADR-0010).</param>
     /// <param name="schedulers">Where the notices' rate cap is timed, which is the one operator here that needs a scheduler at all (fleet-pipeline B-005, B-026).</param>
     /// <param name="description">What the live source offers a view, republished on a swap (fleet-pipeline B-020, B-021).</param>
+    /// <param name="status">The live source's poll status, the stream <see cref="PollStatus"/> re-publishes (fleet-pipeline B-040, ADR-0013).</param>
     public FleetTracker(
         ITrackerSource source,
         IObservedClock clock,
         IObservedClockTicks ticks,
         ISchedulerProvider schedulers,
-        IObservable<FleetSourceDescription> description)
+        IObservable<FleetSourceDescription> description,
+        IPollStatus status)
     {
         _clock = clock;
         _ticks = ticks;
@@ -63,6 +65,7 @@ internal sealed class FleetTracker : IFleetTracker
             .RefCount()
             .TakeUntil(_shutdown);
         Observed = ticks.Instant.TakeUntil(_shutdown);
+        PollStatus = status.Status.TakeUntil(_shutdown);
         Order = _sortBy
             .CombineLatest(Description, static (chosen, offered) => chosen.IfNone(() => FirstSortable(offered)))
             .Select(static comparer => (IComparer<TrackedVehicle>) new FleetOrder(comparer))
@@ -118,6 +121,15 @@ internal sealed class FleetTracker : IFleetTracker
     /// (fleet-pipeline B-005).
     /// </remarks>
     public IObservable<DateTimeOffset> Observed { get; }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The seam with this tracker's shutdown on it and no operator between, the move
+    /// <see cref="Observed"/> makes. No <c>Replay</c>: the seam starts with the status in force, and a
+    /// second copy kept here could outlive the one replacing it. No <c>DistinctUntilChanged</c>, no
+    /// timer and no <c>ObserveOn</c> (fleet-pipeline B-005, B-040).
+    /// </remarks>
+    public IObservable<PollStatus> PollStatus { get; }
 
     /// <inheritdoc/>
     public void Filter(Func<TransportVehicle, bool> predicate) => _predicate.OnNext(predicate);

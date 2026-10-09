@@ -344,6 +344,7 @@ internal partial class FleetTrackerFixture
         WithTicks(clock);
         WithProvider(schedulers);
         WithObservable(new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
+        WithStatus(new NoPollStatus());
     }
 }
 
