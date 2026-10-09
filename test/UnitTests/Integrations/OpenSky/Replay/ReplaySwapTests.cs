@@ -55,7 +55,7 @@ public class ReplaySwapTests
                 () => completed = true);
 
         // When
-        selector.Select<IAircraftReplayTrackerSource>();
+        selector.Select(selector.Entries.Single(static entry => entry.Source is IAircraftReplayTrackerSource));
         scheduler.AdvanceBy(1);
 
         // Then
@@ -95,7 +95,7 @@ public class ReplaySwapTests
         var whileLive = (live.Polls, live.Stops);
 
         // When
-        selector.Select<IAircraftReplayTrackerSource>();
+        selector.Select(selector.Entries.Single(static entry => entry.Source is IAircraftReplayTrackerSource));
         scheduler.AdvanceBy(1);
 
         // Then
@@ -140,7 +140,7 @@ public class ReplaySwapTests
         var whileLive = rows.Select(static row => row.Vehicle.Key).ToArray();
 
         // When
-        selector.Select<IAircraftReplayTrackerSource>();
+        selector.Select(selector.Entries.Single(static entry => entry.Source is IAircraftReplayTrackerSource));
         scheduler.AdvanceBy(1);
 
         // Then

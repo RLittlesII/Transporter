@@ -33,6 +33,9 @@ namespace Transponder.Integrations.OpenSky.Container;
 /// </summary>
 public static class OpenSkyRegistration
 {
+    /// <summary>The name a swap control shows for the live aircraft source (B-057).</summary>
+    internal const string LiveAircraft = "Live aircraft";
+
     /// <summary>
     /// Adds the OpenSky API contract, aliased to the transport that reaches the provider over HTTP, and the
     /// snapshot cache the client writes into. The cache is a plain keyed store with the application's lifetime:
@@ -87,6 +90,7 @@ public static class OpenSkyRegistration
 
         // Never as ITrackerSource: that reaches consumers in place of the selector (ADR-0011).
         services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
+        services.AddSingleton(static provider => new TrackerSourceEntry(provider.GetRequiredService<IAircraftTrackerSource>(), LiveAircraft));
 
         return services;
     }
