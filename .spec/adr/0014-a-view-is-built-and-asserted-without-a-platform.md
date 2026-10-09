@@ -6,7 +6,7 @@ type: adr
 
 # ADR-0014: A view is built and asserted without a platform, and what a platform draws is read
 
-**Status:** proposed
+**Status:** accepted
 
 ## Context
 
