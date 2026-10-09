@@ -1239,36 +1239,12 @@ GazetteerPlaces.Table, 10_000)`, so the ten kilometres is the aircraft's, as
   foresee. Every place type is kept, census-designated places included, because
   Channelview and Mission Bend are where people live.
 
-**The poll status (B-040), designed for `0067`**
+**The poll status (B-040), delivered by `0067`**
 
 ADR-0013 left the member names to this § 7 and the writer half to
-`aircraft-source` § 7. Three declarations in `Tracking/`, written out because
-their files do not exist yet:
-
-```csharp
-/// <summary>What a source says about its polling: when the next poll is due, and the interval a provider asked for while it refuses (fleet-pipeline B-040).</summary>
-public sealed record PollStatus
-{
-    /// <summary>Gets the status of a source that does not poll, or has not yet said when it will.</summary>
-    public static PollStatus None { get; } = new();
-
-    public Option<DateTimeOffset> NextDue { get; init; }
-    public Option<TimeSpan> RefusedFor { get; init; }
-}
-
-/// <summary>The read side of a source's poll status, starting with the status in force (ADR-0013).</summary>
-public interface IPollStatus
-{
-    IObservable<PollStatus> Status { get; }
-}
-```
-
-and on `IFleetTracker`:
-
-```csharp
-/// <summary>Gets the live source's poll status, starting with the one in force (B-040).</summary>
-IObservable<PollStatus> PollStatus { get; }
-```
+`aircraft-source` § 7. The declarations live in their files — `PollStatus`,
+`IPollStatus` and `NoPollStatus` in `Tracking/`, row in the type table above —
+and `IFleetTracker.PollStatus` beside `Observed`. What they owe:
 
 - **A value, not two streams.** The due instant and the refusal are reported
   together by one poll (`aircraft-source` B-055 moves the due instant when it
