@@ -387,10 +387,12 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      Then it shows no next poll and no throttling
 
   @B-037
-  Scenario: The banner shows the recent window, not a list it keeps
-    Given the tracker's window of recent notices holds twenty
+  Scenario: The banner labels the latest notice's counts apart from the window's totals
+    Given a search that hides some of the fleet
+      And the tracker's window of recent notices holds twenty, counted across the whole fleet
      When the banner is projected
-     Then it shows the latest notice's counts beside the added, updated and removed counts of all twenty
+     Then it shows the latest notice's added, updated and removed counts, counted after the search, under their own label
+      And it shows the added, updated and removed totals of all twenty, counted before it, under a label of their own
       And the view model holds no list of notices of its own
 
   @B-038
