@@ -1,0 +1,74 @@
+id: "0075"
+type: chore
+title: Move the pages and the design tokens into a plain net10.0 library, and build one page in a test
+
+status: ready
+
+priority: medium
+value: 3
+risk: 2
+rank: 59
+
+parent: null
+children: []
+
+depends_on: []
+blocks:
+  - "0069"
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  ADR-0014's first move. `FleetPage` and everything it builds leave `src/Gui`
+  for a plain `net10.0` library that references the MAUI packages as packages
+  — no `UseMaui`, no workload — and the heads reference the library. It is the
+  only project outside `src/Gui` that references MAUI; `src/Transponder`
+  references none (`0076`). `test/UnitTests` references it too, and one test builds
+  `FleetPage` with its view model and an inline dispatcher and asserts a
+  binding, so the arrangement every later view test copies exists and runs on
+  the Linux build.
+
+  It blocks `fleet-dashboard` `0069`: the theme's tokens are tested as data,
+  and a test cannot reach them while they live in a project only an Apple SDK
+  builds. `0070` – `0073` assert their views the same way once their § 8 plans
+  name a view test, which is the test-writer's call and wires those edges then.
+
+  Two traps. The page's behaviour must not change: this is a move, so the app on
+  Mac Catalyst against the replay source shows the same grid before and after,
+  and that is checked by running it. And the library must build on Linux, which
+  a Mac does not prove — a `UseMaui` or a platform package slipping into it
+  fails only in CI.
+
+acceptance_criteria:
+  - "`src/Gui` holds the host alone: `MauiProgram`, the container wiring, the
+    platform folders and the bundled resources. Every page and view part is in
+    the library."
+  - "The library targets plain `net10.0`, sets no `UseMaui`, and builds in CI."
+  - "One test in `test/UnitTests` builds `FleetPage` with its view model and an
+    inline dispatcher, and asserts a bound value before and after the view model
+    changes it."
+  - "`transponder-conventions` references/coding.md § \"Project structure\" names
+    the library, and references/testing.md says where a view test lives and
+    that it registers the dispatcher."
+  - "No claim's § 9 row changes: the move proves nothing new about a claim."
+
+decisions:
+  - "2026-10-08 — the person — layers one and two of the UI testing proposal:
+    tokens tested as data and views built and asserted undrawn; no macOS CI and
+    no test of the UI on a device. Recorded in ADR-0014."
+
+out_of_scope:
+  - "A view test for any claim. Each Feature's items write their own."
+  - "Moving the design tokens' values in. The library gets a place for them;
+    `0069` writes them."
+  - "Whether `BoundaryAnalyzer`'s view rules read the new project — ADR-0014
+    leaves that to `boundary-analyzer`."
+  - "A UI test runner, a device test, a screenshot comparison or macOS CI —
+    ADR-0014."
