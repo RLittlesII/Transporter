@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Fleet pipeline
@@ -1761,7 +1761,7 @@ the draft it replaced.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 1-5   | spec-author | 🟢 Approved |
 | §§ 6-7   | implementer | 🟢 Approved |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
@@ -2148,6 +2148,9 @@ are lowered to 🟡 and `spec_status` to `in-review` until the person agrees.
 longer carries what the claim asks for. It is the `implementer`'s to redesign,
 and that change lowers §§ 6-7 when it is written. §§ 6-7 and 8-9 stay 🟢 over
 sections that have not changed.
+
+**Agreed 2026-10-09 by the person: B-030 as amended.** §§ 1-5 are back to 🟢,
+and all three rows are 🟢 again, so `spec_status` is `approved`.
 
 ## Decisions
 
