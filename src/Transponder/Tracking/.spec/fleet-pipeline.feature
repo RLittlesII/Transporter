@@ -384,9 +384,10 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   Scenario: The description names what fills each role on a card
     Given the aircraft description
      When its card roles are read
-     Then the title, the subtitle, the place and an ordered list of readouts each name one of its columns
+     Then the title, the subtitle and an ordered list of readouts each name one of its columns
+      And the place names its place column once it offers one (B-038)
       And a description for a source with no place names none for that role
-      And the role it left empty is empty rather than filled from a member a consumer chose
+      And the role it left empty is empty
 
   @B-037
   Scenario: The trail measure is named by the source, not by the base
@@ -436,9 +437,11 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And SYN101's element replaced a vehicle at 9,000 m with one at 9,036.6 m
      When the altitude readout's delta is read
      Then it yields "▲ +120 ft", formatted by the description
-     When an update leaves the altitude unchanged
+     When the next update descends by the same height
+     Then it yields "▼ −120 ft"
+     When an update leaves the altitude unchanged at the precision the cell shows
      Then the delta yields none
-      And no view model or view subtracted one value from another
+      And an element that has just entered the fleet yields none for every readout
 
   # ───────────────────────── The poll status ─────────────────────────
 
