@@ -235,8 +235,15 @@ public sealed class AircraftCard : ContentView
         _travelled.Value = FleetCardText.Distance(Option<double>.Some(tracked.Travelled));
         _leg.Dim(tracked.IsStale);
         _travelled.Dim(tracked.IsStale);
-        _badge.Kind = tracked.IsStale ? StatusKind.Stale : vehicle.Position.IsNone ? StatusKind.NoFix : StatusKind.Fresh;
-        SemanticProperties.SetDescription(this, $"{_title.Text}, {(tracked.IsStale ? "stale" : "fresh")}");
+        var mark = FleetCardStatus.Of(card, tracked);
+        _badge.Kind = mark switch
+        {
+            FleetCardMark.Stale => StatusKind.Stale,
+            FleetCardMark.NoFix => StatusKind.NoFix,
+            FleetCardMark.Updated => StatusKind.Updated,
+            _ => StatusKind.Fresh,
+        };
+        SemanticProperties.SetDescription(this, $"{_title.Text}, {(mark == FleetCardMark.NoFix ? "no fix" : mark.ToString().ToLowerInvariant())}");
         Mark();
         Age();
     }
