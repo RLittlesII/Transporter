@@ -69,6 +69,12 @@ it. The traps:
 - `src/Transponder` — the model, the feature logic and the integrations;
   `src/Gui` — the MAUI host, pages and container wiring; `test/UnitTests` — the
   test project, root namespace `Transponder.UnitTests`.
+- **`src/Transponder` references no MAUI package.** The model, the pipeline,
+  the integrations and the view models are plain .NET, and a page is the
+  host's. `FeatureAssemblyTests` fails on a MAUI type the assembly compiles
+  against; a package reference nothing uses compiles away, so that half is
+  read in review
+  ([`0076`](../../../.issue/0076-no-maui-in-the-feature-assembly.yml)).
 - **`tools/` holds development tooling, which does not ship.** A tool is its own
   console project referencing the application, reached through one more
   `InternalsVisibleTo`, and invented data lives there rather than in the product

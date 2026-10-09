@@ -2,7 +2,7 @@ id: "0076"
 type: bug
 title: Take the MAUI reference out of the feature assembly
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -22,7 +22,7 @@ claims: []
 
 created: "2026-10-08"
 updated: "2026-10-08"
-closed: null
+closed: "2026-10-08"
 
 summary: |
   `src/Transponder/Transponder.csproj` references `Microsoft.Maui.Controls.Core`.
@@ -51,6 +51,12 @@ decisions:
   - "2026-10-08 — the person — `src/Transponder` has no dependency on MAUI
     controls. Filed as a bug on its own branch, apart from ADR-0014, which named
     the reference as evidence and now names it as this defect."
+  - "2026-10-08 — implementer — the test was not run red. Showing it fail needs
+    the reference put back with a MAUI type used, and the person declined
+    restoring the reference even for a trial. With the reference gone, a MAUI
+    type in the assembly fails to compile (`CS0234`, checked with a probe and
+    deleted), which is the stronger gate; the test catches the reference
+    returning with a use."
 
 out_of_scope:
   - "Moving any page out of `src/Gui` — `0075`."

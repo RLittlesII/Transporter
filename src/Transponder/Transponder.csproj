@@ -17,7 +17,6 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
       <PackageReference Include="Microsoft.Extensions.Options" />
       <PackageReference Include="System.Reactive" />
-      <PackageReference Include="Microsoft.Maui.Controls.Core" />
       <PackageReference Include="ReactiveMarbles.Command" />
       <PackageReference Include="ReactiveMarbles.Mvvm" />
       <PackageReference Include="Riok.Mapperly" />
