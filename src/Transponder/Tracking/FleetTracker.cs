@@ -39,7 +39,7 @@ internal sealed class FleetTracker : IFleetTracker
         _clock = clock;
         _ticks = ticks;
         _schedulers = schedulers;
-        _arrivals = source.Connect().Filter(_predicate).RefCount();
+        _arrivals = source.Connect().Move().Filter(_predicate.Select(Over)).RefCount();
         Fleet = _arrivals
             .Transform(Mark, Reevaluate(ticks))
             .RefCount()
@@ -172,6 +172,13 @@ internal sealed class FleetTracker : IFleetTracker
             .Somes()
             .FirstOrDefault(ByKey);
 
+    /// <summary>Reads a predicate over the vehicle against the moved element the filter carries.</summary>
+    /// <param name="predicate">What a vehicle must satisfy (fleet-pipeline B-007).</param>
+    /// <returns>The same predicate, over the element.</returns>
+    /// <remarks>The filter sits below the movement stage, so a hidden vehicle's total keeps counting (fleet-pipeline B-033).</remarks>
+    private static Func<MovedVehicle, bool> Over(Func<TransportVehicle, bool> predicate) =>
+        moved => predicate(moved.Vehicle);
+
     /// <summary>Counts what a changeset from the seam did, which is what a notice reports (fleet-pipeline B-025).</summary>
     /// <param name="state">What the previous trigger left behind.</param>
     /// <param name="changeset">The changeset that arrived.</param>
@@ -183,7 +190,7 @@ internal sealed class FleetTracker : IFleetTracker
     /// <see cref="FleetNoticeKind.Resumed"/> rather than an <see cref="FleetNoticeKind.Updated"/>,
     /// so a consumer that announced the silence can say it is over (B-027).
     /// </remarks>
-    private static NoticeState Arrived(NoticeState state, IChangeSet<TransportVehicle, string> changeset, DateTimeOffset instant)
+    private static NoticeState Arrived(NoticeState state, IChangeSet<MovedVehicle, string> changeset, DateTimeOffset instant)
     {
         if (changeset.Adds + changeset.Updates + changeset.Removes == 0)
         {
@@ -278,10 +285,21 @@ internal sealed class FleetTracker : IFleetTracker
             .Merge(ticks.Instant.Select(static _ => Unit.Default));
 
     /// <summary>Derives the stale mark, never storing it and never reading an ambient clock (B-043).</summary>
-    /// <param name="vehicle">The vehicle the seam reported.</param>
-    /// <returns>The vehicle, kept rather than removed, carrying the mark (B-051).</returns>
-    private TrackedVehicle Mark(TransportVehicle vehicle) =>
-        new() { Vehicle = vehicle, IsStale = vehicle.IsStale(_clock.Current, _staleAfter.Value) };
+    /// <param name="moved">The vehicle the seam reported, with the movement the stage above derived.</param>
+    /// <returns>The vehicle, kept rather than removed, carrying the mark (B-051) and its movement unchanged.</returns>
+    /// <remarks>
+    /// Forced on every tick, so it copies the movement and never derives it: re-run here, a tick
+    /// would read a zero leg and a vehicle that replaced itself (fleet-pipeline § 7).
+    /// </remarks>
+    private TrackedVehicle Mark(MovedVehicle moved) =>
+        new()
+        {
+            Vehicle = moved.Vehicle,
+            IsStale = moved.Vehicle.IsStale(_clock.Current, _staleAfter.Value),
+            Replaced = moved.Replaced,
+            Leg = moved.Leg,
+            Travelled = moved.Travelled,
+        };
 
     /// <summary>The notices before they are paced, with the state a quiet spell needs (fleet-pipeline B-025 – B-027).</summary>
     /// <returns>One notice per changeset that changed something, plus the quiet and resumed ones.</returns>
@@ -298,8 +316,8 @@ internal sealed class FleetTracker : IFleetTracker
             var state = NoticeState.Idle(_clock.Current);
 
             return _arrivals
-                .Select(changeset => (Changeset: Option<IChangeSet<TransportVehicle, string>>.Some(changeset), Instant: _clock.Current))
-                .Merge(_ticks.Instant.Select(static instant => (Changeset: Option<IChangeSet<TransportVehicle, string>>.None, Instant: instant)))
+                .Select(changeset => (Changeset: Option<IChangeSet<MovedVehicle, string>>.Some(changeset), Instant: _clock.Current))
+                .Merge(_ticks.Instant.Select(static instant => (Changeset: Option<IChangeSet<MovedVehicle, string>>.None, Instant: instant)))
                 .Scan(state, (carried, trigger) => trigger.Changeset.Match(
                     changeset => Arrived(carried, changeset, trigger.Instant),
                     () => Advanced(carried, trigger.Instant, _staleAfter.Value)))
@@ -388,7 +406,7 @@ internal sealed class FleetTracker : IFleetTracker
     private readonly IObservedClock _clock;
     private readonly IObservedClockTicks _ticks;
     private readonly ISchedulerProvider _schedulers;
-    private readonly IObservable<IChangeSet<TransportVehicle, string>> _arrivals;
+    private readonly IObservable<IChangeSet<MovedVehicle, string>> _arrivals;
     private readonly BehaviorSubject<Func<TransportVehicle, bool>> _predicate = new(DefaultPredicate);
     private readonly BehaviorSubject<Option<IComparer<TransportVehicle>>> _sortBy = new(Option<IComparer<TransportVehicle>>.None);
     private readonly BehaviorSubject<FleetGrouping> _groupBy = new(DefaultGrouping);

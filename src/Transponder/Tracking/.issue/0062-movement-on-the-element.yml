@@ -2,7 +2,7 @@ id: "0062"
 type: task
 title: Carry the vehicle replaced, the leg flown and the running total on the element
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -28,7 +28,7 @@ claims:
 
 created: "2026-10-08"
 updated: "2026-10-08"
-closed: null
+closed: "2026-10-08"
 
 summary: |
   Three values derived from movement, each riding on the element the fleet
@@ -68,6 +68,15 @@ decisions:
     sound and its two blocking findings were fixed before the waiver. The waiver
     covers this item only. Rejected: flipping §§ 6-9 to 🟢 for the whole
     Feature, which would approve eight claims with no design."
+  - "2026-10-08 — implementer — `Move()` lives in `FleetMovement.cs` beside
+    `MovedVehicle.cs` and `GreatCircle.cs`, one type per file; § 7's layout
+    row names all three. `TrackedVehicle`'s three new members are init-only
+    with `None` and zero as defaults rather than `required`, so the element a
+    test builds by hand stays an add, which is what the defaults describe."
+  - "2026-10-08 — implementer — the clock-tick test was not run against a
+    mutant that derives movement in the stale mark: that would be a second
+    design, not a one-line change. It failed against the stub with no movement
+    at all. The filter-order mutant was run, and only the filter test failed."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
