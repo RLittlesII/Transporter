@@ -436,6 +436,22 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      Then it holds the last twenty, oldest first
       And a consumer pacing its own notices at one minute does not thin it
 
+  @B-039
+  Scenario: Two consumers read one window, and it goes with them
+    Given a consumer subscribed to the window of recent notices
+      And three changesets that each changed something
+     When a second consumer subscribes
+     Then it reads the same three notices at once
+     When both unsubscribe and a third consumer subscribes
+     Then its window is empty until the next changeset
+
+  @B-039
+  Scenario: A silence does not enter the window
+    Given a window holding two notices
+     When the feed falls quiet past the staleness threshold and then resumes
+     Then the window holds three notices, every one of them Updated
+      And the third carries the resuming changeset's counts
+
   @B-041
   Scenario: The element carries the vehicle its last update replaced
     Given a bound fleet holding SYN101 at 9,000 m
