@@ -761,7 +761,7 @@ code, not ahead of it.
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../../.spec/templates/feature.md). All three rows
-are 🟢, so the items below may be taken; `0036` was, on 2026-10-06.
+were 🟢 and `0036` was taken on 2026-10-06 — until 2026-10-08, below.
 
 **Review of 2026-10-05, after ADR-0009.** Mechanically clean: 27 claims, 27 § 9
 rows, 27 scenarios, every `@B-00n` tagged once, and no claim naming a type. One
@@ -809,6 +809,77 @@ agreement that no longer exists. §§ 1-5 wait on review of the new claims, and
 were written before 2026-10-08 — unless the person waives this for that named item. `spec_status` is
 `in-review` meanwhile. §§ 8-9 reopened the same day: § 8 has no strategy for
 the new claims, and § 9 names items where it will name tests.
+
+**Reviewed 2026-10-09 — all three rows.** The person asked for the sign-off to
+be earned rather than waived item by item. Since the reopening, `0069`, `0070`,
+`0073` and `0038` were built under waivers, so `spec-reviewer` read B-029 –
+B-039 and the amended B-006, B-008 and B-017 against decision 0002, B-017 –
+B-022, ADR-0005 and ADR-0013, the `fleet-pipeline` claims they bind, and the
+code those items merged or opened (`AircraftCard`, `Readout`, `StatusBadge`,
+`FleetCardStatus`, `FleetCardMotion`, `FlightDeck`, `FleetPage`, and the
+detail and summary view models). Mechanically clean: thirty-nine claims, one
+§ 9 row each, fourteen `Verified` and twenty-five `Missing`, and forty-seven
+scenarios, which is § 8's count, with every `@B-0nn` present. The sentence
+above saying all three rows are 🟢 contradicted the table, and is corrected.
+Three findings block §§ 1-5, two block §§ 6-7 and one blocks §§ 8-9.
+
+**§§ 1-5**
+
+1. **B-032 names a status no card can show without breaking B-022 —
+   blocking, `spec-author`, and the person's call.** "On the ground" is an
+   aircraft's field. A card reads only the description's roles (B-029), and
+   only the detail pane may name a subclass (B-022), so as written B-032 can be
+   met only by a role or a status the description publishes, which no
+   `fleet-pipeline` claim provides. The person deferred it on 2026-10-09, and
+   that deferral lives only in item `0069`'s decisions; AGENTS.md rule 2 puts it
+   in the specification. Either B-032 drops "on the ground" and § 5 or § 11
+   gains a row for it, or a `fleet-pipeline` claim gives the description a
+   status the card reads.
+2. **B-037 shows two counts on two bases — blocking, `spec-author`.** Left to
+   this Feature by `fleet-pipeline`'s review of 2026-10-08. "Beside the latest
+   notice's" puts B-025's counts, taken after the filter, next to B-039's
+   totals, taken before it. With a search active the two disagree in a way the
+   banner gives no reason for. B-037 should say which notice, and that the two
+   are labelled so neither reads as the other's subtotal.
+3. **B-034 says nothing of a bounded trail's oldest point — blocking,
+   `spec-author`.** "Extend the line as the trail grows rather than redraw it
+   from empty" is half of what a bounded trail does (`fleet-pipeline` B-034,
+   § 4 row 17): once full, each new point also drops the oldest. A map that
+   only appends grows past the bound; one that redraws on every drop fails the
+   claim. B-034 should say the line is extended at its head and trimmed at its
+   tail.
+
+**§§ 6-7**
+
+4. **§ 7 designs none of B-030 or B-032 – B-039 — blocking, `implementer`.**
+   Six of them are built — B-029 – B-033 and B-038 by `0069`, `0070` and `0073`
+   — and § 7 does not describe what they built: the card, its roles and
+   readouts, the status badge and `FleetCardStatus`, the `FlightDeck` tokens,
+   `FleetCardMotion` and `Motion.IsReduced()`. B-034 and B-035 (`0071`), B-036
+   (`0072`), B-037 (`0041`) and B-039 (`0078`) have no design at all: not the
+   map control or the package it needs in `src/Gui`, not how the trail is
+   split at a gap into segments each coloured from the ramp, not where a
+   countdown's animation lives. And `0071` will have to change `0038`'s
+   `FleetDetailViewModel`, which holds the vehicle where the trail is on the
+   element.
+5. **§ 7 still describes a grid — blocking, `implementer`.** "How the page
+   learns the columns changed" speaks of the grid's header and item template;
+   the page has had cards since `0070`. What the description's columns do now
+   is fill the card's roles and feed the search.
+
+**§§ 8-9**
+
+6. **§ 8 has no strategy for B-029 – B-039 — blocking, `test-writer`.** Its
+   assessment still counts thirteen view-model claims and nine structural ones,
+   none of them the new eleven. The review B-034's colour ramp needs —
+   ordered under simulated protan, deutan and tritan vision, by what
+   computation — is unplanned, and B-038's review is owed by the person and
+   recorded nowhere but § 9.
+
+**Verdict: all three rows stay 🟡.** No item of this Feature moves to
+`in-progress` unwaived until findings 1 – 6 are answered and re-read. Because
+there is no partial status, `0071` waits on the whole of § 7 — `0041`'s,
+`0072`'s and `0078`'s designs included — and not only its own.
 
 ## Decisions
 

@@ -1888,6 +1888,61 @@ review covered contradicts B-002, B-004, B-028, ADR-0009, ADR-0013 or the
 consumer claims in `fleet-dashboard` and `aircraft-source`. §§ 6-7 and 8-9 stay
 🟡, so `spec_status` stays `in-review`.
 
+**Reviewed 2026-10-09 — §§ 6-7 and 8-9, for the two rows still 🟡.** The person
+asked for the sign-off to be earned rather than waived item by item, so
+`spec-reviewer` read the whole of §§ 6-9 against §§ 1-5 as approved above, the
+designs `d2123c9` added for `0056`, `0065` and `0066`, which no review had read,
+ADR-0013, `FleetTracker.cs`, `FleetSearch.cs` and the open items `0056`, `0063`,
+`0065` – `0067` and `0077`. Mechanically clean: forty-two claims, one § 9 row
+each, thirty-five `Verified` and seven `Missing` — B-030, B-034, B-035 and
+B-037 – B-040 — and seventy-four scenarios, which is § 8's count, with every
+`@B-0nn` present. The designs for the window, the grouping values and the place
+column hold against B-002, B-004, B-005, B-006, B-028 and ADR-0009: each reads
+`_reported`, before the filter, through DynamicData's cache-aware `RefCount()`,
+so the seam stays one connection; the rejected alternatives are rejected for
+reasons the claims give; and the swap test holds, because the place table and
+its bound are the description's. Two findings are blocking and four are not.
+
+1. **B-040 has no design — blocking, `implementer`.** ADR-0013 hands "the member
+   names, where the writer half lives, and how the decorator selects it" to this
+   § 7 and `aircraft-source` § 7. This § 7 names no seam type, no member on
+   `IFleetTracker`, no value type for a status, and says nothing of how the
+   tracker re-publishes it, how a consumer subscribing reads it at once, or what
+   B-004's disposal does to it. §§ 6-7 cannot be agreed while one claim has no
+   shape.
+2. **B-040 has no test plan — blocking, `test-writer`.** § 8 names B-040 only in
+   its coverage list. Every other open claim has a "What `0nnn` will prove"
+   paragraph; `0067` has none, so nothing says which arrangement holds the
+   "nothing older" and "no timer or clock read" clauses, or how the swap
+   scenario is proven without the decorator, which the item says is a test
+   double writing the seam.
+3. **§ 9's B-035 row contradicts the review of 2026-10-08 — `test-writer`.**
+   That review records that "§ 9's B-035 row names the test"
+   `GivenAPointMadeUnderOneThreshold_WhenTheThresholdChanges_ThenItsGapMarkStands`;
+   the row reads "no test yet". The same review left B-034's row without a test
+   for the filter scenario. Both rows should name what `0063` will add, as the
+   B-042 row did before `0064`.
+4. **B-043 does not exist — `spec-author`.** The review of 2026-10-08 for `0063`
+   cites "(B-018, B-043)" for replay marking what live did. This specification
+   has forty-two claims, so the reference dangles. B-018's source column names
+   `aircraft-source` B-043, which is the claim it meant; it should say so.
+5. **§ 7's cost of the place column is understated — `implementer`.** It says
+   "the cell is evaluated when a view reads it … so its cost is the cards on
+   screen times the table". `FleetSearch.AnyCell` reads every column's cell, so
+   once the place column joins `Columns` the search runs `Within` for every
+   vehicle the filter tests, on every keystroke and every update. At a few
+   hundred entries with the latitude skip that is still small, but the sentence
+   should say so, and should say that a search now matches a place name
+   (`fleet-dashboard` B-010), which is wanted and is nowhere stated.
+6. **The generator's tests trace to no claim — `test-writer`.** § 8 plans tests
+   of `tools/Transponder.Gazetteer` — trimming to the box plus the bound,
+   dropping the `LSAD` description — and § 3 says the generator is outside the
+   Feature. § 8 should say those tests trace to no claim here and why they exist
+   anyway, or drop them.
+
+**Verdict: §§ 6-7 and 8-9 stay 🟡** until findings 1 and 2 are answered and
+re-read. Findings 3 – 6 do not hold the rows back on their own.
+
 ## Decisions
 
 <!-- Rules: ../../../../.spec/templates/feature.md § Decisions -->
