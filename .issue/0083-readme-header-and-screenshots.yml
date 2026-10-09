@@ -3,7 +3,7 @@ id: "0083"
 type: chore
 title: Give the README a centered header and screenshots of the app
 
-status: in-progress
+status: done
 
 priority: low
 value: 2
@@ -23,7 +23,7 @@ claims: []
 
 created: "2026-10-09"
 updated: "2026-10-09"
-closed: null
+closed: "2026-10-09"
 
 summary: |
     The README opens straight into its first section, with no picture of what
@@ -38,11 +38,19 @@ summary: |
 acceptance_criteria:
     - "The README opens with a centered screenshot, title, tagline, badges and
       an anchor nav to its sections."
-    - "Screenshots of the grid, grouping, filter and detail pane live under
+    - "Screenshots of the grid and the detail pane live under
       `.assets/screenshots/` and are captioned as recorded replay."
     - "No existing section of the README loses or changes a sentence."
 
-decisions: []
+decisions:
+    - "2026-10-09 — the person — the header leads with a screenshot, not a
+      logo; none exists."
+    - "2026-10-09 — the person — the screenshots use the recorded replay, not
+      OpenSky, because there is no API client yet."
+    - "2026-10-09 — no screenshot of grouping or filtering. On the head today,
+      choosing a grouping or a filter changes the picker and nothing in the
+      grid, so a picture of either would show a feature the screen does not
+      perform. Retake both once the grid honours them."
 
 out_of_scope:
     - "Any change to the specification's content."
