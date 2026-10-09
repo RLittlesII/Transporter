@@ -661,8 +661,8 @@ Where the new types go, following `transponder-conventions` § "Project
 structure":
 
 ```
-src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle
-src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, DisplayUnit, FleetGroup, FleetSummary, FleetNotice
+src/Transponder/Tracking/          FleetTracker's pipeline, IObservedClockTicks, TrackedVehicle, MovedVehicle, GreatCircle, SharedLatest
+src/Transponder/Tracking/Fleet/    FleetColumn, FleetGrouping, FleetFilterChoice, FleetSourceDescription, FleetCard, FleetReadout, FleetDelta, DisplayUnit, FleetGroup, FleetSummary, FleetNotice, FleetNoticeWindow
 ```
 
 The description lives under `Tracking/` rather than `Model/` deliberately: it
@@ -970,6 +970,94 @@ chain B-041 forbids; marking gaps at read time from consecutive points, which is
 finding 4's false gap; and a trail store keyed by vehicle beside the fleet,
 which is B-002's second store and outlives the vehicle.
 
+**The window of recent changes (B-039), designed for `0066`**
+
+The window is a stage of its own beside the notices, not built from them:
+`Notices()` is per subscription and paced, and `_arrivals` sits after the
+filter, so neither can be what B-039 counts. Two declarations, written out
+because their files do not exist yet:
+
+```csharp
+public sealed record FleetNoticeWindow
+{
+    public IReadOnlyList<FleetNotice> Notices { get; init; } = [];
+    public int Added { get; init; }
+    public int Updated { get; init; }
+    public int Removed { get; init; }
+}
+
+/// <summary>Gets the twenty most recent changes the source made, and their totals (fleet-pipeline B-039).</summary>
+IObservable<FleetNoticeWindow> Recent { get; }
+```
+
+`FleetNoticeWindow` goes in `Tracking/Fleet/` beside `FleetNotice`, and `Recent`
+on `IFleetTracker`. `Notices` is oldest first, and the totals are summed over it
+in the stage, so the banner sums nothing (`fleet-dashboard` B-023, B-037).
+
+- **The seam's stream is split in two, so the window reads before the
+  filter.** Today `_arrivals` is `source.Connect().Move().Filter(…).RefCount()`.
+  It becomes `_reported = source.Connect().Move().RefCount()`, with `_arrivals
+= _reported.Filter(…).RefCount()` over it. The window subscribes to
+  `_reported`, so it sees what the source reported and nothing a search did,
+  and DynamicData's cache-aware `RefCount()` keeps it one connection to the seam
+  and one `Move()` state however many stages read it (B-028). `0063`'s block
+  says `Move()` is handed the description beside `_arrivals`; whichever of the
+  two items lands second follows this split, and the description goes to
+  `_reported`'s `Move()`.
+- **The fleet a stage is handed as it connects is counted, not entered.** The
+  cache-aware `RefCount()` gives a stage that subscribes while the seam is
+  connected the current fleet as one changeset of adds, and a seam connecting
+  afresh does the same with whatever its cache holds. Both arrive while the
+  window's subscribe call is still running, so the stage marks the changeset
+  delivered during subscription as connecting: it moves the tracked count —
+  B-039's tracked count is every vehicle the source reports — and enters
+  nothing. Rejected: DynamicData's `SkipInitial()`, which is
+  `DeferUntilLoaded().Skip(1)`: on a seam whose cache is empty when the window
+  connects, the first changeset that is not empty is the first poll, and it
+  would be skipped.
+- **Every entry is `Updated`, raised by the stage's own fold.** A `Scan` over
+  `_reported` carries the tracked count and an `ImmutableQueue<FleetNotice>`.
+  A changeset with at least one change adds a notice: kind `Updated`, the
+  instant `_clock.Current` — as `Raised()` reads it, so replay and live agree
+  — the tracked count after it, and its adds, updates and removes. The
+  twenty-first drops the oldest. An empty changeset adds nothing (B-025's rule,
+  applied here too). There is no quiet state, so a changeset after a silence
+  is `Updated` with its counts, and no `Quiet` notice can enter (B-027).
+- **One window for every subscriber, emptied when the last one leaves.** The
+  window is shared by a small operator, `ShareLatest()`, in
+  `Tracking/SharedLatest.cs`: the first subscriber connects the fold and every
+  later one receives the latest window at once, then each new one. When the
+  last unsubscribes, the connection and the latest window are both dropped, so
+  the next subscriber connects afresh and reads an empty window first — the
+  fold starts with one. Rejected:
+    - Rx's `Replay(1).RefCount()`, which keeps its `ReplaySubject` across a
+      reconnection: the next first subscriber reads the window the last ones
+      left before the new connection replaces it, which is the "emptied" clause
+      failing for one emission;
+    - `Publish().RefCount()` with `StartWith`, where a second subscriber reads
+      nothing until the next change, which fails "read at once";
+    - a one-entry DynamicData cache, which makes a single value a changeset a
+      consumer has to bind;
+    - a window per subscription, starting empty, which the person rejected on
+      2026-10-08 (§ 3).
+- **Its lifetime is its own** (§ 4 row 15). A subscriber to `Recent` keeps
+  `_reported`, and so the seam, connected even while nothing binds the fleet —
+  B-028's teardown runs when the last subscriber to any stage goes, and that
+  includes this one. An idle tracker still holds nothing (B-004):
+  `ShareLatest()` holds no subscription until it has a subscriber.
+  `TakeUntil(_shutdown)` completes it on disposal, like every published stream.
+- **No scheduler, and no pacing.** The window changes when a changeset
+  arrives, synchronously, on the thread that delivered it (B-005); B-026's cap
+  is for the notices a consumer paces, and a window paced by one consumer would
+  be thinned for every other.
+- **A swap enters the window** as the removes and adds the decorator's switch
+  produces. That is a change the source made, and the banner shows it as one;
+  nothing marks it as a swap, because nothing downstream may know one occurred
+  (`aircraft-source` B-039).
+
+The size is `FleetTracker.RecentWindowSize`, twenty, held like the trail's
+bound: B-039 fixes it, and nothing configures it.
+
 **No open decisions.**
 
 `AutoRefresh` was the one open block here, and it is closed:
@@ -1128,6 +1216,18 @@ scenarios, and the reviews no test can make are § 9's.
 **What none of them proves:** drawing the trail, its colour ramp and its
 breaks, which are `fleet-dashboard` `0071`.
 
+**What `0066` will prove, planned 2026-10-08.** B-039, through the tracker with
+the arrangement `FleetNoticeTests` uses — a `SourceCache` the test writes to and
+an `ObservedClock` — and no scheduler, because the window is unpaced and
+nothing in it waits. `ShareLatest()` is tested on its own as well as through
+`Recent`, because its one property no fleet arrangement shows by accident is
+what a subscriber reads after a reconnection, and that is the property `Replay`
+gets wrong. The cases that fail a wrong implementation are the `@B-039`
+scenarios: a search, a silence, a stage connecting while the fleet is bound,
+and a first poll after an empty start.
+
+**What none of them proves:** the banner, which is `fleet-dashboard` `0041`.
+
 **Two mechanisms, and which proves what.** The split `aircraft-source` § 8
 establishes holds here unchanged: a computed value is an xUnit test, a rule
 about which types may reference which is an analyzer diagnostic, and nothing is
@@ -1136,7 +1236,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — seventy scenarios, each tagged with the `@B-00n` it proves.
+this file — seventy-two scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason

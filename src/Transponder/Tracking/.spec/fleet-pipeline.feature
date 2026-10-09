@@ -525,6 +525,21 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      Then the window still holds the two notices
 
   @B-039
+  Scenario: A window opened while the fleet is bound starts empty
+    Given a bound fleet of three aircraft
+     When a consumer subscribes to the window of recent notices
+     Then it reads an empty window at once
+     When a changeset adds a fourth aircraft
+     Then the window holds one notice, adding one, with four tracked
+
+  @B-039
+  Scenario: The first poll after an empty start is a change
+    Given a source that reports no vehicles yet
+      And a consumer subscribed to the window of recent notices
+     When the first poll adds three aircraft
+     Then the window holds one notice, adding three
+
+  @B-039
   Scenario: Two consumers read one window, and it goes with them
     Given a consumer subscribed to the window of recent notices
       And three changesets that each changed something
