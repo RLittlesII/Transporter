@@ -16,8 +16,5 @@ public sealed record FleetReadout
     /// <param name="element">The element the card is bound to.</param>
     /// <returns>The change, or none: no delta named, nothing replaced, or nothing changed.</returns>
     public Option<string> Change(TrackedVehicle element) =>
-        from delta in Delta
-        from replaced in element.Replaced
-        from change in delta(replaced, element.Vehicle)
-        select change;
+        Delta.Bind(delta => element.Replaced.Bind(replaced => delta(replaced, element.Vehicle)));
 }

@@ -49,9 +49,7 @@ internal sealed partial class AircraftSnapshotMapper
     /// compiler enforces rather than something a test has to catch (B-036).
     /// </remarks>
     internal static Option<GeoPosition> ToPosition(AircraftSnapshot snapshot) =>
-        from latitude in snapshot.Latitude
-        from longitude in snapshot.Longitude
-        select new GeoPosition(latitude, longitude);
+        snapshot.Latitude.Bind(latitude => snapshot.Longitude.Map(longitude => new GeoPosition(latitude, longitude)));
 
     /// <summary>How the position was fixed, absent when the wire sent a code this build does not name.</summary>
     /// <param name="code">The wire's integer, index 16.</param>
