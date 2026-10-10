@@ -2,7 +2,7 @@ id: "0075"
 type: chore
 title: Move the pages and the design tokens into a plain net10.0 library, and build one page in a test
 
-status: ready
+status: done
 
 priority: medium
 value: 3
@@ -13,8 +13,7 @@ parent: null
 children: []
 
 depends_on: []
-blocks:
-  - "0069"
+blocks: []
 spikes: []
 
 spec: null
@@ -22,8 +21,8 @@ spec: null
 claims: []
 
 created: "2026-10-08"
-updated: "2026-10-08"
-closed: null
+updated: "2026-10-09"
+closed: "2026-10-09"
 
 summary: |
   ADR-0014's first move. `FleetPage` and everything it builds leave `src/Gui`
@@ -60,6 +59,12 @@ acceptance_criteria:
   - "No claim's § 9 row changes: the move proves nothing new about a claim."
 
 decisions:
+  - "2026-10-09 — the person — withdrawn while it was being planned: it does
+    not need to be a library, and everything lives in `src/Gui`. Nothing was
+    built and no acceptance criterion above was met; `done` here means closed,
+    since the status enum has no other word for it. ADR-0016 supersedes
+    ADR-0014 and records the options. Rejected: the library, and compiling
+    `src/Gui`'s view sources into `test/UnitTests`."
   - "2026-10-08 — the person — layers one and two of the UI testing proposal:
     tokens tested as data and views built and asserted undrawn; no macOS CI and
     no test of the UI on a device. Recorded in ADR-0014."

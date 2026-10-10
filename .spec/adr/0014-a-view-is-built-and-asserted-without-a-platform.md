@@ -6,7 +6,12 @@ type: adr
 
 # ADR-0014: A view is built and asserted without a platform, and what a platform draws is read
 
-**Status:** accepted
+**Status:** superseded by
+[ADR-0016](0016-views-and-tokens-stay-in-the-head.md)
+
+**Superseded 2026-10-09 (`0075`), before the library was built.** The person
+decided the pages and tokens stay in `src/Gui`. ADR-0016 lists what of this
+record still holds.
 
 ## Context
 
