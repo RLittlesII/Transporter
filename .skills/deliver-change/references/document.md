@@ -109,6 +109,25 @@ The specification, the scenarios, coverage exemptions, lessons, decision records
   updates the root `README.md` in the same pull request — the fact and the link,
   not the rationale.
 
+### Steps a reader must perform
+
+- **A change that works only after someone acts ships the steps.** A secret to
+  supply, a tool to install, an account to create, a file to place: if the
+  change does nothing until a person does something on their own machine, that
+  action is part of the change. The specification and its decision say why;
+  neither says what to type.
+- **Write them as steps, not as a fact about the subject.** In order: how to do
+  it, how to check it worked, how to undo or redo it, and what to look at when
+  it did not work. A sentence fitted into a paragraph about something else has
+  room for the first and none of the rest.
+- **Link them from where that person starts** — wherever the project says how
+  to build and run — not only from where the subject is described.
+- **Run every command before writing it down**, against invented values where
+  the real ones are secret. What a tool prints, and what it does not, is a fact
+  about the installed version, and a guess about it is wrong in the direction
+  that matters
+  ([lesson 0026](../../../.spec/lessons/0026-a-step-the-reader-must-perform-is-documented-as-steps.md)).
+
 ### Markdown and agent files
 
 - Every tracked markdown file opens with the frontmatter the companion
