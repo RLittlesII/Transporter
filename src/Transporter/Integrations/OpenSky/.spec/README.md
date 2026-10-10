@@ -480,11 +480,11 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../Tracking/Sources/AircraftSnapshotMapper.cs) | B-034 – B-037, B-046                            |
 | `SwappingTrackerSource`     | [`Tracking/Sources/SwappingTrackerSource.cs`](../../../Tracking/Sources/SwappingTrackerSource.cs)   | B-038 – B-040                                   |
 | `SourceSwapActor`           | [`Tracking/Sources/SourceSwapActor.cs`](../../../Tracking/Sources/SourceSwapActor.cs)               | `fleet-dashboard` B-016's half; B-057; ADR-0015 |
-| `SwapSource`                | [`Tracking/Sources/SwapSource.cs`](../../../Tracking/Sources/SwapSource.cs)                         | B-057, the handle carried back                  |
+| `SwapSource`                | [`Messages/SwapSource.cs`](../../../Messages/SwapSource.cs)                                         | B-057, the handle carried back                  |
 | `TrackerSourceEntry`        | [`Tracking/Sources/TrackerSourceEntry.cs`](../../../Tracking/Sources/TrackerSourceEntry.cs)         | B-057, registration's name                      |
-| `GetSwapTargets`            | [`Tracking/Sources/GetSwapTargets.cs`](../../../Tracking/Sources/GetSwapTargets.cs)                 | B-057, asked once                               |
-| `SwapTargets`               | [`Tracking/Sources/SwapTargets.cs`](../../../Tracking/Sources/SwapTargets.cs)                       | B-057, in registration order                    |
-| `SwapTarget`                | [`Tracking/Sources/SwapTarget.cs`](../../../Tracking/Sources/SwapTarget.cs)                         | B-057, a name and a handle                      |
+| `GetSwapTargets`            | [`Messages/GetSwapTargets.cs`](../../../Messages/GetSwapTargets.cs)                                 | B-057, asked once                               |
+| `SwapTargets`               | [`Messages/SwapTargets.cs`](../../../Messages/SwapTargets.cs)                                       | B-057, in registration order                    |
+| `SwapTarget`                | [`Messages/SwapTarget.cs`](../../../Messages/SwapTarget.cs)                                         | B-057, a name and a handle                      |
 | `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../Tracking/IFleetTracker.cs)                                   | B-041, B-051                                    |
 | `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051                             |
 | `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives                     |
@@ -873,6 +873,24 @@ force — and left this § 7 the writer and the selection.
   The list is fixed for a run, because registration is, so it is asked for and
   not subscribed to. Nothing here says which target is live; the picker starts
   on the first, which `replay-source` B-028 makes the live source.
+- **The four messages are declared in `Messages/`, not beside the actor.**
+  `GetSwapTargets`, `SwapTargets`, `SwapTarget` and `SwapSource` are in
+  `Transporter.Messages`, where `DemandPoll` is, because a view model names
+  each of them and `TRN0006` reports a view model that names a class under
+  `Tracking` the seam does not publish (B-041). `0080` built them in
+  `Tracking/Sources/`; `0085` moved them, and
+  [lesson 0005](lessons/0005-a-message-declared-beside-its-receiver-is-one-its-sender-cannot-name.md)
+  says why they started there.
+- **The actor is registered under `SwapSource`, the message it is told.**
+  `AddFleetTrackingActors` calls `registry.Register<SwapSource>(…)`, so a view
+  model resolves the actor with `registry.Get<SwapSource>()` and both asks it
+  `GetSwapTargets` and tells it `SwapSource` through that one reference. It
+  was registered under `SourceSwapActor`, which is a class under `Tracking` a
+  view model may not name; the message as the key is the rule `DemandPoll`
+  set (§ 10, 2026-10-07). The told message rather than the asked one, because
+  the swap is what the actor is for. `SourceSwapActor` and
+  `TrackerSourceEntry` stay in `Tracking/Sources/`: with the key changed,
+  nothing above the tracker names either.
 
 Rejected: the tracker re-publishing the targets, which the person declined on
 2026-10-09 because it reopens `fleet-pipeline` for a value that never changes;
@@ -1123,7 +1141,7 @@ whose dependencies it is about. The Feature cannot reach `done` until it does.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 10 -->
 
-Four Feature-scoped lessons.
+Five Feature-scoped lessons.
 [Lessons 0001](lessons/0001-a-claim-needs-a-subject-that-can-satisfy-it.md) is
 § 11 row 2: B-026 – B-028 named the snapshot client for behaviour only the
 holder of the HTTP response can perform, so no component could satisfy them as
@@ -1143,6 +1161,11 @@ is `0005`'s projection: `ToKey` was written for one member and Mapperly applied
 it to every string on the snapshot, so the origin country was lowercased too —
 a wrong value that renders as plausible data, under a clean build and a passing
 test for the member the method was written for.
+[Lessons 0005](lessons/0005-a-message-declared-beside-its-receiver-is-one-its-sender-cannot-name.md)
+is `0080`'s four messages: a skill said a message is declared beside its actor,
+a convention said a message a consumer tells lives in `Messages/`, and the
+design followed the first into a namespace the analyzer forbids a view model to
+name — found by a re-read of the Feature that was about to name them.
 
 **Delta, 2026-10-05 — B-010 is withdrawn, and the analyzer loses a rule with
 it.** Trigger: `0004` reached the first test above the contract, which is where
@@ -1570,22 +1593,55 @@ is
 [ADR-0013](../../../../../.spec/adr/0013-a-read-side-seam-carries-a-sources-poll-status.md),
 for the same reason.
 
+**§§ 6-7 reopened 2026-10-09, for `0085`.** § 7 changed after its approval: its
+type table now gives `SwapSource`, `GetSwapTargets`, `SwapTargets` and
+`SwapTarget` under `Messages/`, and the swap actor's design gained two bullets:
+why the messages are there, and that the actor is registered under
+`SwapSource` rather than under its own class. An approval does not carry over to text written after it
+(root lesson 0023), so the row is 🟡 until that text is read. No claim changed
+and §§ 1-5 and §§ 8-9 were not touched, so those rows stand. `0085` was already
+`in-progress` when the row was lowered, and it is the item that lowered it.
+
+**§§ 6-7 re-read 2026-10-09 — 🟢, by an independent `spec-reviewer`.** A
+second reader who wrote none of it, because the session that moved the types
+also wrote this § 7 text and a reviewer does not sign what they wrote. Its
+first read held the row: the actor was still registered under
+`SourceSwapActor`, so a view model could not resolve it without naming a class
+under `Tracking`, and § 7 said nothing above the tracker named it. `0085`
+registered it under `SwapSource` and § 7 says so. Its second read, transcribed:
+
+> Read § 7's type table rows for the four swap messages, the two bullets
+> saying where they are declared and what the actor is registered under, § 10's
+> lesson paragraph and lesson 0005, against `src/Transporter/Messages/`,
+> `SourceSwapActor`, `TrackingRegistration`, `Layers.IsConcreteTracking` and
+> `BoundaryAnalyzer`'s TRN0006. The text and the code agree: the four types are
+> in `Transporter.Messages`, the actor is registered under `SwapSource`, and a
+> view model naming either is not reported where one naming a class under
+> `Tracking.Sources` was. B-057 and B-041 read as they did and their § 9 rows
+> name tests that exist. Every link in the changed text resolves, and
+> `akka-actor`, `mvvm` and `coding.md` now give one answer on where a message
+> lives and what an actor is registered under.
+
+By reading: the reader ran no build. `./build.sh` ran on the delivering
+branch, 300 of 300. `spec_status` is `approved` again.
+
 ## Tasks
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Tasks -->
 
-| Item                                                        | Claims                                          |
-| ----------------------------------------------------------- | ----------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)                | all 57 — the parent; its children hold the work |
-| [`0002`](../.issue/0002-opensky-api-contract.yml)           | B-001, B-002, B-004 – B-010, B-048              |
-| [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml)    | B-011 – B-014, B-030 – B-032                    |
-| [`0004`](../.issue/0004-aircraft-snapshot-client.yml)       | B-003, B-015 – B-029, B-045, B-050              |
-| [`0005`](../.issue/0005-aircraft-tracker-source.yml)        | B-033 – B-037, B-046, B-049                     |
-| [`0006`](../.issue/0006-source-swap-decorator.yml)          | B-038 – B-040, B-052                            |
-| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)          | B-042 – B-044, B-047, B-051                     |
-| [`0057`](../.issue/0057-poll-on-demand.yml)                 | B-053                                           |
-| [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056                                   |
-| [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                           |
+| Item                                                        | Claims                                                  |
+| ----------------------------------------------------------- | ------------------------------------------------------- |
+| [`0001`](../.issue/0001-aircraft-source.yml)                | all 57 — the parent; its children hold the work         |
+| [`0002`](../.issue/0002-opensky-api-contract.yml)           | B-001, B-002, B-004 – B-010, B-048                      |
+| [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml)    | B-011 – B-014, B-030 – B-032                            |
+| [`0004`](../.issue/0004-aircraft-snapshot-client.yml)       | B-003, B-015 – B-029, B-045, B-050                      |
+| [`0005`](../.issue/0005-aircraft-tracker-source.yml)        | B-033 – B-037, B-046, B-049                             |
+| [`0006`](../.issue/0006-source-swap-decorator.yml)          | B-038 – B-040, B-052                                    |
+| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)          | B-042 – B-044, B-047, B-051                             |
+| [`0057`](../.issue/0057-poll-on-demand.yml)                 | B-053                                                   |
+| [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056                                           |
+| [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                                   |
+| [`0085`](../.issue/0085-swap-messages-in-messages.yml)      | none — a bug that moves four types and changes no claim |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. `0002` keeps
@@ -1614,6 +1670,13 @@ included as before.
 
 **B-057 was cut into `0080` on 2026-10-09**, which `fleet-dashboard` `0039`
 waits on for the list its picker offers. `0001` reads 57.
+
+**`0085` was cut on 2026-10-09 and carries no claim.** It is a bug:
+`fleet-dashboard`'s § 12 re-read found that `0080` declared the swap actor's
+four messages where `TRN0006` reports a view model for naming them. The item
+moves them to `Messages/` and preserves B-057 and B-041 as written, so the
+sentence above still holds — every claim is carried by exactly one child — and
+`0001` still reads 57.
 
 Each item's `depends_on` sequences the work: `0002` and `0003` have no
 prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and

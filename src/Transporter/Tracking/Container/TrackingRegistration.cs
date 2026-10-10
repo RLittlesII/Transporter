@@ -2,6 +2,7 @@ using Akka.Actor;
 using Akka.DependencyInjection;
 using Akka.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Transporter.Messages;
 using Transporter.Tracking.Sources;
 
 namespace Transporter.Tracking.Container;
@@ -40,7 +41,7 @@ public static class TrackingRegistration
         ActorSystem system,
         IDependencyResolver resolver)
     {
-        registry.Register<SourceSwapActor>(system.ActorOf(resolver.Props<SourceSwapActor>(), nameof(SourceSwapActor)));
+        registry.Register<SwapSource>(system.ActorOf(resolver.Props<SourceSwapActor>(), nameof(SourceSwapActor)));
 
         return registry;
     }

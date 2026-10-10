@@ -1,6 +1,6 @@
-namespace Transporter.Tracking.Sources;
+namespace Transporter.Messages;
 
-/// <summary>Asked of <see cref="SourceSwapActor"/> for what a swap can select; answered with <see cref="SwapTargets"/>.</summary>
+/// <summary>Asked of <see cref="Transporter.Tracking.Sources.SourceSwapActor"/> for what a swap can select; answered with <see cref="SwapTargets"/>.</summary>
 /// <remarks>Asked once rather than subscribed to, because registration fixes the list for a run (ADR-0015).</remarks>
 internal sealed class GetSwapTargets
 {

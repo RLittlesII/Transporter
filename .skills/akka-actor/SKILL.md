@@ -34,7 +34,11 @@ The division matters more than the syntax:
   already is. Akka's `IDependencyResolver` builds it instead — the registration
   takes `(system, registry, resolver)` and calls `resolver.Props<ThingActor>()`,
   and the constructor is resolved from the container like any other.
-- Messages are `internal`, immutable, and declared beside the actor. A
+- Messages are `internal` and immutable. One that only the actor's own layer
+  sends is declared beside the actor. **One that another layer tells, asks or
+  reads in an answer is declared where that layer may name it** — the project's
+  conventions say where — and that includes the answer and every type the
+  answer carries. A
   parameterless message gets a private constructor and a
   `static readonly Instance`, so there is one of it:
 
@@ -71,6 +75,10 @@ The division matters more than the syntax:
         registry.AddThingActors(system, resolver))
     ```
 
+- **An actor another layer resolves is registered under the message that
+  layer tells it, not under its own class** — `registry.Register<DoThing>(…)`
+  — so the caller names a message and never the actor. The actor's class is a
+  key only for an actor nothing outside its layer resolves.
 - View models take `IActorRegistry` and resolve from it. **Every `Ask<T>`
   carries an explicit timeout**; an `Ask` with no timeout is a hang waiting for
   a bad network.

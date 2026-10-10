@@ -92,10 +92,10 @@ summary: |
   `0036` replaces all three as it builds the page (B-002).
 
   The children are slices of this item rather than work beside it, which is why
-  it carries all twenty-eight claims.
+  it carries all forty claims.
 
-  § 12 is 🟡 on every row and § 11 holds three open questions, two of which are
-  `fleet-pipeline`'s to answer, so this stays at `ready-for-architecture`.
+  § 12 is 🟡 on every row and § 11 has two rows without an answer, 3 and 4, so
+  this stays at `ready-for-architecture`.
 
 acceptance_criteria:
   - "B-001 – B-004 — the surfaces, C# markup, the template removed, and one

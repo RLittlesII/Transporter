@@ -9,10 +9,12 @@ using DynamicData;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Reactive.Testing;
+using NSubstitute;
 using Rocket.Surgery.Airframe;
 using Transporter.Container;
 using Transporter.Integrations.OpenSky;
 using Transporter.Integrations.OpenSky.Container;
+using Transporter.Messages;
 using Transporter.Model;
 using Transporter.Tracking;
 using Transporter.Tracking.Container;
@@ -146,6 +148,32 @@ public class SourceSwapActorTests : TestKit
         targets.Should().Equal(
             [new SwapTarget(OpenSkyRegistration.LiveAircraft, 0)],
             "a run that names no recording registers no replay source to offer");
+    }
+
+    /// <summary>
+    /// Item 0085, preserving `aircraft-source` B-041: a view model resolves the swap actor from the
+    /// registry, and the only key it may name is a message. Registered under the actor's own class,
+    /// the actor is one <c>TRN0006</c> forbids a view model to ask for.
+    /// </summary>
+    [Fact]
+    public void GivenTheTrackingActorsRegistered_WhenTheSwapActorIsResolvedByTheMessageItIsTold_ThenItAnswersTheTargets()
+    {
+        // Given
+        using var host = new HostBuilder()
+            .ConfigureServices(static services => services
+                .AddTransporter(ReplayComposition.Settings(), new TestScheduler())
+                .AddAkka("transporter", static _ => { }))
+            .Build();
+        var resolver = Substitute.For<Akka.DependencyInjection.IDependencyResolver>();
+        resolver.Props<SourceSwapActor>().Returns(Starts(host.Services.GetRequiredService<SwappingTrackerSource>()));
+        var registry = new ActorRegistry().AddFleetTrackingActors(Sys, resolver);
+
+        // When
+        var resolved = registry.TryGet<SwapSource>(out var sut);
+
+        // Then
+        resolved.Should().BeTrue("the message a consumer tells is the key it resolves the actor by");
+        TargetsOf(sut).Select(static target => target.Name).Should().Equal(OpenSkyRegistration.LiveAircraft);
     }
 
     /// <summary>What the system starts the actor from.</summary>
