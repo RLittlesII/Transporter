@@ -46,7 +46,7 @@ summary: |
 
   The rest of the item is the boundaries: what a view model may not hold, what
   it may not compute, what it may not name, and the swap test — that no view is
-  edited to show a different source. Four of the six claims are analyzer rules,
+  edited to show a different source. Four of the seven claims are analyzer rules,
   extending the set ADR-0006 established.
 
   Runs after `0036`, and after `aircraft-source` `0006`, which is the decorator
@@ -64,11 +64,11 @@ acceptance_criteria:
     in a view or view model. Analyzer rule."
   - "B-018 — no filtering, sorting, grouping, expiry or staleness arithmetic in
     a view or view model. Analyzer rule."
-  - "B-020 — dependencies stop at the tracker, the query and the actors.
-    Analyzer rule."
+  - "B-020 — dependencies stop at `IFleetTracker`, `ISchedulerProvider` and
+    the actors. Analyzer rule."
   - "B-021 — a swap edits no view, markup or comparer."
-  - "B-022 — only the detail pane asks which kind of vehicle it has. Analyzer
-    rule."
+  - "B-022 — nothing in this Feature asks which kind of vehicle it has, the
+    detail pane included. Analyzer rule."
   - "B-040 — a picker over the targets the swap actor answers, asked once with a timeout and empty until answered; no markup per source."
   - "§ 9 Traceability Matrix carries a row naming a test or an analyzer rule
     for each id above."
