@@ -1574,18 +1574,19 @@ for the same reason.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Tasks -->
 
-| Item                                                        | Claims                                          |
-| ----------------------------------------------------------- | ----------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)                | all 57 — the parent; its children hold the work |
-| [`0002`](../.issue/0002-opensky-api-contract.yml)           | B-001, B-002, B-004 – B-010, B-048              |
-| [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml)    | B-011 – B-014, B-030 – B-032                    |
-| [`0004`](../.issue/0004-aircraft-snapshot-client.yml)       | B-003, B-015 – B-029, B-045, B-050              |
-| [`0005`](../.issue/0005-aircraft-tracker-source.yml)        | B-033 – B-037, B-046, B-049                     |
-| [`0006`](../.issue/0006-source-swap-decorator.yml)          | B-038 – B-040, B-052                            |
-| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)          | B-042 – B-044, B-047, B-051                     |
-| [`0057`](../.issue/0057-poll-on-demand.yml)                 | B-053                                           |
-| [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056                                   |
-| [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                           |
+| Item                                                        | Claims                                                  |
+| ----------------------------------------------------------- | ------------------------------------------------------- |
+| [`0001`](../.issue/0001-aircraft-source.yml)                | all 57 — the parent; its children hold the work         |
+| [`0002`](../.issue/0002-opensky-api-contract.yml)           | B-001, B-002, B-004 – B-010, B-048                      |
+| [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml)    | B-011 – B-014, B-030 – B-032                            |
+| [`0004`](../.issue/0004-aircraft-snapshot-client.yml)       | B-003, B-015 – B-029, B-045, B-050                      |
+| [`0005`](../.issue/0005-aircraft-tracker-source.yml)        | B-033 – B-037, B-046, B-049                             |
+| [`0006`](../.issue/0006-source-swap-decorator.yml)          | B-038 – B-040, B-052                                    |
+| [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)          | B-042 – B-044, B-047, B-051                             |
+| [`0057`](../.issue/0057-poll-on-demand.yml)                 | B-053                                                   |
+| [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056                                           |
+| [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                                   |
+| [`0085`](../.issue/0085-swap-messages-in-messages.yml)      | none — a bug that moves four types and changes no claim |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. `0002` keeps
@@ -1614,6 +1615,13 @@ included as before.
 
 **B-057 was cut into `0080` on 2026-10-09**, which `fleet-dashboard` `0039`
 waits on for the list its picker offers. `0001` reads 57.
+
+**`0085` was cut on 2026-10-09 and carries no claim.** It is a bug:
+`fleet-dashboard`'s § 12 re-read found that `0080` declared the swap actor's
+four messages where `TRN0006` reports a view model for naming them. The item
+moves them to `Messages/` and preserves B-057 and B-041 as written, so the
+sentence above still holds — every claim is carried by exactly one child — and
+`0001` still reads 57.
 
 Each item's `depends_on` sequences the work: `0002` and `0003` have no
 prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
