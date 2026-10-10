@@ -342,11 +342,11 @@ sequenceDiagram
     VM->>Cards: the cards that no longer match are removed
     Note over Cards: no refetch, no rebuild, no clear
     User->>VM: taps the swap control
-    VM->>VM: IsSwapping = true
+    Note over VM: IsSwapping reads true, from the press
     VM-->>Tracker: (the actor swaps the source — aircraft-source 0006)
     Tracker->>VM: the new fleet arrives as changes
     VM->>Cards: applied to the collection it already holds
-    VM->>VM: IsSwapping = false
+    Note over VM: IsSwapping reads false, at the first add
     Note over Cards: the same collection object throughout — it is the view model's
 ```
 
@@ -825,13 +825,17 @@ subject, and the scheduler is a `TestScheduler`:
 
 - The command runs. The probe receives one `SwapSource` and no `Ask` for the
   swap, and `IsSwapping` is true. This fails a command that publishes the
-  choice as a value, and an indicator set after the tell rather than by it.
+  choice as a value, a command that `Ask`s, and a missing indicator.
 - A changeset of removes arrives, then one carrying an add. `IsSwapping` is
   still true after the first and false after the second. This fails an
   indicator that clears on any change, which is the old fleet leaving.
 - Nothing arrives and the scheduler advances ten seconds. `IsSwapping` is
   false at the cap and true one tick before. This fails an indicator with no
   cap, which a source that reports nothing leaves on for good.
+- The command runs again five seconds into the window, and the scheduler
+  advances six more. `IsSwapping` is still true. This fails a cap measured
+  from the first press. It is a fourth case of the cap's test, and like that
+  test it waits on § 11 row 9.
 
 **The swap picker (B-040).** Each test uses a `TestKit` probe as the swap
 actor, registered under `SwapSource`, and the probe decides how the `Ask`
@@ -957,7 +961,7 @@ repository with no UI test runner is that item's to decide.
 | B-037    | `@B-037` | [`0041`](../.issue/0041-arrival-banner-and-toast.yml) — planned: `FleetBannerViewModelTests.GivenAWindowWhoseTotalsAreNotItsNoticesSum_WhenTheBannerIsProjected_ThenItShowsTheWindowsTotals`; plus a review that the two groups carry their headings                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Missing  |
 | B-038    | `@B-038` | `FleetCardMotionTests.GivenANewerReadingOfTheShownVehicle_WhenTheAltitudeChanged_ThenTheReadoutPulses` — with `GivenACardsFirstBind_WhenTheElementCarriesAChange_ThenNothingPulses`, `GivenARecycledCard_WhenItIsBoundToAnotherVehicle_ThenNothingPulses`, `GivenTheSameReadingRepublishedAsStale_WhenItIsBound_ThenNothingPulses` and `GivenAVehicleJustAdded_WhenItIsBound_ThenNothingPulses` for when it does not; the change text is `fleet-pipeline` B-042's `FleetReadoutTests`. **Review owed** on `0073`: `Readout.Pulse()` returns before animating when `Motion.IsReduced()`, and `AircraftCard.Fill` sets `Change` whether or not it pulses — watched with Reduce Motion on and off                                                                                                                                                                                           | Missing  |
 | B-039    | `@B-039` | [`0078`](../.issue/0078-grouping-values-as-filter-choices.yml) — planned: `FleetViewModelTests.GivenGroupingValues_WhenTheyArriveAndLeave_ThenTheChoicesFollowTheChangeset`, `GivenAValueChosen_WhenTheGroupingChanges_ThenItIsClearedAndTheSearchStands` and `GivenADescriptionsChoiceChosen_WhenTheGroupingChanges_ThenItStands`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Missing  |
-| B-040    | `@B-040` | [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) — planned: `FleetViewModelTests.GivenTheActorAnswersTwoTargets_WhenTheViewModelIsBuilt_ThenThePickerOffersThemInOrderByName`, `GivenTheActorHasNotAnswered_WhenThePickerIsRead_ThenItOffersNothing`, `GivenTheActorAnswersAFailure_WhenThePickerIsRead_ThenItOffersNothingAndNothingIsRetried` `GivenATargetChosen_WhenTheSwapCommandRuns_ThenTheActorIsToldThatTarget` and `GivenNoTargetAnswered_WhenTheSwapCommandIsRead_ThenItCannotExecute`; plus a review that the page builds one picker over `Targets` and names no source                                                                                                                                                                                                                                                                                        | Missing  |
+| B-040    | `@B-040` | [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) — planned: `FleetViewModelTests.GivenTheActorAnswersTwoTargets_WhenTheViewModelIsBuilt_ThenThePickerOffersThemInOrderByName`, `GivenTheActorHasNotAnswered_WhenThePickerIsRead_ThenItOffersNothing`, `GivenTheActorAnswersAFailure_WhenThePickerIsRead_ThenItOffersNothingAndNothingIsRetried`, `GivenATargetChosen_WhenTheSwapCommandRuns_ThenTheActorIsToldThatTarget` and `GivenNoTargetAnswered_WhenTheSwapCommandIsRead_ThenItCannotExecute`; plus a review that the page builds one picker over `Targets` and names no source                                                                                                                                                                                                                                                                                       | Missing  |
 
 ## 10. Lessons / Spec Deltas
 
@@ -1116,6 +1120,7 @@ what ADR-0016 and B-022 say. No claim changes.
 | 6   | **Answered and closed 2026-10-07 — the observed instant clears it** ([decisions/0001](decisions/0001-the-observed-instant-clears-the-refresh-indicator.md)). Neither option this row had was taken: a fixed duration means "we asked" and clears before slow data lands, and the next notice (`fleet-pipeline` B-025) is raised only when something changed, which a refresh returning identical data does not. The signal both were missing is the one `aircraft-source` B-003 already reports on **every** applied poll — the envelope's instant, which differs per poll whether or not an aircraft moved — so a poll landing is observable with no `Ask` and no change to the fleet. `fleet-pipeline` B-031 publishes it on `IFleetTracker`, because a view model depends on the tracker and nothing below it (`aircraft-source` B-041), and [`0059`](../../../Tracking/.issue/0059-observed-instant-on-the-tracker.yml) builds that member. A three-second cap covers the refused press, which produces no poll to report; it is the one number chosen by feel, and the first rehearsal is what checks it. B-028 is unamended. Rejected with the two above: an actor reply, which is the `Ask` B-028 forbids, and a poll-status stream published end to end, which is exact for a new type and a seam crossing two Features.                                                                                                                                                                                       | the person                 | Closed      |
 | 7   | **Answered 2026-10-08 — yes, by a view animation.** The person took option (b): an animation a view runs toward a value already bound fetches, derives and polls nothing, so it is not the timer B-017 forbids, and B-017 now says so. B-036 counts down to the due instant `fleet-pipeline` B-040 publishes, and the same rule lets B-038's readout pulse. Rejected: (a) the due time with nothing ticking, which keeps B-017 absolute at the cost of a static ring; and (c) a one-second tick from the tracker, a subscription `fleet-pipeline` B-004 forbids it holding while nothing is bound.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | the person                 | Closed      |
 | 8   | **Answered 2026-10-08 — both ship, and the delta comes from the description.** The element carries the vehicle its last update replaced (`fleet-pipeline` B-041), and a readout column may name a delta over the previous and current vehicle that returns the formatted change (`fleet-pipeline` B-042) — so units stay in the per-source description and this Feature formats nothing. The pulse is a view animation under row 7's answer, dropped under reduced motion. B-038 claims both. Rejected: the previous cell shown as "was 12,180 ft", which has no direction; and a canonical number plus a formatter on every column, which reverses `fleet-pipeline` § 11 row 3 and puts subtraction in a view model.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | the person                 | Closed      |
+| 9   | Raised 2026-10-09 by § 12's independent re-read (N1). § 7 clears the swap indicator after `SwapClearsAfter`, ten seconds, when no fleet arrives; B-016 says only "until the new fleet arrives", and no claim, § 4 row or decision gives the cap or its number — the refresh cap had decisions/0001. And B-017 forbids a view model "a timer": the refresh cap already is `Observable.Timer` on the injected scheduler in `FleetViewModel`, the swap cap would be a second, and `0039` builds the analyzer rule that would report both. **(a)** Does B-016 gain the cap, and is ten seconds the number? **(b)** Is a one-shot cap on the injected scheduler the timer B-017 forbids? Recommended: (a) yes — an indicator a silent source leaves on for good is worse on stage than one that gives up — and (b) no, said in B-017 the way row 7's answer said it for a view's animation: it fetches, derives and polls nothing, and a test advances it. Blocks `0039`, and all three rows of § 12.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | the person                 | 2026-10-12  |
 
 ## 12. Sign-off
 
@@ -1503,6 +1508,58 @@ found, and what was done, each by the section's owner:
   they are.
 
 § 10 has the delta. The verdict on this text is the entry below it.
+
+**Re-read 2026-10-09, the third — an independent `spec-reviewer`.** A second
+reader who wrote none of the text, asked for because the reviewer of the first
+two re-reads wrote § 4 rows 4 and 13 and then, as `implementer`,
+`test-writer` and `spec-author`, the answers above. It read twice: the answer
+to finding 12, where it found what the entry above lists, and then those
+answers. Its verdict is transcribed here, not composed. By reading only — it
+ran no build and no test.
+
+Answered, on its second read: the registry key, the `internal` type on a
+`public` view model, `IsSwapping`'s design as a design, `SwapCommand`'s type
+and its empty case, § 4 row 13, § 5 rows 7 and 8, and the items `0035` and
+`0039`. § 4 row 4 it would sign. Mechanically: forty § 9 rows, each claim
+once, nineteen `Verified` and twenty-one `Missing`, as the gate's prose says.
+"Outgoing as removes, incoming as adds" is consistent with
+`SwappingTrackerSource` and `FleetTracker`; DynamicData's `Switch` was not
+read, and the design does not depend on the two arriving separately.
+
+14. **The swap indicator's cap has no claim behind it, and B-017 does not say
+    a cap is not a timer — blocking, all three rows; `spec-author` on the
+    person's call, then `test-writer`.** B-016 covers the swap "until the new
+    fleet arrives". § 7 also clears it after ten seconds: behaviour and a
+    number with no source in a claim, § 4, an ADR or a decision. The refresh
+    cap had one — decisions/0001 and the `@B-028` scenario. B-017 forbids a
+    view model a timer and exempts only a view's animation; the refresh cap is
+    already `Observable.Timer` in `FleetViewModel`, and `0039` builds the
+    analyzer rule that would report it and the new one. The reader raised this
+    on its second read and said its first should have: the disagreement
+    predates today's text, which added a second instance. It is § 11 row 9.
+    Once answered: B-016 or a decision carries the cap, B-017 says what a cap
+    is, the `@B-016` scenario or a second one carries it, and §§ 6-9 need a
+    re-read against the amended claim and, the reader expects, no further
+    edit.
+
+Not blocking, and answered in the same change: a missing comma in § 9's B-040
+row, a § 8 case that claimed to tell apart what no test can, a diagram that
+showed `IsSwapping` assigned, and no case for a second press, which § 8 now
+has. Still open and not blocking: the `@B-032` scenario's example words are
+not the ones `StatusBadge` carries (`test-writer`); and the two carried notes
+above.
+
+**Verdict.**
+
+- **§§ 1-5 — 🟡**, on finding 14 alone. The row this morning's re-read could
+  not sign for want of a second reader has now had one, and rows 4 and 13
+  hold.
+- **§§ 6-7 — 🟡**, on finding 14 alone: § 7 designs against a claim that does
+  not yet say it. Finding 12 is answered.
+- **§§ 8-9 — 🟡**, on finding 14 alone: the cap's test proves a clause B-016
+  does not have, and no scenario carries it.
+
+`spec_status` stays `in-review`, and `0039` waits on § 11 row 9.
 
 ## Decisions
 

@@ -2,7 +2,7 @@ id: "0085"
 type: bug
 title: Declare the swap actor's messages where a view model may name them
 
-status: in-progress
+status: done
 
 priority: high
 value: 3
@@ -24,7 +24,7 @@ claims: []
 
 created: "2026-10-09"
 updated: "2026-10-09"
-closed: null
+closed: "2026-10-09"
 
 summary: |
     `0080` declared `GetSwapTargets`, `SwapTargets`, `SwapTarget` and
@@ -41,6 +41,11 @@ summary: |
     references/coding.md § "Project structure"). This item moves the four types
     there and changes nothing they do.
 
+    The move's own review found it one type short. The actor was registered
+    under `SourceSwapActor`, so a view model resolving it still named a class
+    under `Tracking`. The same rule says the message doubles as the registry
+    key, and the item registers the actor under `SwapSource`.
+
     No claim is delivered and none changes. B-057, B-041 and `fleet-dashboard`
     B-020 and B-040 stand as written, and B-057's three tests pass before and
     after. That is the no-scenario exemption, and those are the claims it
@@ -50,11 +55,22 @@ acceptance_criteria:
     - "`GetSwapTargets`, `SwapTargets`, `SwapTarget` and `SwapSource` are
       declared in `Transporter.Messages`, and a test fails if one is declared
       anywhere else."
-    - "`SourceSwapActorTests` passes unchanged but for a `using`."
+    - "B-057's three tests in `SourceSwapActorTests` pass unchanged but for a
+      `using`."
+    - "The swap actor is registered under `SwapSource`, and a test fails if it
+      is resolved by any other key."
     - "§ 7's type table names the four files under `Messages/`, and
       `fleet-dashboard` § 7 says where the view model reads them."
 
-decisions: []
+decisions:
+    - "2026-10-09 — `implementer`, on the `spec-reviewer`'s first finding — the
+      scope widens from the four declarations to the registry key. A view
+      model that can name the messages and not reach the actor is the defect
+      this item was cut for, unfixed. `SwapSource` is the key rather than
+      `GetSwapTargets`, because the swap is what the actor is for."
+    - "2026-10-09 — closed on the independent re-read's 🟢 for § 12's §§ 6-7.
+      Its one finding against the item was this file's own text, answered
+      above; that answer was not itself re-read."
 
 out_of_scope:
     - "The picker, `FleetViewModel.Targets` and `SwapCommand` —

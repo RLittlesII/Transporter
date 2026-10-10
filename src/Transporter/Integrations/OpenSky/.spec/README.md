@@ -2,7 +2,7 @@
 title: "Specification: Aircraft source"
 description: "Poll OpenSky through a typed API contract, cache snapshots per client, project them to domain vehicles in a per-type strategy, and swap strategies behind a decorator the fleet tracker wraps."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Aircraft source
@@ -1431,7 +1431,7 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟡 Draft    |
+| §§ 6-7   | implementer | 🟢 Approved |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
@@ -1601,6 +1601,29 @@ why the messages are there, and that the actor is registered under
 (root lesson 0023), so the row is 🟡 until that text is read. No claim changed
 and §§ 1-5 and §§ 8-9 were not touched, so those rows stand. `0085` was already
 `in-progress` when the row was lowered, and it is the item that lowered it.
+
+**§§ 6-7 re-read 2026-10-09 — 🟢, by an independent `spec-reviewer`.** A
+second reader who wrote none of it, because the session that moved the types
+also wrote this § 7 text and a reviewer does not sign what they wrote. Its
+first read held the row: the actor was still registered under
+`SourceSwapActor`, so a view model could not resolve it without naming a class
+under `Tracking`, and § 7 said nothing above the tracker named it. `0085`
+registered it under `SwapSource` and § 7 says so. Its second read, transcribed:
+
+> Read § 7's type table rows for the four swap messages, the two bullets
+> saying where they are declared and what the actor is registered under, § 10's
+> lesson paragraph and lesson 0005, against `src/Transporter/Messages/`,
+> `SourceSwapActor`, `TrackingRegistration`, `Layers.IsConcreteTracking` and
+> `BoundaryAnalyzer`'s TRN0006. The text and the code agree: the four types are
+> in `Transporter.Messages`, the actor is registered under `SwapSource`, and a
+> view model naming either is not reported where one naming a class under
+> `Tracking.Sources` was. B-057 and B-041 read as they did and their § 9 rows
+> name tests that exist. Every link in the changed text resolves, and
+> `akka-actor`, `mvvm` and `coding.md` now give one answer on where a message
+> lives and what an actor is registered under.
+
+By reading: the reader ran no build. `./build.sh` ran on the delivering
+branch, 300 of 300. `spec_status` is `approved` again.
 
 ## Tasks
 
