@@ -88,19 +88,17 @@ as an observable and its scheduler by constructor, so a test drives both. See
 [`mvvm`](../mvvm/SKILL.md) "Testing" and
 [`test-from-scenarios`](../test-from-scenarios/SKILL.md).
 
-A view is tested **built, never drawn**
-([ADR-0014](../../.spec/adr/0014-a-view-is-built-and-asserted-without-a-platform.md)).
-Pages live in a plain `net10.0` project, so a test constructs one with its view
-model and reads the visual tree: what is bound to what, that a status carries a
-word and an icon beside its colour, that a colour comes from a token, that the
-page built against two source descriptions is the same page. A `BindableObject`
-throws on a property change with no dispatcher, so the test registers one that
-runs inline. Design tokens are tested as data — contrast and colour-vision
-distinctness are arithmetic, with no page built.
+**A view is not tested**
+([ADR-0016](../../.spec/adr/0016-views-and-tokens-stay-in-the-head.md)). Pages,
+their parts and the design tokens live in the head, which no test project
+references. What a view binds — that a status carries a word and an icon beside
+its colour, that a colour comes from a token — is a review, and so are the
+tokens' contrast and colour-vision distinctness, and what a platform draws:
+pixels, a map's rendering, an animation. Each is recorded in its matrix row.
 
-What a platform draws — pixels, a map's rendering, an animation — is a review,
-recorded in its matrix row. Keep the view empty of logic: anything it computes
-is something only a reader can check.
+Keep the view empty of logic: anything it computes is something only a reader
+can check. What a view would decide is a static or a view model beside the
+feature, where a test reaches it.
 
 ## Never add
 
@@ -110,8 +108,7 @@ is something only a reader can check.
 - A downcast or type check on the domain base in a view or view model.
 - A view that must be edited to show a different source.
 - A UI test runner, a device or simulator test, or a screenshot comparison
-  (ADR-0014).
-- A page in a project a plain `net10.0` test cannot reference.
+  (ADR-0016).
 - An event handler attached with `+=`, or a subscription in a view with nothing
   that ends it.
 - Blocking in a binding or command path — no `.Result`, no `.Wait()`.
