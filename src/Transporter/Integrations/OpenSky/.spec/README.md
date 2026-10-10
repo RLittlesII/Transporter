@@ -2,7 +2,7 @@
 title: "Specification: Aircraft source"
 description: "Poll OpenSky through a typed API contract, cache snapshots per client, project them to domain vehicles in a per-type strategy, and swap strategies behind a decorator the fleet tracker wraps."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Aircraft source
@@ -30,13 +30,47 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
-Fifty-seven claims, in nine groups — one per component, plus the boundary rules:
+Fifty-eight claims, in ten groups — one per component, plus the boundary rules
+and the configuration:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
-types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029 and
-B-050** the snapshot client — except **B-026 – B-028**, re-subjected to the HTTP
+types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029,
+B-050 and B-053 – B-055** the snapshot client — except **B-026 – B-028**, re-subjected to the HTTP
 transport when § 11 row 2 was answered, and still delivered by `0004`; **B-030 – B-032** the cache; **B-033 – B-037** the
 tracker source strategy; **B-038 – B-040, B-056 and B-057** the swap decorator; **B-041 – B-044,
-B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries.
+B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries;
+**B-058** the configuration the application is composed from.
+
+B-058 was added on 2026-10-09, from bug
+[`0086`](../.issue/0086-credentials-from-user-secrets.yml): the person registered
+the OpenSky account, and the application had nowhere to read the credentials
+from. § 4 row 12 had said where they come from since the Feature was written,
+and no claim made anything read them
+(this Feature's
+[lesson 0006](lessons/0006-a-constraint-nobody-claims-is-a-rule-nothing-builds.md)).
+The person chose the user-secrets store the same day
+([decision 0004](decisions/0004-the-credentials-live-in-the-user-secrets-store.md)).
+Its row sits beside B-029's because it is that claim's other half: B-029 says
+what happens when a credential is absent, and B-058 how one comes to be
+present. Its subject is neither the client nor the transport but the
+configuration both are bound from, which is why it is a group of one.
+
+**B-058 reverses part of a decision, and says so.** `0047`'s second decision,
+2026-10-06, was that configuration ships as an asset carrying no credential,
+and it rejected credentials layered over that asset because a developer's own
+machine would become the only place the application behaves one way. B-058
+layers a machine-local store over the asset. What stands of `0047`:
+`appsettings.json` still carries no credential, and a clone with no store still
+starts, polls, and is refused. What is reversed: a machine holding the store
+now behaves differently from one that does not, by the person's choice on
+2026-10-09, because a live source nothing can authenticate is not a source.
+Decision 0004 records it.
+
+**The store may name any setting, not only a credential.** That is what
+layering is, and the claim says it rather than leaving it to be found: a
+setting the store names takes the store's value. Nothing asked for that
+breadth — § 4 row 12 and the person's choice are about credentials — and
+narrowing it to the two credential keys is a filter nobody asked for either.
+It is the store's ordinary behaviour, written down, and the person's to narrow.
 
 B-054 and B-055 were added on 2026-10-08, from
 [`fleet-dashboard` decision 0002](../../../Features/Fleet/.spec/decisions/0002-cards-and-a-trail-map-replace-the-grid.md):
@@ -124,6 +158,7 @@ than being slotted into the sequence.
 | B-027 | The HTTP transport SHALL log the `X-Rate-Limit-Remaining` header value at debug level on every poll, and no log line, exception message, test fixture or diagnostic SHALL contain a token, `client_id` or `client_secret` value.                                                                                                                                                                                                                                                                                                                                      | README.md § "Limits"; api-contract § "Credentials"; § 11 row 2                      |
 | B-028 | A `429` response SHALL be inspected for `X-Rate-Limit-Retry-After-Seconds` in the HTTP transport, and SHALL defer the snapshot client's next poll by exactly that many seconds; no exception SHALL reach a subscriber of the client's stream and no backoff SHALL be invented; every other non-2xx status SHALL remain an exception.                                                                                                                                                                                                                                  | README.md § "Limits"; flurl-http-client; ADR-0008; § 11 row 2                       |
 | B-029 | A missing OpenSky credential SHALL fail at application startup with a message naming which credential is absent; and a failed poll — timeout, `429`, `5xx`, or an unreadable body — SHALL NOT complete or error-terminate the client's stream.                                                                                                                                                                                                                                                                                                                        | api-contract § "Credentials"; hot-swap-source                                       |
+| B-058 | The configuration the application composes SHALL be its packaged settings with the developer's user-secrets store layered over them: a setting the store names takes the store's value, so an OpenSky credential held in the store reaches the live transport, and no packaged setting the store does not name changes. With no store, the configuration SHALL be the packaged settings unchanged, carrying no credential.                                                                                                                                            | § 4 row 12; `0086`; api-contract § "Credentials"                                    |
 | B-030 | The cache SHALL be a plain keyed store of snapshots: no diff policy of its own, no projection, and no clock.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Decided call — the cache is dumb                                                    |
 | B-031 | There SHALL be one cache per client, typed to that client's snapshot, and its lifetime SHALL be the application's rather than the client's.                                                                                                                                                                                                                                                                                                                                                                                                                           | Decided call; hot-swap-source § "What must not be rebuilt"; ADR-0009                |
 | B-032 | The cache SHALL NOT hold, construct, reference or return a `TransportVehicle` or any other domain type.                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Decided call                                                                        |
@@ -193,10 +228,11 @@ than being slotted into the sequence.
 | 12  | OpenSky's `sensors` field (index 12)                                                                                                             | Explicitly excluded by B-021. Recorded as a decision rather than left as an omission, so a later reader does not add it believing it was overlooked.                                                                                                                                                                                                                                                                                                                                             |
 | 13  | A second strategy seam, and any source-describing metadata on the seam or a per-type interface — display name, which columns make sense, an icon | B-037 forbids widening a per-type interface for this. A source that genuinely needs to describe itself gets a separate small type in a separate feature — the columns did, as `fleet-pipeline`'s description. **Not excluded since 2026-10-09:** the name a swap control shows for a registered strategy (B-057). It is registration's, answered by the swap actor, unreachable from the seam, and says nothing about the data a source reports.                                                 |
 | 14  | Persisting snapshots, snapshot history, or a track per aircraft                                                                                  | Each cache holds current state, and a history store beside it is a second collection, which dynamic-data-pipeline § "Never add" rules out. The trail the dashboard draws since 2026-10-08 is `fleet-pipeline` B-034's — carried on the fleet element downstream of the seam, and leaving with it — so nothing here keeps one.                                                                                                                                                                    |
-| 15  | Registering the OpenSky account, creating the API client, and provisioning the credentials                                                       | Operational tasks tracked in README.md § "Open items". B-029 claims the application's _behavior_ when a credential is absent; obtaining one is not code.                                                                                                                                                                                                                                                                                                                                         |
+| 15  | Registering the OpenSky account, creating the API client, and provisioning the credentials                                                       | Operational tasks tracked in README.md § "Open items". B-029 claims the application's _behavior_ when a credential is absent; obtaining one is not code. Reading one in is, and is B-058.                                                                                                                                                                                                                                                                                                        |
 | 16  | The poller's hosting — actor shape, supervision, registration, and whether a view model uses `Tell` or `Ask`                                     | `akka-actor` and `mvvm`. This spec claims the client's observable behavior (B-015 – B-029), not where it runs. `Tell`-vs-`Ask` is a repository-wide undecided, open at README.md § "Open items".                                                                                                                                                                                                                                                                                                 |
 | 17  | A `Test` target in the Nuke build                                                                                                                | A repository-wide call, and `0017` made it outside this Feature. Deciding it inside a feature specification would have settled a build convention by side effect.                                                                                                                                                                                                                                                                                                                                |
 | 18  | The bind into a collection, and the marshal to the user-interface thread                                                                         | ADR-0009 moved both out of the pipeline and into its consumer, so they are `fleet-dashboard` B-005's — one `Bind` in a view model, disposed with it. Nothing here owns a `ReadOnlyObservableCollection`, and no claim in § 3 is satisfied by one. The obligation is not lost, only unprovable until a view model exists to carry it.                                                                                                                                                             |
+| 19  | Distributing a built bundle, a keychain, a settings screen for the credentials, and any run-time read of the developer's home directory          | B-058 packages the store into the bundle when it is built, so a bundle built on a machine holding the store contains the secret. It is a rehearsal and stage artefact on the presenter's own machine, never shipped, attached or committed. A keychain or a settings screen would keep the secret out of the bundle, and each is a feature nobody asked for (`fleet-dashboard` § 5 row 4); a sandboxed head cannot open the home directory at run time at all.                                   |
 
 ## 6. Concern Separation
 
@@ -241,6 +277,7 @@ why it was allowed.
 | Token lifecycle, the credit header, and the throttle                | Technical      | § 4 rows 7 and 9 are the provider's terms, not ours to simplify. B-026, B-028, which name the transport: it is the only thing holding the response, and B-006 keeps the credential off the contract.                                                                                                                                                                                                                                                                               |
 | A credential never reaches a log, a fixture or a screenshot         | Both           | Technically § 4 row 12. The business reason is that this runs in front of a room and is recorded, so "it is only a debug log" does not apply. B-027.                                                                                                                                                                                                                                                                                                                               |
 | A missing credential stops the application at startup               | Business       | Chosen so the presenter learns before the stage rather than during it (§ 2 need 5). Failing lazily on the first poll compiles equally well and is the natural implementation. B-029, first half.                                                                                                                                                                                                                                                                                   |
+| A credential kept outside the tree still reaches the application    | Both           | Technically § 4 row 12, and a sandbox: the store is in the home directory, which a Mac Catalyst or iOS head cannot open, so it is packaged at build rather than read at run. The business half is the person's choice of the store over an ignored settings file — one place for every worktree, and no copy outside ignored build output. B-058.                                                                                                                                  |
 | A failed poll does not end the stream                               | Both           | Technically an `IObservable` that errors is finished for good. Why it is claimed at all: the grid must not go dead mid-sentence on a venue network. B-029, second half.                                                                                                                                                                                                                                                                                                            |
 | The swap is unobservable from the stream                            | Both           | § 2 need 6: if the pipeline can tell which source is live, the claim the talk is making is false while it is being made. The decorator is the technical shape that buys it. B-038, B-039.                                                                                                                                                                                                                                                                                          |
 | A swapped-out source stops spending                                 | Both           | Credits, and a leak reads as a library bug on a projector. `hot-swap-source` § "Disposal discipline" is the technical half. B-040.                                                                                                                                                                                                                                                                                                                                                 |
@@ -489,6 +526,7 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051                             |
 | `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives                     |
 | `TrackingRegistration`      | [`Tracking/Container/TrackingRegistration.cs`](../../../Tracking/Container/TrackingRegistration.cs) | B-052                                           |
+| `TransporterConfiguration`  | [`Container/TransporterConfiguration.cs`](../../../Container/TransporterConfiguration.cs)           | B-058                                           |
 
 `IOpenSkyApi` carries no suffix, which is B-048 visible in the identifier. Not
 `IOpenSkyApiContract`: "contract" is the pattern's word for the role, not part
@@ -592,6 +630,45 @@ credential reaching a log line and a single options object invites being logged
 whole. The polling interval defaults to fifteen seconds and the bounding box has
 no default compiled in (B-050); `ValidateOnStart` on the credentials is what
 makes B-029's startup failure name the absent one.
+
+**The credentials reach configuration from the user-secrets store, packaged at
+build.** The store is a JSON file in the developer's home directory, keyed by
+the head project's `UserSecretsId`, and its keys are the configuration's own —
+`OpenSky:ClientId`, `OpenSky:ClientSecret` — so nothing maps one name to
+another. The head project packages that file beside `appsettings.json` when it
+exists and packages nothing when it does not; there is no run-time read of the
+home directory, because a sandboxed head cannot make one. `TransporterConfiguration`
+composes the two — the packaged settings, then the store over them — and is in
+`Container/` beside `AddTransporter` rather than in the head for the reason
+that method is: no test project can reference the head, so a layering only the
+head performs is one nothing proves
+([lesson 0014](../../../../../.spec/lessons/0014-a-composition-only-the-head-performs-is-one-nothing-proves.md)).
+The head keeps what only it can do: opening the two packaged assets. The
+provider's `AddUserSecrets` is not used, since it resolves the same
+home-directory path at run time. `OpenSkyCredentials` and its binding are
+untouched: B-058 changes what configuration holds, not who reads it.
+
+Four things about the packaging are true and none of them is a claim, so they
+are written here where the next reader of the head project will look:
+
+- **A build after the store is removed must take the copy out.** A resource
+  that leaves a project stays in a bundle already built, so "packages nothing"
+  is owed a second step: the head project deletes the bundle's copy when the
+  store is gone. That step hangs on two names the Apple SDK keeps private, and
+  an SDK that renames either leaves a stale copy being read until the output
+  is cleaned. A copy already installed on a simulator or a device is not
+  reached at all; reinstalling is what removes it.
+- **The store's path is the one the tool uses on macOS**, the only platform
+  that builds a head. A Windows head would need the tool's other path.
+- **Every configuration packages it**, Release and a publish included. Nothing
+  in the build tells a rehearsal bundle from one about to be handed to
+  somebody, which is why § 5 row 19 is a rule for whoever holds the machine
+  and not one the build enforces.
+- **The copy is in the working tree after a build**, under the head's output
+  directory, in every worktree that built one. Git ignores that directory, and
+  ignores a file named `secrets.json` wherever it is, which is what keeps § 4
+  row 12's "never committed" from depending on nobody placing one beside
+  `appsettings.json`.
 
 The projection is a Mapperly mapper with `RequiredMappingStrategy.Both`, so a
 forgotten member is a build error rather than a silent default, and with
@@ -939,14 +1016,15 @@ clause names.
 **Scenarios**
 
 Full Gherkin lives in [`aircraft-source.feature`](aircraft-source.feature)
-beside this file — fifty-four scenarios, each tagged with the `@B-00n` it
+beside this file — fifty-seven scenarios, each tagged with the `@B-00n` it
 proves. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
 - Happy path → B-001 – B-003, B-005, B-008, B-011, B-012, B-015, B-016,
   B-019, B-020, B-023 – B-025, B-027, B-030 – B-035, B-038, B-039, B-041,
-  B-042, B-050, B-052, B-054, B-056, B-057
-- Failure mode → B-022, B-026 – B-029, B-040, B-043, B-051, B-053, B-055
+  B-042, B-050, B-052, B-054, B-056 – B-058
+- Failure mode → B-022, B-026 – B-029, B-040, B-043, B-051, B-053, B-055,
+  B-058
 - Validation failure → B-004, B-006, B-007, B-009, B-013, B-014, B-017,
   B-021, B-036, B-037, B-044 – B-049
 - Data-driven → B-018 – B-020, B-022, B-035
@@ -954,8 +1032,9 @@ diagnostics are what execute.
 Ten claims carry two scenarios each, because each states two things a single
 scenario would have had to prove at once — B-026's expiry and its `401`,
 B-028's deferral and its every-other-status clause, B-051's marking and its
-threshold. § 9 still gives each claim exactly one row; the row's tag anchors
-both scenarios.
+threshold. B-058 carries three: its store, its absence, and a setting both
+documents name, which is the only case in which "over" can be read. § 9 still
+gives each claim exactly one row; the row's tag anchors every scenario under it.
 
 **What `0068` and `0080` will prove, planned 2026-10-09.**
 
@@ -982,6 +1061,25 @@ both scenarios.
   no recording answers one target. That the seam carries no name is B-037's
   analyzer rule, already in force, not re-tested here.
 
+**What `0086` proves, and what it cannot.** B-058 is proven where the layering
+is composed: `TransporterConfiguration` is handed two streams a test writes —
+the packaged settings, and a store in the flat shape `dotnet user-secrets`
+writes — and what is asserted is what `OpenSkyCredentials` binds from the
+result, since that binding is the only reader a credential has. A third case
+hands it a store naming a setting the packaged document names too, because the
+first two share no key and pass with the layers in either order. Every value is
+synthetic (§ 4 row 12), and each is written once in the fixture the documents
+are composed from. None of it proves the half only the head can perform, and
+that half is two things. **That the head project packages the store when it
+exists and nothing when it does not** is a **Review** of a built bundle,
+performed on `0086` for the Mac Catalyst head. **That the running head finds
+the packaged store and a credential in it reaches the provider** is a launch,
+and no test project can reference the head to make it a test. It was not
+performed on `0086`: a launch polls the live provider, which a delivering
+session does not do, and no credential was in the store. So B-058's § 9 row
+reads `Missing` and names the launch, which the person can perform now that
+the credentials exist (root lesson 0011).
+
 **What the tests need before any of them can be written**
 
 `transporter-conventions` mandates AwesomeAssertions, NSubstitute and
@@ -1000,9 +1098,10 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and four of the fifty-six rows read `Missing`** — B-041's
-"what view models depend on" half, owed by `fleet-dashboard` `0039`, and B-054
-– B-056, added on 2026-10-08 and cut into `0068`.
+**This is the gate, and five of the fifty-seven rows read `Missing`** — B-041's
+"what view models depend on" half, owed by `fleet-dashboard` `0039`, B-054
+– B-056, added on 2026-10-08 and cut into `0068`, and B-058, whose tests pass
+and whose head has not been launched beside a store.
 Fifty-two are `Verified`, and they arrived three different ways.
 Thirty-five came from
 items: `0002` built the contract, its envelope, the positional row's converter
@@ -1053,7 +1152,7 @@ that builds the subject (lesson 0011).
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
 retitled scenario does not silently orphan a row. Ten claims carry two
-scenarios; the tag anchors both.
+scenarios and B-058 three; the tag anchors all of them.
 
 Three kinds of entry appear in Test. An **xUnit test** proves a computed value.
 An **analyzer diagnostic** proves a claim about what may name what — the
@@ -1064,7 +1163,8 @@ eighteen of its rules exist and report, so no row here is waiting on one.
 A **review** proves a claim that constrains code the repository does not yet
 contain, where there is no value to compute and no declaration to analyze; § 8
 says why those two claims take neither of the other mechanisms. It appears
-twice. A review is a mechanism and it can be performed: **Review** in a row
+twice — and a third time in B-058's row for another reason: the head project
+is code the repository does contain and no test project can reference. A review is a mechanism and it can be performed: **Review** in a row
 reading `Verified` records what was looked at, on which item, and what change
 re-does it — the form `boundary-analyzer` § 9 uses for its four. A review that
 cannot be performed yet leaves the row `Missing` and names what is absent, which
@@ -1128,11 +1228,13 @@ is B-049 and the clause waiting on `0005`.
 | B-055    | `@B-055` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `AircraftPollStatusTests.GivenAThrottledPoll_WhenItIsHandled_ThenARefusalOfItsSecondsIsReportedAndNextDueIsExactlyThatLater`, with the clearing case beside it                                                                                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
 | B-056    | `@B-056` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `SwappingTrackerSourceTests.GivenTwoStrategiesWithStatuses_WhenTheSourceSwaps_ThenTheIncomingStatusIsReadAtOnceAndNothingOutgoingFollows`                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
 | B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's row                                                                                                                                                                                                                                                   | Verified |
+| B-058    | `@B-058` | `TransporterConfigurationTests.GivenAUserSecretsStoreHoldingTheCredentials_WhenTheConfigurationIsComposed_ThenTheCredentialsAreTheStoresAndNoOtherSettingChanges`, `…GivenAUserSecretsStoreNamingASettingThePackagedSettingsName_WhenTheConfigurationIsComposed_ThenTheSettingIsTheStores` and `…GivenNoUserSecretsStore_WhenTheConfigurationIsComposed_ThenItIsThePackagedSettingsAndNoCredentialIsConfigured`. **Review** on `0086`: the Mac Catalyst bundle held `secrets.json` beside a synthetic store, none without; iOS not built. **Absent: a launch** (§ 8). Re-done by a change to `Gui.csproj`, `MauiProgram.Settings()` or the Apple workload      | Missing  |
 
-Fifty-six rows, fifty-six live claims, each appearing once — B-010 is
+Fifty-seven rows, fifty-seven live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
-only place a claim's build state is written, and four of its rows still say
-their claim is not proven: B-054 – B-056 wait on `0068`, and B-041 does not wait
+only place a claim's build state is written, and five of its rows still say
+their claim is not proven: B-054 – B-056 wait on `0068`, B-058 waits on one
+launch of the head beside the store, and B-041 does not wait
 on a mechanism: the analyzer is complete, and
 B-041's remaining half waits on `fleet-dashboard` `0039` building the view model
 whose dependencies it is about. The Feature cannot reach `done` until it does.
@@ -1141,7 +1243,7 @@ whose dependencies it is about. The Feature cannot reach `done` until it does.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 10 -->
 
-Five Feature-scoped lessons.
+Six Feature-scoped lessons.
 [Lessons 0001](lessons/0001-a-claim-needs-a-subject-that-can-satisfy-it.md) is
 § 11 row 2: B-026 – B-028 named the snapshot client for behaviour only the
 holder of the HTTP response can perform, so no component could satisfy them as
@@ -1166,6 +1268,31 @@ is `0080`'s four messages: a skill said a message is declared beside its actor,
 a convention said a message a consumer tells lives in `Messages/`, and the
 design followed the first into a namespace the analyzer forbids a view model to
 name — found by a re-read of the Feature that was about to name them.
+[Lessons 0006](lessons/0006-a-constraint-nobody-claims-is-a-rule-nothing-builds.md)
+is `0086`'s credentials: § 4 row 12 said where they come from, no claim made
+anything read them, and two exclusions pointed past the gap — so every row a
+credential touches read `Verified` on an application that could not be given
+one.
+
+**Delta, 2026-10-09 — B-058 is added, and § 4 row 12 gains a claim under it.**
+Trigger: bug `0086`. The application's configuration is now claimed to be its
+packaged settings with the developer's user-secrets store layered over them;
+§ 5 row 19 excludes distributing a bundle built beside a store; § 6 and § 7
+say why the store is packaged at build. B-029 is unamended: it still says what
+an absent credential does.
+
+**Delta, 2026-10-09 — B-058 loses a sentence and gains a clause, on the
+`spec-reviewer`'s read.** As first written it ended "No credential SHALL be
+read from a file in the repository", which nothing proved and which is false
+of the working tree: the build copies the store into the head's output
+directory, and the head reads that copy. The sentence is gone; § 4 row 12
+already says a credential is never committed, § 7 says what keeps the copy
+uncommitted, and `.gitignore` now names `secrets.json`. The clause it gains is
+"a setting the store names takes the store's value" — the layering order, which
+the first two scenarios could not tell from its reverse, and which a third now
+reads. `0047`'s second decision is reversed in part, recorded in § 3 and in
+decision 0004. B-058's § 9 row went from `Verified` to `Missing`: its tests
+pass and no head has been launched beside a store.
 
 **Delta, 2026-10-05 — B-010 is withdrawn, and the analyzer loses a rule with
 it.** Trigger: `0004` reached the first test above the contract, which is where
@@ -1335,10 +1462,10 @@ instance of it is.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 11 -->
 
-One open, of six asked. The first two were opened by § 7, the third by § 8,
+Two open, of seven asked. The first two were opened by § 7, the third by § 8,
 the fourth by review of pull request #1, the fifth by `0002` running out of
-ways to reach `done`, and the sixth by running the application against a
-recording; writing a section surfaces a question, reading the code it produced
+ways to reach `done`, the sixth by running the application against a
+recording, and the seventh by reading the head on `0086`; writing a section surfaces a question, reading the code it produced
 surfaces another, and so does an item whose last two rows name no test anything
 can write, or a grid that fills only when two registration lines trade places.
 The first five have been answered and moved to the paragraphs below. Their
@@ -1348,6 +1475,7 @@ at the question it meant.
 | #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Owner      | Target date |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------- |
 | 6   | **Which registered strategy is live when the application starts?** Nothing decides it today: `SwappingTrackerSource` begins on the first `ITrackerSourceStrategy` the container hands it, so the starting source is whichever registration `TransporterRegistration` makes first — live OpenSky, by an order nobody recorded. Surfaced 2026-10-07, when the only way to watch `0052`'s generated recording run in the head was to put `AddAircraftReplay` before `AddOpenSky`: a local edit, never committed, because `replay-source` B-015 and its `adr/0001` item 3 say nothing but the selector decides whether replay is live, and an order that decides it is a second selector hiding in the composition root. Three readings to weigh. **(a)** Live first, as now, but stated in B-038 — a visitor with no credential sees an empty grid until `fleet-dashboard` `0039`'s control exists. **(b)** Replay first whenever a recording is registered, so a clone runs from the sample with no account — at the cost of the presenter opening on a recording and swapping to live on stage, and of configuration deciding what is live by deciding what is registered. **(c)** An explicit starting choice handed to the decorator by the composition root, so neither order nor configuration carries it and the choice is one line a reader finds. Whichever is chosen, B-038 gains the sentence, `0039` reads it before the control is designed, and `0061`'s fix knows whether an unregistered replay source changes what starts. | the person | 2026-10-14  |
+| 7   | **Does B-029's startup failure happen in the application, or only in the host its test builds?** `AddOpenSky` registers the credentials with `ValidateOnStart`, which is run by a generic host's start. The head builds a `MauiApp`, which starts no generic host: the Akka host it adds runs as a MAUI initialize service, and nothing in either calls the start-up validators. Read from the code on `0086`, not observed in a run — launching the head polls the live provider, and no credential was held to launch with. If the reading is right, an absent credential does not stop the head: the validator runs when the token source first reads the options, inside a poll, and B-029's own second clause keeps that failure off the stream, so the presenter sees an empty fleet and no message. B-058 makes the case rarer and does not close it. Three readings. **(a)** The head calls the validators itself before the window is built, so B-029 holds as written. **(b)** B-029 is reworded to what happens — the first poll fails and the page says why — which needs `fleet-dashboard` to show it. **(c)** It stays as it is, and § 5 says a missing credential is found at rehearsal. Two things the answer owes: B-029's § 9 row reads `Verified` beside this doubt, and `0047`'s criterion that the application starts with no exception against configuration carrying no credential cannot hold together with B-029 as written.                                                                                    | the person | 2026-10-16  |
 
 **Row 4 — answered: B-010 is withdrawn, both halves.** The question asked
 whether a substitute may stand in at the contract seam. The person asked the
@@ -1428,11 +1556,11 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status      |
-| -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟢 Approved |
+| Sections | Owner       | Status   |
+| -------- | ----------- | -------- |
+| §§ 1-5   | spec-author | 🟡 Draft |
+| §§ 6-7   | implementer | 🟡 Draft |
+| §§ 8-9   | test-writer | 🟡 Draft |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
@@ -1575,6 +1703,49 @@ is `approved`. § 9 still has five `Missing` rows — B-041 and B-054 – B-057 
 which block those items reaching `done`, not this agreement (lesson 0007). A
 change to a signed section lowers its row again.
 
+**Reopened 2026-10-09, by bug `0086`.** B-058 was added, with § 5 row 19, a
+§ 6 row, a § 7 paragraph and type-table row, a § 8 paragraph and a § 9 row, so
+the agreement above was given to text that has since changed. All three rows
+are 🟡 and `spec_status` is `in-review`. What is owed is a `spec-reviewer`
+read of B-058 and its two scenarios against § 4 row 12, § 5 rows 15 and 19,
+B-027 and B-029, `0047`'s second decision, and the head project that packages
+the store; then the person's agreement. Until then no other item of this
+Feature moves to `in-progress` — `0068` is the one waiting — and `0086`, taken
+while the rows were 🟢, does not reach `done`.
+
+**Read 2026-10-09 by an independent `spec-reviewer` — all three rows held at
+🟡.** A reader who wrote none of it, handed the text and the code and not the
+author's conclusion. By reading: it ran no build. Eleven findings, five of
+them blocking, each answered on `0086` the same day:
+
+1. **§§ 1-5 — B-058's last sentence was unproven and false of the working
+   tree.** Removed; § 10's second delta says where its substance went.
+2. **§§ 8-9 — no scenario or test fixed the layering order.** A third
+   scenario and a third test name one setting in both documents; with the
+   layers reversed that test fails and the other two pass.
+3. **§§ 8-9 — the row read `Verified` on a head never launched.** It reads
+   `Missing` and names the launch.
+4. **§§ 1-5 — B-058 reverses part of `0047`'s second decision and nothing
+   said so.** § 3 says so, with decision 0004 and a dated entry on the item.
+5. **§§ 6-7 — § 7 left out the stale-copy removal, the macOS-only path, and
+   that every configuration packages the store.** § 7 states all three, and
+   that the copy is in the working tree.
+
+The six that did not block: § 5 row 15 now points at B-058; the § 9 and § 11
+counts this change left stale are recounted, and B-058 is its own group in
+§ 3; `0001` lists B-058; the tests hold arrangement out of `// Then` and read
+every expected value from the fixture that wrote it; the bare "lesson 0006"
+now says whose; § 11 row 7 carries the two consequences the reader drew; and
+the runbook no longer offers environment variables.
+
+**What is owed before any row is 🟢:** a read of these answers by a reader who
+did not write them, and then the person's agreement. Three things in them are
+the person's to decide and were not decided here: whether the store may name
+any setting or only the two credentials (§ 3); whether lesson 0006 binds every
+Feature and belongs at the root; and § 11 row 7. B-058's row is `Missing`
+until the head is launched beside the store, which blocks `0086` reaching
+`done` and not this agreement (lesson 0007).
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
@@ -1582,6 +1753,7 @@ change to a signed section lowers its row again.
 - [0001 — Houston is the bounding box, and the interval starts at 15 seconds](decisions/0001-houston-bounding-box.md) — decided
 - [0002 — A busy indicator covers the swap, then the new fleet arrives](decisions/0002-busy-indicator-on-swap.md) — decided
 - [0003 — The demo gets a refresh button, throttled at the poll interval](decisions/0003-a-refresh-is-throttled-at-the-poll-interval.md) — decided
+- [0004 — The credentials live in the user-secrets store, packaged at build](decisions/0004-the-credentials-live-in-the-user-secrets-store.md) — decided
 
 The layering this specification is written against is a cross-cutting technical
 decision rather than a product call, so it is recorded in the repository-wide
@@ -1631,7 +1803,7 @@ branch, 300 of 300. `spec_status` is `approved` again.
 
 | Item                                                        | Claims                                                  |
 | ----------------------------------------------------------- | ------------------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)                | all 57 — the parent; its children hold the work         |
+| [`0001`](../.issue/0001-aircraft-source.yml)                | all 58 — the parent; its children hold the work         |
 | [`0002`](../.issue/0002-opensky-api-contract.yml)           | B-001, B-002, B-004 – B-010, B-048                      |
 | [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml)    | B-011 – B-014, B-030 – B-032                            |
 | [`0004`](../.issue/0004-aircraft-snapshot-client.yml)       | B-003, B-015 – B-029, B-045, B-050                      |
@@ -1642,6 +1814,7 @@ branch, 300 of 300. `spec_status` is `approved` again.
 | [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056                                           |
 | [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                                   |
 | [`0085`](../.issue/0085-swap-messages-in-messages.yml)      | none — a bug that moves four types and changes no claim |
+| [`0086`](../.issue/0086-credentials-from-user-secrets.yml)  | B-058                                                   |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
 because the children are slices of it rather than work beside it. `0002` keeps
@@ -1678,6 +1851,11 @@ moves them to `Messages/` and preserves B-057 and B-041 as written, so the
 sentence above still holds — every claim is carried by exactly one child — and
 `0001` still reads 57.
 
+**B-058 was cut into `0086` on 2026-10-09.** It is a bug, and unlike `0085`
+it carries a claim: the item came first, as an observation that the head reads
+no credential, and the claim is the specification delta it produced. `0001`
+reads 58.
+
 Each item's `depends_on` sequences the work: `0002` and `0003` have no
 prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 `0007` wait on `0005`.
@@ -1710,6 +1888,8 @@ prerequisite, `0004` waits on both, `0005` waits on `0004`, and `0006` and
 | 2026-10-05 | `0004` | risk  | 3, unchanged, and the sentence that said this item's claim list may still change is spent: § 11 row 2 answered it and row 4 answered the last open question. The four hazards the row above names are untouched. What B-010's withdrawal removes is work rather than risk — the response queue and recorded-calls list this item would have had to add to the fake, each a piece of double behaviour fifteen claims would have rested on.                                                                                                                                                                                                                                                                                                   |
 | 2026-10-08 | `0068` | value | 3. A presenter who cannot see a 429 believes the feed stopped; this is the half of the throttle display only the poller can supply.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-10-08 | `0068` | risk  | 3. The due instant must come from the poller's scheduler, not the wall clock, and a refusal must stay data rather than a fault — both pass a careless test.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2026-10-09 | `0086` | value | 4. Without it the live source can only answer `401`, so the half of the talk that is live aircraft has nothing to show; one below `0001` because the recording still runs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2026-10-09 | `0086` | risk  | 2. One hazard, and it is the one § 4 row 12 exists for: a change that makes a credential easy to supply makes it easy to commit. The store being outside what git tracks is the whole mitigation, and § 4 row 12 is what a reviewer holds it to.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 Why `0001` carries a `value` and no child does: a child omits it to inherit the
 parent's, and `risk` is never inherited. The derivation of `priority` and `rank`

@@ -344,6 +344,9 @@ test/**/coverage.json
 # App Settings
 appsettings.*.json
 
+# The user-secrets store, should a copy ever be placed in the tree (aircraft-source § 4 row 12)
+secrets.json
+
 # skillfile
 .skillfile/cache/
 .skillfile/conflict

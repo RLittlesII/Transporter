@@ -24,6 +24,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
+        <!-- Where the user-secrets tool writes for this id on macOS, the only platform that
+             builds a head. -->
+        <UserSecretsId>transporter-gui</UserSecretsId>
+        <UserSecretsStore>$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))/.microsoft/usersecrets/$(UserSecretsId)/secrets.json</UserSecretsStore>
+
         <!-- The XAML source generator emits a __Type<hash> class per ResourceDictionary with no XML
              documentation (CS1591). The warning only surfaces because GenerateDocumentationFile is on
              for the analyzer's sake, there is no source here to document, and an .editorconfig
@@ -78,7 +83,20 @@
 
         <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)"/>
+
+        <!-- The developer's user-secrets store, packaged beside appsettings.json when there is
+             one (aircraft-source B-058). It is read at build because a sandboxed head cannot
+             open the home directory at run time. A bundle built beside a store holds the
+             secret: never distribute one. -->
+        <MauiAsset Include="$(UserSecretsStore)" LogicalName="secrets.json" Condition="Exists('$(UserSecretsStore)')"/>
     </ItemGroup>
+
+    <!-- A resource that leaves the project stays in a bundle already built, so a store removed
+         since the last build would go on being read. Both names are the Apple SDK's own; if
+         either goes, this stops running and the bundle keeps its copy until it is cleaned. -->
+    <Target Name="RemoveStaleUserSecrets" AfterTargets="_CopyResourcesToBundle" Condition="'$(_AppResourcesPath)' != '' And !Exists('$(UserSecretsStore)')">
+        <Delete Files="$(_AppResourcesPath)secrets.json"/>
+    </Target>
 
     <ItemGroup>
         <PackageReference Include="Akka.Hosting.Maui" />

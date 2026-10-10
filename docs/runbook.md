@@ -21,6 +21,12 @@ this file is the order to do them in.
 - **Verify every credential** — the polled provider's client id and secret, and
   the push provider's key for the closing act. An expired key discovered
   mid-sentence is the worst possible time.
+- **Build the head on the machine that holds the secret store.** The polled
+  provider's credentials are packaged into the bundle when it is built
+  (`README.md` § "Authentication"), so a bundle built elsewhere, or before the
+  store was set, has none — and one built here is never copied off the machine.
+  Setting, checking and rotating the store is
+  [`credentials.md`](credentials.md).
 - **Record replay data in rehearsal**, aircraft _and_ vessels
   ([`features/replay-source`](../features/replay-source/.spec/README.md)).
   Record long enough that items go stale on playback, or the staleness part of
@@ -41,8 +47,8 @@ this file is the order to do them in.
 - **Have replay one control away, not one rebuild away.** It is the same source
   selector as the live swap
   ([`hot-swap-source`](../.skills/hot-swap-source/SKILL.md)).
-- **Keep credential values off screen.** Secrets come from user secrets or
-  environment variables, and a shared screen is a screenshot.
+- **Keep credential values off screen.** Secrets come from the user-secrets
+  store, and a shared screen is a screenshot.
 
 ## The closing act
 

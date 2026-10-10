@@ -52,12 +52,15 @@ public static class MauiProgram
         return builder.Build();
     }
 
-    // The settings packaged beside the application: the base URL, the poll interval and the box,
-    // and no credential, so the application starts and a poll needing one fails instead (0047).
+    // The settings packaged beside the application carry no credential (0047). The developer's
+    // user-secrets store is packaged beside them only when the build found one (B-058).
     private static IConfiguration Settings()
     {
         using var settings = FileSystem.OpenAppPackageFileAsync("appsettings.json").GetAwaiter().GetResult();
+        using var secrets = FileSystem.AppPackageFileExistsAsync("secrets.json").GetAwaiter().GetResult()
+            ? FileSystem.OpenAppPackageFileAsync("secrets.json").GetAwaiter().GetResult()
+            : null;
 
-        return new ConfigurationBuilder().AddJsonStream(settings).Build();
+        return TransporterConfiguration.Compose(settings, secrets);
     }
 }
