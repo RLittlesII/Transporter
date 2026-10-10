@@ -2,7 +2,7 @@
 title: "Specification: Aircraft source"
 description: "Poll OpenSky through a typed API contract, cache snapshots per client, project them to domain vehicles in a per-type strategy, and swap strategies behind a decorator the fleet tracker wraps."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Aircraft source
@@ -480,11 +480,11 @@ rather than a declaration, and a stale name in one is something grep finds.
 | `AircraftSnapshotMapper`    | [`Tracking/Sources/AircraftSnapshotMapper.cs`](../../../Tracking/Sources/AircraftSnapshotMapper.cs) | B-034 – B-037, B-046                            |
 | `SwappingTrackerSource`     | [`Tracking/Sources/SwappingTrackerSource.cs`](../../../Tracking/Sources/SwappingTrackerSource.cs)   | B-038 – B-040                                   |
 | `SourceSwapActor`           | [`Tracking/Sources/SourceSwapActor.cs`](../../../Tracking/Sources/SourceSwapActor.cs)               | `fleet-dashboard` B-016's half; B-057; ADR-0015 |
-| `SwapSource`                | [`Tracking/Sources/SwapSource.cs`](../../../Tracking/Sources/SwapSource.cs)                         | B-057, the handle carried back                  |
+| `SwapSource`                | [`Messages/SwapSource.cs`](../../../Messages/SwapSource.cs)                                         | B-057, the handle carried back                  |
 | `TrackerSourceEntry`        | [`Tracking/Sources/TrackerSourceEntry.cs`](../../../Tracking/Sources/TrackerSourceEntry.cs)         | B-057, registration's name                      |
-| `GetSwapTargets`            | [`Tracking/Sources/GetSwapTargets.cs`](../../../Tracking/Sources/GetSwapTargets.cs)                 | B-057, asked once                               |
-| `SwapTargets`               | [`Tracking/Sources/SwapTargets.cs`](../../../Tracking/Sources/SwapTargets.cs)                       | B-057, in registration order                    |
-| `SwapTarget`                | [`Tracking/Sources/SwapTarget.cs`](../../../Tracking/Sources/SwapTarget.cs)                         | B-057, a name and a handle                      |
+| `GetSwapTargets`            | [`Messages/GetSwapTargets.cs`](../../../Messages/GetSwapTargets.cs)                                 | B-057, asked once                               |
+| `SwapTargets`               | [`Messages/SwapTargets.cs`](../../../Messages/SwapTargets.cs)                                       | B-057, in registration order                    |
+| `SwapTarget`                | [`Messages/SwapTarget.cs`](../../../Messages/SwapTarget.cs)                                         | B-057, a name and a handle                      |
 | `IFleetTracker`             | [`Tracking/IFleetTracker.cs`](../../../Tracking/IFleetTracker.cs)                                   | B-041, B-051                                    |
 | `FleetTracker`              | [`Tracking/FleetTracker.cs`](../../../Tracking/FleetTracker.cs)                                     | B-042, B-043, B-051                             |
 | `TrackedVehicle`            | [`Tracking/TrackedVehicle.cs`](../../../Tracking/TrackedVehicle.cs)                                 | B-051, where the mark lives                     |
@@ -873,6 +873,15 @@ force — and left this § 7 the writer and the selection.
   The list is fixed for a run, because registration is, so it is asked for and
   not subscribed to. Nothing here says which target is live; the picker starts
   on the first, which `replay-source` B-028 makes the live source.
+- **The four messages are declared in `Messages/`, not beside the actor.**
+  `GetSwapTargets`, `SwapTargets`, `SwapTarget` and `SwapSource` are in
+  `Transporter.Messages`, where `DemandPoll` is, because a view model names
+  each of them and `TRN0006` reports a view model that names a class under
+  `Tracking` the seam does not publish (B-041). `0080` built them in
+  `Tracking/Sources/`; `0085` moved them, and
+  [lesson 0005](lessons/0005-a-message-declared-beside-its-receiver-is-one-its-sender-cannot-name.md)
+  says why they started there. `SourceSwapActor` and `TrackerSourceEntry` stay
+  where they are: nothing above the tracker names either.
 
 Rejected: the tracker re-publishing the targets, which the person declined on
 2026-10-09 because it reopens `fleet-pipeline` for a value that never changes;
@@ -1123,7 +1132,7 @@ whose dependencies it is about. The Feature cannot reach `done` until it does.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 10 -->
 
-Four Feature-scoped lessons.
+Five Feature-scoped lessons.
 [Lessons 0001](lessons/0001-a-claim-needs-a-subject-that-can-satisfy-it.md) is
 § 11 row 2: B-026 – B-028 named the snapshot client for behaviour only the
 holder of the HTTP response can perform, so no component could satisfy them as
@@ -1143,6 +1152,11 @@ is `0005`'s projection: `ToKey` was written for one member and Mapperly applied
 it to every string on the snapshot, so the origin country was lowercased too —
 a wrong value that renders as plausible data, under a clean build and a passing
 test for the member the method was written for.
+[Lessons 0005](lessons/0005-a-message-declared-beside-its-receiver-is-one-its-sender-cannot-name.md)
+is `0080`'s four messages: a skill said a message is declared beside its actor,
+a convention said a message a consumer tells lives in `Messages/`, and the
+design followed the first into a namespace the analyzer forbids a view model to
+name — found by a re-read of the Feature that was about to name them.
 
 **Delta, 2026-10-05 — B-010 is withdrawn, and the analyzer loses a rule with
 it.** Trigger: `0004` reached the first test above the contract, which is where
@@ -1408,7 +1422,7 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 6-7   | implementer | 🟡 Draft    |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
@@ -1569,6 +1583,14 @@ neither here nor in this Feature's `adr/`. The seam B-054 and B-055 report on
 is
 [ADR-0013](../../../../../.spec/adr/0013-a-read-side-seam-carries-a-sources-poll-status.md),
 for the same reason.
+
+**§§ 6-7 reopened 2026-10-09, for `0085`.** § 7 changed after its approval: its
+type table now gives `SwapSource`, `GetSwapTargets`, `SwapTargets` and
+`SwapTarget` under `Messages/`, and the swap actor's design gained the bullet
+that says why. An approval does not carry over to text written after it
+(root lesson 0023), so the row is 🟡 until that text is read. No claim changed
+and §§ 1-5 and §§ 8-9 were not touched, so those rows stand. `0085` was already
+`in-progress` when the row was lowered, and it is the item that lowered it.
 
 ## Tasks
 

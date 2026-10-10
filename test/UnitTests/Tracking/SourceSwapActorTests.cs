@@ -13,6 +13,7 @@ using Rocket.Surgery.Airframe;
 using Transporter.Container;
 using Transporter.Integrations.OpenSky;
 using Transporter.Integrations.OpenSky.Container;
+using Transporter.Messages;
 using Transporter.Model;
 using Transporter.Tracking;
 using Transporter.Tracking.Container;

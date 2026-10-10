@@ -384,7 +384,11 @@ model's dependencies to say so.
 
 `aircraft-source` § 7 designed the actor's half: `SourceSwapActor` answers
 `GetSwapTargets` with `SwapTargets`, a list of `SwapTarget` — a name and an
-opaque handle — and `SwapSource` carries one. This is the view model's half.
+opaque handle — and `SwapSource` carries one. All four are declared in
+`Transporter.Messages`, which is where a view model may name them:
+`aircraft-source` `0085` moved them out of `Tracking/Sources/`, where `TRN0006`
+would have reported this design (§ 12, finding 12). This is the view model's
+half.
 
 - **Asked once, at construction, with its timeout.** `FleetViewModel` resolves
   the swap actor from `IActorRegistry`, the way the refresh resolves its

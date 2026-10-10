@@ -1,4 +1,4 @@
-namespace Transporter.Tracking.Sources;
+namespace Transporter.Messages;
 
 /// <summary>One thing a swap can select: a name to show, and the handle <see cref="SwapSource"/> carries back (B-057).</summary>
 /// <param name="Name">The name the strategy's registration gave it.</param>

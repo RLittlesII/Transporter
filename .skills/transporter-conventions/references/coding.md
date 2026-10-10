@@ -112,7 +112,8 @@ it. The traps:
   and the replay source all consume that layer, so filing it under one of them
   would make the other two reach into a sibling Feature's folder — the same
   reason integrations are not under `Features/` either.
-- **A message a consumer tells an actor lives in `src/Transporter/Messages/`.**
+- **A message a consumer tells an actor lives in `src/Transporter/Messages/`,
+  and so does one it asks, the answer, and every type the answer carries.**
   Not in the integration that receives it — a view model naming
   `Transporter.Integrations.OpenSky.Polling.PollAircraft` puts a provider's name
   on a surface that must survive the provider being swapped. Not in `Tracking/`
