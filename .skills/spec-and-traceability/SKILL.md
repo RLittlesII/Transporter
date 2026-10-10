@@ -186,6 +186,14 @@ not hold that, so the prose has to, or it leaves with the paste.
   test exists. A list kept for a reviewer belongs in the pull request, which is
   read once and then stays where it was
   ([lesson 0025](../../.spec/lessons/0025-a-test-plan-in-the-spec-is-the-test-file-twice.md)).
+- **A constraint that obliges the code to do something has a claim under it.**
+  A constraint row says what is ruled out, and nothing is ever built, tested or
+  reported missing because of one. Where a row also says where a thing comes
+  from, what is read, or what must be present, that half is an obligation, and
+  only a claim gives it a scenario, a matrix row and an item. The signal is an
+  exclusion that names a gap and routes it to nobody: "nothing here does X"
+  with no owner beside it is a claim not yet written
+  ([lesson 0006](../../src/Transporter/Integrations/OpenSky/.spec/lessons/0006-a-constraint-nobody-claims-is-a-rule-nothing-builds.md)).
 - **A mechanism classifies by what the claim names, not by where today's one
   instance lives.** A folder, a namespace or a name suffix is a proxy that holds
   until a second instance arrives, and the mechanism then reports work the claim
