@@ -220,12 +220,20 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And the message does not contain the value of any credential that was configured
 
   @B-058
-  Scenario: A credential in the developer's secret store reaches the live transport
+  Scenario: A credential in the developer's secret store is the one the application binds
     Given packaged settings that carry a base URL, an interval and a box, and no credential
       And a user-secrets store holding an OpenSky client id and a client secret
      When the application composes its configuration
      Then the OpenSky credentials it binds are the store's
       And the base URL, the interval and the box are the packaged ones
+
+  @B-058
+  Scenario: A setting both documents name takes the secret store's value
+    Given packaged settings that carry a base URL, an interval and a box
+      And a user-secrets store naming a different base URL
+     When the application composes its configuration
+     Then the base URL it binds is the store's
+      And the interval and the box are the packaged ones
 
   @B-058
   Scenario: With no secret store the configuration is the packaged settings

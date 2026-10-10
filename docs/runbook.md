@@ -45,8 +45,8 @@ this file is the order to do them in.
 - **Have replay one control away, not one rebuild away.** It is the same source
   selector as the live swap
   ([`hot-swap-source`](../.skills/hot-swap-source/SKILL.md)).
-- **Keep credential values off screen.** Secrets come from user secrets or
-  environment variables, and a shared screen is a screenshot.
+- **Keep credential values off screen.** Secrets come from the user-secrets
+  store, and a shared screen is a screenshot.
 
 ## The closing act
 

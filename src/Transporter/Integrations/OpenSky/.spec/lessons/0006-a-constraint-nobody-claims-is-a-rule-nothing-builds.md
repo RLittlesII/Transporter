@@ -52,9 +52,11 @@ read at run. § 4 row 12 stands as written, and now has a claim under it.
 
 - B-058 —
   `TransporterConfigurationTests.GivenAUserSecretsStoreHoldingTheCredentials_WhenTheConfigurationIsComposed_ThenTheCredentialsAreTheStoresAndNoOtherSettingChanges`
+  `TransporterConfigurationTests.GivenAUserSecretsStoreNamingASettingThePackagedSettingsName_WhenTheConfigurationIsComposed_ThenTheSettingIsTheStores`
   and
   `TransporterConfigurationTests.GivenNoUserSecretsStore_WhenTheConfigurationIsComposed_ThenItIsThePackagedSettingsAndNoCredentialIsConfigured`.
-  The packaging half is a review, recorded on B-058's § 9 row.
+  The packaging half is a review, recorded on B-058's § 9 row, which reads
+  `Missing` until the head is launched beside a store.
 
 ## Skill
 
