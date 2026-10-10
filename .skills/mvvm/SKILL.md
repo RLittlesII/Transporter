@@ -90,7 +90,7 @@ subject, which is a second place the gesture lives.
 
 ```csharp
 SwapCommand = RxCommand
-    .Create(() => registry.Get<SourceActor>().Tell(new SwapSource(selected)), outputScheduler: schedulers.UserInterfaceThread)
+    .Create(() => registry.Get<SwapSource>().Tell(SwapSource.To(selected)), outputScheduler: schedulers.UserInterfaceThread)
     .DisposeWith(_garbage);
 
 _isSwapping = SwapCommand.Select(...).Switch().AsValue(…); // the command is the stream

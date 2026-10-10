@@ -75,6 +75,10 @@ The division matters more than the syntax:
         registry.AddThingActors(system, resolver))
     ```
 
+- **An actor another layer resolves is registered under the message that
+  layer tells it, not under its own class** — `registry.Register<DoThing>(…)`
+  — so the caller names a message and never the actor. The actor's class is a
+  key only for an actor nothing outside its layer resolves.
 - View models take `IActorRegistry` and resolve from it. **Every `Ask<T>`
   carries an explicit timeout**; an `Ask` with no timeout is a hang waiting for
   a bad network.

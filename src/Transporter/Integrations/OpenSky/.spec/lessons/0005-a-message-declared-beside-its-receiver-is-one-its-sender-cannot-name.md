@@ -41,17 +41,28 @@ so the convention's sentence, read literally, covers `SwapSource` alone.
 ## Spec delta
 
 § 7's type table gives the four files under `Messages/`, and the swap actor's
-design says where its messages are declared and why. `fleet-dashboard` § 7 says
-where the view model reads them. No claim changed: B-057 is what the actor
-answers and B-041 is what a view model may depend on, and both read as they
-did.
+design says where its messages are declared and why. It also says the actor is
+registered under `SwapSource`: the move's own review found the registration
+still keyed on `SourceSwapActor`, which left the view model one class short of
+being able to reach the actor at all. `fleet-dashboard` § 7 says where the view
+model reads the messages and how it resolves the actor. No claim changed: B-057
+is what the actor answers and B-041 is what a view model may depend on, and
+both read as they did.
 
 ## Claim
 
-- B-041 and `fleet-dashboard` B-020, preserved —
-  `FeatureAssemblyTests.GivenAMessageAViewModelNames_WhenItsDeclarationIsRead_ThenItIsInMessages`,
-  which fails if any of the four is declared outside `Transporter.Messages`.
-- B-057, preserved — `SourceSwapActorTests`, unchanged but for a `using`.
+No claim changed, and no § 9 row names these tests; they guard the placement
+this lesson is about.
+
+- `FeatureAssemblyTests.GivenAMessageAViewModelNames_WhenItsDeclarationIsRead_ThenItIsInMessages`
+  fails if one of the four named messages is declared outside
+  `Transporter.Messages`. It holds four names, not the rule: a fifth message
+  declared beside its actor passes it, and `TRN0006` is what reports that one,
+  at the view model that names it.
+- `SourceSwapActorTests.GivenTheTrackingActorsRegistered_WhenTheSwapActorIsResolvedByTheMessageItIsTold_ThenItAnswersTheTargets`
+  fails if the actor is registered under anything but `SwapSource`.
+- B-057's own three tests in `SourceSwapActorTests` are unchanged but for a
+  `using`.
 
 ## Skill
 
@@ -59,6 +70,10 @@ did.
 longer says every message is declared beside its actor. It says one that only
 the actor's own layer sends is, and that one another layer tells, asks or reads
 in an answer is declared where that layer may name it — the answer and what it
-carries included. `transporter-conventions` references/coding.md already says
-where that is here, and now says it for an answer as well as for a message
-told.
+carries included. Its § "Registration and consumption" says an actor another
+layer resolves is registered under the message that layer tells it, not under
+its own class. [`mvvm`](../../../../../../.skills/mvvm/SKILL.md) § "Talking to
+an actor" resolved an actor by its class in its example; it now resolves by the
+message. `transporter-conventions` references/coding.md already said where a
+told message lives and that it is the key, and now says the first for a message
+asked, its answer and what the answer carries.

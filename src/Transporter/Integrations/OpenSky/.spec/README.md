@@ -880,8 +880,17 @@ force — and left this § 7 the writer and the selection.
   `Tracking` the seam does not publish (B-041). `0080` built them in
   `Tracking/Sources/`; `0085` moved them, and
   [lesson 0005](lessons/0005-a-message-declared-beside-its-receiver-is-one-its-sender-cannot-name.md)
-  says why they started there. `SourceSwapActor` and `TrackerSourceEntry` stay
-  where they are: nothing above the tracker names either.
+  says why they started there.
+- **The actor is registered under `SwapSource`, the message it is told.**
+  `AddFleetTrackingActors` calls `registry.Register<SwapSource>(…)`, so a view
+  model resolves the actor with `registry.Get<SwapSource>()` and both asks it
+  `GetSwapTargets` and tells it `SwapSource` through that one reference. It
+  was registered under `SourceSwapActor`, which is a class under `Tracking` a
+  view model may not name; the message as the key is the rule `DemandPoll`
+  set (§ 10, 2026-10-07). The told message rather than the asked one, because
+  the swap is what the actor is for. `SourceSwapActor` and
+  `TrackerSourceEntry` stay in `Tracking/Sources/`: with the key changed,
+  nothing above the tracker names either.
 
 Rejected: the tracker re-publishing the targets, which the person declined on
 2026-10-09 because it reopens `fleet-pipeline` for a value that never changes;
@@ -1586,8 +1595,9 @@ for the same reason.
 
 **§§ 6-7 reopened 2026-10-09, for `0085`.** § 7 changed after its approval: its
 type table now gives `SwapSource`, `GetSwapTargets`, `SwapTargets` and
-`SwapTarget` under `Messages/`, and the swap actor's design gained the bullet
-that says why. An approval does not carry over to text written after it
+`SwapTarget` under `Messages/`, and the swap actor's design gained two bullets:
+why the messages are there, and that the actor is registered under
+`SwapSource` rather than under its own class. An approval does not carry over to text written after it
 (root lesson 0023), so the row is 🟡 until that text is read. No claim changed
 and §§ 1-5 and §§ 8-9 were not touched, so those rows stand. `0085` was already
 `in-progress` when the row was lowered, and it is the item that lowered it.

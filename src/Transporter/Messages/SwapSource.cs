@@ -1,6 +1,7 @@
 namespace Transporter.Messages;
 
 /// <summary>Told to <see cref="Transporter.Tracking.Sources.SourceSwapActor"/> to make one strategy live.</summary>
+/// <remarks>Also the key the actor is registered under, as <see cref="DemandPoll"/> is for the actor that polls.</remarks>
 internal sealed class SwapSource
 {
     private SwapSource(SwapTarget target) => Target = target;
