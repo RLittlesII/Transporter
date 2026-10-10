@@ -55,7 +55,7 @@ acceptance_criteria:
     register, so a concrete marker type implements it and is registered as
     `IJson`. Whether the marker also carries the options — one per boundary, or
     one for the repository — is the decision this item records."
-  - "The rule in `transponder-conventions` § testing that parsing is `IJson`'s
+  - "The rule in `transporter-conventions` § testing that parsing is `IJson`'s
     and not each test class's is amended to name the production location."
 
 decisions:

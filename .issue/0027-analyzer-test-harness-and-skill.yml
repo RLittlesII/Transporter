@@ -57,7 +57,7 @@ acceptance_criteria:
 
 decisions:
   - "2026-10-04 — the person — assertions, not Verify snapshots. Verify arrives
-    transitively with the package and stays unused: transponder-conventions fixes
+    transitively with the package and stays unused: transporter-conventions fixes
     the stack at xUnit and AwesomeAssertions, and a snapshot nobody reviews is a
     test that passes because it was regenerated."
   - "2026-10-04 — implementer — Microsoft.CodeAnalysis.CSharp moves from 4.14.0 to

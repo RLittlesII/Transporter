@@ -54,7 +54,7 @@ summary: |
   are all unbuilt. What it buys before then is realistic input for writing
   those three, and the moment `0012` lands it buys a demo that needs no
   provider account at all — which is `features/replay-source` B-011's own
-  scenario, and what makes `transponder-conventions` § "Verify and publish"
+  scenario, and what makes `transporter-conventions` § "Verify and publish"
   step 3 performable for the first time.
 
   Two homes, and the split is the point. `RecordingWriter` is `0009`'s and
@@ -72,7 +72,7 @@ summary: |
   It does **not** reference the project: a `.build` that depended on the
   application could not compile while the application did not, so the one
   command a person runs to find out what broke would be the command that
-  cannot run. `nuke-build` owns the target. `transponder-conventions`
+  cannot run. `nuke-build` owns the target. `transporter-conventions`
   § "Project layout" gains the `tools/` line, since the repository has had no
   such directory.
 
@@ -117,7 +117,7 @@ decisions:
     refuses a span that does not outlast the staleness threshold, reading
     `FleetTracker.DefaultStaleAfter` rather than restating five minutes."
   - "2026-10-07 — the person — review: the comment left where Cake's `tools/**`
-    rule was deleted is gone. `transponder-conventions` § \"Naming and layout\"
+    rule was deleted is gone. `transporter-conventions` § \"Naming and layout\"
     now says the comment rule covers every tracked file and names the shape —
     a note saying why something was removed, which is what the history is for."
   - "2026-10-07 — implementer — review asked whether `SyntheticAircraft` should

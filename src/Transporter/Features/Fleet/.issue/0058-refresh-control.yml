@@ -87,7 +87,7 @@ decisions:
       class under `Tracking/` that `IFleetTracker` does not publish?
     answer: >-
       `src/Transporter/Messages/`, its own namespace, with the rule recorded in
-      `transponder-conventions` § "Project structure".
+      `transporter-conventions` § "Project structure".
     why: >-
       Widening `TRN0006` for a message would weaken the boundary it exists to
       hold, and suppressing it at the call site is a pattern every later gesture
@@ -141,7 +141,7 @@ review_2: |
   taken. Three in the records: § 7 held the indicator's stream as live code and a
   paragraph explaining it operator by operator, which is a second definition and a
   lesson in the wrong file. § 7 is five bullets of what the indicator owes now, the
-  rule is the opening of `transponder-conventions` § "Declarations in § 7", and
+  rule is the opening of `transporter-conventions` § "Declarations in § 7", and
   `lessons/0003-a-specification-that-carried-live-code.md` holds the incident. The
   `mvvm` snippet assigns the command to its property, as the suggestion wrote it.
 

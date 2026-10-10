@@ -54,7 +54,7 @@ acceptance_criteria:
 
 decisions:
   - "2026-10-08 — the person — § 12's 🟡 gate waived for this item by name
-    (`transponder-conventions` delivery: the waiver is a row here). All three
+    (`transporter-conventions` delivery: the waiver is a row here). All three
     rows of `fleet-pipeline` § 12 are 🟡 because B-030, B-034, B-035 and
     B-037 – B-040 are unreviewed; this item's two claims are designed in § 7 and
     planned in § 8, and an independent spec-reviewer pass recorded in § 12 found

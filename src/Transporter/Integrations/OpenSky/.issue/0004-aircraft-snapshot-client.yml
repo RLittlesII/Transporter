@@ -178,7 +178,7 @@ delivered: |
   - "2026-10-05 — the person, in review of pull request #18 — fifteen comments,
     twelve of them a test convention this repository held nowhere. Addressed in
     full and recorded as `lessons/0003`, with the rules themselves added to
-    `transponder-conventions` § testing so the next item reads them before
+    `transporter-conventions` § testing so the next item reads them before
     writing rather than after. Two were design rather than style and changed
     production code: `SchedulerProvider` now takes both schedulers by
     constructor, so a test builds the real type through a fixture instead of

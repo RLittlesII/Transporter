@@ -156,7 +156,7 @@ that way rather than naming something that would assert nothing.
   single place that answers it.
 - **This is not the testing stack changing.** xUnit, AwesomeAssertions and
   NSubstitute remain what
-  [`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+  [`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
   says they are, and the analyzer's own tests are ordinary tests. No
   architecture-rule library joins the repository, so nothing new appears in
   `Directory.Packages.props` for this decision beyond what the analyzer project

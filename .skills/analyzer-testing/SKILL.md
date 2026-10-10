@@ -69,7 +69,7 @@ constant per layer.
   which also reads better than a line number.
 - **`Verify` arrives whether or not it is used.** The package depends on
   `Verify.SourceGenerators`. This repository asserts with **AwesomeAssertions**
-  and commits no snapshots: `transponder-conventions` references/testing.md
+  and commits no snapshots: `transporter-conventions` references/testing.md
   fixes the stack, and a snapshot nobody reviews is a test that passes because
   it was regenerated.
 - **The default reference set is not the platform.** `System.ObjectModel` is

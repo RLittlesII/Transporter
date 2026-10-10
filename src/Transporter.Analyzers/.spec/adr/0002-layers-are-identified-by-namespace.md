@@ -1,6 +1,6 @@
 ---
 title: "ADR-0002: A rule identifies a layer by namespace"
-description: "The analyzer reads a type's layer from its containing namespace, which transponder-conventions already fixes to the folder it sits in, rather than from a marker attribute invented for the analyzer or from a project per layer."
+description: "The analyzer reads a type's layer from its containing namespace, which transporter-conventions already fixes to the folder it sits in, rather than from a marker attribute invented for the analyzer or from a project per layer."
 type: adr
 ---
 
@@ -18,7 +18,7 @@ neither [ADR-0006](../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-bou
 nor § 3 settles: **given a type, which layer is it?**
 
 The repository already has an answer for humans.
-[`transponder-conventions`](../../../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../../../.skills/transporter-conventions/SKILL.md)
 § "Project structure" fixes the folders — a provider's wire surface in
 `Integrations/<Provider>/Contracts`, its implementation in `Http`, its
 registration in `Container`, the domain model in `Model/`, the per-type
@@ -49,7 +49,7 @@ identification seven times against a guess.
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A marker attribute per layer                       | Each layer's types carry `[Layer(Layer.Contract)]`; the rule reads the attribute.                                                                                                                    | Unambiguous and it survives a reorganization, but it is a new public surface on every type the analyzer cares about, invented for the analyzer. It also fails open: a type that forgets the attribute is classified as nothing and every rule passes it, which is the "satisfied by absence" failure ADR-0006 exists to retire.                                                                       |
 | One project per layer                              | The compiler enforces the coarse cases with no analyzer at all; the rule reads the assembly.                                                                                                         | It is a restructure of the whole repository for one Feature, and it breaks something deliberate: the integration lives inside `Transporter` so its contract, wire types and implementation can stay `internal` and be reached by tests through `InternalsVisibleTo`. Split into projects, they would have to be `public` to be composed — the visibility claim traded away for the enforcement of it. |
-| **Namespace, from the folder convention (chosen)** | The rule reads the containing namespace of the declaring symbol and of the referenced symbol, against the layout `transponder-conventions` references/coding.md § "Project structure" already fixes. | —                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Namespace, from the folder convention (chosen)** | The rule reads the containing namespace of the declaring symbol and of the referenced symbol, against the layout `transporter-conventions` references/coding.md § "Project structure" already fixes. | —                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ## Decision
 

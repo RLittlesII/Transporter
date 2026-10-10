@@ -20,7 +20,7 @@ inside them, and inline prose above registration calls that restated the call.
 Several carried claim and record identifiers in the middle of a sentence —
 `(B-034, ADR-0002 item 6)`.
 
-`transponder-conventions` § "The rules that bind every change" already said:
+`transporter-conventions` § "The rules that bind every change" already said:
 
 > **Terse, and XML over inline.** A `<summary>` is one line, `<remarks>` one
 > sentence and only for what the code cannot state, an inline comment one line
@@ -53,7 +53,7 @@ putting it in both places felt like thoroughness.
 
 ## Spec delta
 
-- `transponder-conventions` § `coding` carries the rule in its own words, with
+- `transporter-conventions` § `coding` carries the rule in its own words, with
   the two shapes the review named — prose restating the line, and an identifier
   inside comment prose — and the test that settles it: delete the comment and
   name what a reader loses.

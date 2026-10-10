@@ -106,7 +106,7 @@ decisions:
     `0013` pace from recorded instants too."
   - "2026-10-06 — person — the § 12 sign-off gate is waived for this item. All
     three rows of the specification's § 12 read 🟡 Draft and `spec_status` is
-    `draft`, which `transponder-conventions` § \"The rules that bind every
+    `draft`, which `transporter-conventions` § \"The rules that bind every
     change\" would otherwise hold `in-progress` behind. The waiver is named to
     `0010` alone and is not standing; `0009` ran against the same rows and
     recorded no waiver at all, which is the hole this row closes."

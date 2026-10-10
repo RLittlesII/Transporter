@@ -54,7 +54,7 @@ acceptance_criteria:
   - "One test in `test/UnitTests` builds `FleetPage` with its view model and an
     inline dispatcher, and asserts a bound value before and after the view model
     changes it."
-  - "`transponder-conventions` references/coding.md § \"Project structure\" names
+  - "`transporter-conventions` references/coding.md § \"Project structure\" names
     the library, and references/testing.md says where a view test lives and
     that it registers the dispatcher."
   - "No claim's § 9 row changes: the move proves nothing new about a claim."

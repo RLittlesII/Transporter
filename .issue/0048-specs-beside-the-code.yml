@@ -30,7 +30,7 @@ summary: |
   `.issue/` beside it ([1563e5b](https://github.com/RLittlesII/Transporter/commit/1563e5b)) —
   but the move was made for one Feature and never became the rule. Three
   specifications are still at the repository root in `features/`, and
-  `transponder-conventions` still teaches `features/<slug>/` as the home, so
+  `transporter-conventions` still teaches `features/<slug>/` as the home, so
   the next specification lands in the place the last one was moved out of.
 
   That commit also left its own references behind: `README.md`, eight root
@@ -55,7 +55,7 @@ acceptance_criteria:
   - "No link resolves to nothing — including the `features/aircraft-source/...` links the earlier move left behind — and every relative link inside a moved file is re-depthed to its new level."
   - "The analyzer tests' `SpecificationPath` constants name the new path, and the test suite passes."
   - "The CI path filter excludes the relocated `.issue/` directories, regenerated from the `GitHubActions` attribute rather than hand-edited."
-  - "`transponder-conventions` teaches the new placement as the rule, and no skill or template still teaches `features/<slug>/` as the only home."
+  - "`transporter-conventions` teaches the new placement as the rule, and no skill or template still teaches `features/<slug>/` as the only home."
 
 decisions:
   - "2026-10-06 — rlittlesii: `fleet-dashboard` goes to `src/Transporter/Features/Fleet/`, beside the view models. Rejected `src/Gui/` and `src/Gui/Views/`: the page there is the thin head, and the specification's subject is the view model layer."

@@ -119,7 +119,7 @@ The record carve-out is what keeps this compatible with an immutable accepted
 ADR. A record argues from what was true on its date; only a document claiming
 to describe the present owes the code anything.
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 § `spec-and-traceability` gained the repository's shape of it — which section,
 the table's columns, and the layout block shrinking as the table grows — and,
 separately, lost the sentence claiming this repository has no git remote. The

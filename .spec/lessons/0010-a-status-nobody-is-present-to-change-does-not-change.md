@@ -25,7 +25,7 @@ because the process produced it.
 
 ## Root cause
 
-`transponder-conventions` references/delivery.md said `done` "when it lands",
+`transporter-conventions` references/delivery.md said `done` "when it lands",
 and **nothing is present when a change lands.** The squash merge deletes the
 branch, the worktree comes down once the pull request opens, and the session
 that did the work has reported and stopped. A step scheduled for that moment has
@@ -56,7 +56,7 @@ None. No claim changes; the delivery convention does.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 references/delivery.md § "The tracker". `done` and the `closed:` date are now
 written **by the pull request that delivers the item, before it is opened**,
 dated the day it opens — the last moment anyone is there to know. And a pull

@@ -11,7 +11,7 @@ Make a red test green. The cited claims are the whole brief.
 
 Sections **6 Concern Separation** and **7 Technical Design** of the Feature's
 `.spec/README.md`, and the production code. Nothing else — the full table is in
-[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
+[`transporter-conventions`](../.skills/transporter-conventions/SKILL.md).
 
 **§ 7 is a compromise.** There is no separate architect role here and § 7 must
 have exactly one owner, so it sits with the role that writes the code. A design

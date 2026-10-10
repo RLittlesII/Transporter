@@ -7,7 +7,7 @@ namespace Transporter.Analyzers;
 
 /// <summary>Which layer a symbol belongs to, read from its containing namespace.</summary>
 /// <remarks>
-/// The one place that answers it. Namespaces are the folders <c>transponder-conventions</c>
+/// The one place that answers it. Namespaces are the folders <c>transporter-conventions</c>
 /// references/coding.md § "Project structure" fixes; <c>adr/0002</c> says why, and names the
 /// hazard — a misfiled file silently changes which rules apply to it.
 /// </remarks>

@@ -42,7 +42,7 @@ feature specifications — around fifty lines each — along with the
 reworded themselves: the template's "so link each id to its own file" became
 "so each id links to its own file" in one spec. Three copies, three wordings,
 and nothing to say which governed. This is also how
-`transponder-conventions`'s claim to be "the only place the mapping is written"
+`transporter-conventions`'s claim to be "the only place the mapping is written"
 became false in seven other places while still reading as true.
 
 **Documenting a mirror is not removing one.** The template said outright that
@@ -103,14 +103,14 @@ outside its reach:
   its per-section guidance belongs to the template and is reduced to a one-line
   pointer on copy, the way a `{{placeholder}}` is replaced. The pointer names no
   owner, because the section-to-owner mapping is
-  [`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)'s.
+  [`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)'s.
 - [`.spec/templates/item.yml`](../../.spec/templates/item.yml) carries the
   `rank` formula, its thresholds and its bucket vocabulary beside the fields
   they derive, and the positive shape of a criterion that cites rather than
   restates.
 - `AGENTS.md` is a router: each class of rule names its owner, and only the
   traps that cost real damage when missed are written inline.
-- `transponder-conventions` stopped citing `AGENTS.md` as its own source. That
+- `transporter-conventions` stopped citing `AGENTS.md` as its own source. That
   loop left authority in neither file, which is what let the two regeneration
   commands coexist.
 

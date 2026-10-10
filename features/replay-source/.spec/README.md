@@ -207,7 +207,7 @@ B-009 and B-010 are separate claims about.
 
 Six components, none of which exists yet. The home each lands in is the
 implementer's to create, and the Feature's specification and `.issue/` move
-beside its code in the change that builds it (`transponder-conventions`
+beside its code in the change that builds it (`transporter-conventions`
 § "Where a specification lives",
 [lesson 0015](../../../.spec/lessons/0015-a-move-that-leaves-its-references-behind-is-half-a-move.md)).
 Two homes are in play — the recording spine serves both feeds, where the
@@ -421,7 +421,7 @@ sequenceDiagram
 **Interface changes**
 
 Every file below is new, so the declarations are written out; each becomes a row
-in this table once its file exists (`transponder-conventions` § "Declarations in
+in this table once its file exists (`transporter-conventions` § "Declarations in
 § 7"). Accessibility follows the repository's rule — a type a consumer never
 names is `internal`, and the registration method is the only public surface.
 
@@ -706,7 +706,7 @@ section marks Review; B-024 is the odd one, a registration a host test observes.
 
 **What the tests need before any of them can be written**
 
-Nothing central. The stack `transponder-conventions` mandates is already
+Nothing central. The stack `transporter-conventions` mandates is already
 referenced, `Akka.TestKit.Xunit2` arrived with `0006`, and `test/UnitTests`
 already stands up the application's own composition in
 `TransporterCompositionTests` — which is the shape every host-level row below

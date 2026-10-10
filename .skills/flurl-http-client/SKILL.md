@@ -28,7 +28,7 @@ services.AddSingleton<IFlurlClientCache>(_ => new FlurlClientCache()
 ```
 
 Register it through a container builder block
-([`transponder-conventions`](../transponder-conventions/SKILL.md)), and let a
+([`transporter-conventions`](../transporter-conventions/SKILL.md)), and let a
 client class take `IFlurlClientCache` by constructor and ask for its own named
 client.
 

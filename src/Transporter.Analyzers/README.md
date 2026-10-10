@@ -97,7 +97,7 @@ rule, why the other fourteen have none.
 ## How a symbol's layer is decided
 
 [`Layers`](Layers.cs) reads the containing namespace, which is the folder
-structure the `transponder-conventions` skill fixes. That is a deliberate choice
+structure the `transporter-conventions` skill fixes. That is a deliberate choice
 with a named hazard — a misfiled file silently changes which rules apply to it —
 argued in
 [adr/0002](../../features/boundary-analyzer/.spec/adr/0002-layers-are-identified-by-namespace.md).

@@ -40,7 +40,7 @@ summary: |
   violation the claim exists to catch.
 
   § 11 row 1 is answered — a rule identifies a layer by its containing
-  namespace, read against the layout transponder-conventions
+  namespace, read against the layout transporter-conventions
   references/coding.md § "Project structure" fixes, recorded as src/Transporter.Analyzers/.spec/adr/0002. The
   classification lives in Layers.cs, which 0021 lands, so these six rules read
   it rather than each deciding what a layer is.

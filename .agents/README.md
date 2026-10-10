@@ -38,7 +38,7 @@ having: no stage has to reconstruct the reasoning of the stage before.
 | `spec-reviewer` | [`spec-reviewer.md`](spec-reviewer.md) |
 
 Which sections each role owns — including § 10, § 11 and Decisions — is written
-in one place, [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md)
+in one place, [`transporter-conventions`](../.skills/transporter-conventions/SKILL.md)
 § "Section ownership", so it has nowhere to drift from. Each role file names its
 own sections. The sections themselves are a Feature's `.spec/README.md`, whose
 blank is [`.spec/templates/feature.md`](../.spec/templates/feature.md). A role
@@ -54,7 +54,7 @@ starts at an item instead.
 
 What matters to a role is that `status: in-progress` is the only signal an item
 is taken. Where items live, the schema, the status enum and the authority split
-are in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md),
+are in [`transporter-conventions`](../.skills/transporter-conventions/SKILL.md),
 under the model
 [`spec-and-traceability`](../.skills/spec-and-traceability/SKILL.md) describes;
 claiming an item and publishing the work are
@@ -63,7 +63,7 @@ claiming an item and publishing the work are
 ## Two standing facts
 
 - **Scenarios are documentation**, and the xUnit tests are what execute —
-  [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md) has
+  [`transporter-conventions`](../.skills/transporter-conventions/SKILL.md) has
   the rule.
 - **`src/` is a demo, not an adopted architecture.** The sample code came from
   package documentation. The skills say which of their guidance is a fact about

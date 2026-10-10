@@ -70,7 +70,7 @@ about a stale vehicle, not a reference to the type.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 § `coding` gained the rule, beside the naming traps:
 
 > **A type is named for what every instance of it is**, not for the state some

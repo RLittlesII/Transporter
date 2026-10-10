@@ -1,5 +1,5 @@
 ---
-name: transponder-conventions
+name: transporter-conventions
 description: Everything specific to this repository — paths, layout, naming, the local tracker, the build and test commands, the specification scheme and its section owners — extending the five method skills. Use for any change, alongside the method skill the work belongs to.
 ---
 

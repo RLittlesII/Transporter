@@ -105,7 +105,7 @@ decisions:
     moving to `Features/Tracking/` (same review). Two Features and the replay
     source consume that layer, so filing it under one Feature makes the other
     two reach into a sibling's folder — the reason integrations are not under
-    `Features/` either. `transponder-conventions` § `coding` already held the
+    `Features/` either. `transporter-conventions` § `coding` already held the
     rule for the model and the strategies and now covers the tracker, the clock
     and the published element too."
   - "2026-10-05 — implementer — this item is delivered in two pull requests and

@@ -30,7 +30,7 @@ own API, see
   state, a scheduler. Nothing is resolved from a static or a service locator.
 - Live beside the actors they talk to, and are registered through the container's
   user-interface builder block
-  ([`transponder-conventions`](../transponder-conventions/SKILL.md)).
+  ([`transporter-conventions`](../transporter-conventions/SKILL.md)).
 
 ## Thin means: input in, message out, projection back
 

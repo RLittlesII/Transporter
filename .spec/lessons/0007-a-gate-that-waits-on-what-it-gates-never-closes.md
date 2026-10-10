@@ -75,7 +75,7 @@ No § 3 claim follows. Nothing about what the software does has changed.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 gained it in § `deliver-change` → "The tracker", beside the line that makes
 `in-progress` the mark an item is taken — the two belong together, because that
 is the moment the question goes unasked:

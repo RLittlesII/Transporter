@@ -39,7 +39,7 @@ summary: |
 
   Found by the person, asking how three items came to be implemented under a
   specification nobody had signed. Both halves are recorded: lesson 0007 holds
-  the incident, and transponder-conventions holds the rule that an item does not
+  the incident, and transporter-conventions holds the rule that an item does not
   move to in-progress while its § 12 rows are 🟡.
 
 acceptance_criteria:

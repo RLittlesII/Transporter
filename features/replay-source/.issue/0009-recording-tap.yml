@@ -79,7 +79,7 @@ decisions:
     halves and lesson 0018 records it."
   - "2026-10-06 — review of pull request #39 — the writer's tests build it
     through a generated `RecordingWriterFixture` rather than by constructor
-    call, which `transponder-conventions` § testing already required in
+    call, which `transporter-conventions` § testing already required in
     writing. No new rule, only compliance — lesson 0017's shape. The generated
     builder is `WithDestination`, not `WithWriter`: the naming rule as written
     said \"after its parameter's type\", which holds for an interface and not

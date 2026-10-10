@@ -30,7 +30,7 @@ had an opinion about and had written down nowhere**:
 - A test that stands up a host stands up the application's own composition, so
   there is one of it rather than two to keep in step.
 
-None of these is a matter of taste once stated, and `transponder-conventions`
+None of these is a matter of taste once stated, and `transporter-conventions`
 § testing — the companion skill whose whole job is this — carried none of them.
 It had the test stack, the naming scheme, the generated-fixture rule and the
 `InternalsVisibleTo` rule, and stopped there.
@@ -73,7 +73,7 @@ the item delivers is proven by the test § 9 names, under the same name.
 
 ## Process delta
 
-[`transponder-conventions`](../../../../../../.skills/transponder-conventions/references/testing.md)
+[`transporter-conventions`](../../../../../../.skills/transporter-conventions/references/testing.md)
 § testing now carries all twelve as rules, in the place a test writer reads
 before writing rather than after. The ones that generalise past this repository —
 a test reads no files, and a test stands up the application's own composition —

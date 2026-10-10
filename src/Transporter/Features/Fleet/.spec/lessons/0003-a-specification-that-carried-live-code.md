@@ -1,6 +1,6 @@
 ---
 title: "Lesson 0003: A specification that carried live code"
-description: "PR #52's second review round: § 7 held the indicator's stream line by line and a paragraph walking a reader through each operator, which is a second definition of shipped code and a lesson hiding in a specification; the rule is now in transponder-conventions."
+description: "PR #52's second review round: § 7 held the indicator's stream line by line and a paragraph walking a reader through each operator, which is a second definition of shipped code and a lesson hiding in a specification; the rule is now in transporter-conventions."
 type: lesson
 ---
 
@@ -21,7 +21,7 @@ stated by that shape". Two review comments, on the block and on the paragraph:
 > This looks like lessons hiding in the spec.
 
 Both are right, and the first already had a rule:
-`transponder-conventions` § "Declarations in § 7" said a declaration is written
+`transporter-conventions` § "Declarations in § 7" said a declaration is written
 out **only while its file does not exist**. I read that as being about
 declarations — an `interface` sketch — and not about a constructor's stream, so
 the stream went in and then survived two rewrites of the same section, each of
@@ -40,7 +40,7 @@ any two of those commits read a stream the repository did not have.
 
 ## The rule now written down
 
-`transponder-conventions` § "Declarations in § 7" opens with it: no code in a
+`transporter-conventions` § "Declarations in § 7" opens with it: no code in a
 specification once the code is live, and the rule covers operator pipelines and
 constructor bodies, not only declarations. What § 7 writes instead is what the
 code **owes** — the behaviour, the rule, the reason an operator is the one chosen

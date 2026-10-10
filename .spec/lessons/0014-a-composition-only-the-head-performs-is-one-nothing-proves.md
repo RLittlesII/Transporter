@@ -44,7 +44,7 @@ could not be seen: **the registration list lived where nothing executes.**
 B-007 is about registration or who polls first. The second half was right and
 the first was not.
 
-**`transponder-conventions` § "Verify and publish" step 3 says to launch against
+**`transporter-conventions` § "Verify and publish" step 3 says to launch against
 a recorded or simulated source** — and this repository has nothing to launch
 against: `replay-source` (`0008` – `0013`) is unbuilt, and OpenSky wants
 credentials. A step with nothing behind it is a step that does not run, which is

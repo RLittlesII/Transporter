@@ -64,7 +64,7 @@ do.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 references/specs.md § "Section ownership": **a change to a signed section
 reopens its row**, in the same commit, to 🟡 with `spec_status` back to
 `in-review`. It is the one write to § 12 another role makes, and it only lowers

@@ -22,7 +22,7 @@ claims they proved were the right claims.
 
 Two failures, and only one of them is the convention's.
 
-**Mine.** `transponder-conventions` references/testing.md already said "**What
+**Mine.** `transporter-conventions` references/testing.md already said "**What
 varies comes from `[ClassData]` or `[MemberData]`** — a `TheoryData<…>` subclass
 in a `*Cases.cs` file beside the tests". The repository had eight `*Cases.cs`
 files and ten `[ClassData]` call sites when I wrote `[InlineData]` seven times.
@@ -64,7 +64,7 @@ proof is written, not about what is claimed.
 
 ## Skill
 
-`transponder-conventions` references/testing.md, in the bullet that already
+`transporter-conventions` references/testing.md, in the bullet that already
 held the `[ClassData]` rule: a domain value a helper builds comes from that
 type's fixture, a type with no fixture gets one rather than a constructor call
 in a test, and a shared constant feeding those constructors goes into the

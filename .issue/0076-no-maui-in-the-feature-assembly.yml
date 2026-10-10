@@ -36,14 +36,14 @@ summary: |
   defect, so the fix is the removal plus a gate: a test that fails when the
   compiled assembly references any `Microsoft.Maui` assembly. A package
   reference nothing uses is compiled away and the test cannot see it — that half
-  is a rule written in `transponder-conventions`, checked by review.
+  is a rule written in `transporter-conventions`, checked by review.
 
 acceptance_criteria:
   - "`src/Transporter/Transporter.csproj` references no MAUI package, and
     `Directory.Packages.props` carries no version nothing references."
   - "A test fails when the `Transporter` assembly references an assembly whose
     name starts with `Microsoft.Maui`."
-  - "`transponder-conventions` references/coding.md § \"Project structure\" says
+  - "`transporter-conventions` references/coding.md § \"Project structure\" says
     `src/Transporter` references no MAUI package."
   - "./build.sh passes and every existing test passes."
 

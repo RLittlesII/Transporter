@@ -37,7 +37,7 @@ show in a test: one needs a real file, the other needs two writers.
 reached it. [`coding-conventions`](../../.skills/coding-conventions/SKILL.md)
 banned "a blocking wait on an asynchronous call" — but the block here was on a
 _synchronous_ API, with no asynchronous call to wait on, no `.Result` and no
-`.Wait()`. [`transponder-conventions`](../../.skills/transponder-conventions/references/coding.md)
+`.Wait()`. [`transporter-conventions`](../../.skills/transporter-conventions/references/coding.md)
 covered the `Async` suffix — how to name an asynchronous method — without
 saying when a method has to be one. And [`akka-actor`](../../.skills/akka-actor/SKILL.md)
 forbade blocking inside `Receive`, which is actor-scoped and again about
@@ -79,7 +79,7 @@ ungated: the rule did not exist until the review created it.
 
 The same review's second comment was the opposite case. "AutoFixture?" pointed
 at a subject built by a constructor call in the test, which
-[`transponder-conventions`](../../.skills/transponder-conventions/references/testing.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/references/testing.md)
 already forbids in writing. One comment created a rule; the other enforced one
 nothing enforces. Both arrived in the same pass, and only one needed a skill
 edit.

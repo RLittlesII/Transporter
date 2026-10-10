@@ -30,7 +30,7 @@ summary: |
   analyzer that scrubs comments to ensure they do not contain identifiers? Not
   sure yet."
 
-  `transponder-conventions` already says a `<summary>` is one line and a
+  `transporter-conventions` already says a `<summary>` is one line and a
   `<remarks>` one sentence. Nothing reads it, so `0006` wrote nine files of
   paragraph-length `<remarks>` and no gate objected; `0050` is the scrub, and
   this is what stops the next one.

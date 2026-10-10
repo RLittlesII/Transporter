@@ -77,7 +77,7 @@ decisions:
     a maintenance burden and most of them go. Ten lines across seven files, one
     finding: prose restating the call below it, paragraph-length `<remarks>`,
     and claim or record identifiers inside a sentence. The convention was
-    already written — `transponder-conventions` § \"The rules that bind every
+    already written — `transporter-conventions` § \"The rules that bind every
     change\" — and nothing executes it, which is lesson 0017. Scrubbed here;
     `0050` scrubs the rest of the repository and `0051` is the diagnostic that
     would have caught it. The identifier half of `0051` is left
