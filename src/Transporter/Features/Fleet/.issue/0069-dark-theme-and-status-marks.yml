@@ -2,7 +2,7 @@ id: "0069"
 type: task
 title: Put the page on one dark theme, with every status told by icon and word
 
-status: in-review
+status: done
 
 priority: medium
 value: 3
@@ -12,8 +12,7 @@ rank: 59
 parent: "0035"
 children: []
 
-depends_on:
-  - "0075"
+depends_on: []
 blocks:
   - "0070"
 spikes: []
@@ -26,7 +25,7 @@ claims:
 
 created: "2026-10-08"
 updated: "2026-10-09"
-closed: null
+closed: "2026-10-09"
 
 summary: |
   The page's resources become the Flight Deck's tokens, built in C# rather than
@@ -35,9 +34,9 @@ summary: |
   status vocabulary — fresh, stale, throttled, quiet, removed — where each
   status carries an icon and a word as well as a colour (B-032).
 
-  Depends on `0075`: the tokens are tested as data (ADR-0014), and no test
-  reaches them until the pages and tokens leave `src/Gui`. `0070` puts the
-  marks on cards.
+  It waited on `0075` while the tokens were to be tested as data; ADR-0016
+  keeps them in `src/Gui`, so their contrast is the review this item
+  performed. `0070` puts the marks on cards.
 
   Two traps. A token kept as a XAML resource looks finished and fails B-002's
   review. And a status distinguishable only by hue passes every screenshot
@@ -69,6 +68,10 @@ decisions:
   - "2026-10-09 — implementer — the card says updated when the last update
     changed a value one of its readouts shows, decided by `FleetCardStatus`
     so it is tested. The card had only ever said fresh, stale or no fix."
+  - "2026-10-09 — the person — the pages and tokens stay in `src/Gui`
+    (ADR-0016), so `0075` is withdrawn and nothing holds this item. B-032 and
+    B-033 are `Verified` in § 9 on the reviews it performed, and no token test
+    is owed. Closed."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
