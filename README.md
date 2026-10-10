@@ -124,6 +124,14 @@ In roughly the order the audience meets them:
 - Create an API client on the OpenSky account page to get `client_id` and `client_secret`.
 - Token URL: `https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token`
 - Tokens expire after 30 minutes; refresh on expiry or on a 401.
+- The application reads both from the developer's user-secrets store, never from the repository. Set them once, in a terminal of your own — the tool prints the value it saves:
+
+    ```sh
+    dotnet user-secrets set "OpenSky:ClientId" "<client id>" --id transporter-gui
+    dotnet user-secrets set "OpenSky:ClientSecret" "<client secret>" --id transporter-gui
+    ```
+
+    The next build of the head packages the store into the app bundle, so a built bundle holds the secret and is never shared ([`aircraft-source`](src/Transporter/Integrations/OpenSky/.spec/README.md) B-058).
 
 ### Limits
 
@@ -177,7 +185,7 @@ Replace the polled source with a push source and show that everything downstream
 
 ## Open items
 
-- [ ] Register an OpenSky account and create an API client
+- [x] Register an OpenSky account and create an API client — done 2026-10-09; the credentials go in the user-secrets store (§ "Authentication")
 - [x] Pick the bounding box (metro area) and polling interval — Houston: IAH, HOU, the ship channel and Galveston Bay, polled every 15 seconds ([decision 0001](src/Transporter/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md))
 - [x] Decide UI framework (WPF, Avalonia, Blazor, MAUI)
 - [ ] Record replay snapshots during rehearsal

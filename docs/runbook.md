@@ -21,6 +21,10 @@ this file is the order to do them in.
 - **Verify every credential** — the polled provider's client id and secret, and
   the push provider's key for the closing act. An expired key discovered
   mid-sentence is the worst possible time.
+- **Build the head on the machine that holds the secret store.** The polled
+  provider's credentials are packaged into the bundle when it is built
+  (`README.md` § "Authentication"), so a bundle built elsewhere, or before the
+  store was set, has none — and one built here is never copied off the machine.
 - **Record replay data in rehearsal**, aircraft _and_ vessels
   ([`features/replay-source`](../features/replay-source/.spec/README.md)).
   Record long enough that items go stale on playback, or the staleness part of
