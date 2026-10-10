@@ -1050,11 +1050,11 @@ both halves are reviews. No claim, no § 8 plan and no § 9 row changes — § 8
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 6-7   | implementer | 🟡 Draft    |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../../.spec/templates/feature.md). All three rows
@@ -1344,6 +1344,66 @@ answered; the `spec-reviewer` re-reads next.
 
 **§ 4 rows 4 and 13 reworded 2026-10-09**, for ADR-0016 (§ 10), while every row
 above was 🟡, so nothing is lowered.
+
+**Re-read 2026-10-09, the second — `spec-reviewer`.** Read against §§ 1-9, the
+`.feature` file, the items `0039`, `0041`, `0044`, `0071`, `0072` and `0078`,
+`aircraft-source` B-057 and its § 7, `fleet-pipeline` B-030 as amended,
+ADR-0015, ADR-0016, and the code `0080` landed under `Tracking/Sources/`.
+
+Mechanically clean: forty claims, forty § 9 rows, nineteen `Verified` and
+twenty-one `Missing` as the gate's prose says, fifty scenarios, every claim
+tagged at least once and carried by a child item.
+
+Findings 7, 8, 9 and 11 hold as answered. B-040 and `aircraft-source` B-057
+now describe one route, and both `@B-040` scenarios say it. Items `0071` and
+`0041` carry B-034 and B-037 as amended. § 7 names no grouping key, and
+`fleet-pipeline` B-030 carries the predicate. The gate's count matches its
+rows. Finding 10 is answered — § 7 has the picker's design — and that design
+is what finding 12 is about.
+
+**§§ 6-7**
+
+12. **The picker's design has the view model name four classes the analyzer
+    reports — blocking for `0039`, `implementer`.** § 7 has `FleetViewModel`
+    ask `GetSwapTargets`, read `SwapTargets` and `SwapTarget`, and tell
+    `SwapSource`. `0080` landed all four in `Transporter.Tracking.Sources`.
+    `BoundaryAnalyzer` reports `TRN0006` when a view model names a concrete
+    class in `Transporter.Tracking` that `IFleetTracker` does not publish, and
+    the seam publishes none of these. `transporter-conventions`
+    references/coding.md § "Project structure" already gives the remedy: a
+    message a consumer tells an actor lives in `src/Transporter/Messages/`,
+    "not in `Tracking/` either", which is where `DemandPoll` is. So `0039`
+    built to § 7 as written fails B-020's own analyzer row. The delta is
+    `aircraft-source`'s first: its § 7 moves the four types to `Messages/`, on
+    an item cut for the move, and § 7 here then says where it reads them. No
+    claim changes — B-040, B-020 and `aircraft-source` B-057 all stand.
+
+**§§ 1-5**
+
+13. **Item `0035` still describes the specification as it was — not blocking,
+    `spec-author`.** Its summary says it "carries all twenty-eight claims" and
+    that "§ 11 holds three open questions". There are forty claims, and § 11
+    has two rows without an answer, 3 and 4.
+
+Carried from the last re-read, still open and still not blocking: no item
+carries the column chooser B-012's cards need, and § 8 does not say why
+`Canvas` stands in for the map's own dark style in the ramp's contrast check.
+
+**Verdict.**
+
+- **§§ 8-9 — 🟢.** Finding 11 holds, § 8 plans four tests for B-040 that a
+  wrong picker fails, and the plan names no type by its namespace, so finding
+  12's move does not reach it.
+- **§§ 6-7 — 🟡**, on finding 12. They are complete for `0041`, `0071`,
+  `0072` and `0078`. They are not for `0039`. `0044` has no design to judge:
+  what proves a page is that item's to decide.
+- **§§ 1-5 — 🟡**, and not on a finding. Every claim reads as agreed, and the
+  sections are complete for all six items above. What holds the row is that
+  this reviewer wrote § 4 rows 4 and 13 for ADR-0016 the same day, and a
+  reviewer does not sign a section they changed. The row needs a second
+  reader of those two rows, or the person's word on them, and nothing else.
+
+`spec_status` stays `in-review`.
 
 ## Decisions
 
