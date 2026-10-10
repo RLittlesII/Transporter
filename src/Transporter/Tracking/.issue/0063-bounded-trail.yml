@@ -1,0 +1,72 @@
+id: "0063"
+type: task
+title: Carry a bounded trail on the element, broken at a gap and measured by the description
+
+status: ready-for-architecture
+
+priority: high
+value: 4
+risk: 3
+rank: 76
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0062"
+blocks:
+  - "0071"
+spikes: []
+
+spec: src/Transporter/Tracking/.spec/README.md
+
+claims:
+  - B-034
+  - B-035
+  - B-037
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  The path a vehicle flew, on the element rather than in a store beside the
+  fleet (B-034), bounded at 240 points with the oldest going first. A point
+  that follows a silence longer than the staleness threshold is marked as a
+  gap (B-035), so a map does not draw a straight line across twenty minutes the
+  feed said nothing. What colours the trail is the description's trail measure
+  (B-037): a display name, the range a ramp spans and a selector, which for
+  aircraft is barometric altitude — a member `TransportVehicle` does not carry,
+  so the selector may name the concrete type under B-022's exception.
+
+  Waits on `0062`, because the trail folds into the element its `Move()`
+  stage emits, and a gap is measured from B-041's replaced vehicle. A point's
+  distance is from the point before, which is B-032's leg except across a lost
+  fix. `fleet-dashboard` `0071` waits on this one.
+
+  Three traps. A trail kept in a dictionary beside the fleet is the second
+  store B-002 forbids, and it outlives the vehicle it describes. A gap
+  measured against the wall clock is wrong under replay; it is the gap between
+  two last-contact instants, both the provider's — the point's and the
+  replaced vehicle's, not the point before's, or a parked aircraft that taxis
+  gets a gap the feed never had. And an update that changes the altitude
+  without moving the vehicle adds no point; the person chose that on
+  2026-10-08, and a point added on any change fails the scenario.
+
+acceptance_criteria:
+  - "B-034 — the trail on the element, a point only on entry or a move, bounded, oldest first, gone with the vehicle."
+  - "B-035 — a point whose last contact follows the replaced vehicle's by more than the threshold marks a gap."
+  - "B-037 — the trail measure named in the description; no altitude on the base."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-08 — the person — an update that changes the altitude alone adds
+    no trail point; B-034 and its scenario stand, and this summary, which said
+    the opposite, is corrected. A parked aircraft's barometric jitter would
+    otherwise fill the 240-point bound with points of zero length. Rejected:
+    adding a point when the trail measure changes too."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Drawing the trail, and the colour ramp — `fleet-dashboard` `0071`."
+  - "A configurable bound — the default is the claim; a configuration surface is not asked for."

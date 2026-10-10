@@ -11,14 +11,14 @@ type: lesson
 
 ## Symptom
 
-[1563e5b](https://github.com/RLittlesII/Transponder/commit/1563e5b) moved
+[1563e5b](https://github.com/RLittlesII/Transporter/commit/1563e5b) moved
 `aircraft-source`'s specification and items out of `features/` and into the
-integration they describe, `src/Transponder/Integrations/OpenSky/`. A day later
+integration they describe, `src/Transporter/Integrations/OpenSky/`. A day later
 the repository held sixty-nine references to where they had been.
 
 - **Forty-four relative links inside the moved tree** resolved one directory
   short. `features/aircraft-source/.spec/` is three directories deep and
-  `src/Transponder/Integrations/OpenSky/.spec/` is four, so every `../../../`
+  `src/Transporter/Integrations/OpenSky/.spec/` is four, so every `../../../`
   in the specification and its four lessons — to the root ADRs, the templates,
   the skills, `Directory.Packages.props`, and nineteen source files — pointed
   one level above its target. The specification's own § 7 type table, where a
@@ -27,7 +27,7 @@ the repository held sixty-nine references to where they had been.
   root ADRs, a root lesson, the `item.yml` schema comment, two skills and the
   runbook — still named `features/aircraft-source/...`, which had become a
   directory that does not exist.
-- **`transponder-conventions` still taught `features/<slug>/`** as the home for
+- **`transporter-conventions` still taught `features/<slug>/`** as the home for
   a specification, its items and its records. The one place that would have
   made the move a convention was the one place the move did not touch, so the
   next specification written would have landed in the directory the last one
@@ -89,9 +89,9 @@ end of a link, which is why the sixty-nine were countable at all.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 carries both halves —
-[`specs`](../../.skills/transponder-conventions/references/specs.md) § "Where
+[`specs`](../../.skills/transporter-conventions/references/specs.md) § "Where
 things live" replaces `features/<slug>/` with `<home>` throughout, names each
 Feature's current one, and states what a move owes:
 
@@ -101,6 +101,6 @@ Feature's current one, and states what a move owes:
 > that builds the code, and the move repoints every reference to them,
 > re-depthing the relative links inside the files that moved.
 
-and [`delivery`](../../.skills/transponder-conventions/references/delivery.md)
+and [`delivery`](../../.skills/transporter-conventions/references/delivery.md)
 § "The tracker" points an item at `<home>/.issue/` rather than at
 `features/<slug>/.issue/`.

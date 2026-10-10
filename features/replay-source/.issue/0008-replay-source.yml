@@ -114,7 +114,7 @@ decisions:
     put a fleet page on the screen and `0047` made the application open it, and
     what it opens onto is an empty grid: the live provider needs credentials no
     developer's machine should be the only holder of, and
-    `transponder-conventions` § \"Verify and publish\" step 3 already says to
+    `transporter-conventions` § \"Verify and publish\" step 3 already says to
     launch against a recorded or simulated source. Until this Feature lands,
     that step has nothing behind it and no screen is ever looked at running."
   - "2026-10-04 — spec-author — cut into five children on component boundaries

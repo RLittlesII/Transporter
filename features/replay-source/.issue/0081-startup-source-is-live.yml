@@ -30,7 +30,7 @@ summary: |
     The swap decorator starts on the first registered strategy
     (`SwappingTrackerSource`), and `AddOpenSky` happens to be called before
     `AddAircraftReplay`. Nothing says so and nothing tests it, which is why
-    swapping two lines in `TransponderRegistration` was enough to start on a
+    swapping two lines in `TransporterRegistration` was enough to start on a
     recording — the local edit `0039`'s 2026-10-07 decision describes. This item
     makes the order a claim with a test, so that edit fails the build instead of
     quietly working.

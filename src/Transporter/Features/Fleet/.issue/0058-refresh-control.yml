@@ -1,0 +1,162 @@
+id: "0058"
+type: task
+title: Put a refresh control on the page that tells an actor
+
+status: done
+
+priority: medium
+value: 3
+risk: 3
+rank: 51
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0036"
+  - "0057"
+  - "0059"
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-028
+
+created: "2026-10-07"
+updated: "2026-10-07"
+closed: "2026-10-07"
+
+summary: |
+  The gesture half of the refresh: a control on the page, a `Tell` to the actor,
+  and an indicator while a demanded poll is outstanding. The view model names no
+  client, awaits nothing and never `Ask`s, so whether a poll actually happens is
+  the actor's answer and not something this surface predicts — `aircraft-source`
+  B-053 holds the throttle, and repeating it here would be a second place the
+  rule lives.
+
+  Runs after `0036`, which built the page, and after `0057`, which built the
+  actor there is something to tell.
+
+  **Unblocked on 2026-10-07**: § 11 row 6 is answered, and `decisions/0001` is
+  the call. The indicator is set by the press and cleared by the next observed
+  instant — one per applied poll, identical data included — with a three-second
+  cap for the press that was refused and produced no poll at all. That instant
+  reaches a view model through `fleet-pipeline` B-031, which is why `0059` is
+  now a prerequisite: there is nothing to subscribe to until it lands.
+
+  **One trap, found building `0059` (2026-10-07).** `IFleetTracker.Observed`
+  publishes the instant in force on subscription — the clock holds it behind a
+  `BehaviorSubject` — so the window must `Skip(1)` or it ends on the press that
+  opened it and the indicator is never seen. § 7 now states that the instant in
+  force is not a poll that landed, and `fleet-pipeline` § 10 records why.
+
+  The indicator is a derived value read through `ReactiveMarbles.Mvvm`'s
+  `AsValue`, not a property the gesture sets — § 7 states what the indicator owes
+  and the view model carries it, and this is the repository's first use of
+  `AsValue`, so `mvvm` gained the rule that says when to reach for it.
+
+acceptance_criteria:
+  - "B-028 — a control that `Tell`s the actor, names no client, awaits nothing,
+    and shows it is working while a demanded poll is outstanding."
+  - "B-028's indicator clears on the observed instant and on the cap, whichever
+    is first, and a second press replaces the window rather than queueing one —
+    the three clauses § 7 states (decisions/0001)."
+  - "§ 9 Traceability Matrix carries a row naming a test and the review for
+    B-028, replacing the row that names this item."
+
+decisions:
+  - date: "2026-10-07"
+    question: >-
+      What may the dashboard name to tell the poll actor, when the actor and its
+      message are both internal to the OpenSky integration?
+    answer: >-
+      A provider-agnostic message, which is also the registry key. `PollAircraft`
+      is replaced by `DemandPoll`; `AddOpenSkyActors` registers the actor under
+      it, and a second source that polls registers under the same key.
+    why: >-
+      Naming `AircraftPollActor` compiles and passes the analyzer, but it puts a
+      provider's name on the dashboard, and after the closing act's swap the
+      button would be telling an aircraft-shaped actor about vessels. Rejected: a
+      seam in `Tracking` wrapping the `Tell`, which is close to the fifth tracker
+      method ADR-0012 turned down.
+  - date: "2026-10-07"
+    question: >-
+      Where does that message live, given `TRN0006` refuses a view model naming a
+      class under `Tracking/` that `IFleetTracker` does not publish?
+    answer: >-
+      `src/Transporter/Messages/`, its own namespace, with the rule recorded in
+      `transporter-conventions` § "Project structure".
+    why: >-
+      Widening `TRN0006` for a message would weaken the boundary it exists to
+      hold, and suppressing it at the call site is a pattern every later gesture
+      would copy. Found by the analyzer while building, not by review.
+
+delivered: |
+  B-028 to `Verified`. `FleetViewModel` takes `IActorRegistry`, exposes
+  `RefreshCommand` as an `RxCommand` that `Tell`s `DemandPoll` and returns,
+  and exposes `IsRefreshing` as a derived value read through
+  `ReactiveMarbles.Mvvm`'s `AsValue` — the repository's first use of it. The page
+  carries the button and an `ActivityIndicator` bound to that value.
+
+  The indicator behaves as § 7 states: the press opens the window, the next observed
+  instant closes it (`fleet-pipeline` B-031), and a three-second cap covers the
+  press the actor refused. `Skip(1)` is why the instant in force does not close
+  the window on the press that opened it, `Switch` is why a second press replaces
+  the window, and the cap is timed on the injected scheduler.
+
+  Five tests in `FleetRefreshTests`, including one that replies to the actor's
+  message and asserts the indicator ignores it — the `Ask` B-028 forbids would
+  have been waiting for exactly that. 214 unit tests green.
+
+  Two findings, both in `fleet-dashboard` § 10. The message's home was decided by
+  `TRN0006` rather than by preference (`decisions` above). And giving the view
+  model a registry broke `TransporterCompositionTests`, because the registry comes
+  from the head's Akka host and that test built the container from
+  `AddTransporter` alone; the test's arrangement now composes the host too, which
+  is lesson `0047` working as intended.
+
+review: |
+  Pull request #52, 2026-10-07 — `Needs work`, five findings, all taken.
+  `GestureCommand` is deleted: `RxCommand` from `ReactiveMarbles.Command` is both
+  the command and the stream of its own presses, so the subject beside it is gone
+  too. `AsValue` now carries the initial value and the scheduler, replacing a
+  `StartWith(false)` that projected a presentation default down the pipeline and
+  the `ObserveOn` above the call; the binder and the command are disposed with
+  `DisposeWith(_garbage)`. `0047`'s three composition tests pass a `TestScheduler`
+  instead of `ImmediateScheduler.Instance`.
+
+  No claim moved and no behaviour changed: B-028's five tests passed before and
+  after, 214 green. One consequence found while making the change — `RxCommand`
+  reads its exception handler from ReactiveMarbles' process-wide locator even when
+  the output scheduler is passed, so `AddTransporter` writes that locator's core
+  registrations and the test assembly does the same once in a module initialiser.
+  The rules are in `mvvm` and `test-from-scenarios`, and
+  `lessons/0002-a-hand-rolled-command-and-a-projected-default.md` holds the
+  incident.
+
+review_2: |
+  Pull request #52, second round, 2026-10-07 — `Needs work`, five findings, all
+  taken. Three in the records: § 7 held the indicator's stream as live code and a
+  paragraph explaining it operator by operator, which is a second definition and a
+  lesson in the wrong file. § 7 is five bullets of what the indicator owes now, the
+  rule is the opening of `transporter-conventions` § "Declarations in § 7", and
+  `lessons/0003-a-specification-that-carried-live-code.md` holds the incident. The
+  `mvvm` snippet assigns the command to its property, as the suggestion wrote it.
+
+  Two in the code. `RefreshCommand` is assigned straight from `RxCommand.Create`
+  and read from the property, with no local in between, and it is typed as the
+  command rather than as `ICommand` — a property typed `ICommand` cannot be
+  subscribed to, which is the reason for the type. `Observable.Return(true)` and its
+  `Concat` are gone: one `StartWith(true)` on the window says the same thing. Tests
+  press it the reactive way, `Execute().Subscribe()`, since `Execute` returns a cold
+  observable, and one test presses through `ICommand` because that is the path the
+  button takes. 214 green.
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The instant itself — `fleet-pipeline` B-031, built by `0059`."
+  - "The poll itself and its throttle — `aircraft-source` B-053, `0057`."
+  - "Whether a view model reaches its actor with `Tell` or `Ask` in general
+    (README.md § \"Open items\") — B-028 settles it for this control only."

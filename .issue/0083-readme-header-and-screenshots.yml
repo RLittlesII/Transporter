@@ -28,7 +28,7 @@ closed: "2026-10-09"
 summary: |
     The README opens straight into its first section, with no picture of what
     the demo looks like. specht's README opens with a centered image, a
-    tagline, a badge row and an anchor nav; this item gives Transponder the
+    tagline, a badge row and an anchor nav; this item gives Transporter the
     same header, with screenshots of the running app in place of a logo.
 
     The README is the design authority, so this is presentation only: every

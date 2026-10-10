@@ -9,15 +9,15 @@ using AwesomeAssertions;
 using DynamicData;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
-using Transponder.Features.Fleet.ViewModels;
-using Transponder.Messages;
-using Transponder.Model;
-using Transponder.Scheduling;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Features.Fleet.ViewModels;
+using Transporter.Messages;
+using Transporter.Model;
+using Transporter.Scheduling;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 public class FleetRefreshTests : TestKit
 {

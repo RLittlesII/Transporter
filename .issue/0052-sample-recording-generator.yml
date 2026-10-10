@@ -54,16 +54,16 @@ summary: |
   are all unbuilt. What it buys before then is realistic input for writing
   those three, and the moment `0012` lands it buys a demo that needs no
   provider account at all — which is `features/replay-source` B-011's own
-  scenario, and what makes `transponder-conventions` § "Verify and publish"
+  scenario, and what makes `transporter-conventions` § "Verify and publish"
   step 3 performable for the first time.
 
   Two homes, and the split is the point. `RecordingWriter` is `0009`'s and
-  lives in the application, in `src/Transponder/Recording` — it is how a live
+  lives in the application, in `src/Transporter/Recording` — it is how a live
   rehearsal records, so it ships. The **synthetic payload generator** is dev
   tooling and does not ship: it lives in its own console project,
-  `tools/Transponder.SampleRecording`, which references the application and is
+  `tools/Transporter.SampleRecording`, which references the application and is
   named in one more `InternalsVisibleTo` beside the two
-  [`Transponder.csproj`](../src/Transponder/Transponder.csproj) already
+  [`Transporter.csproj`](../src/Transporter/Transporter.csproj) already
   carries. It builds wire-shaped payloads and hands each to `RecordingWriter`,
   so the format still has exactly one writer and no invented data sits in the
   product assembly.
@@ -72,7 +72,7 @@ summary: |
   It does **not** reference the project: a `.build` that depended on the
   application could not compile while the application did not, so the one
   command a person runs to find out what broke would be the command that
-  cannot run. `nuke-build` owns the target. `transponder-conventions`
+  cannot run. `nuke-build` owns the target. `transporter-conventions`
   § "Project layout" gains the `tools/` line, since the repository has had no
   such directory.
 
@@ -84,7 +84,7 @@ acceptance_criteria:
   - "One writer of the format. The generator emits payloads and hands them to
     `0009`'s `RecordingWriter`; it does not spell out a line itself."
   - "No invented data in the product assembly. The generator is its own
-    project; `src/Transponder` gains the `InternalsVisibleTo` and nothing
+    project; `src/Transporter` gains the `InternalsVisibleTo` and nothing
     else."
   - "`.build` references no project of the application's. The target shells
     `dotnet run`, so a build still runs when the application does not
@@ -117,7 +117,7 @@ decisions:
     refuses a span that does not outlast the staleness threshold, reading
     `FleetTracker.DefaultStaleAfter` rather than restating five minutes."
   - "2026-10-07 — the person — review: the comment left where Cake's `tools/**`
-    rule was deleted is gone. `transponder-conventions` § \"Naming and layout\"
+    rule was deleted is gone. `transporter-conventions` § \"Naming and layout\"
     now says the comment rule covers every tracked file and names the shape —
     a note saying why something was removed, which is what the history is for."
   - "2026-10-07 — implementer — review asked whether `SyntheticAircraft` should
@@ -144,7 +144,7 @@ decisions:
     is the poll that reports nothing, which the criteria ask for separately."
   - "2026-10-07 — implementer — the generated recording is tested from
     `test/UnitTests`, which gains a project reference to
-    `tools/Transponder.SampleRecording` and reaches its internals through one
+    `tools/Transporter.SampleRecording` and reaches its internals through one
     `InternalsVisibleTo`. Determinism and the hazard list are claims about
     behaviour, and the criteria for them read as tests rather than as a review;
     the alternative was a second test project for one tool, which is a harness
@@ -156,11 +156,11 @@ decisions:
     `RecordingWriter` stays in the application. The question as first filed was
     wrong: it asked where the writer could live such that a build target could
     see it, when the writer was never going anywhere — `0009` builds it in
-    `src/Transponder/Recording` because recording a live rehearsal is the
+    `src/Transporter/Recording` because recording a live rehearsal is the
     application's job. What is actually dev tooling is the synthetic payload
     generator, and putting that in the product assembly would ship invented
     callsigns and positions as dead code. So it gets
-    `tools/Transponder.SampleRecording`, one more `InternalsVisibleTo` beside
+    `tools/Transporter.SampleRecording`, one more `InternalsVisibleTo` beside
     the two already there, and reaches `RecordingWriter` the same way the test
     project reaches everything else. Rejected: letting `.build` reference the
     application, which is lighter by one project and makes the build

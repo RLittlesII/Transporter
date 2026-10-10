@@ -50,7 +50,7 @@ The division matters more than the syntax:
 - State is actor-local and private. It is not an invitation to share mutable
   state between actors.
 - Actors live beside the feature they serve
-  ([`transponder-conventions`](../transponder-conventions/SKILL.md)).
+  ([`transporter-conventions`](../transporter-conventions/SKILL.md)).
 
 ## Registration and consumption
 

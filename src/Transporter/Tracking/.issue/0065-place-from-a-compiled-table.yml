@@ -1,0 +1,56 @@
+id: "0065"
+type: task
+title: Name the place under an aircraft from a Census table compiled in
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 3
+rank: 56
+
+parent: "0030"
+children: []
+
+depends_on: []
+blocks:
+  - "0070"
+spikes: []
+
+spec: src/Transporter/Tracking/.spec/README.md
+
+claims:
+  - B-038
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  The aircraft description offers a place column: the nearest entry in the US
+  Census Bureau's Gazetteer places within ten kilometres, or the position's
+  coordinates when none is that close (B-038, § 11 row 8). The table is
+  generated from the Gazetteer file, trimmed to the box the demo flies
+  (`aircraft-source` decisions/0001), and compiled in, so resolving a place
+  makes no network call and reads no file (§ 4 row 18).
+
+  Depends on nothing open. `fleet-dashboard` `0070` binds the column.
+
+  Three traps. A table read from disk at runtime is the file read B-038
+  forbids, and it is the one the Mac Catalyst sandbox refuses silently. A
+  nearest-neighbour search over the whole table on every vehicle on every poll
+  is a cost that only shows once the fleet is real — a few hundred entries make
+  a linear scan honest, but measure before assuming it. And the generator is
+  build tooling, not application code: it belongs where `0052`'s recording
+  generator does, and its output is what is committed.
+
+acceptance_criteria:
+  - "B-038 — the aircraft description offers a place: within ten kilometres by great-circle distance, coordinates beyond it, neither for a vehicle with no position; no network call, and no file or resource read."
+  - "§ 9 Traceability Matrix carries a row naming a test for B-038."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "A place for a box outside Houston — the table is regenerated when the box moves (§ 4 row 18)."
+  - "A worldwide gazetteer — § 11 row 8 rejected GeoNames."

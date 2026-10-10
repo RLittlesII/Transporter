@@ -31,7 +31,7 @@ the method says what happens when a review arrives**, so the work of answering
 one had no owner and no step number, and the steps that do exist all end in a
 commit — which trained the habit that a commit is where a thing is finished.
 
-Two rules were already written and still held: `transponder-conventions`
+Two rules were already written and still held: `transporter-conventions`
 references/delivery.md says a reviewer who sends work back changes the status
 with the rest of the change, and that was done. So the item's state was right
 while the conversation it belonged to was abandoned. A status is not a reply.
@@ -62,4 +62,4 @@ say which comment was a rule that already existed and which was a gap, and land
 the gap in the skill that should have held it in the same change.
 
 The companion needs no edit: the status half was already written in
-`transponder-conventions` references/delivery.md and was already followed.
+`transporter-conventions` references/delivery.md and was already followed.

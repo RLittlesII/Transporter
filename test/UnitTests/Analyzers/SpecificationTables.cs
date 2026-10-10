@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Transponder.UnitTests.Analyzers;
+namespace Transporter.UnitTests.Analyzers;
 
 /// <summary>Reads a specification out of the repository, so a test can hold it to what it says.</summary>
 /// <remarks>Three claims are about documents: B-008, B-016 and B-019. The analyzer's own harness is the package.</remarks>
@@ -43,12 +43,12 @@ internal static class SpecificationTables
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
 
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Transponder.slnx")))
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Transporter.slnx")))
         {
             directory = directory.Parent;
         }
 
         return directory?.FullName
-               ?? throw new InvalidOperationException("No Transponder.slnx above the test assembly, so the repository root cannot be found.");
+               ?? throw new InvalidOperationException("No Transporter.slnx above the test assembly, so the repository root cannot be found.");
     });
 }

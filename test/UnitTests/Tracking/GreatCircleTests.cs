@@ -1,8 +1,8 @@
 using AwesomeAssertions;
-using Transponder.Model;
-using Transponder.Tracking;
+using Transporter.Model;
+using Transporter.Tracking;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class GreatCircleTests
 {

@@ -3,9 +3,9 @@ using System.Reactive.Subjects;
 using AwesomeAssertions;
 using LanguageExt;
 using NSubstitute;
-using Transponder.Tracking;
+using Transporter.Tracking;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class FleetTrackerPollStatusTests
 {

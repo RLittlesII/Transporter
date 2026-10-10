@@ -7,14 +7,14 @@ using DynamicData;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Model;
-using Transponder.Scheduling;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
-using Transponder.Tracking.Sources;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Model;
+using Transporter.Scheduling;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
+using Transporter.Tracking.Sources;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 // RSA1010 asks for ObserveOn before every Bind. These bind without one deliberately: the
 // pipeline marshals for nobody (fleet-pipeline B-005) and the user-interface scheduler belongs to

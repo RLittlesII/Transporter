@@ -5,17 +5,17 @@ using AwesomeAssertions;
 using LanguageExt;
 using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Features.Fleet.ViewModels;
-using Transponder.Model;
-using Transponder.Scheduling;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
-using Transponder.Tracking.Sources;
-using Transponder.UnitTests.Model.Fixtures;
-using Transponder.UnitTests.Scheduling;
-using Transponder.UnitTests.Tracking.Fixtures;
+using Transporter.Features.Fleet.ViewModels;
+using Transporter.Model;
+using Transporter.Scheduling;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
+using Transporter.Tracking.Sources;
+using Transporter.UnitTests.Model.Fixtures;
+using Transporter.UnitTests.Scheduling;
+using Transporter.UnitTests.Tracking.Fixtures;
 
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 public class FleetDetailViewModelTests
 {

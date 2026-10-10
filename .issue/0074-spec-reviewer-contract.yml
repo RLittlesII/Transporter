@@ -42,14 +42,14 @@ summary: |
 
   Separately, every `.agents/` file carried `model` and `effort` in its
   frontmatter since `cf5a67a`, against the rule in `AGENTS.md` and
-  `transponder-conventions` references/coding.md that agent files declare
+  `transporter-conventions` references/coding.md that agent files declare
   `name` and `description` only. The repository ships no loadable agents, so
   the two fields configured nothing.
 
 acceptance_criteria:
   - "A change to a section whose § 12 row reads 🟢 reopens that row to 🟡, and
     `spec_status` to `in-review`, in the same commit — written once, in
-    `transponder-conventions` references/specs.md § \"Section ownership\", and
+    `transporter-conventions` references/specs.md § \"Section ownership\", and
     checked by `spec-reviewer`."
   - "`spec-reviewer` reads and checks a specification-only change: claims
     testable and sourced, claims and scenarios and items agreeing, prose counts

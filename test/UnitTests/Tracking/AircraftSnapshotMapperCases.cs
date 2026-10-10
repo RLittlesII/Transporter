@@ -1,9 +1,9 @@
 using LanguageExt;
-using Transponder.Integrations.OpenSky;
-using Transponder.Model;
-using Transponder.UnitTests.Integrations.OpenSky.Fixtures;
+using Transporter.Integrations.OpenSky;
+using Transporter.Model;
+using Transporter.UnitTests.Integrations.OpenSky.Fixtures;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 /// <summary>Which reported value a case is about.</summary>
 public enum ReportedUnit

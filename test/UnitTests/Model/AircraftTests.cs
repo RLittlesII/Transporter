@@ -1,7 +1,7 @@
 using AwesomeAssertions;
-using Transponder.Model;
+using Transporter.Model;
 
-namespace Transponder.UnitTests.Model;
+namespace Transporter.UnitTests.Model;
 
 public class AircraftTests
 {

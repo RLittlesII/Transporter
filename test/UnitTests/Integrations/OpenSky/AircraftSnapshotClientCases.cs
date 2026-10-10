@@ -1,4 +1,4 @@
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 /// <summary>The ways B-022 says a row can be unreadable.</summary>
 public enum RowDefect

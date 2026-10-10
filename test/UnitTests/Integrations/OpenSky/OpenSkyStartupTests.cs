@@ -4,11 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Configuration;
-using Transponder.Integrations.OpenSky.Container;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Configuration;
+using Transporter.Integrations.OpenSky.Container;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class OpenSkyStartupTests
 {

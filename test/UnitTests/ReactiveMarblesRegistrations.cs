@@ -6,7 +6,7 @@ using System.Runtime.ExceptionServices;
 using ReactiveMarbles.Locator;
 using ReactiveMarbles.Mvvm;
 
-namespace Transponder.UnitTests;
+namespace Transporter.UnitTests;
 
 /// <summary>
 /// Puts ReactiveMarbles' core registrations in its locator once for the whole test assembly, which

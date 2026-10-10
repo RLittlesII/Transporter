@@ -8,7 +8,7 @@
 ## invocations.
 ##
 ## Checks the SUBJECT of the message against the convention
-## `.skills/transponder-conventions/references/delivery.md` § "Commit and pull
+## `.skills/transporter-conventions/references/delivery.md` § "Commit and pull
 ## request messages" writes down. Only what that document states is checked
 ## here, and only on the subject: the body rules -- a paragraph per decision,
 ## the item line, the verification paragraph, what is still not true -- are
@@ -82,7 +82,7 @@ if ! printf '%s' "$subject" | grep -Eq '^(feature|docs|chore|refactor|fix|test|b
     echo "    chore: gate the commit subject with a commit-msg hook"
     echo
     echo "Note feature, not feat. The rules are in"
-    echo ".skills/transponder-conventions/references/delivery.md."
+    echo ".skills/transporter-conventions/references/delivery.md."
     echo
     echo "Bypass with: git commit --no-verify"
 fi

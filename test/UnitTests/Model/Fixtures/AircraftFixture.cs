@@ -1,9 +1,9 @@
 using System;
 using LanguageExt;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Model;
+using Transporter.Model;
 
-namespace Transponder.UnitTests.Model.Fixtures;
+namespace Transporter.UnitTests.Model.Fixtures;
 
 /// <summary>
 /// Builds an <see cref="Aircraft"/>, so a test overrides the one member it is about and nothing

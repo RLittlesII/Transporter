@@ -1,6 +1,6 @@
-using Transponder.UnitTests.Integrations.OpenSky;
+using Transporter.UnitTests.Integrations.OpenSky;
 
-namespace Transponder.UnitTests.Integrations.OpenSky.Replay;
+namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 /// <summary>
 /// Every synthetic recording a replay test reads, in the NDJSON shape ADR-0004 fixes: one line per

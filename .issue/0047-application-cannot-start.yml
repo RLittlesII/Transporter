@@ -29,8 +29,8 @@ summary: |
   first window:
 
       System.InvalidOperationException: Unable to resolve service for type
-      'Transponder.Tracking.IFleetTracker' while attempting to activate
-      'Transponder.Features.Fleet.ViewModels.FleetViewModel'.
+      'Transporter.Tracking.IFleetTracker' while attempting to activate
+      'Transporter.Features.Fleet.ViewModels.FleetViewModel'.
 
   `MauiProgram` registers `FleetPage` and `FleetViewModel` and nothing else.
   `AddFleetTracking` and `AddOpenSky` exist, are public, and are called by
@@ -45,7 +45,7 @@ summary: |
   executed over the head's registration list, so nothing could say it was
   short.
 
-  The second is that `transponder-conventions` § "Verify and publish" step 3
+  The second is that `transporter-conventions` § "Verify and publish" step 3
   says to launch against a recorded or simulated source, and this repository
   has nothing to launch against: `replay-source` (`0008` – `0013`) is unbuilt,
   and OpenSky wants credentials. A step with nothing behind it is a step that
@@ -64,7 +64,7 @@ acceptance_criteria:
 
 decisions:
   - "2026-10-06 — the person — everything that can be composed outside the MAUI
-    head is composed outside it. `AddTransponder` in `src/Transponder/Container`
+    head is composed outside it. `AddTransporter` in `src/Transporter/Container`
     takes the configuration and the user-interface scheduler and registers the
     integration, the tracker and the view models; the head keeps the asset it
     reads the settings from, its pages, and the thread that owns its window.
@@ -83,7 +83,7 @@ decisions:
   - "2026-10-06 — the person — an empty grid is all this item can show, which
     makes recorded data the only thing that proves a screen works.
     `replay-source` is not a convenience behind the live provider: it is what
-    `transponder-conventions` § \"Verify and publish\" step 3 already asks for,
+    `transporter-conventions` § \"Verify and publish\" step 3 already asks for,
     and `0008` is re-valued on that reading."
   - "2026-10-06 — this item — `0036`'s third decision is the one this reverses in
     part. It dropped spike `0040` on the reading that no claim B-001 – B-007 is
@@ -96,7 +96,7 @@ decisions:
     comes from `[ClassData]`: `WindowServiceCases` is one row per service the
     first window needs resolved. Lesson 0013's rule already said this and was
     read as being about doubles only, so lesson 0015 records the repeat and
-    `transponder-conventions` references/testing.md now says the host is stood
+    `transporter-conventions` references/testing.md now says the host is stood
     up in the `// Given`."
 
 out_of_scope:

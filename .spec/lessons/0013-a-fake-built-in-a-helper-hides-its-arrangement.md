@@ -39,7 +39,7 @@ rather than what it proves.
 
 ## The rule
 
-`transponder-conventions` references/testing.md now carries it: a fake is
+`transporter-conventions` references/testing.md now carries it: a fake is
 configured in the test that uses it, what varies comes from `[ClassData]` or
 `[MemberData]` with a `TheoryData<…>` subclass in a `*Cases.cs` file, and a
 private helper may build data but never a double.

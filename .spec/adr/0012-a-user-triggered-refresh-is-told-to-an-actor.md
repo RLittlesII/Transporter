@@ -27,7 +27,7 @@ then gave the tracker four input methods for the continuous half, which is what
 
 The constraint that makes this more than a routing question is money. One poll
 is one OpenSky credit against 4,000 a day (README.md § "Limits"), and
-`fleet-pipeline` [decision 0002](../../src/Transponder/Tracking/.spec/decisions/0002-the-poll-interval-is-not-a-live-input.md)
+`fleet-pipeline` [decision 0002](../../src/Transporter/Tracking/.spec/decisions/0002-the-poll-interval-is-not-a-live-input.md)
 already refused a **live poll interval** for exactly that reason: "a control
 that makes the poll faster is a control that can empty the day's budget during
 the talk." A refresh button is the same hazard at a smaller grain — a credit per
@@ -69,7 +69,7 @@ to keep in step.
 
 Claims: `aircraft-source` B-053 for the throttled on-demand poll,
 `fleet-dashboard` B-028 for the button and its `Tell`. The budget reasoning is
-`aircraft-source` [decision 0003](../../src/Transponder/Integrations/OpenSky/.spec/decisions/0003-a-refresh-is-throttled-at-the-poll-interval.md).
+`aircraft-source` [decision 0003](../../src/Transporter/Integrations/OpenSky/.spec/decisions/0003-a-refresh-is-throttled-at-the-poll-interval.md).
 
 ## Consequences
 

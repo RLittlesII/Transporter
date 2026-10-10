@@ -1,13 +1,13 @@
 using Flurl.Http.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Reactive.Testing;
-using Transponder.Integrations.OpenSky.Authentication;
-using Transponder.Integrations.OpenSky.Configuration;
-using Transponder.Integrations.OpenSky.Http.Api;
-using Transponder.Scheduling;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Integrations.OpenSky.Authentication;
+using Transporter.Integrations.OpenSky.Configuration;
+using Transporter.Integrations.OpenSky.Http.Api;
+using Transporter.Scheduling;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 /// <summary>
 /// What the transport's tests stand up in common: the two named Flurl clients, and a real token

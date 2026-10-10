@@ -1,0 +1,90 @@
+id: "0064"
+type: task
+title: Name what fills a card, and the change each readout shows, in the description
+
+status: done
+
+priority: high
+value: 4
+risk: 2
+rank: 84
+
+parent: "0030"
+children: []
+
+depends_on:
+  - "0062"
+blocks:
+  - "0070"
+  - "0073"
+spikes: []
+
+spec: src/Transporter/Tracking/.spec/README.md
+
+claims:
+  - B-036
+  - B-042
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: "2026-10-08"
+
+summary: |
+  The description gains two things a card needs. Card roles (B-036): which
+  column is the title, the subtitle, the place and the ordered readouts, so the
+  card is laid out from the description the same way the grid's columns were
+  (`fleet-dashboard` B-007, B-021), and a swap to another kind of vehicle
+  changes the card without a markup edit. And a delta per readout (B-042): a
+  selector over the vehicle B-041 carries and the current one, returning the
+  change already formatted — "▲ +120 ft" — or none when nothing changed.
+
+  Waits on `0062` for the replaced vehicle. `fleet-dashboard` `0070` lays the
+  card out from the roles, and `0073` shows the delta.
+
+  One trap, and it is § 11 row 3's. Cells are formatted strings, so a
+  consumer cannot subtract them; the arithmetic lives in the description,
+  beside the unit conversion it needs, and under B-022's exception only. A
+  delta computed in a view model from two formatted cells parses its own
+  output and breaks on the first locale that writes a decimal comma.
+
+acceptance_criteria:
+  - "B-036 — title, subtitle, place and ordered readouts each a column the description holds, or empty."
+  - "B-042 — a named delta is the change at its cell's precision, formatted by the description; none where the cell did not change."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-08 — the person — § 12's 🟡 gate waived for this item by name
+    (`transporter-conventions` delivery: the waiver is a row here). All three
+    rows of `fleet-pipeline` § 12 are 🟡 because B-030, B-034, B-035 and
+    B-037 – B-040 are unreviewed; this item's two claims are designed in § 7 and
+    planned in § 8, and an independent spec-reviewer pass recorded in § 12 found
+    them complete for this item after its two blocking findings were fixed. The
+    waiver covers this item only. Rejected: flipping §§ 6-9 to 🟢 for the whole
+    Feature, which would approve seven claims with no design."
+
+  - "2026-10-08 — implementer — each readout reads its value through one
+    private reader that converts and rounds to the cell's unit, and the cell
+    and the delta both call it. That is what makes § 7's precision rule hold by
+    construction: the delta subtracts the two numbers the cells show, so it
+    cannot disagree with them. Rounding is midpoint-away-from-zero, written
+    once, rather than left to each format string. The four readers are the
+    only new casts, so B-022's re-run `grep` finds six lines, all in the
+    aircraft description."
+  - "2026-10-08 — implementer — the description is built in a private
+    `Describe()` rather than a property initializer, because a role must be the
+    same instance as a column, and an initializer has no local to share. A
+    heading of 359.6° reads `000°`, not `360°`. A zero vertical rate reads
+    `0 ft/min`, with no sign; § 7 names the sign of a climb and a descent and
+    nothing for level flight."
+  - "2026-10-08 — implementer — mutants run against the new tests, each
+    caught: the altitude delta's arguments swapped (4 failed), subtraction
+    before rounding (1), the title built from a fresh column with the same
+    name (1), a delta added to the heading (1), a hyphen in place of U+2212
+    (2), and `Change` reading the vehicle itself in place of the replaced one
+    (5)."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The place column itself — `0065`."
+  - "A delta for a sort or filter column — § 5 row 12."
+  - "The pulse and the reduced-motion rule — `fleet-dashboard` `0073`."

@@ -10,7 +10,7 @@ public class AppShell : Shell
     /// <remarks>The page is resolved from the container through its type, as the XAML this replaces did.</remarks>
     public AppShell()
     {
-        Title = "Transponder";
+        Title = "Transporter";
         Items.Add(new ShellContent
         {
             Title = "Fleet",

@@ -30,7 +30,7 @@ summary: |
   nothing: `test/UnitTests` held no `.cs` file.
 
   Item 0002 changed that. Seven tests now exist, five § 9 rows of
-  src/Transponder/Integrations/OpenSky read `Verified` because they pass, and the build
+  src/Transporter/Integrations/OpenSky read `Verified` because they pass, and the build
   that is supposed to be the gate would report success with every one of them
   failing. That is the shape lesson 0002 is about — a gate reporting a pass
   that nothing verified — and it gets worse with every test the remaining
@@ -60,7 +60,7 @@ decisions:
 
 out_of_scope:
   - "A coverage threshold. `coverlet.collector` is referenced so coverage is
-    collectible; no gate is added and `transponder-conventions` already says
+    collectible; no gate is added and `transporter-conventions` already says
     none is enforced."
   - "Regenerating .github/workflows/ci.yml. The `[GitHubActions]` attribute is
     untouched, and regeneration would rewrite the pinned action versions for

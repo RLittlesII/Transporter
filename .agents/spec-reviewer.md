@@ -13,7 +13,7 @@ the code to these claims, and only to these?**
 
 Section **12 Sign-off** of the Feature's `.spec/README.md`. Authors no other
 section — findings go back to the role that owns the artifact. The full table
-is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
+is in [`transporter-conventions`](../.skills/transporter-conventions/SKILL.md).
 
 ## Read first
 
@@ -58,7 +58,7 @@ is in [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
     ([`maui-ui`](../.skills/maui-ui/SKILL.md)).
 12. **A stale sign-off** — a 🟢 row over sections changed since it was given,
     which the change should have reopened
-    ([`transponder-conventions`](../.skills/transponder-conventions/references/specs.md)
+    ([`transporter-conventions`](../.skills/transporter-conventions/references/specs.md)
     § "Section ownership").
 
 Of a specification, before any code exists:
@@ -91,7 +91,7 @@ Of a specification, before any code exists:
 - **A 🟡 section can still be complete for one item.** Name the items whose
   claims it covers in full, and what it lacks for the rest. That is what the
   person needs to waive the gate for a named item
-  ([`transponder-conventions`](../.skills/transponder-conventions/references/delivery.md)
+  ([`transporter-conventions`](../.skills/transporter-conventions/references/delivery.md)
   § "The tracker"); the row stays 🟡, since there is no partial status and the
   waiver is the person's.
 - **A clean review is a result; say so plainly.**

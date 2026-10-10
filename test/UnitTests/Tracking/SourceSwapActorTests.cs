@@ -10,16 +10,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Airframe;
-using Transponder.Container;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Container;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.Tracking.Container;
-using Transponder.Tracking.Sources;
-using Transponder.UnitTests.Integrations.OpenSky.Replay;
+using Transporter.Container;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Container;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.Tracking.Container;
+using Transporter.Tracking.Sources;
+using Transporter.UnitTests.Integrations.OpenSky.Replay;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 // RSA1010 asks for ObserveOn before every Bind; the consumer here is a test, which has no
 // user-interface thread to marshal to (ReplaySwapTests gives the same reason).
@@ -134,8 +134,8 @@ public class SourceSwapActorTests : TestKit
         // Given
         using var host = new HostBuilder()
             .ConfigureServices(static services => services
-                .AddTransponder(ReplayComposition.Settings(), new TestScheduler())
-                .AddAkka("transponder", static _ => { }))
+                .AddTransporter(ReplayComposition.Settings(), new TestScheduler())
+                .AddAkka("transporter", static _ => { }))
             .Build();
         var sut = Sys.ActorOf(Starts(host.Services.GetRequiredService<SwappingTrackerSource>()));
 

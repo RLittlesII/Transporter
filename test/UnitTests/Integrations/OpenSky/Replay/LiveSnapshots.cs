@@ -1,9 +1,9 @@
 using System.Reactive.Disposables;
 using DynamicData;
-using Transponder.Integrations.OpenSky;
-using Transponder.UnitTests.Integrations.OpenSky.Fixtures;
+using Transporter.Integrations.OpenSky;
+using Transporter.UnitTests.Integrations.OpenSky.Fixtures;
 
-namespace Transponder.UnitTests.Integrations.OpenSky.Replay;
+namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 /// <summary>
 /// The live poller, counted: it reports one aircraft the moment it is polled and records when the

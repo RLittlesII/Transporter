@@ -29,7 +29,7 @@ summary: |
   burden. It's either covered by analysis, or it should be. We shouldn't need
   all the additional comments."
 
-  The convention already exists — `transponder-conventions` § "The rules that
+  The convention already exists — `transporter-conventions` § "The rules that
   bind every change" says a `<summary>` is one line, a `<remarks>` one sentence
   for what the code cannot state, and an inline comment one line saying a _why_,
   with reasoning cited rather than explained. `0006` broke it across nine files
@@ -60,7 +60,7 @@ acceptance_criteria:
   - "No `<remarks>` runs to more than one sentence, and no `<summary>` to more
     than one line, outside a `<para>` block that a reader of the pull request
     agrees earns itself."
-  - "`transponder-conventions` § `coding` carries the rule in its own words
+  - "`transporter-conventions` § `coding` carries the rule in its own words
     rather than only in the `SKILL.md` summary, with the two shapes above as
     its examples."
   - "A lesson records how the convention was written down and still drifted, and

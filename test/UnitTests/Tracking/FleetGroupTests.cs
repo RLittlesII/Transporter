@@ -1,11 +1,11 @@
 using System.Reactive.Linq;
 using AwesomeAssertions;
 using DynamicData;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 // RSA1010 asks for ObserveOn before every Bind. These bind without one deliberately: the
 // pipeline marshals for nobody (fleet-pipeline B-005) and the user-interface scheduler belongs to

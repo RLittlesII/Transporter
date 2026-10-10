@@ -1,0 +1,128 @@
+id: "0005"
+type: task
+title: Project cached snapshots into domain vehicles behind ITrackerSource
+
+status: done
+
+priority: high
+risk: 2
+rank: 109
+
+parent: "0001"
+children: []
+
+depends_on:
+  - "0004"
+blocks:
+  - "0006"
+  - "0007"
+  - "0011"
+spikes: []
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+  - B-033
+  - B-034
+  - B-035
+  - B-036
+  - B-037
+  - B-046
+  - B-049
+
+created: "2026-10-04"
+updated: "2026-10-06"
+closed: "2026-10-05"
+
+summary: |
+  The item that answers the original complaint. `ITrackerSource` declares the
+  `TransportVehicle` changeset stream, and the aircraft strategy behind it owns
+  the Mapperly projection from snapshot to `Aircraft` — the first and only place
+  a domain object is built. Projection is what genuinely varies between an
+  aircraft feed and a vessel feed, which is what makes it the strategy and puts
+  the seam at the domain boundary rather than the wire one.
+
+  Declares the interface three later items plug into — two in this Feature and
+  aircraft replay in the replay Feature — so it unblocks the most and ranks
+  highest of either set. It still runs after 0004, which produces the snapshot
+  changesets it projects.
+
+acceptance_criteria:
+  - "B-033 — the seam's declaration."
+  - "B-034 — the projection this item owns. The first place a domain object
+    exists."
+  - "B-035, B-036 — canonical units, and absent values that are not zeroes.
+    The item's hazard: a mapper will answer wrongly without complaining."
+  - "B-037 — the key's form, and not widening the per-type interface."
+  - "B-046 — the snapshot's referents. The snapshot dies at this projection,
+    which is why the claim is verifiable here and not before."
+  - "B-049 — the contract layer is conditional (§ 4 row 4), proved by a review
+    this item completes rather than by a test. Two of its three clauses already
+    hold and `0002`'s review said so: one contract layer, over the one
+    request/response provider, and no contract invented for a socket because no
+    push provider exists. The third — that the surface every strategy shares is
+    `ITrackerSource` and nothing above it — has no subject until this item
+    declares it, which is why the row is here. Re-done by the Feature that adds
+    a push provider."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-06 — implementer — the status reads `done`, which it should have
+    read since 2026-10-05. The work landed as #19 and that pull request wrote
+    `closed` and the `delivered` block while leaving `status: in-review`, so the
+    item has sat finished and marked otherwise for a day — long enough to read
+    as a hard prerequisite still outstanding when `0011`, which depends on it,
+    came up for scheduling. All seven claims read `Verified` in the
+    specification's § 9 against the tests #19 landed; nothing is re-verified
+    here and no file outside this one changes."
+  - "2026-10-05 — the person — B-049 moves here from `0002`. Its § 9 row is a
+    review, and two of the three clauses were reviewable on `0002` and hold; the
+    third names the `ITrackerSource` this item declares, so no change before
+    this one can finish the row. Same shape as B-003 moving to `0004`: the claim
+    goes to the item that builds its subject. § 3's sentence is unchanged and
+    the row stays `Missing` until this item closes it."
+  - "2026-10-05 — implementer — the projection takes an `[ObjectFactory]` rather
+    than an object initialiser, because ADR-0005 item 3 sets the key and the last
+    contact through a `protected` constructor and Mapperly cannot set `init`
+    members on an instance a factory returned. The remaining reported values are
+    settable, which ADR-0005 already allows — a domain item is keyed and mutable
+    in its reported values."
+  - "2026-10-05 — implementer — the strategy re-keys its changesets on the
+    vehicle's own key. The cache is keyed on `icao24` as the wire spelled it and
+    `ToKey` lowercases it, so leaving the stream on the cache's key would put the
+    split B-037 bans one layer further down. § 7 records it."
+  - "2026-10-05 — implementer — `ToKey` and the non-optional `ToInstant` are
+    scoped out of Mapperly's default mappings. A user-implemented mapping is a
+    rule about a type pair, so `ToKey` lowercased the origin country as well as
+    the key in the first generated projection. Recorded as `lessons/0004` and as
+    a rule in `mapping`; the test that would have caught it is now written."
+  - "2026-10-05 — implementer — the strategy and its mapper are registered in
+    `AddOpenSky`, behind `IAircraftTrackerSource` rather than as themselves. § 7
+    says that registration is the only composition there is, and the service type
+    being the seam is also what keeps `TRN0016`'s wrapper clause off a strategy
+    that holds the cache. The decorator that selects between strategies is
+    `0006`'s and nothing here anticipates it."
+
+delivered: |
+  Six claims to `Verified`: B-033 – B-037 and B-049; B-046 was already carried by the
+  analyzer and is unchanged. `ITrackerSource` declares the `TransportVehicle` changeset
+  and nothing else, `IAircraftTrackerSource` declares nothing at all, and
+  `AircraftTrackerSource` projects the snapshot cache's changesets through an
+  `AircraftSnapshotMapper` whose `ToKey`, `ToInstant`, `ToPosition` and
+  `ToPositionSource` are named methods the tests call directly. `TransportVehicle`,
+  `Aircraft`, `GeoPosition` and `PositionSource` are the domain model ADR-0005 decided,
+  built here because this is the item that needed one.
+
+  B-049's review was performed rather than deferred: one contract layer over the one
+  request/response provider, no contract invented for a socket, and `ITrackerSource` the
+  only surface the strategies share, with no type above it.
+
+  One defect was found by reading the generated projection before writing the tests —
+  `ToKey` applied to every string member, lowercasing the origin country — and
+  `lessons/0004` holds it along with the rule now in `mapping`. Thirteen tests, and
+  `./build.sh` green.
+
+out_of_scope:
+  - "Unit conversion and display formatting (§ 5 row 11)."
+  - "Source-describing metadata (§ 5 row 13)."
+  - "The vessel strategy (§ 5 row 3)."

@@ -30,12 +30,12 @@ summary: |
   deleted branch, and nobody re-read the bases after the lower two landed. The
   work was merged, reviewed and missing from main at the same time.
 
-  The rule is in transponder-conventions references/delivery.md: branch off main where
+  The rule is in transporter-conventions references/delivery.md: branch off main where
   the work can be, stack only where the later work cannot compile or be tested
   without the earlier, one dependent level at most, and retarget a dependent
   pull request the moment its base merges. Lesson 0009 holds the incident.
 
-  Follow-up in the same pull request, from the same review: transponder-conventions
+  Follow-up in the same pull request, from the same review: transporter-conventions
   was 381 lines and five companions in one file, and deliver-change was the only
   skill over the Agent Skills specification's 5,000-token guidance for a SKILL.md
   body. Neither breached the 500-line cap, and no skill in the repository used
@@ -43,7 +43,7 @@ summary: |
   the specification is built around: metadata always, body on activation,
   references on demand.
 
-  Both are now an index plus references. transponder-conventions keeps the rules
+  Both are now an index plus references. transporter-conventions keeps the rules
   that decide whether work may start; deliver-change keeps the three-phase walk
   through. Every section-anchored cite moved with its section.
 

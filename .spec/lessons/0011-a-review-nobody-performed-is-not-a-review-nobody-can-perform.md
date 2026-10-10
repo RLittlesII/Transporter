@@ -65,7 +65,7 @@ two options were both refused. No claim text changes.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 references/delivery.md § "The tracker". Before reporting that an item cannot
 close, **perform the reviews its rows name.** A `Missing` row naming a review is
 a review nobody has done; the row records what was looked at, on which item, and

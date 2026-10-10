@@ -53,7 +53,7 @@ None. No claim, no section; the shape of the work changed, not what it does.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 § `deliver-change` → "Worktree and branch":
 
 > **Branch off `main`. If the work can be done off `main`, it is.** Stack only

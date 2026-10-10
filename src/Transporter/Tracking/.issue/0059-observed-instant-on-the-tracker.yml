@@ -1,0 +1,93 @@
+id: "0059"
+type: task
+title: Publish the observed instant on the tracker, so a consumer can tell a poll landed
+
+status: done
+
+priority: medium
+value: 2
+risk: 1
+rank: 42
+
+parent: "0030"
+children: []
+
+depends_on: []
+blocks:
+  - "0058"
+spikes: []
+
+spec: src/Transporter/Tracking/.spec/README.md
+
+claims:
+  - B-031
+
+created: "2026-10-07"
+updated: "2026-10-07"
+closed: "2026-10-07"
+
+summary: |
+  One member on `IFleetTracker`: the observed instant, and every advance of it.
+  `ObservedClock` already publishes that stream through `IObservedClockTicks`
+  (ADR-0010) and the client already reports an instant on every applied poll
+  (`aircraft-source` B-003), so this item adds no mechanism — it makes an
+  existing one reachable from a consumer, which depends on the tracker and
+  nothing below it (`aircraft-source` B-041).
+
+  It exists for `fleet-dashboard` B-028: the refresh indicator is set by the
+  gesture and has nothing truthful to clear it, because a poll returning
+  identical data raises no notice and the actor is told rather than asked.
+  `fleet-dashboard` decision 0001 is the call, and `0058` is the item that
+  consumes this.
+
+  Depends on nothing. The seam, the clock and its registration are all on
+  `main`; the member is re-published from the clock the tracker already holds.
+
+  One trap. The value is the instant the **provider reported**, not a wall-clock
+  read and not the moment the changeset arrived — B-018 and ADR-0007 are what
+  make that distinction load-bearing, and under replay the recorded instants are
+  what a consumer sees. A member that reported `DateTimeOffset.UtcNow` on each
+  advance would pass a careless test and be wrong in exactly the demo this
+  repository exists to give.
+
+acceptance_criteria:
+  - "B-031 — the observed instant published on the tracker, one per applied
+    poll, identical data included; the provider's reported value, never a wall
+    clock."
+  - "§ 9 Traceability Matrix carries a row naming a test for B-031, replacing
+    the row that names this item."
+
+decisions: []
+
+delivered: |
+  B-031 to `Verified`. `IFleetTracker.Observed` is `IObservedClockTicks.Instant`
+  re-published with the tracker's shutdown on it and no operator between — no
+  `DistinctUntilChanged`, because the same instant reported twice is two polls and
+  deduplicating would leave `fleet-dashboard`'s indicator spinning after the second;
+  no `ObserveOn`, because the pipeline marshals for nobody (B-005). No stage, no
+  scheduler and no subject added, which is what the risk score said.
+
+  Four tests in `ObservedInstantTests`: the identical poll that raises no notice and
+  still publishes an instant, the recorded 2021 instant a wall-clock read would get
+  wrong, the in-force value a subscription reads, and disposal completing the stream.
+  206 unit tests green.
+
+  **One finding, and it changes `0058` rather than this.** Subscribing to the stream
+  is itself an emission — the clock holds the instant in force behind a
+  `BehaviorSubject` (ADR-0010), so a subscriber receives it at once, and
+  `DateTimeOffset.MinValue` before any poll. A consumer timing a window from a
+  gesture must `Skip(1)` or the window ends on the press that opened it. The claim
+  is unamended, § 7 and § 10 now say it, `fleet-dashboard`'s view model carries the
+  skip, and `0058`'s item carries the trap. Rejected: dropping the in-force value,
+  which would leave a late subscriber with nothing until the next poll and break the
+  staleness re-derivation `Reevaluate` depends on.
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The indicator, its cap and what the user sees — `fleet-dashboard` B-028,
+    built by `0058`."
+  - "Any change to `IObservedClock`, `IObservedClockWriter` or
+    `IObservedClockTicks`: ADR-0007's read/write split and ADR-0010's third
+    seam both stand, and this republishes the third rather than widening any."
+  - "Staleness re-evaluation on an advance — `fleet-pipeline` B-018, delivered
+    by `0034`, and unchanged by publishing the same stream to a consumer."

@@ -1,0 +1,82 @@
+---
+id: "0084"
+type: chore
+title: Name the internals Transporter, as the repository already is
+
+status: done
+
+priority: medium
+value: 3
+risk: 3
+rank: 51
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-09"
+updated: "2026-10-09"
+closed: "2026-10-09"
+
+summary: |
+    The repository is published as `RLittlesII/Transporter`, and everything
+    inside it is named Transponder: the solution, four project directories,
+    every namespace, the conventions skill and the prose. The README already
+    carries both, a Transponder title above a badge that points at
+    Transporter. This item gives the inside the name the outside has.
+
+    Nothing behaves differently afterwards. The change is a rename of files,
+    directories, namespaces, assemblies and identifiers, with every reference
+    to a moved path repointed in the commit that moves it.
+
+acceptance_criteria:
+    - "No tracked path contains `transponder` in any case."
+    - "The solution is `Transporter.slnx`, the projects and their root
+      namespaces are `Transporter*`, and the conventions skill is
+      `transporter-conventions`."
+    - "`./build.sh` and `dotnet test test/UnitTests` pass, the analyzer
+      boundary tests among them."
+    - "Every relative link in tracked markdown resolves."
+    - "The word survives only where it is not the product's name or the record
+      is immutable: the two `transponder code` comments that mean the squawk,
+      the former skill `transponder-domain-model` in lesson 0001, the quoted
+      bootstrap commit subject, the `Transponder Flight Deck` design system,
+      and the bodies of accepted or superseded decision records."
+
+decisions:
+    - "2026-10-09 — the person — the internals take the repository's name, in
+      full: paths, namespaces, assemblies, identifiers, the skill and the
+      prose."
+    - "2026-10-09 — the `TRN` diagnostic ids stay. `TRN` abbreviates
+      Transporter as well as it did Transponder, and the ids are in the
+      commit-msg hook, an ADR's filename, the tests and seventeen items.
+      Rejected: a new prefix, which would renumber nothing and rewrite 290
+      references for no gain in meaning."
+    - "2026-10-09 — an accepted or superseded ADR, and a decided decision,
+      keeps its body. Only a link's target is repointed there, which is what
+      `document.md` allows of an accepted record. Rejected: rewriting their
+      prose, which the same rule forbids."
+    - "2026-10-09 — `RCS1194` is off for `OpenSkyThrottledException`, with the
+      reason beside it. The file had carried the fixable warning since before
+      the pre-commit hook existed, and the rename is the first commit to stage
+      it since. Rejected: the fix, three constructors that build the exception
+      with no delay; and bypassing the hook."
+    - "2026-10-09 — eight relative links in tracked markdown were unresolved
+      before this item and are left so. None names the product: two point at
+      an item `0051` that does not exist, five in the analyzer's README at
+      `features/boundary-analyzer`, and one in OpenSky decision 0003 is a
+      directory short. They are another item's."
+
+out_of_scope:
+    - "The local checkout's directory name — it is not tracked, and renaming
+      it breaks the registered worktrees."
+    - "The app's `ApplicationTitle` and `ApplicationId` in `src/Gui`, which
+      are template defaults and never carried the name."
+    - "Rebasing the other open branches onto the rename — each is its owner's."

@@ -16,8 +16,8 @@ type: lesson
 
 ```
 System.InvalidOperationException: Unable to resolve service for type
-'Transponder.Tracking.IFleetTracker' while attempting to activate
-'Transponder.Features.Fleet.ViewModels.FleetViewModel'.
+'Transporter.Tracking.IFleetTracker' while attempting to activate
+'Transporter.Features.Fleet.ViewModels.FleetViewModel'.
 ```
 
 Not a wrong value on a screen — no screen. `AppShell`'s only content is the
@@ -35,7 +35,7 @@ Three things were supposed to catch that, and each had been let go for a reason
 that was true on its own.
 
 **B-004 is the registration claim**, and its § 9 row reads `Missing`, routed to
-[`0044`](../../src/Transponder/Features/Fleet/.issue/0044-page-level-claim-proof.yml)
+[`0044`](../../src/Transporter/Features/Fleet/.issue/0044-page-level-claim-proof.yml)
 because `test/UnitTests` is `net10.0` and `src/Gui` is a pair of Apple-only MAUI
 heads. The reason the claim could not be proved is the same reason the defect
 could not be seen: **the registration list lived where nothing executes.**
@@ -44,7 +44,7 @@ could not be seen: **the registration list lived where nothing executes.**
 B-007 is about registration or who polls first. The second half was right and
 the first was not.
 
-**`transponder-conventions` § "Verify and publish" step 3 says to launch against
+**`transporter-conventions` § "Verify and publish" step 3 says to launch against
 a recorded or simulated source** — and this repository has nothing to launch
 against: `replay-source` (`0008` – `0013`) is unbuilt, and OpenSky wants
 credentials. A step with nothing behind it is a step that does not run, which is

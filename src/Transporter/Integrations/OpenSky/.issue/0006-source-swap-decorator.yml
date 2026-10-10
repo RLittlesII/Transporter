@@ -1,0 +1,142 @@
+id: "0006"
+type: task
+title: Swap the live source behind a decorator over ITrackerSource
+
+status: done
+
+priority: high
+risk: 3
+rank: 106
+
+parent: "0001"
+children: []
+
+depends_on:
+  - "0005"
+blocks:
+  - "0012"
+  - "0039"
+  - "0080"
+spikes: ["0049"]
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+  - B-038
+  - B-039
+  - B-040
+  - B-052
+
+created: "2026-10-04"
+updated: "2026-10-09"
+closed: "2026-10-06"
+
+summary: |
+  A decorator registered as `ITrackerSource` picks which strategy is live at
+  runtime. There is no `IStrategyResolver` and no caller that asks which
+  strategy to use: each strategy registers as `ITrackerSourceStrategy`, the
+  selector takes the container's enumerable of those, and the selector is the
+  only thing registered as `ITrackerSource`. Nothing downstream can observe
+  from the stream that a swap happened — which is the claim the closing act
+  makes on stage, so it has to be true in the source rather than in the
+  narration.
+
+  Adds no package. ADR-0003 named `Scrutor` until `0049` ran it on 2026-10-06:
+  `Decorate<>` wraps one registration at a time, so N strategies registered as
+  the seam are N decorators and the last one wins. ADR-0011 supersedes it with
+  the strategy seam above, and the ordering hazard that was most of this item's
+  risk is retired with it. ADR-0011 § "How a swap happens at runtime" is the
+  walkthrough this item implements, step by step.
+
+  Runs after 0005, which declares the interface it decorates and provides the
+  one strategy it can wrap. Replay selection (0012) waits on this item, since
+  replay is selected by this decorator and by nothing else.
+
+acceptance_criteria:
+  - "B-038 — the decorator registered as the seam, and no resolver type."
+  - "B-039 — a swap unobservable from the stream."
+  - "B-040 — the outgoing source is stopped, so it stops spending credits."
+  - "B-052 — the constructed container resolves `IFleetTracker` with every
+    dependency satisfied and this decorator applied. Taken from `0007`, which
+    could not prove it before the decorator existed."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-06 — review of pull request #36 — the strategy holds its poller as
+    `IAircraftSnapshotClient` rather than as `AircraftSnapshotClient`, and the
+    two untested pieces are tested. The client is the only collaborator in this
+    item that performs I/O, so it is the one the inversion is worth and the one
+    a test must stand in for; the interface declares `Poll()` and nothing else.
+    The cache and the mapper stay concrete and are not the same case — B-030
+    forbids the cache a type of its own and the mapper is Mapperly's generated
+    class, so either interface would have one implementation and nothing to
+    substitute. `Akka.TestKit.Xunit2` is taken for `SourceSwapActorTests`;
+    rejected: leaving the actor untested because no claim names it, which the
+    pull request body had said out loud and the review did not accept."
+  - "2026-10-06 — review of pull request #36 — the comments this item added are
+    a maintenance burden and most of them go. Ten lines across seven files, one
+    finding: prose restating the call below it, paragraph-length `<remarks>`,
+    and claim or record identifiers inside a sentence. The convention was
+    already written — `transporter-conventions` § \"The rules that bind every
+    change\" — and nothing executes it, which is lesson 0017. Scrubbed here;
+    `0050` scrubs the rest of the repository and `0051` is the diagnostic that
+    would have caught it. The identifier half of `0051` is left
+    `ready-for-architecture` because the reviewer raised it as a suspicion, and
+    a bare citation on a line that would be wrong without one is the form that
+    should survive."
+  - "2026-10-06 — `0006` — the `.Switch()` in the decorator resolves to
+    **DynamicData's** changeset operator rather than Rx's, because `using
+    DynamicData` is in scope. The difference showed up in the B-039 test's first
+    run — three changesets rather than two, the extra one a remove of the
+    outgoing fleet. Kept, because the alternative leaves aircraft in the
+    collection among the ships, which `hot-swap-source` lists as a failure mode.
+    B-039 is unharmed: a vehicle leaving is an ordinary change, indistinguishable
+    from that aircraft leaving the box, and what the claim forbids is a marker, a
+    completion or an error, none of which the stream carries. The skill said
+    nothing is cleared on a swap and is corrected; `aircraft-source` § 7 and § 10
+    carry it so the next reader does not re-run it (lesson 0016's rule)."
+  - "2026-10-06 — the person — the item was taken and put back the same day.
+    Its first step ran ADR-0003's library against the registration shape the
+    record described, and the record was wrong (`0049`, lesson 0016). No
+    decorator was written; the three calls below were made before the stop and
+    stand."
+  - "2026-10-06 — the person — B-040 is satisfied by the subscription rather
+    than by disposal: a strategy's `Connect()` owns its poller, so `Switch`
+    stops the outgoing one and a swap back starts it again. Rejected: the
+    decorator disposing an outgoing `IDisposable` source, which makes a
+    swapped-away singleton unusable and so makes repeated swaps need a factory
+    per strategy — the flat-across-swaps property `hot-swap-source` requires.
+    This gives `AircraftTrackerSource` the snapshot client, and it answers
+    spike `0040` question 3 in passing: the first subscription starts the first
+    poll."
+  - "2026-10-06 — the person — the actor that performs the swap is built here,
+    per `fleet-dashboard` § 4 row 6 and § 5 row 2, which assign the decorator,
+    the disposal and that actor to this item. It answers spike `0040`
+    question 1 in passing — how a source actor gets its container-resolved
+    collaborators — and the finding is recorded rather than left implicit. The
+    control and the busy indicator stay `fleet-dashboard` `0039`'s."
+  - "2026-10-06 — the person — republishing the `FleetSourceDescription` on a
+    swap is **not** this item's. It is `fleet-pipeline` B-020 and B-021, this
+    item carries no claim for it, and making the decorator do it would need
+    every strategy to carry its description — the per-type seam widening B-037
+    forbids. `AddOpenSky`'s comment saying the next push is `0006`'s is
+    corrected rather than honoured."
+  - "2026-10-06 — `0049` — risk lowered 4 to 3, and the rank with it. The
+    ordering hazard is retired by ADR-0011; what replaces it is a strategy
+    registered as `ITrackerSource` rather than as `ITrackerSourceStrategy`,
+    which B-052's composition test sees. B-040's unstopped poller stands."
+  - "2026-10-06 — the person — B-052 moves here from `0007`. Its second clause
+    is \"every decorator applied\", so the claim is unprovable until this item
+    builds one; `0007` held a row nothing it delivered could move."
+  - "2026-10-04 — spec-author — Scrutor rather than keyed services, per-type
+    interfaces, or hand-written decoration. Recorded with its rejected options
+    in ADR-0003."
+
+out_of_scope:
+  - "The swap control, the stage choreography, and cancelling an in-flight
+    result on swap (§ 5 row 5). `hot-swap-source` owns them; this item claims
+    the decorator's obligations and stops there — no selector UI, no disposal
+    choreography."
+  - "A second strategy to swap to. The replay and simulated strategies are
+    § 5 row 4 and the vessel feed is § 5 row 3."
+  - "Rebuilding anything on swap. B-042 forbids it and belongs to 0007."

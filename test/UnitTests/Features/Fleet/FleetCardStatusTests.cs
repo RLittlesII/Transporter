@@ -1,9 +1,9 @@
 using AwesomeAssertions;
-using Transponder.Features.Fleet;
-using Transponder.Tracking;
-using Transponder.Tracking.Sources;
+using Transporter.Features.Fleet;
+using Transporter.Tracking;
+using Transporter.Tracking.Sources;
 
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 public class FleetCardStatusTests
 {

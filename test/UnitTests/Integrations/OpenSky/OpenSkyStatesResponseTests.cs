@@ -1,6 +1,6 @@
 using AwesomeAssertions;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class OpenSkyStatesResponseTests
 {

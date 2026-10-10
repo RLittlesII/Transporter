@@ -3,13 +3,13 @@ using AwesomeAssertions;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Features.Fleet.ViewModels;
-using Transponder.Scheduling;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Features.Fleet.ViewModels;
+using Transporter.Scheduling;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 public class FleetSummaryViewModelTests
 {

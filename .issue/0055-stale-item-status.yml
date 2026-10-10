@@ -117,7 +117,7 @@ decisions:
   - "2026-10-07 — implementer — nothing was re-verified to close `0014` – `0016`.
     Their acceptance criteria are checkable by reading the repository, and they
     are: `.issues/` is gone and `.issue/.sequence` exists (`0015`),
-    `.skills/transponder-conventions` holds this repository's specifics and
+    `.skills/transporter-conventions` holds this repository's specifics and
     root lesson `0001` records why (`0014`), every specification section carries
     a one-line pointer and the rank formula lives in `.spec/templates/item.yml`
     (`0016`). What was missing was the closing, not the work."

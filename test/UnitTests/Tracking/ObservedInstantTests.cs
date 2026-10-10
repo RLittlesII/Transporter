@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using AwesomeAssertions;
 using DynamicData;
 using NSubstitute;
-using Transponder.Model;
-using Transponder.Tracking;
+using Transporter.Model;
+using Transporter.Tracking;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class ObservedInstantTests
 {

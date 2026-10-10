@@ -1,4 +1,4 @@
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 /// <summary>
 /// Two positions and the great-circle distance between them in metres, each computed from R times

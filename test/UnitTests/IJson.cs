@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Transponder.UnitTests;
+namespace Transporter.UnitTests;
 
 /// <summary>
 /// Reading a payload, once, for anything that holds one.

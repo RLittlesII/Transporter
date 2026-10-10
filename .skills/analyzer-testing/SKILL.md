@@ -9,13 +9,13 @@ Extends the `source-generators` skill — not in this repository; it is the
 agent-level one — for authoring and packaging, and
 [`test-from-scenarios`](../test-from-scenarios/SKILL.md) for how a test is
 named and shaped. This skill holds only what is specific to testing
-[`Transponder.Analyzers`](../../src/Transponder.Analyzers/).
+[`Transporter.Analyzers`](../../src/Transporter.Analyzers/).
 
 **Do not hand-roll a harness.**
 `Rocket.Surgery.Extensions.Testing.SourceGenerators` compiles source text, runs
 analyzers, code fixes and refactorings over it, and hands back the diagnostics.
 Airframe tests the `RSA` rules this repository already runs with it, and
-`src/Transponder.Analyzers/.spec/README.md` B-015 is why the test project is
+`src/Transporter.Analyzers/.spec/README.md` B-015 is why the test project is
 the only one that references the analyzer as an assembly.
 
 ## The builder
@@ -69,7 +69,7 @@ constant per layer.
   which also reads better than a line number.
 - **`Verify` arrives whether or not it is used.** The package depends on
   `Verify.SourceGenerators`. This repository asserts with **AwesomeAssertions**
-  and commits no snapshots: `transponder-conventions` references/testing.md
+  and commits no snapshots: `transporter-conventions` references/testing.md
   fixes the stack, and a snapshot nobody reviews is a test that passes because
   it was regenerated.
 - **The default reference set is not the platform.** `System.ObjectModel` is
@@ -111,7 +111,7 @@ A fix changes only what the claim requires, and applying it twice offers no
 second change.
 
 **The fixes are a project of their own**
-([`src/Transponder.CodeFixes`](../../src/Transponder.CodeFixes/)), because a
+([`src/Transporter.CodeFixes`](../../src/Transporter.CodeFixes/)), because a
 `CodeFixProvider` needs `Microsoft.CodeAnalysis.Workspaces` and an analyzer must
 not carry that into the compiler's load path. It takes **no project reference to
 the analyzer** either — both sit in that load path from different directories, so

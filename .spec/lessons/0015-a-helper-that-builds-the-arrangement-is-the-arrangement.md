@@ -11,8 +11,8 @@ type: lesson
 
 ## Symptom
 
-`TransponderCompositionTests` carried two private helpers. `Host()` built the
-`HostBuilder`, called `AddTransponder` and returned the host; `Settings()` built
+`TransporterCompositionTests` carried two private helpers. `Host()` built the
+`HostBuilder`, called `AddTransporter` and returned the host; `Settings()` built
 the configuration it was called with. Every test read `using var host = Host();`
 and said nothing about what the application had been composed over. The review:
 
@@ -25,7 +25,7 @@ written the same day.
 
 ## Root cause
 
-Lesson 0013's rule landed in `transponder-conventions` references/testing.md as
+Lesson 0013's rule landed in `transporter-conventions` references/testing.md as
 a sentence about doubles — "a fake is configured in the test that uses it" —
 with a closing clause that a private helper "may still build **data** a case
 needs". Neither helper here built a double, and configuration reads as data, so
@@ -51,7 +51,7 @@ what it proves.
 
 ## The rule
 
-`transponder-conventions` references/testing.md § "A test that stands up a host"
+`transporter-conventions` references/testing.md § "A test that stands up a host"
 now carries it: **the host is built in the test body** — the `HostBuilder`, the
 configuration handed to it and the registration call are the `// Given`, never a
 private `Host()` or `Settings()`. A helper may build one domain value a case

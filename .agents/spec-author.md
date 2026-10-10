@@ -17,11 +17,11 @@ Sections **1 Business Goal, 2 User Needs, 3 Acceptance Criteria, 4
 Constraints, 5 Out of Scope** of `features/<slug>/.spec/README.md`, the
 companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
 `.issue/` items. Nothing else — the full table is in
-[`transponder-conventions`](../.skills/transponder-conventions/SKILL.md).
+[`transporter-conventions`](../.skills/transporter-conventions/SKILL.md).
 
 ## Read first
 
-- `AGENTS.md`, and [`transponder-conventions`](../.skills/transponder-conventions/SKILL.md)
+- `AGENTS.md`, and [`transporter-conventions`](../.skills/transporter-conventions/SKILL.md)
   for the layout, the claim scheme, and who owns what.
 - [`README.md`](../README.md) — the project specification today, and the
   source of the constraints that matter (the data source's limits, the credit
@@ -44,7 +44,7 @@ companion `.feature` file, and `## Tasks` / `## Scoring` drawn from the
    each, with `B-00n` ids. Ids are permanent — never renumbered, never reused —
    and **scoped to this Feature**, so a new spec starts again at `B-001` and two
    specs may share an id without either giving way
-   ([`transponder-conventions`](../.skills/transponder-conventions/SKILL.md)).
+   ([`transporter-conventions`](../.skills/transporter-conventions/SKILL.md)).
    A withdrawn claim is marked `Withdrawn` on the claim itself, not deleted;
    § 9 and the `.feature` file are anchored to it.
 2. **Scenarios** in the Feature's `.feature` file: declarative

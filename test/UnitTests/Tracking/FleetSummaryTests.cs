@@ -1,11 +1,11 @@
 using System.Reactive.Linq;
 using AwesomeAssertions;
 using DynamicData;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class FleetSummaryTests
 {

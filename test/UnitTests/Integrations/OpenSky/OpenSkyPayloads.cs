@@ -1,4 +1,4 @@
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 /// <summary>
 /// Every synthetic <c>/states/all</c> payload a test reads, and the builders that vary one element
@@ -11,7 +11,7 @@ namespace Transponder.UnitTests.Integrations.OpenSky;
 /// next to the index table it is read against.
 /// <para>
 /// Every value is invented — callsigns, <c>icao24</c> values, countries and positions
-/// (<c>transponder-conventions</c> § testing).
+/// (<c>transporter-conventions</c> § testing).
 /// </para>
 /// </remarks>
 public static class OpenSkyPayloads

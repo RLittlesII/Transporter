@@ -1,0 +1,78 @@
+id: "0022"
+type: task
+title: Report a forbidden reference wherever it is written, method bodies included
+
+status: done
+
+priority: high
+risk: 4
+rank: 88
+
+parent: "0019"
+children: []
+
+depends_on:
+  - "0021"
+blocks: []
+spikes: []
+
+spec: src/Transporter.Analyzers/.spec/README.md
+
+claims:
+  - B-009
+
+created: "2026-10-04"
+updated: "2026-10-05"
+closed: "2026-10-05"
+
+summary: |
+  TRN0002 – TRN0007, six of the seven rules ADR-0006 exists for: the envelope
+  and row confined to two types, the snapshot dying at the
+  projection, nothing upstream named from below IFleetTracker, no domain type in
+  the cache, no strategy or client or cache or decorator named by a view model,
+  and no imperative mutation of a bound collection.
+
+  They are evaluated over the semantic model including method bodies — a local,
+  a new, a cast, a generic argument supplied at a call site, a type named only
+  inside a method. That is the single constraint that ruled out reflection
+  (ADR-0006 § Context): a signature-only rule reports a view model as satisfied
+  while it constructs an envelope in a method and throws it away, which is the
+  violation the claim exists to catch.
+
+  § 11 row 1 is answered — a rule identifies a layer by its containing
+  namespace, read against the layout transporter-conventions
+  references/coding.md § "Project structure" fixes, recorded as src/Transporter.Analyzers/.spec/adr/0002. The
+  classification lives in Layers.cs, which 0021 lands, so these six rules read
+  it rather than each deciding what a layer is.
+
+  TRN0001 moved to 0021: B-004 and B-005 are claims about where a diagnostic
+  lands and whether generated code is exempt, and neither can be proven without
+  one rule that actually reports. This item is TRN0002 – TRN0007.
+
+  The hazard runs both ways and only one direction is visible: a rule written too
+  broadly stops work that was never wrong and gets switched off in
+  .editorconfig; a rule written too narrowly reports nothing, the aircraft-source
+  § 9 row reads Verified, and the boundary is unenforced while the matrix says
+  otherwise.
+
+acceptance_criteria:
+  - "B-009 — a reference named only inside a method body is reported, and no
+    rule reports a type satisfied on the strength of its signatures."
+  - "§ 9 carries a row naming a test for B-009."
+  - "Each of the six claims this item carries rules for is proven by the test
+    aircraft-source § 9 names for it, under that name (B-016). Those rows are
+    that specification's, not this item's: it is where they stop reading
+    Missing."
+
+decisions:
+  - "2026-10-04 — the person — layers are identified by namespace, not by a
+    marker attribute or a project per layer. Recorded as
+    src/Transporter.Analyzers/.spec/adr/0002; it unblocked this item."
+
+out_of_scope:
+  - "Declaration rules — 0023. Call-site rules — 0024."
+  - "TRN0001, aircraft-source B-004 — moved to 0021 as the rule its B-004 and
+    B-005 tests report through."
+  - "The descriptor conventions every rule here obeys — 0021, which this item
+    depends on."
+  - "aircraft-source B-009 and B-049 — § 5 row 1."

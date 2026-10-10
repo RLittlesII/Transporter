@@ -1,0 +1,102 @@
+id: "0057"
+type: task
+title: Poll when told to, and refuse a poll that would outspend the cadence
+
+status: done
+
+priority: high
+value: 4
+risk: 3
+rank: 76
+
+parent: "0001"
+children: []
+
+depends_on: []
+blocks:
+  - "0058"
+spikes: []
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+  - B-053
+
+created: "2026-10-07"
+updated: "2026-10-07"
+closed: "2026-10-07"
+
+summary: |
+  The half of the refresh gesture that performs the work. An actor is told a
+  poll is wanted and decides whether to make one: inside B-050's configured
+  interval it refuses, outside it polls once, and the snapshot reaches the cache
+  by the path every other poll already takes. The gesture that tells it is
+  `fleet-dashboard` B-028, built by `0058`.
+
+  Throttled rather than free because one poll is one credit against 4,000 a day,
+  and an unbounded control over that budget is what `fleet-pipeline`
+  decision 0002 already refused — see decision 0003, which is the spec delta
+  that record left available. Binding the window to B-050 rather than adding an
+  option is what keeps the guarantee statable: demand cannot make the source
+  spend faster than its own cadence.
+
+  Depends on nothing: the client, the cache, the options and the dependency
+  resolver are all on `main`, and the actor this adds is registered the way
+  `SourceSwapActor` already is.
+
+  Two traps. A refusal is silent to the caller and must not fault the stream or
+  disturb the cadence — a throttle implemented as an exception would surface as
+  a broken grid. And the refusal window is measured from the last poll the
+  source actually made, cadence polls included, not from the last demanded one;
+  measuring only demand lets a press land one tick after a scheduled poll and
+  spend a credit for a snapshot the cadence was about to fetch anyway.
+
+acceptance_criteria:
+  - "B-053 — a poll performed on demand, told rather than published; refused
+    inside the configured interval; the refusal silent and non-faulting."
+  - "§ 9 Traceability Matrix carries a row naming a test for B-053, replacing
+    the row that names this item."
+
+decisions:
+  - "2026-10-07 — the person — the cadence yields to a demanded poll. B-053's
+    guarantee is read literally, so the poll loop measures its next poll from
+    the last poll performed rather than from its own last fetch: one poll per
+    interval, always. Rejected the reading that leaves the loop untouched, which
+    caps demanded polls at one per interval but lets a press landing just after
+    the window opens put two polls inside one interval. The cost is that a
+    demanded poll pushes the next cadence poll out by up to one interval, so the
+    scenario's \"the cadence is not disturbed\" covers a refusal and not a
+    performed poll — § 7 says so and § 10 carries the delta."
+
+delivered: |
+  B-053 to `Verified`. `AircraftPollActor` is told `PollAircraft` and decides:
+  inside B-050's interval it refuses — a debug line and a return, so the caller
+  learns nothing and the stream neither faults nor completes — and outside it
+  performs one poll through the same `Fetch` the cadence calls, so the snapshot
+  reaches the cache by the path every other poll takes. `IDemandedPoll` is the
+  seam it reads the last poll's instant through, and `AddOpenSkyActors` starts
+  the actor from this integration's own registration.
+
+  The window is measured from the last poll the source actually made, and the
+  client stamps that instant immediately before it calls the provider, so a
+  throttled or failed poll closes the window exactly as a successful one does.
+
+  One design defect was found while building it rather than after: the actor's
+  refusal bounds demand on its own, but the cadence slept a full interval after
+  each of its own fetches, so a press landing just after a window opened put two
+  calls inside one interval and B-053's guarantee was false of the pair. The
+  person chose the literal reading, the loop now waits out what is left of the
+  interval since the last poll whoever made it, and the third test is what would
+  have caught it. § 10 carries the delta and § 7 the rule.
+
+  Three tests, and `dotnet test test/UnitTests` is 205 green. `./build.sh` is
+  what verified the whole of it.
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The button, its indicator and what clears it — `fleet-dashboard` B-028,
+    built by `0058`."
+  - "A live poll interval (§ 5 row 8 of `fleet-pipeline`) — still excluded, and
+    decision 0003 does not reverse it."
+  - "A press budget per session — named and rejected in decision 0003, and
+    available later without amending B-053."

@@ -25,7 +25,7 @@ updated: "2026-10-08"
 closed: "2026-10-08"
 
 summary: |
-  `src/Transponder/Transponder.csproj` references `Microsoft.Maui.Controls.Core`.
+  `src/Transporter/Transporter.csproj` references `Microsoft.Maui.Controls.Core`.
   It came in with the Akka demo (`4e33882`, 2026-10-03), and nothing in the
   assembly uses it: with the reference removed, the assembly builds and all
   219 tests pass. The person, 2026-10-08: the feature assembly has no
@@ -36,19 +36,19 @@ summary: |
   defect, so the fix is the removal plus a gate: a test that fails when the
   compiled assembly references any `Microsoft.Maui` assembly. A package
   reference nothing uses is compiled away and the test cannot see it — that half
-  is a rule written in `transponder-conventions`, checked by review.
+  is a rule written in `transporter-conventions`, checked by review.
 
 acceptance_criteria:
-  - "`src/Transponder/Transponder.csproj` references no MAUI package, and
+  - "`src/Transporter/Transporter.csproj` references no MAUI package, and
     `Directory.Packages.props` carries no version nothing references."
-  - "A test fails when the `Transponder` assembly references an assembly whose
+  - "A test fails when the `Transporter` assembly references an assembly whose
     name starts with `Microsoft.Maui`."
-  - "`transponder-conventions` references/coding.md § \"Project structure\" says
-    `src/Transponder` references no MAUI package."
+  - "`transporter-conventions` references/coding.md § \"Project structure\" says
+    `src/Transporter` references no MAUI package."
   - "./build.sh passes and every existing test passes."
 
 decisions:
-  - "2026-10-08 — the person — `src/Transponder` has no dependency on MAUI
+  - "2026-10-08 — the person — `src/Transporter` has no dependency on MAUI
     controls. Filed as a bug on its own branch, apart from ADR-0014, which named
     the reference as evidence and now names it as this defect."
   - "2026-10-08 — implementer — the test was not run red. Showing it fail needs

@@ -11,13 +11,13 @@ type: lesson
 
 ## Symptom
 
-`src/Transponder/Tracking` § 7 declared the element its fleet stream publishes as
+`src/Transporter/Tracking` § 7 declared the element its fleet stream publishes as
 `StaleVehicle` — a vehicle and a derived stale mark, wrapped so a consumer binds
 one collection and reads the mark off the row it already has. The name went
 through the § 11 row 4 architecture review, which considered the wrapper against
 two alternatives and kept it;
 [ADR-0009](../adr/0009-the-pipeline-publishes-changesets-a-consumer-binds.md),
-which decided the published shape; `src/Transponder/Features/Fleet` § 7, which binds
+which decided the published shape; `src/Transporter/Features/Fleet` § 7, which binds
 it; and `0007`, which built it.
 
 Reading `0007`'s pull request, the person asked one question:
@@ -49,14 +49,14 @@ was reviewed as a shape, and it was the right shape.
 
 ## Spec delta
 
-`src/Transponder/Tracking` § 7 carries the new name and one paragraph recording
+`src/Transporter/Tracking` § 7 carries the new name and one paragraph recording
 the rename, because the old name stays in two places on purpose: § 11 row 4's
 record of the review that chose the wrapper, and `0030`'s decision rows. Those
 are records of what was decided on 2026-10-05, and rewriting a record to match a
 later rename is how a history stops being one.
 
-`src/Transponder/Features/Fleet` § 4 row 8 and § 7, and
-`src/Transponder/Integrations/OpenSky/.spec/README.md` § 7, name the type as
+`src/Transporter/Features/Fleet` § 4 row 8 and § 7, and
+`src/Transporter/Integrations/OpenSky/.spec/README.md` § 7, name the type as
 current design and were updated. `fleet-dashboard` § 9's
 `GivenAStaleVehicle_WhenItsRowIsProjected_...` keeps its wording: that is English
 about a stale vehicle, not a reference to the type.
@@ -70,7 +70,7 @@ about a stale vehicle, not a reference to the type.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 § `coding` gained the rule, beside the naming traps:
 
 > **A type is named for what every instance of it is**, not for the state some

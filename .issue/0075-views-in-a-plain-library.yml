@@ -29,7 +29,7 @@ summary: |
   ADR-0014's first move. `FleetPage` and everything it builds leave `src/Gui`
   for a plain `net10.0` library that references the MAUI packages as packages
   — no `UseMaui`, no workload — and the heads reference the library. It is the
-  only project outside `src/Gui` that references MAUI; `src/Transponder`
+  only project outside `src/Gui` that references MAUI; `src/Transporter`
   references none (`0076`). `test/UnitTests` references it too, and one test builds
   `FleetPage` with its view model and an inline dispatcher and asserts a
   binding, so the arrangement every later view test copies exists and runs on
@@ -54,7 +54,7 @@ acceptance_criteria:
   - "One test in `test/UnitTests` builds `FleetPage` with its view model and an
     inline dispatcher, and asserts a bound value before and after the view model
     changes it."
-  - "`transponder-conventions` references/coding.md § \"Project structure\" names
+  - "`transporter-conventions` references/coding.md § \"Project structure\" names
     the library, and references/testing.md says where a view test lives and
     that it registers the dispatcher."
   - "No claim's § 9 row changes: the move proves nothing new about a claim."

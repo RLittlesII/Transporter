@@ -38,7 +38,7 @@ spec_status: draft
          <!-- Rules: ../../../.spec/templates/feature.md § 3 -->
 
      The pointer names no owner. Section ownership is written in exactly one
-     place, .skills/transponder-conventions/references/specs.md § "Section
+     place, .skills/transporter-conventions/references/specs.md § "Section
      ownership",
      and a copy that restated it would be one more place to keep in step.
      A role writes only its own sections; filling in someone else's is a
@@ -215,7 +215,7 @@ spec_status: draft
 <!-- Owner: spec-reviewer. 🟡 Draft | 🟢 Approved | 🔴 Blocked — state the
      reason on a Blocked row. One row per owner, named by section number:
      the mapping from number to owner is written in
-     .skills/transponder-conventions/SKILL.md, not restated here.
+     .skills/transporter-conventions/SKILL.md, not restated here.
 
      There is NO Overall row. The frontmatter's `spec_status` is the single
      store for document maturity. -->
@@ -239,9 +239,9 @@ and the implementation was supposed to wait on approval — so a Feature whose
 proves itself, could never be approved at all.
 [Lesson 0007](../lessons/0007-a-gate-that-waits-on-what-it-gates-never-closes.md)
 is that incident. The rule that an item does not start against 🟡 rows is
-`.skills/transponder-conventions/references/delivery.md`, and the rule that a
+`.skills/transporter-conventions/references/delivery.md`, and the rule that a
 change to a signed section reopens its row is
-`.skills/transponder-conventions/references/specs.md`, not here.
+`.skills/transporter-conventions/references/specs.md`, not here.
 
 ## Decisions
 

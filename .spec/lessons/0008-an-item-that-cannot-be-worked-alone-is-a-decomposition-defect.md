@@ -11,7 +11,7 @@ type: lesson
 
 ## Symptom
 
-Review of pull request #6, on `src/Transponder.Analyzers/.issue/0019`:
+Review of pull request #6, on `src/Transporter.Analyzers/.issue/0019`:
 
 > The items got moved to in-progress at once. This seems like this should be the
 > exception not the rule. That we should define the items in a way that we can
@@ -28,7 +28,7 @@ Feature's `## Tasks` says it plainly: the children are "cut on what a rule has
 to look at rather than on § 3's four groups" — a reference rule, a declaration
 rule and a call-site rule are three registrations against one compilation. That
 is a true statement about the analyzer and a poor one about delivery. Nothing
-in `0020` is demonstrable on its own: `transponder-conventions` says a green
+in `0020` is demonstrable on its own: `transporter-conventions` says a green
 build does not prove an analyzer loaded, so `0020`'s own acceptance criterion
 could not be met until `0021` wrote a rule that fires. `0021` in turn could not
 prove B-004 or B-005 without that rule. Two items, one indivisible piece of
@@ -57,7 +57,7 @@ feeds.
 
 ## Skill
 
-[`transponder-conventions`](../../.skills/transponder-conventions/SKILL.md)
+[`transporter-conventions`](../../.skills/transporter-conventions/SKILL.md)
 gained it in § `deliver-change` → "The tracker", beside the rule that an item
 does not start against unsigned sign-off rows — both are about taking work that
 is not ready to be taken:

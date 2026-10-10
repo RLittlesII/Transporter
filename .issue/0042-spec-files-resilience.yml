@@ -16,7 +16,7 @@ depends_on: []
 blocks: []
 spikes: []
 
-spec: src/Transponder/Integrations/OpenSky/.spec/README.md
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
 
 claims: []
 

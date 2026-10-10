@@ -2,9 +2,9 @@ using System.Collections.ObjectModel;
 using AwesomeAssertions;
 using Microsoft.CodeAnalysis;
 using Rocket.Surgery.Extensions.Testing.SourceGenerators;
-using Transponder.Analyzers;
+using Transporter.Analyzers;
 
-namespace Transponder.UnitTests.Analyzers;
+namespace Transporter.UnitTests.Analyzers;
 
 public class BoundaryAnalyzerTests
 {

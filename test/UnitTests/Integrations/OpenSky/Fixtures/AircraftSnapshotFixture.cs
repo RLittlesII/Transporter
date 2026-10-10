@@ -1,8 +1,8 @@
 using LanguageExt;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky;
 
-namespace Transponder.UnitTests.Integrations.OpenSky.Fixtures;
+namespace Transporter.UnitTests.Integrations.OpenSky.Fixtures;
 
 /// <summary>
 /// Builds an <see cref="AircraftSnapshot"/>. Hand-written rather than generated because the target is a record,

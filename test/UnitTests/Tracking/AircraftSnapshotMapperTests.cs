@@ -1,12 +1,12 @@
 using AwesomeAssertions;
 using LanguageExt;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Integrations.OpenSky;
-using Transponder.Model;
-using Transponder.Tracking.Sources;
-using Transponder.UnitTests.Integrations.OpenSky.Fixtures;
+using Transporter.Integrations.OpenSky;
+using Transporter.Model;
+using Transporter.Tracking.Sources;
+using Transporter.UnitTests.Integrations.OpenSky.Fixtures;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class AircraftSnapshotMapperTests
 {
@@ -122,7 +122,7 @@ public class AircraftSnapshotMapperTests
         var unnamed = sut.Project(unknown);
 
         // Then
-        Some(named.PositionSource, Transponder.Model.PositionSource.Mlat);
+        Some(named.PositionSource, Transporter.Model.PositionSource.Mlat);
         None(unnamed.PositionSource);
     }
 

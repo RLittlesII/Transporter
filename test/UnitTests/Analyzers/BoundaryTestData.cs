@@ -1,4 +1,4 @@
-namespace Transponder.UnitTests.Analyzers;
+namespace Transporter.UnitTests.Analyzers;
 
 /// <summary>Sources the boundary rules are tested against, one layer per constant.</summary>
 /// <remarks>Shared the way Airframe's <c>DesignTestData</c> is: each namespace is one <c>Layers</c> classification.</remarks>
@@ -6,7 +6,7 @@ internal static class BoundaryTestData
 {
     // lang=csharp
     internal const string WireType = """
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         internal sealed class OpenSkyStateRow
         {
@@ -16,9 +16,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string ViewModelNamingTheRow = """
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Features.Demo.ViewModels;
+        namespace Transporter.Features.Demo.ViewModels;
 
         internal sealed class DemoViewModel
         {
@@ -33,9 +33,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string DomainTypeNamingTheRow = """
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Model;
+        namespace Transporter.Model;
 
         internal sealed class TransportVehicle
         {
@@ -50,9 +50,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string IntegrationCodeNamingTheRow = """
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Http;
+        namespace Transporter.Integrations.OpenSky.Http;
 
         internal sealed class OpenSkyHttpApi
         {
@@ -70,7 +70,7 @@ internal static class BoundaryTestData
         using System.Threading;
         using System.Threading.Tasks;
 
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         internal sealed class OpenSkyStateRow
         {
@@ -90,9 +90,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string RegistrationNamingTheRow = """
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class OpenSkyRegistration
         {
@@ -109,9 +109,9 @@ internal static class BoundaryTestData
     internal const string ReplayImplementingTheContract = """
         using System.Threading;
         using System.Threading.Tasks;
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Replay;
+        namespace Transporter.Integrations.OpenSky.Replay;
 
         internal sealed class ReplayOpenSkyApi : IOpenSkyApi
         {
@@ -122,9 +122,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string ReplayCodeImplementingNothing = """
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Replay;
+        namespace Transporter.Integrations.OpenSky.Replay;
 
         internal sealed class ReplayPayloads
         {
@@ -139,7 +139,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string Snapshot = """
-        namespace Transponder.Integrations.OpenSky;
+        namespace Transporter.Integrations.OpenSky;
 
         internal sealed record AircraftSnapshot
         {
@@ -149,7 +149,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string Domain = """
-        namespace Transponder.Model;
+        namespace Transporter.Model;
 
         internal sealed class TransportVehicle
         {
@@ -159,9 +159,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string DomainTypeNamingASnapshot = """
-        using Transponder.Integrations.OpenSky;
+        using Transporter.Integrations.OpenSky;
 
-        namespace Transponder.Model;
+        namespace Transporter.Model;
 
         internal sealed class Aircraft
         {
@@ -171,13 +171,13 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string DomainTypeNamingASnapshotInABodyOnly = """
-        namespace Transponder.Model;
+        namespace Transporter.Model;
 
         internal sealed class Aircraft
         {
             public string Key()
             {
-                Transponder.Integrations.OpenSky.AircraftSnapshot snapshot = new();
+                Transporter.Integrations.OpenSky.AircraftSnapshot snapshot = new();
 
                 return snapshot.Icao24;
             }
@@ -186,9 +186,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string ProjectionNamingASnapshot = """
-        using Transponder.Integrations.OpenSky;
+        using Transporter.Integrations.OpenSky;
 
-        namespace Transponder.Tracking;
+        namespace Transporter.Tracking;
 
         internal sealed class AircraftTrackerSource
         {
@@ -198,7 +198,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string HostNamingTheContract = """
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
         namespace Gui;
 
@@ -223,9 +223,9 @@ internal static class BoundaryTestData
     // lang=csharp
     internal const string CacheOfADomainType = """
         using DynamicData;
-        using Transponder.Model;
+        using Transporter.Model;
 
-        namespace Transponder.Integrations.OpenSky;
+        namespace Transporter.Integrations.OpenSky;
 
         internal sealed class AircraftSnapshotClient
         {
@@ -242,7 +242,7 @@ internal static class BoundaryTestData
     internal const string CacheOfASnapshot = """
         using DynamicData;
 
-        namespace Transponder.Integrations.OpenSky;
+        namespace Transporter.Integrations.OpenSky;
 
         internal sealed class AircraftSnapshotClient
         {
@@ -257,7 +257,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string ConcreteTrackerSource = """
-        namespace Transponder.Tracking;
+        namespace Transporter.Tracking;
 
         internal sealed class AircraftTrackerSource
         {
@@ -267,7 +267,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string TrackerSeam = """
-        namespace Transponder.Tracking;
+        namespace Transporter.Tracking;
 
         public interface IFleetTracker
         {
@@ -294,9 +294,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string ViewModelNamingWhatTheSeamPublishes = """
-        using Transponder.Tracking;
+        using Transporter.Tracking;
 
-        namespace Transponder.Features.Fleet.ViewModels;
+        namespace Transporter.Features.Fleet.ViewModels;
 
         public class FleetViewModel
         {
@@ -306,9 +306,9 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string ViewModelNamingAStrategy = """
-        using Transponder.Tracking;
+        using Transporter.Tracking;
 
-        namespace Transponder.Features.Fleet.ViewModels;
+        namespace Transporter.Features.Fleet.ViewModels;
 
         public class FleetViewModel
         {
@@ -325,7 +325,7 @@ internal static class BoundaryTestData
     internal const string ViewModelMutatingABoundCollection = """
         using System.Collections.ObjectModel;
 
-        namespace Transponder.Features.Fleet.ViewModels;
+        namespace Transporter.Features.Fleet.ViewModels;
 
         public class FleetViewModel
         {
@@ -341,7 +341,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string EnvelopeNamingPerAircraftTypes = """
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         internal sealed class OpenSkyStateRow
         {
@@ -366,7 +366,7 @@ internal static class BoundaryTestData
         using System.Threading;
         using System.Threading.Tasks;
 
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         internal sealed class OpenSkyStatesResponse
         {
@@ -393,9 +393,9 @@ internal static class BoundaryTestData
         using System.Threading;
         using System.Threading.Tasks;
         using DynamicData;
-        using Transponder.Integrations.OpenSky;
+        using Transporter.Integrations.OpenSky;
 
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         internal interface IOpenSkyApi
         {
@@ -413,7 +413,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string OptionsAndCredentials = """
-        namespace Transponder.Integrations.OpenSky;
+        namespace Transporter.Integrations.OpenSky;
 
         internal sealed class BoundingBox
         {
@@ -431,7 +431,7 @@ internal static class BoundaryTestData
         using System.Threading;
         using System.Threading.Tasks;
 
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         public sealed class OpenSkyStatesResponse
         {
@@ -448,9 +448,9 @@ internal static class BoundaryTestData
     internal const string ImplementationsOfTheWrongShape = """
         using System.Threading;
         using System.Threading.Tasks;
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Http;
+        namespace Transporter.Integrations.OpenSky.Http;
 
         public class OpenSkyHttpApi : IOpenSkyApi
         {
@@ -469,9 +469,9 @@ internal static class BoundaryTestData
     internal const string TheOneImplementationPerTransport = """
         using System.Threading;
         using System.Threading.Tasks;
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Http;
+        namespace Transporter.Integrations.OpenSky.Http;
 
         internal sealed class OpenSkyHttpApi : IOpenSkyApi
         {
@@ -482,7 +482,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string SnapshotCarryingDerivedMembers = """
-        namespace Transponder.Integrations.OpenSky;
+        namespace Transporter.Integrations.OpenSky;
 
         internal sealed record AircraftSnapshot
         {
@@ -500,7 +500,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string ClientReadingADerivedMember = """
-        namespace Transponder.Integrations.OpenSky;
+        namespace Transporter.Integrations.OpenSky;
 
         internal sealed class AircraftSnapshotClient
         {
@@ -510,7 +510,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string SeamDescribingItsSource = """
-        namespace Transponder.Tracking;
+        namespace Transporter.Tracking;
 
         internal interface IAircraftTrackerSource
         {
@@ -524,7 +524,7 @@ internal static class BoundaryTestData
 
     // lang=csharp
     internal const string Seam = """
-        namespace Transponder.Tracking;
+        namespace Transporter.Tracking;
 
         internal interface IAircraftTrackerSource
         {
@@ -537,7 +537,7 @@ internal static class BoundaryTestData
         using System.Threading;
         using System.Threading.Tasks;
 
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         internal interface IOpenSkyApi
         {
@@ -549,9 +549,9 @@ internal static class BoundaryTestData
     internal const string PublicImplementation = """
         using System.Threading;
         using System.Threading.Tasks;
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Http;
+        namespace Transporter.Integrations.OpenSky.Http;
 
         public class OpenSkyHttpApi : IOpenSkyApi
         {
@@ -565,7 +565,7 @@ internal static class BoundaryTestData
         using System.Threading;
         using System.Threading.Tasks;
 
-        namespace Transponder.Integrations.OpenSky.Contracts;
+        namespace Transporter.Integrations.OpenSky.Contracts;
 
         internal interface IOpenSkyApiMarker;
 
@@ -606,10 +606,10 @@ internal static class BoundaryTestData
     // lang=csharp
     internal const string TheOneAliasPerChain = """
         using Microsoft.Extensions.DependencyInjection;
-        using Transponder.Integrations.OpenSky.Contracts;
-        using Transponder.Integrations.OpenSky.Http;
+        using Transporter.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Http;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class OpenSkyRegistration
         {
@@ -622,10 +622,10 @@ internal static class BoundaryTestData
     internal const string ImplementationRegisteredResolvedAndAliasedTwice = """
         using System;
         using Microsoft.Extensions.DependencyInjection;
-        using Transponder.Integrations.OpenSky.Contracts;
-        using Transponder.Integrations.OpenSky.Http;
+        using Transporter.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Http;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class OpenSkyRegistration
         {
@@ -651,9 +651,9 @@ internal static class BoundaryTestData
     internal const string TwoTransports = """
         using System.Threading;
         using System.Threading.Tasks;
-        using Transponder.Integrations.OpenSky.Contracts;
+        using Transporter.Integrations.OpenSky.Contracts;
 
-        namespace Transponder.Integrations.OpenSky.Http;
+        namespace Transporter.Integrations.OpenSky.Http;
 
         internal sealed class OpenSkyHttpApi : IOpenSkyApi
         {
@@ -673,7 +673,7 @@ internal static class BoundaryTestData
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal sealed class AircraftCache
         {
@@ -691,9 +691,9 @@ internal static class BoundaryTestData
     internal const string CacheOfADomainTypeRegistered = """
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
-        using Transponder.Model;
+        using Transporter.Model;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class CacheRegistration
         {
@@ -707,7 +707,7 @@ internal static class BoundaryTestData
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class CacheRegistration
         {
@@ -728,7 +728,7 @@ internal static class BoundaryTestData
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class CacheRegistration
         {
@@ -742,7 +742,7 @@ internal static class BoundaryTestData
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class CacheRegistration
         {
@@ -760,7 +760,7 @@ internal static class BoundaryTestData
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
 
-        namespace Transponder.Integrations.OpenSky;
+        namespace Transporter.Integrations.OpenSky;
 
         internal sealed class AircraftSnapshotClient
         {
@@ -774,7 +774,7 @@ internal static class BoundaryTestData
     internal const string ClientRegistered = """
         using Microsoft.Extensions.DependencyInjection;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class ClientRegistration
         {
@@ -788,7 +788,7 @@ internal static class BoundaryTestData
         using DynamicData;
         using Microsoft.Extensions.DependencyInjection;
 
-        namespace Transponder.Integrations.OpenSky.Container;
+        namespace Transporter.Integrations.OpenSky.Container;
 
         internal static class CacheRegistration
         {

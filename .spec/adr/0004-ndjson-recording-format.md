@@ -23,7 +23,7 @@ one line per snapshot" — two entirely different on-disk shapes, never picked �
 and nothing else in the repository picked either. No persistence package is in
 `Directory.Packages.props`, no recording path exists, and `.gitignore` has no
 entry for recorded data.
-[`src/Transponder/Integrations/OpenSky`](../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+[`src/Transporter/Integrations/OpenSky`](../../src/Transporter/Integrations/OpenSky/.spec/README.md)
 § 5 defers the replay strategy out of its own scope, so no Feature spec owns
 the call. It is a decision both the aircraft replay and the vessel replay need
 before either is built, which makes it this record's and not a Feature's.

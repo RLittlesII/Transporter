@@ -23,7 +23,7 @@ specification's to say, not this file's.
   [`mvvm`](../mvvm/SKILL.md).
 - **Register pages and view models through the container's user-interface
   builder block**, not ad-hoc in the host's startup
-  ([`transponder-conventions`](../transponder-conventions/SKILL.md)).
+  ([`transporter-conventions`](../transporter-conventions/SKILL.md)).
 - **The head registers only what is MAUI.** Everything else — the integration,
   the pipeline, the view models, the schedulers — is composed in one method a
   test can build a host from, and that test resolves the view model each page
@@ -47,7 +47,7 @@ specification's to say, not this file's.
 - **A view subscribes through an observable, never with `+=`** — any event,
   not only a view model's: a child control's `SizeChanged` or `SelectionChanged`
   is the same `+=`, and a layout event on the page's own child is no exception
-  ([lesson 0004](../../src/Transponder/Features/Fleet/.spec/lessons/0004-two-written-rules-read-as-not-applying.md)).
+  ([lesson 0004](../../src/Transporter/Features/Fleet/.spec/lessons/0004-two-written-rules-read-as-not-applying.md)).
   The page keeps a `CompositeDisposable`, and `OnHandlerChanged` disposes it
   when `Handler` is null. Where a view
   must react to a view-model property — rebuilding a column template from a new

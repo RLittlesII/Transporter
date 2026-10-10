@@ -70,7 +70,7 @@ spikes: [] # ids of investigations this waits on
 
 # REQUIRED for type: feature — the spec this item was cut from. null for a
 # bug, spike or chore, which may produce a spec delta later.
-spec: src/Transponder/Integrations/OpenSky/.spec/README.md # <home>/.spec/README.md
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md # <home>/.spec/README.md
 
 # The § 3 claims this item delivers — ids ONLY, never the claim text, or the
 # two records disagree. They already exist: the spec was written first.

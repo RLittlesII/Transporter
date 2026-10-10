@@ -3,12 +3,12 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Recording;
-using Transponder.Scheduling;
-using Transponder.UnitTests.Integrations.OpenSky;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Recording;
+using Transporter.Scheduling;
+using Transporter.UnitTests.Integrations.OpenSky;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Recording;
+namespace Transporter.UnitTests.Recording;
 
 public class RecordingPacerTests
 {

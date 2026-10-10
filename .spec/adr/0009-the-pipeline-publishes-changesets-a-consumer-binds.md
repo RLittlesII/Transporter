@@ -10,7 +10,7 @@ type: adr
 
 ## Context
 
-[`src/Transponder/Tracking`](../../src/Transponder/Tracking/.spec/README.md) § 7
+[`src/Transporter/Tracking`](../../src/Transporter/Tracking/.spec/README.md) § 7
 declared `IFleetTracker` with two `ReadOnlyObservableCollection<T>` properties —
 the fleet and the groups — alongside two `IObservable<T>` streams. Its § 11 row
 4 held every declaration open for review, and concern 1 was that a consumer

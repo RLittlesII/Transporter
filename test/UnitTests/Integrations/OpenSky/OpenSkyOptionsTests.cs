@@ -1,9 +1,9 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Options;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Configuration;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Configuration;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class OpenSkyOptionsTests
 {
