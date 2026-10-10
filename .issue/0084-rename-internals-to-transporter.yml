@@ -3,7 +3,7 @@ id: "0084"
 type: chore
 title: Name the internals Transporter, as the repository already is
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -23,7 +23,7 @@ claims: []
 
 created: "2026-10-09"
 updated: "2026-10-09"
-closed: null
+closed: "2026-10-09"
 
 summary: |
     The repository is published as `RLittlesII/Transporter`, and everything
@@ -63,6 +63,16 @@ decisions:
       keeps its body. Only a link's target is repointed there, which is what
       `document.md` allows of an accepted record. Rejected: rewriting their
       prose, which the same rule forbids."
+    - "2026-10-09 — `RCS1194` is off for `OpenSkyThrottledException`, with the
+      reason beside it. The file had carried the fixable warning since before
+      the pre-commit hook existed, and the rename is the first commit to stage
+      it since. Rejected: the fix, three constructors that build the exception
+      with no delay; and bypassing the hook."
+    - "2026-10-09 — eight relative links in tracked markdown were unresolved
+      before this item and are left so. None names the product: two point at
+      an item `0051` that does not exist, five in the analyzer's README at
+      `features/boundary-analyzer`, and one in OpenSky decision 0003 is a
+      directory short. They are another item's."
 
 out_of_scope:
     - "The local checkout's directory name — it is not tracked, and renaming
