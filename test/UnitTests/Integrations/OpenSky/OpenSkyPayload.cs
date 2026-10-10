@@ -1,6 +1,6 @@
-using Transponder.Integrations.OpenSky.Contracts;
+using Transporter.Integrations.OpenSky.Contracts;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 /// <summary>
 /// One synthetic <c>/states/all</c> payload: the raw JSON, and the envelope it reads as.

@@ -68,6 +68,6 @@ decisions:
 out_of_scope:
   - "The code fixes themselves. B-020 is the claim and TRN0009, TRN0011 and
     TRN0017 are the three that can have one; they land in 0023 and 0024 with the
-    rules they fix, in src/Transponder.CodeFixes."
+    rules they fix, in src/Transporter.CodeFixes."
   - "Re-cutting 0020 - 0022, which lesson 0008 records as a decomposition defect
     and the reviewer explicitly left alone."

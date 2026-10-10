@@ -1,7 +1,7 @@
 using System.Text;
-using Transponder.Recording;
+using Transporter.Recording;
 
-namespace Transponder.UnitTests.Integrations.OpenSky.Replay;
+namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 /// <summary>
 /// A recordings root held in memory: the names a test configured, and the lines behind each one.

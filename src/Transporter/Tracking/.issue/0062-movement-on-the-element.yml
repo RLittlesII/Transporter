@@ -1,0 +1,85 @@
+id: "0062"
+type: task
+title: Carry the vehicle replaced, the leg flown and the running total on the element
+
+status: done
+
+priority: high
+value: 4
+risk: 3
+rank: 86
+
+parent: "0030"
+children: []
+
+depends_on: []
+blocks:
+  - "0063"
+  - "0064"
+  - "0070"
+spikes: []
+
+spec: src/Transporter/Tracking/.spec/README.md
+
+claims:
+  - B-032
+  - B-033
+  - B-041
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: "2026-10-08"
+
+summary: |
+  Three values derived from movement, each riding on the element the fleet
+  stream already publishes, so nothing downstream keeps a copy of a previous
+  vehicle to work them out. The changeset that makes an update already carries
+  the vehicle it replaced; B-041 puts it on the element for one update, B-032
+  measures the great-circle leg between the two positions, and B-033 adds legs
+  into a total that starts again when the vehicle leaves and comes back.
+
+  It exists for `fleet-dashboard` decision 0002: a card that shows how far an
+  aircraft moved, and a readout that shows what changed (`fleet-dashboard`
+  B-030 and B-038). Both would otherwise be arithmetic in a view model, which
+  `fleet-dashboard` B-018 forbids.
+
+  Depends on nothing open: the spine, the description and the staleness stage
+  are on `main`. Three items wait on this one: `0063` builds its trail from the
+  same legs, `0064`'s delta reads the vehicle B-041 carries, and
+  `fleet-dashboard` `0070` binds the distances.
+
+  Two traps. A missing position on either side is no leg, not a zero, and a
+  zero summed into the total reads as an aircraft that stood still. And the
+  replaced vehicle is held for exactly one update: keeping two is a history,
+  which § 5 row 12 excludes, and which grows without bound on a long talk.
+
+acceptance_criteria:
+  - "B-032 — the leg between the replaced and current positions, none where either lacks one."
+  - "B-033 — the running total since the vehicle entered, reset on re-entry."
+  - "B-041 — the vehicle one update back, none for a vehicle just added."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-08 — the person — § 12's 🟡 gate waived for this item by name
+    (`transponder-conventions` delivery: the waiver is a row here). All three
+    rows of `fleet-pipeline` § 12 are 🟡 because claims B-034 – B-040 and B-042
+    are unreviewed or undesigned; this item's three claims are designed in § 7
+    and planned in § 8, and an independent spec-reviewer pass found that design
+    sound and its two blocking findings were fixed before the waiver. The waiver
+    covers this item only. Rejected: flipping §§ 6-9 to 🟢 for the whole
+    Feature, which would approve eight claims with no design."
+  - "2026-10-08 — implementer — `Move()` lives in `FleetMovement.cs` beside
+    `MovedVehicle.cs` and `GreatCircle.cs`, one type per file; § 7's layout
+    row names all three. `TrackedVehicle`'s three new members are init-only
+    with `None` and zero as defaults rather than `required`, so the element a
+    test builds by hand stays an add, which is what the defaults describe."
+  - "2026-10-08 — implementer — the clock-tick test was not run against a
+    mutant that derives movement in the stale mark: that would be a second
+    design, not a one-line change. It failed against the stub with no movement
+    at all. The filter-order mutant was run, and only the filter test failed."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "A history kept beyond one update — § 5 row 12."
+  - "The trail of positions — `0063`."
+  - "How a distance is shown, and in which unit — `fleet-dashboard` `0070`."

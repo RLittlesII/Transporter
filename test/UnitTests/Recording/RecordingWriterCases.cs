@@ -1,6 +1,6 @@
-using Transponder.UnitTests.Integrations.OpenSky;
+using Transporter.UnitTests.Integrations.OpenSky;
 
-namespace Transponder.UnitTests.Recording;
+namespace Transporter.UnitTests.Recording;
 
 /// <summary>
 /// The payloads B-002 is about: what the provider sent has to be what the line holds, whatever

@@ -79,7 +79,7 @@ if [ -n "$staged_cs" ]; then
     set +f
     IFS=$saved_ifs
 
-    if ! dotnet format Transponder.slnx --verify-no-changes --include "$@"; then
+    if ! dotnet format Transporter.slnx --verify-no-changes --include "$@"; then
         format_status=1
         echo
         echo "pre-commit: these staged C# files are not formatted:"
@@ -88,7 +88,7 @@ if [ -n "$staged_cs" ]; then
         echo
         echo "Fix with:"
         echo
-        echo "    dotnet format Transponder.slnx --include \$(git diff --cached --name-only --diff-filter=AMR -- '*.cs')"
+        echo "    dotnet format Transporter.slnx --include \$(git diff --cached --name-only --diff-filter=AMR -- '*.cs')"
         echo
         echo "That command DOES apply analyzer code fixes. If the diff it produces"
         echo "removes a [Theory] parameter, that is xUnit1026 -- make the parameter"

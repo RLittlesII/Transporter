@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Akka" />
+      <PackageReference Include="Akka.Hosting" />
+      <PackageReference Include="DynamicData" />
+      <PackageReference Include="Flurl.Http" />
+      <PackageReference Include="LanguageExt.Core" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+      <PackageReference Include="Microsoft.Extensions.Options" />
+      <PackageReference Include="System.Reactive" />
+      <PackageReference Include="ReactiveMarbles.Command" />
+      <PackageReference Include="ReactiveMarbles.Mvvm" />
+      <PackageReference Include="ReactiveMarbles.PropertyChanged" />
+      <PackageReference Include="Riok.Mapperly" />
+      <PackageReference Include="Rocket.Surgery.Airframe.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="Transporter.UnitTests" />
+      <!-- The synthetic payload generator, which hands its payloads to RecordingWriter so the
+           format keeps exactly one writer. Dev tooling, so it does not ship: tools/. -->
+      <InternalsVisibleTo Include="Transporter.SampleRecording" />
+      <!-- Castle's dynamic proxy, which NSubstitute builds its doubles with. Every type under
+           Integrations/ is internal, so a substitute for an internal interface needs this grant. -->
+      <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="**\.issue\*.yml" />
+      <Content Include="**\.spec\*.feature" />
+      <Content Include="**\.spec\**\*.md" />
+    </ItemGroup>
+
+</Project>

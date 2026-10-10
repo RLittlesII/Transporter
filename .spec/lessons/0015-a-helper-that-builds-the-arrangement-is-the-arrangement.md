@@ -11,8 +11,8 @@ type: lesson
 
 ## Symptom
 
-`TransponderCompositionTests` carried two private helpers. `Host()` built the
-`HostBuilder`, called `AddTransponder` and returned the host; `Settings()` built
+`TransporterCompositionTests` carried two private helpers. `Host()` built the
+`HostBuilder`, called `AddTransporter` and returned the host; `Settings()` built
 the configuration it was called with. Every test read `using var host = Host();`
 and said nothing about what the application had been composed over. The review:
 

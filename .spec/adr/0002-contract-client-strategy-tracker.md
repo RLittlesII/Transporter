@@ -118,7 +118,7 @@ Each component has one responsibility.
     version, and a provider that _does_ version gets the full pattern from its
     first line of code.
 
-    It lives under `src/Transponder/Integrations/OpenSky/`, split
+    It lives under `src/Transporter/Integrations/OpenSky/`, split
     `Contracts/`, `Http/` and `Container/` — **not** under `Features/`. A
     provider's code belongs to the provider, not to one feature, and two
     features can want the same provider. `AGENTS.md` governs feature layout and
@@ -170,7 +170,7 @@ in the client, because positional arrays are not something Mapperly can map;
 Behavioral detail — index-by-index reading, callsign trimming, squawk as a
 string, absent versus unknown category, token refresh, retry-after handling —
 is **not** in this record. Those are claims, in § 3 of
-[`src/Transponder/Integrations/OpenSky/.spec/README.md`](../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+[`src/Transporter/Integrations/OpenSky/.spec/README.md`](../../src/Transporter/Integrations/OpenSky/.spec/README.md)
 (B-001 – B-052).
 
 ## Consequences

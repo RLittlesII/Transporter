@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
 using Microsoft.Maui.Storage;
-using Transponder.Container;
-using Transponder.Integrations.OpenSky.Container;
-using Transponder.Tracking.Container;
+using Transporter.Container;
+using Transporter.Integrations.OpenSky.Container;
+using Transporter.Tracking.Container;
 
 namespace Gui;
 
@@ -25,19 +25,19 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMarkup()
 
-            // Which actors exist is Transponder's to say: they and what they are handed are internal there.
+            // Which actors exist is Transporter's to say: they and what they are handed are internal there.
             .AddAkkaHost(
-                "Transponder",
+                "Transporter",
                 static (system, registry, resolver) => registry
                     .AddFleetTrackingActors(system, resolver)
                     .AddOpenSkyActors(system, resolver))
 
-            // Everything but the page is composed in Transponder, where a test builds the same graph
+            // Everything but the page is composed in Transporter, where a test builds the same graph
             // (0047). The scheduler is the head's because only it knows the thread that owns the
             // window: both heads are Apple-only, and the UIKit context is installed on the main
             // thread before this runs.
             .AddUserInterface(collection => collection
-                .AddTransponder(configuration, new SynchronizationContextScheduler(SynchronizationContext.Current!))
+                .AddTransporter(configuration, new SynchronizationContextScheduler(SynchronizationContext.Current!))
                 .AddTransient<FleetPage>())
             .ConfigureFonts(static fonts =>
             {

@@ -2,7 +2,7 @@
   <img src=".assets/screenshots/fleet-grid.png" width="760" alt="The fleet dashboard: a grid of aircraft cards with altitude, ground speed, heading and freshness" />
 </p>
 
-<h1 align="center">Transponder</h1>
+<h1 align="center">Transporter</h1>
 
 <p align="center">
   Polled data can still be reactive — a DynamicData and .NET MAUI fleet dashboard over aircraft above Houston.
@@ -41,7 +41,7 @@ Line-of-business and enterprise .NET developers. Most of them work with data beh
 
 ## The app: "Fleet Tracking Dashboard"
 
-Live aircraft over Houston — both international airports, the ship channel and Galveston Bay — framed as a fleet dashboard so the audience maps it onto their own domains (trucks, technicians, shipments, tickets). The box was chosen so the ships closing act can subscribe to the same geography ([decision 0001](src/Transponder/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md)).
+Live aircraft over Houston — both international airports, the ship channel and Galveston Bay — framed as a fleet dashboard so the audience maps it onto their own domains (trucks, technicians, shipments, tickets). The box was chosen so the ships closing act can subscribe to the same geography ([decision 0001](src/Transporter/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md)).
 
 UI features:
 
@@ -81,7 +81,7 @@ In roughly the order the audience meets them:
 | `Group`                               | Grouped grid by country or category                                                                                                                                                                                                                                                                                                                                                                                                |
 | `Bind`                                | Pushing changes into the UI collection                                                                                                                                                                                                                                                                                                                                                                                             |
 | Aggregates (`Count`, etc.)            | Summary counts per group                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `AutoRefresh`                         | Re-evaluating filters and sorts when a held item's properties change. The aircraft pipeline has no subject for it — the projection emits a new vehicle per change rather than mutating one, so staleness re-evaluates on the observed clock instead ([`fleet-pipeline` decision 0001](src/Transponder/Tracking/.spec/decisions/0001-no-autorefresh-in-this-pipeline.md)). Shown as the operator a mutating push source reaches for |
+| `AutoRefresh`                         | Re-evaluating filters and sorts when a held item's properties change. The aircraft pipeline has no subject for it — the projection emits a new vehicle per change rather than mutating one, so staleness re-evaluates on the observed clock instead ([`fleet-pipeline` decision 0001](src/Transporter/Tracking/.spec/decisions/0001-no-autorefresh-in-this-pipeline.md)). Shown as the operator a mutating push source reaches for |
 | `ExpireAfter` / staleness             | Items that stop reporting. Aircraft are _marked_ at five minutes rather than removed; `ExpireAfter` itself is for vessels, which go silent rather than departing                                                                                                                                                                                                                                                                   |
 
 ## Data source: OpenSky Network
@@ -178,7 +178,7 @@ Replace the polled source with a push source and show that everything downstream
 ## Open items
 
 - [ ] Register an OpenSky account and create an API client
-- [x] Pick the bounding box (metro area) and polling interval — Houston: IAH, HOU, the ship channel and Galveston Bay, polled every 15 seconds ([decision 0001](src/Transponder/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md))
+- [x] Pick the bounding box (metro area) and polling interval — Houston: IAH, HOU, the ship channel and Galveston Bay, polled every 15 seconds ([decision 0001](src/Transporter/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md))
 - [x] Decide UI framework (WPF, Avalonia, Blazor, MAUI)
 - [ ] Record replay snapshots during rehearsal
 - [ ] Decide on the closing act (ships, Coinbase, or simulated)

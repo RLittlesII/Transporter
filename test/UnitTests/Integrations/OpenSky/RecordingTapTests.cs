@@ -2,18 +2,18 @@ using AwesomeAssertions;
 using DynamicData;
 using Flurl.Http.Testing;
 using Microsoft.Reactive.Testing;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Authentication;
-using Transponder.Integrations.OpenSky.Contracts;
-using Transponder.Integrations.OpenSky.Http.Api;
-using Transponder.Model;
-using Transponder.Recording;
-using Transponder.Tracking;
-using Transponder.Tracking.Sources;
-using Transponder.UnitTests.Recording;
-using Transponder.UnitTests.Tracking;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Authentication;
+using Transporter.Integrations.OpenSky.Contracts;
+using Transporter.Integrations.OpenSky.Http.Api;
+using Transporter.Model;
+using Transporter.Recording;
+using Transporter.Tracking;
+using Transporter.Tracking.Sources;
+using Transporter.UnitTests.Recording;
+using Transporter.UnitTests.Tracking;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class RecordingTapTests
 {

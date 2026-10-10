@@ -6,14 +6,14 @@ using Microsoft.Extensions.Options;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Contracts;
-using Transponder.Integrations.OpenSky.Model;
-using Transponder.Scheduling;
-using Transponder.Tracking;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Contracts;
+using Transporter.Integrations.OpenSky.Model;
+using Transporter.Scheduling;
+using Transporter.Tracking;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class AircraftSnapshotClientTests
 {

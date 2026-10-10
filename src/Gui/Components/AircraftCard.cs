@@ -6,9 +6,9 @@ using LanguageExt;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
-using Transponder.Features.Fleet;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
+using Transporter.Features.Fleet;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
 
 namespace Gui.Components;
 

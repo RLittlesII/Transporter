@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Tracking.Fleet;
+using Transporter.Tracking.Fleet;
 
-namespace Transponder.UnitTests.Tracking.Fixtures;
+namespace Transporter.UnitTests.Tracking.Fixtures;
 
 /// <summary>
 /// Builds a <see cref="FleetSourceDescription"/> — what a live source offers a view, which is the

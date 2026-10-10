@@ -1,0 +1,103 @@
+id: "0019"
+type: feature
+title: Report the layer-boundary claims as compiler diagnostics
+
+status: done
+
+priority: high
+value: 5
+risk: 4
+rank: 88
+
+parent: null
+children:
+  - "0020"
+  - "0021"
+  - "0022"
+  - "0023"
+  - "0024"
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transporter.Analyzers/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+
+created: "2026-10-04"
+updated: "2026-10-05"
+closed: "2026-10-05"
+
+summary: |
+  As the person deciding what ships I want the eighteen structural claims
+  aircraft-source § 9 leaves Missing to be enforced by the compiler, and as a
+  developer reading this repository afterwards I want to see the layering held
+  by the same build that compiles it, so that a boundary is a build error for
+  everyone rather than an agreement the author remembers.
+
+  Parent of the analyzer: the project the compiler loads, the diagnostic
+  conventions every rule obeys, and the three rule families § 7's mapping table
+  groups — reference rules over method bodies, declaration rules, and call-site
+  rules. Five children; it holds no work of its own.
+
+  Claim ids here resolve against src/Transporter.Analyzers/.spec/README.md.
+  The eighteen claims the analyzer enforces belong to
+  src/Transporter/Integrations/OpenSky/.spec/README.md and are NOT listed in any
+  `claims:` in this Feature — that specification's § 9 owns their coverage, and
+  B-019 forbids the second store.
+
+acceptance_criteria:
+  - "All 20 claims in § 3, carried once each. Which child takes which is each
+    child's own `claims:` list, indexed in the specification's `## Tasks`."
+  - "§ 9 has no Missing row once every child is done."
+  - "The eighteen rows in aircraft-source § 9 that name BoundaryAnalyzerTests
+    stop reading Missing — the outcome this Feature exists for, recorded there
+    and not here."
+
+decisions:
+  - "2026-10-04 — the person — the analyzer is built, and this specification is
+    written before any of it. The 'by whom' half of aircraft-source § 11 row 3;
+    the 'when' half stays open there and as § 11 row 4 here."
+  - "2026-10-04 — the person — diagnostics carry the TRN prefix. The numbering
+    that followed is src/Transporter.Analyzers/.spec/adr/0001: TRN ids run on
+    their own sequence and encode no claim number, because a claim id is only
+    unique inside one specification."
+  - "2026-10-04 — spec-author — cut into five children on what a rule has to
+    look at rather than on § 3's four claim groups. A reference rule, a
+    declaration rule and a call-site rule are three different registrations
+    against the same compilation; the claim groups would have split the
+    conventions away from the first rule that needs them."
+  - "2026-10-04 — the person — an analyzer does not ship without a code fix where
+    one is possible. § 5 row 2 is reversed and B-020 replaces it: a fix per
+    diagnostic, or § 7 records why the violation is a decision only the author
+    can make. Three of the eighteen qualify — TRN0009, TRN0011, TRN0017."
+
+  - "2026-10-05 — implementer — `done`: every child has landed, and all twenty
+    claims read `Verified` in § 9 with none `Missing`. The Feature’s ship gate is
+    closed, which also retires `aircraft-source` § 11 row 3."
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "aircraft-source B-009 and B-049 — § 5 row 1; review obligations on the
+    Feature that creates each precondition."
+  - "Any replay-source claim — § 5 row 3, and § 11 row 3 carries the question."

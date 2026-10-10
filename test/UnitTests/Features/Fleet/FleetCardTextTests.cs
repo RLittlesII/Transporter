@@ -1,9 +1,9 @@
 using System;
 using AwesomeAssertions;
 using LanguageExt;
-using Transponder.Features.Fleet;
+using Transporter.Features.Fleet;
 
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 public class FleetCardTextTests
 {

@@ -29,8 +29,8 @@ summary: |
   first window:
 
       System.InvalidOperationException: Unable to resolve service for type
-      'Transponder.Tracking.IFleetTracker' while attempting to activate
-      'Transponder.Features.Fleet.ViewModels.FleetViewModel'.
+      'Transporter.Tracking.IFleetTracker' while attempting to activate
+      'Transporter.Features.Fleet.ViewModels.FleetViewModel'.
 
   `MauiProgram` registers `FleetPage` and `FleetViewModel` and nothing else.
   `AddFleetTracking` and `AddOpenSky` exist, are public, and are called by
@@ -64,7 +64,7 @@ acceptance_criteria:
 
 decisions:
   - "2026-10-06 — the person — everything that can be composed outside the MAUI
-    head is composed outside it. `AddTransponder` in `src/Transponder/Container`
+    head is composed outside it. `AddTransporter` in `src/Transporter/Container`
     takes the configuration and the user-interface scheduler and registers the
     integration, the tracker and the view models; the head keeps the asset it
     reads the settings from, its pages, and the thread that owns its window.

@@ -1,4 +1,4 @@
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 /// <summary>
 /// Every synthetic <c>/states/all</c> payload a test reads, and the builders that vary one element

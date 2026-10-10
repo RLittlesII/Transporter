@@ -10,7 +10,7 @@ type: adr
 
 ## Context
 
-[`fleet-dashboard` decision 0002](../../src/Transponder/Features/Fleet/.spec/decisions/0002-cards-and-a-trail-map-replace-the-grid.md)
+[`fleet-dashboard` decision 0002](../../src/Transporter/Features/Fleet/.spec/decisions/0002-cards-and-a-trail-map-replace-the-grid.md)
 puts the next poll and a provider's refusal on the page (`fleet-dashboard`
 B-036). Only the poller knows either: `aircraft-source` B-054 reports when the
 next poll is due, and B-055 reports a `429` with the interval

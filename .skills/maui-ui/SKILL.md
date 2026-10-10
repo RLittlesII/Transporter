@@ -47,7 +47,7 @@ specification's to say, not this file's.
 - **A view subscribes through an observable, never with `+=`** — any event,
   not only a view model's: a child control's `SizeChanged` or `SelectionChanged`
   is the same `+=`, and a layout event on the page's own child is no exception
-  ([lesson 0004](../../src/Transponder/Features/Fleet/.spec/lessons/0004-two-written-rules-read-as-not-applying.md)).
+  ([lesson 0004](../../src/Transporter/Features/Fleet/.spec/lessons/0004-two-written-rules-read-as-not-applying.md)).
   The page keeps a `CompositeDisposable`, and `OnHandlerChanged` disposes it
   when `Handler` is null. Where a view
   must react to a view-model property — rebuilding a column template from a new

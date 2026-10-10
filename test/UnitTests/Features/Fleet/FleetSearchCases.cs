@@ -1,4 +1,4 @@
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 /// <summary>
 /// What the user typed against whether an aircraft labelled <c>FLT0421</c> and registered in

@@ -1,10 +1,10 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Recording;
-using Transponder.UnitTests.Integrations.OpenSky;
+using Transporter.Recording;
+using Transporter.UnitTests.Integrations.OpenSky;
 
-namespace Transponder.UnitTests.Recording;
+namespace Transporter.UnitTests.Recording;
 
 public class RecordingWriterTests
 {

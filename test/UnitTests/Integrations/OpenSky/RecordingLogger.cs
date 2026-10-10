@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 /// <summary>
 /// An <see cref="ILogger{TCategoryName}"/> that keeps what was written, so a test can assert on a

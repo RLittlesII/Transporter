@@ -1,13 +1,13 @@
 using AwesomeAssertions;
 using LanguageExt;
-using Transponder.Features.Fleet;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.UnitTests.Model.Fixtures;
-using Transponder.UnitTests.Tracking;
-using Transponder.UnitTests.Tracking.Fixtures;
+using Transporter.Features.Fleet;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.UnitTests.Model.Fixtures;
+using Transporter.UnitTests.Tracking;
+using Transporter.UnitTests.Tracking.Fixtures;
 
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 public class FleetCardMotionTests
 {

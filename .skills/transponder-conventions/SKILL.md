@@ -3,7 +3,7 @@ name: transponder-conventions
 description: Everything specific to this repository — paths, layout, naming, the local tracker, the build and test commands, the specification scheme and its section owners — extending the five method skills. Use for any change, alongside the method skill the work belongs to.
 ---
 
-# Transponder conventions
+# Transporter conventions
 
 Everything specific to this repository. Each section below extends one method
 skill — read that skill first, then the reference here, which wins where they

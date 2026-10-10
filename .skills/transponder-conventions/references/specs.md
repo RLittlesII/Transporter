@@ -25,10 +25,10 @@ specification with it.
 
 | Feature             | `<home>`                               |
 | ------------------- | -------------------------------------- |
-| `aircraft-source`   | `src/Transponder/Integrations/OpenSky` |
-| `boundary-analyzer` | `src/Transponder.Analyzers`            |
-| `fleet-pipeline`    | `src/Transponder/Tracking`             |
-| `fleet-dashboard`   | `src/Transponder/Features/Fleet`       |
+| `aircraft-source`   | `src/Transporter/Integrations/OpenSky` |
+| `boundary-analyzer` | `src/Transporter.Analyzers`            |
+| `fleet-pipeline`    | `src/Transporter/Tracking`             |
+| `fleet-dashboard`   | `src/Transporter/Features/Fleet`       |
 | `replay-source`     | `features/replay-source`               |
 
 **`features/<slug>/` is where a specification waits for its code**, and the
@@ -109,7 +109,7 @@ start again in every Feature.
 
 | Written in full                                                        | Scheme                              |
 | ---------------------------------------------------------------------- | ----------------------------------- |
-| `src/Transponder/Integrations/OpenSky/.issue/0001-aircraft-source.yml` | work item, repository-wide sequence |
+| `src/Transporter/Integrations/OpenSky/.issue/0001-aircraft-source.yml` | work item, repository-wide sequence |
 | `ADR-0001`                                                             | root ADR, repository-wide           |
 | `lesson 0001`                                                          | root lesson, repository-wide        |
 | `<home>/.spec/decisions/0001`                                          | that Feature's decisions            |

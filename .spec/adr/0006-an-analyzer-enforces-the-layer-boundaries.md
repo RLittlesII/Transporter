@@ -36,7 +36,7 @@ registration may look like:
   one of these reported on a call rather than on a name, and the only one
   whose violation is an expression rather than a declaration.
 
-[`aircraft-source.feature`](../../src/Transponder/Integrations/OpenSky/.spec/aircraft-source.feature)
+[`aircraft-source.feature`](../../src/Transporter/Integrations/OpenSky/.spec/aircraft-source.feature)
 phrases these as "when every reference to them is identified" and "no domain
 type, cache, strategy, tracker or view can name either". Seventeen of the
 fifty-one claims are of this kind — a third of the specification, and the third
@@ -54,7 +54,7 @@ carried an eighteenth item — B-010's second clause, what may produce the
 contract's double — and `TRN0018` enforced it. `aircraft-source` B-010 is
 Withdrawn, so the clause records no agreement and the rule is retired; the id
 is not reused
-([lesson 0002](../../src/Transponder/Integrations/OpenSky/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md)).
+([lesson 0002](../../src/Transporter/Integrations/OpenSky/.spec/lessons/0002-an-inherited-rule-is-not-a-decision.md)).
 Edited rather than superseded, because this record is `proposed` and because
 nothing it decides turns on the count — the same treatment
 `boundary-analyzer` § 11 row 2 gave the seventeen-versus-eighteen correction

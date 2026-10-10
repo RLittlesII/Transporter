@@ -1,6 +1,6 @@
-# Transponder Agent Instructions
+# Transporter Agent Instructions
 
-This document establishes development practices for the Transponder repository, emphasizing specification-driven development for a demo codebase (DynamicData + .NET MAUI "Fleet Tracking Dashboard") built to teach reactive patterns to line-of-business .NET developers.
+This document establishes development practices for the Transporter repository, emphasizing specification-driven development for a demo codebase (DynamicData + .NET MAUI "Fleet Tracking Dashboard") built to teach reactive patterns to line-of-business .NET developers.
 
 ## Core Principles
 

@@ -1,8 +1,8 @@
 using System.Linq;
 using AwesomeAssertions;
-using Transponder.Model;
+using Transporter.Model;
 
-namespace Transponder.UnitTests;
+namespace Transporter.UnitTests;
 
 public class FeatureAssemblyTests
 {

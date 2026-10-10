@@ -1,11 +1,11 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Reactive.Testing;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Container;
-using Transponder.Tracking;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Container;
+using Transporter.Tracking;
 
-namespace Transponder.UnitTests.Integrations.OpenSky.Replay;
+namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 public class ReplayCadenceTests
 {

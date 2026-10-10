@@ -1,10 +1,10 @@
 using LanguageExt;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.UnitTests.Model.Fixtures;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.UnitTests.Model.Fixtures;
 
-namespace Transponder.UnitTests.Tracking.Fixtures;
+namespace Transporter.UnitTests.Tracking.Fixtures;
 
 /// <summary>Builds a <see cref="TrackedVehicle"/> — the element the pipeline publishes.</summary>
 /// <remarks>

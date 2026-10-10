@@ -8,15 +8,15 @@ using Microsoft.Extensions.Options;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Authentication;
-using Transponder.Integrations.OpenSky.Contracts;
-using Transponder.Integrations.OpenSky.Http.Api;
-using Transponder.Integrations.OpenSky.Model;
-using Transponder.Scheduling;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Authentication;
+using Transporter.Integrations.OpenSky.Contracts;
+using Transporter.Integrations.OpenSky.Http.Api;
+using Transporter.Integrations.OpenSky.Model;
+using Transporter.Scheduling;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class OpenSkyHttpApiTests
 {

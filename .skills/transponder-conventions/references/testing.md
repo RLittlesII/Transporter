@@ -16,7 +16,7 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
   comment on the method, where a reader meets them before the body and a
   renamed claim is a cite that can be followed. A paragraph of prose above
   `// Given` is the same text in the worse place
-  ([lesson 0003](../../../src/Transponder/Integrations/OpenSky/.spec/lessons/0003-a-review-is-a-convention-nobody-wrote-down.md)).
+  ([lesson 0003](../../../src/Transporter/Integrations/OpenSky/.spec/lessons/0003-a-review-is-a-convention-nobody-wrote-down.md)).
 - **AwesomeAssertions** for assertions, **NSubstitute** for test doubles,
   **`Rocket.Surgery.Extensions.Testing.AutoFixtures`** for building the system
   under test, `Akka.TestKit` for actors, and Flurl's `HttpTest` for anything
@@ -86,13 +86,13 @@ xUnit, the assertion and double libraries, generated fixtures, and where analyze
 - **Substituting an `internal` interface needs a second grant.** NSubstitute
   builds its doubles with Castle's dynamic proxy, which cannot see an
   `internal` type unless the assembly declaring it grants
-  `InternalsVisibleTo("DynamicProxyGenAssembly2")`. `src/Transponder` does.
+  `InternalsVisibleTo("DynamicProxyGenAssembly2")`. `src/Transporter` does.
   Without it the failure is a run-time proxy error naming an inaccessible type,
   not a compile error, so it looks like a test bug rather than a missing grant.
 - **A test reaches an `internal` type through `InternalsVisibleTo`, not by
   widening the type.** An integration keeps its contract, its wire types and
   its implementation `internal` so nothing outside can name them; the project
-  that holds them grants `InternalsVisibleTo("Transponder.UnitTests")` once, in
+  that holds them grants `InternalsVisibleTo("Transporter.UnitTests")` once, in
   its `.csproj`. Making a type `public` so a test can see it is the visibility
   claim being lost to the convenience of testing it.
 - **Scenarios here are documentation.** A Feature's `.feature` file is the

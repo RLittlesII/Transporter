@@ -1,0 +1,81 @@
+id: "0038"
+type: task
+title: Show the selected vehicle and the projected counts
+
+status: done
+
+priority: high
+value: 4
+risk: 3
+rank: 76
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0036"
+  - "0034"
+blocks:
+  - "0071"
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-013
+  - B-014
+  - B-015
+  - B-019
+
+created: "2026-10-05"
+updated: "2026-10-09"
+closed: "2026-10-09"
+
+summary: |
+  The detail pane is the one surface in the application allowed to name a
+  concrete `TransportVehicle` subclass (ADR-0005 item 6), and the one place a
+  canonical unit is converted for display — in an explicitly named member, never
+  inline in a binding. The summary projects what the tracker derived rather
+  than recomputing it.
+
+  Runs after `0036`, which builds the pane, and after `fleet-pipeline` `0034`,
+  which derives the mark this item displays. B-015 additionally binds what
+  `fleet-pipeline` `0033` derives; the dependency on `0034` carries the ordering
+  because `0033` waits on `0034` already.
+
+  Two hazards. Legal-here reads as legal-everywhere to the next reader, so the
+  pane's downcast is the one the analyzer rule B-022 names has to keep bounded.
+  And a selection that outlives its vehicle shows a row the grid does not have,
+  with nothing erroring.
+
+acceptance_criteria:
+  - "B-013 — the pane shows fields only a concrete vehicle reports, and no
+    other surface named one to do it."
+  - "B-014 — a selection does not outlive its vehicle; the pane empties."
+  - "B-015 — the summary is projected, never recomputed in a view model."
+  - "B-019 — a unit is converted in a named member and the domain value is
+    unchanged."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-08 — spec-author — B-008 moved to `0070`. The claim was amended
+    from a row to a card (`fleet-dashboard` decisions/0002), and `0070` builds
+    the card; nothing here had been built against it. `0071` now waits on this
+    item for the pane it draws the trail in, which moves the rank from 71 to
+    76."
+  - "2026-10-09 — the person — § 12 waived for this item: `fleet-dashboard`
+    §§ 1-9 are still 🟡 Draft, and the work starts against them as written."
+  - "2026-10-09 — the person — from the review of pull request #69, the detail
+    pane's lines move to the description: `fleet-pipeline` B-043 is added and
+    delivered here, and B-013 and B-022 are amended so no surface names a
+    subclass. The pane's values are derived through `AsValue` from the
+    selection, observed with `ReactiveMarbles.PropertyChanged`'s `WhenChanged`,
+    rather than pushed from setters — a package the person chose over
+    `FromEventPattern`. Lesson 0005."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Deciding who is stale, and the counts themselves (§ 5 row 1) —
+    `fleet-pipeline` B-016 and B-014."
+  - "Where the summary is exposed — § 11 row 1 is open; this item binds what
+    `fleet-pipeline` § 7 currently puts on the tracker."

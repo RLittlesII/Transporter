@@ -12,8 +12,8 @@
     <ItemGroup>
         <!-- The one project that needs the assemblies as well as the analyzers: its tests name
              BoundaryAnalyzer and the fixes (B-015). Updates, not second ProjectReferences. -->
-        <ProjectReference Update="$(TransponderAnalyzerProject)" ReferenceOutputAssembly="true"/>
-        <ProjectReference Update="$(TransponderCodeFixProject)" ReferenceOutputAssembly="true"/>
+        <ProjectReference Update="$(TransporterAnalyzerProject)" ReferenceOutputAssembly="true"/>
+        <ProjectReference Update="$(TransporterCodeFixProject)" ReferenceOutputAssembly="true"/>
     </ItemGroup>
 
 </Project>

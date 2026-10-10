@@ -1,0 +1,54 @@
+id: "0073"
+type: task
+title: Show the change on a readout that moved, and pulse it once
+
+status: in-review
+
+priority: medium
+value: 3
+risk: 3
+rank: 51
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0064"
+  - "0070"
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-038
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  A readout whose cell changed in the last update shows the change the
+  description names for it (`fleet-pipeline` B-042) — "▲ +120 ft" — and pulses
+  once, by a view animation (B-038). Where the platform asks for reduced motion,
+  the change is shown and nothing moves; a vehicle just added shows no change.
+
+  Waits on `fleet-pipeline` `0064` for the delta and on `0070` for the card it
+  sits on.
+
+  Two traps. The pulse is triggered by the bound value changing, not by a
+  timer and not by the view model remembering the last value — that memory is
+  B-041's, on the element. And reduced motion removes the motion, not the
+  information: a build that hides the delta when motion is reduced fails the
+  claim's middle clause.
+
+acceptance_criteria:
+  - "B-038 — the named change shown, one pulse, still under reduced motion, none for a vehicle just added."
+  - "§ 9 Traceability Matrix carries a row naming a test or a performed review for B-038."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Computing the change — `fleet-pipeline` B-042, built by `0064`."
+  - "A history of changes beyond one update — `fleet-pipeline` § 5 row 12."

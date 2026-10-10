@@ -3,13 +3,13 @@ using AwesomeAssertions;
 using DynamicData;
 using NSubstitute;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Integrations.OpenSky;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.Tracking.Sources;
-using Transponder.UnitTests.Integrations.OpenSky.Fixtures;
+using Transporter.Integrations.OpenSky;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.Tracking.Sources;
+using Transporter.UnitTests.Integrations.OpenSky.Fixtures;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class AircraftTrackerSourceTests
 {

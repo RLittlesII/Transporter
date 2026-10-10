@@ -7,11 +7,11 @@ using System.Runtime.CompilerServices;
 using AwesomeAssertions;
 using DynamicData;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.Tracking.Sources;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.Tracking.Sources;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class SwappingTrackerSourceTests
 {

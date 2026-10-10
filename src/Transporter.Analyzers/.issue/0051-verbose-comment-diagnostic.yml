@@ -1,0 +1,75 @@
+id: "0051"
+type: task
+title: Report a comment that has outgrown what a comment is for
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 3
+rank: 51
+
+parent: "0019"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transporter.Analyzers/.spec/README.md
+
+claims: []
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  Review of pull request #36: "We should definitely have an analyzer for verbose
+  xml comments!" — and, less settled, "Starting to think we should have an
+  analyzer that scrubs comments to ensure they do not contain identifiers? Not
+  sure yet."
+
+  `transponder-conventions` already says a `<summary>` is one line and a
+  `<remarks>` one sentence. Nothing reads it, so `0006` wrote nine files of
+  paragraph-length `<remarks>` and no gate objected; `0050` is the scrub, and
+  this is what stops the next one.
+
+  **Two rules, and only the first is decided.** The verbosity rule is the one
+  the reviewer asked for outright. The identifier rule — a comment carrying
+  `B-034` or `ADR-0002` — the reviewer raised as a suspicion rather than a
+  decision, so this item is `ready-for-architecture` and § 7 settles it before
+  either rule is built. It cannot be settled by this item's author: a citation
+  is sometimes the only thing that makes a comment worth keeping, and a rule
+  that bans them outright turns a one-line `why` into a comment that explains
+  itself.
+
+  This Feature's own claims decide what a rule may do. A new diagnostic takes
+  the next `TRN` number from the analyzer's sequence, carries a release-notes
+  row, and is specified in § 3 before it is written — a rule added to the
+  project without a claim is what `boundary-analyzer` B-002 and ADR-0006 exist
+  to prevent.
+
+acceptance_criteria:
+  - "§ 3 carries a claim per rule this item builds, and § 7 records the
+    identifier question's answer with the option it rejects."
+  - "The verbosity rule reports a `<summary>` of more than one sentence and a
+    `<remarks>` of more than one, and says which element and how many it found."
+  - "A threshold is a decision with a reason, not a number someone picked:
+    whatever it is, § 7 says why that and not one either side of it."
+  - "The rule does not fire on the repository as `0050` leaves it. Run against
+    `src/` before and after that scrub, and record both counts."
+  - "No code fix. The compliant form is prose nobody but the author can write,
+    which is the same reason `TRN0008` and `TRN0013` have none."
+  - "§ 9 carries a row naming a test per rule, and `AnalyzerReleases.Unshipped.md`
+    a row per diagnostic."
+
+decisions: []
+
+out_of_scope:
+  - "The scrub itself — `0050`. This item reports; that item cleans, and neither
+    waits on the other."
+  - "A rule over comments in test projects. `test-from-scenarios` asks a test's
+    `<summary>` to name the claim under test, which is the opposite rule."
+  - "Spelling, grammar or tone. A rule that reads prose for quality is not a
+    rule, and ADR-0006 § Decision rules out a diagnostic nothing can falsify."

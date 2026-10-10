@@ -40,7 +40,7 @@ class Build : NukeBuild
     [Parameter("Seconds between the sample recording's payloads - Default is the tool's own")]
     private readonly double? PollInterval;
 
-    [Solution("Transponder.slnx")] private readonly Solution Solution = null!;
+    [Solution("Transporter.slnx")] private readonly Solution Solution = null!;
 
     private AbsolutePath SourceDirectory => RootDirectory / "src";
     private AbsolutePath TestDirectory => RootDirectory / "test";
@@ -59,7 +59,7 @@ class Build : NukeBuild
     /// Every other host builds everything.
     private IEnumerable<AbsolutePath> BuildScope =>
         EnvironmentInfo.IsLinux
-            ? [SourceDirectory / "Transponder" / "Transponder.csproj", TestDirectory / "UnitTests" / "UnitTests.csproj"]
+            ? [SourceDirectory / "Transporter" / "Transporter.csproj", TestDirectory / "UnitTests" / "UnitTests.csproj"]
             : [Solution.Path];
 
     private Target Clean => definition => definition
@@ -122,7 +122,7 @@ class Build : NukeBuild
     /// the project, so this build still runs when the application does not compile.
     private Target SampleRecording => definition => definition
         .Executes(() => DotNetRun(settings => settings
-            .SetProjectFile(RootDirectory / "tools" / "Transponder.SampleRecording" / "Transponder.SampleRecording.csproj")
+            .SetProjectFile(RootDirectory / "tools" / "Transporter.SampleRecording" / "Transporter.SampleRecording.csproj")
             .SetApplicationArguments(SampleRecordingArguments())));
 
     /// What the generator is told: the seed and the output always, the length and the cadence only

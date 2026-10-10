@@ -1,0 +1,70 @@
+id: "0044"
+type: test
+title: Prove the page-level claims this repository has no mechanism for today
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 3
+rank: 51
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0036"
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-003
+  - B-004
+  - B-006
+
+created: "2026-10-06"
+updated: "2026-10-06"
+closed: null
+
+summary: |
+  `0036` builds a page that takes its view model by constructor (B-003),
+  registers it through the user-interface builder block (B-004), and binds a
+  changeset so a row updates in place (B-006). Nothing in this repository
+  proves any of the three, and § 9 named two tests that cannot be written:
+  `test/UnitTests` is `net10.0` and references `Transporter` only, while the
+  page and the builder block live in `src/Gui`, whose heads are Apple-only and
+  out of Linux CI's scope (§ 4 rows 4 – 5). The MAUI page is not what this
+  repository tests, and a test project on a MAUI head is a thing CI would never
+  run.
+
+  B-006 is held for a second reason: watching one vehicle change needs a
+  running feed. `0047` registered the source on 2026-10-06, so the graph is
+  there; nothing starts a poll (spike `0040`) and there is nothing recorded to
+  play back (`0008` – `0013`), so a vehicle that changes is still something
+  this repository cannot show.
+
+  So the mechanism is the question, and it is deferred here rather than
+  invented inside an implementation item. Three options are on the table for
+  B-003 and B-004 — a recorded review in the form lesson 0011 requires, a
+  `BoundaryAnalyzer` rule reaching the `src/Gui` project, or a test project on
+  a MAUI head excluded from Linux CI — and the one taken is this item's to name
+  with the one rejected.
+
+acceptance_criteria:
+  - "B-003, B-004 — the mechanism is chosen and built, and the option rejected
+    is named in `decisions`."
+  - "B-006 — performed against a running application whose fleet changes, with
+    what was looked at and what re-does it recorded in the § 9 row."
+  - "§ 9 rows for B-003, B-004 and B-006 read `Verified` and name what proves
+    each."
+
+decisions: []
+
+out_of_scope:
+  - "Building the page, the view model or the registration — `0036` owns all
+    three, and this item proves what that one builds."
+  - "A UI test runner, and snapshot or screenshot tests — § 5 row 7."
+  - "Wiring a source into the application so the feed exists — spike `0040`
+    and `aircraft-source` own the startup wiring this waits on for B-006."

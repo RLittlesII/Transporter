@@ -16,7 +16,7 @@ writes through, and `IObservedClock`, which exposes `Current` and is all a
 consumer gets. The split is the point of that record — a consumer holding the
 read side cannot advance time.
 
-[`src/Transponder/Tracking`](../../src/Transponder/Tracking/.spec/README.md)
+[`src/Transporter/Tracking`](../../src/Transporter/Tracking/.spec/README.md)
 B-018 needs more than `Current`. A vehicle must become stale **with no new data
 arriving for it**, which means the pipeline has to notice the instant advancing,
 and `Current` cannot be noticed — it can only be read, by something that already

@@ -1,0 +1,76 @@
+id: "0069"
+type: task
+title: Put the page on one dark theme, with every status told by icon and word
+
+status: in-review
+
+priority: medium
+value: 3
+risk: 2
+rank: 59
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0075"
+blocks:
+  - "0070"
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-032
+  - B-033
+
+created: "2026-10-08"
+updated: "2026-10-09"
+closed: null
+
+summary: |
+  The page's resources become the Flight Deck's tokens, built in C# rather than
+  in the template's `Colors.xaml` and `Styles.xaml` (B-002): one dark theme
+  whose text meets 7:1 and whose secondary text meets 4.5:1 (B-033), and a
+  status vocabulary — fresh, stale, throttled, quiet, removed — where each
+  status carries an icon and a word as well as a colour (B-032).
+
+  Depends on `0075`: the tokens are tested as data (ADR-0014), and no test
+  reaches them until the pages and tokens leave `src/Gui`. `0070` puts the
+  marks on cards.
+
+  Two traps. A token kept as a XAML resource looks finished and fails B-002's
+  review. And a status distinguishable only by hue passes every screenshot
+  review taken by someone with typical colour vision; check the palette under
+  a deuteranopia simulation, and check that every status still reads with the
+  colour removed entirely.
+
+acceptance_criteria:
+  - "B-032 — every status has an icon and a word beside its colour."
+  - "B-033 — one dark theme; text at 7:1, secondary text at 4.5:1."
+  - "§ 9 Traceability Matrix carries a row naming a test or a performed review for each id above."
+
+decisions:
+  - "2026-10-08 — the person — tokens are tested as data and the page built
+    and undrawn (ADR-0014), so `0069` waits on `0075`, which moves the pages
+    and tokens to a project a test can reference. Rank unchanged: it counts
+    what this item unblocks, not what it waits on."
+  - "2026-10-08 — the person — build the theme in `src/Gui` now, as
+    `ContentView` components, and let `0075` move it later; the token tests
+    wait for `0075`. JetBrains Mono is bundled for the ticking numbers."
+  - "2026-10-09 — the person — defer the on-the-ground status; the detail
+    screen, the toast and the card's updated mark come first. B-032 stays
+    `Missing` on that clause alone, and this item stays `in-review`."
+  - "2026-10-09 — the person — drop the on-the-ground status rather than defer
+    it: B-032 no longer names it, `fleet-dashboard` § 5 row 8 records why, and
+    B-032's § 9 row is `Verified` on the review this item performed. The detail
+    pane still shows the field. The item's status is unchanged: it still
+    depends on `0075`."
+  - "2026-10-09 — implementer — the card says updated when the last update
+    changed a value one of its readouts shows, decided by `FleetCardStatus`
+    so it is tested. The card had only ever said fresh, stale or no fix."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "A light theme or a theme switch — § 5 row 5."
+  - "The cards themselves — `0070`."

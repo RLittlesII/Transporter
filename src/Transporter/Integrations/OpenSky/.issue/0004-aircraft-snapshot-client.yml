@@ -1,0 +1,196 @@
+id: "0004"
+type: task
+title: Poll OpenSky, read the positional rows, and diff them into the cache
+
+status: done
+
+priority: high
+risk: 3
+rank: 101
+
+parent: "0001"
+children: []
+
+depends_on:
+  - "0002"
+  - "0003"
+blocks:
+  - "0005"
+  - "0009"
+spikes: []
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+  - B-003
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+  - B-021
+  - B-022
+  - B-023
+  - B-024
+  - B-025
+  - B-026
+  - B-027
+  - B-028
+  - B-029
+  - B-045
+  - B-050
+
+created: "2026-10-04"
+updated: "2026-10-05"
+closed: "2026-10-05"
+
+summary: |
+  The headline mechanism and the largest item: `AircraftSnapshotClient` takes
+  the contract and the cache by constructor, reads every field of an 18-element
+  row by positional index, and applies each fetched set to its cache as one
+  differential update. That differential write is the step the talk exists to
+  show, and after this item it has an address in the source.
+
+  Carries the provider's awkward facts too: token refresh on expiry *and* on
+  `401`, `429` treated as data and deferred by exactly the header's seconds,
+  `X-Rate-Limit-Remaining` logged at debug, and a startup failure naming an
+  absent credential. A failed poll must not terminate the stream.
+
+  Needs the contract (0002) to call and the cache (0003) to write to, so it
+  runs after both — they touch the same seam and must not run side by side.
+  The recording tap (0009) taps this client, which is why this item unblocks
+  two.
+
+acceptance_criteria:
+  - "B-003 — each fetched envelope's reported time is written to
+    `IObservedClockWriter` in the same method that writes the cache, per
+    ADR-0007. Both clauses ride the one test § 9 names: the second — that no
+    consumer reads an ambient clock for an instant — has no analyzer rule,
+    because ADR-0006 assigned none, so the test has to leave the client with no
+    other source of one."
+  - "B-015 — contract and cache by constructor."
+  - "B-016 — positional reading, per README.md § \"Response shape\"."
+  - "B-017, B-018 — absent versus defaulted, and absent versus present-zero.
+    These two are the item's hazard: each wrong answer is plausible data."
+  - "B-019, B-020, B-021 — callsign padding, squawk as a string, `sensors`."
+  - "B-022 — one unreadable row does not abort the batch."
+  - "B-023 — the whole-set differential update and the changeset stream. This
+    is the claim the demo's core idea rests on."
+  - "B-024 — box and interval as constructor or options input."
+  - "B-025 — `extended=1` and the absent category."
+  - "B-026, B-027, B-028 — token refresh and retry, the credit header at debug,
+    and `429` as data. § 11 row 2 placed these on the HTTP transport, so this
+    item finishes `OpenSkyHttpApi` rather than putting them on the client: the
+    token source and the logger § 7 declares it taking arrive here. The
+    deferral half of B-028 is the client's, and the ban on an exception is
+    scoped to a subscriber of its stream."
+  - "B-029 — startup on an absent credential, and a failed poll that neither
+    completes nor error-terminates the stream."
+  - "B-045 — the envelope's referents. Falsifiable here for the first time,
+    because this is the second and last one."
+  - "B-050 — the configurable interval and box (decisions/0001)."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-05 — spec-author — § 11 row 2 is answered, so this item moves from
+    `ready-for-architecture` to `ready-for-implementation`. B-026 and B-027 name
+    the HTTP transport and B-028 names both it and the client; the claim ids,
+    this item's claim list and § Tasks are unchanged, because a claim's subject
+    is which component satisfies it rather than which item builds it. Recorded
+    as lessons/0001. The residual is § 11 row 4, which says of itself that it
+    blocks nothing and targets the first test this item writes above the
+    contract: if a substitute may not stand in at that seam, the double stays
+    the hand-written fake B-010 already requires."
+  - "**Answered 2026-10-05 by the decision below.** 2026-10-05 — spec-author —
+    B-003's test is `AircraftSnapshotClientTests`'s and its behaviour is § 7's
+    `IObservedClockWriter` call inside the method that writes the cache, but the
+    claim is `0002`'s and `0002` has shipped without a client. No item can
+    currently make that row pass. Raised rather than fixed: whether B-003 joins
+    this item's claims is the person's."
+  - "2026-10-05 — the person — B-003 is this item's. It gains the claim and an
+    acceptance criterion; `0002` loses both and records the move. § 9's row is
+    unchanged, because it already named the test and the class this item
+    creates — the row was right and the claim list was wrong. Nothing else
+    moves: a claim's owning item is which item builds it, and the subject of
+    B-003's sentence is the envelope `0002` declares, so § 3 stands as written.
+    ADR-0007 is the mechanism, and § 6 row 3 no longer reads `Unresolved`
+    against it — it had kept that word, and a cite to a § 7 heading that no
+    longer exists, since before the ADR was written."
+  - "2026-10-05 — the person — **§ 11 row 4 is answered: B-010 is withdrawn
+    outright, both halves.** The person asked why the hand-written fake was
+    decided in the first place and the answer is that nobody decided it on its
+    merits. Commit 31dda56 records the whole of it — the versioned-contract
+    pattern bans a mocking framework for the contract's double, `AGENTS.md`
+    mandates NSubstitute, and the conflict was resolved by obeying the pattern
+    inside the contract layer. There is no ADR and no decision record. The
+    hazard § Scoring and TRN0018's message both cite — a double returning
+    `default` passes every test above it — was written around a rule that was
+    already there, so it is this repository's rationalisation of an inherited
+    obligation rather than the reason it was adopted. The cost had already
+    landed and this item would have grown it: `OpenSkyApiFakeTests` is a test
+    suite whose subject is a test double, and the arrangements this item needs
+    (throw-then-succeed, timeout-then-succeed, two sets across two intervals,
+    `extended=1` asserted on the request) meant a response queue and a
+    recorded-calls list inside the fake — more untested behaviour under
+    fifteen claims. NSubstitute stands in at the contract seam from here, and
+    the throw-on-unset half goes with the ban: an unarranged `GetStates`
+    fails loudly without a named message, which is enough. This item carries
+    every consequence, the analyzer's included."
+  - "2026-10-05 — the person — time is taken as
+    `Rocket.Surgery.Airframe.ISchedulerProvider`, not as a bare `IScheduler`.
+    The first draft registered `AddSingleton<IScheduler>(TaskPoolScheduler.Default)`,
+    which makes every call site inherit one thread choice it never states. The
+    provider declares `UserInterfaceThread` and `BackgroundThread`, so a poll
+    says it is background work where it is written. `Rocket.Surgery.Airframe.Core`
+    ships the interface and no implementation — the person's own prior
+    repositories hand-write the provider and substitute it in tests — so
+    `Transporter.Scheduling.SchedulerProvider` is this repository's, and
+    `AddOpenSky` registers it only when the host has not registered its own.
+    One consequence for tests: a substituted provider hands the same
+    `TestScheduler` to both members, so §§ 4 row 14's one-object rule still
+    holds."
+  - "2026-10-05 — the person — the logger B-027 names is
+    `Microsoft.Extensions.Logging`'s `ILogger<T>` at the call site, with
+    Serilog behind it through an adapter at the composition root — the shape
+    the person's own prior work uses (`Finder.Logging`'s
+    `SerilogLoggerFactory : ILoggerFactory` and its `AddSerilog` registration
+    extension). B-027's test asserts against `ILogger<OpenSkyHttpApi>`, so the
+    sink choice is the composition root's and no test depends on it."
+
+
+delivered: |
+  Seventeen claims to `Verified`: B-003, B-015 - B-029 and B-050. `AircraftSnapshotClient`
+  reads every field of a row by index, applies each fetched set to its cache as one
+  `EditDiff` over the whole set, and reports the envelope's instant to
+  `IObservedClockWriter` in that same method. The transport gained the token source
+  (refresh on expiry *and* on `401`, retried once) and the logger that records the
+  remaining credit at debug and no credential anywhere. `OpenSkyOptions`,
+  `OpenSkyCredentials` and `BoundingBox` carry the box and the interval, validated on
+  start so an absent credential stops the host rather than the first poll.
+
+  B-010 is Withdrawn with the person's answer to § 11 row 4, which also retired the
+  analyzer's `TRN0018` and the hand-written contract fake; `lessons/0002` holds the
+  reasoning. Two defects were found by the tests that were written for other claims:
+  a `catch` filter that excluded every `OperationCanceledException` also excluded the
+  timeout B-029 is named for, and `TRN0016`'s wrapper clause reported the client for
+  holding the cache B-015 requires it to take.
+  - "2026-10-05 — the person, in review of pull request #18 — fifteen comments,
+    twelve of them a test convention this repository held nowhere. Addressed in
+    full and recorded as `lessons/0003`, with the rules themselves added to
+    `transponder-conventions` § testing so the next item reads them before
+    writing rather than after. Two were design rather than style and changed
+    production code: `SchedulerProvider` now takes both schedulers by
+    constructor, so a test builds the real type through a fixture instead of
+    substituting `ISchedulerProvider`; and `AddOpenSky` now takes
+    `IConfiguration` and binds both options types itself, so the startup test
+    exercises the application's own composition rather than a second graph
+    assembled beside it. `OpenSkyOptions.BaseUrl` arrives with that, defaulted,
+    because the URL is the provider's. No claim moved and no § 9 row changed —
+    every test § 9 names still exists under that name."
+
+out_of_scope:
+  - "The domain projection — B-034 puts the first domain object in 0005."
+  - "The poller's hosting (§ 5 row 16)."
+  - "Replay and recorded fixtures (§ 5 row 4) — the replay Feature's."
+  - "Registering the account and provisioning credentials (§ 5 row 15)."

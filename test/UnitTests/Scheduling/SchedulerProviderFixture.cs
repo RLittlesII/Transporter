@@ -1,9 +1,9 @@
 using System.Reactive.Concurrency;
 using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
-using Transponder.Scheduling;
+using Transporter.Scheduling;
 
-namespace Transponder.UnitTests.Scheduling;
+namespace Transporter.UnitTests.Scheduling;
 
 /// <summary>
 /// Builds a <see cref="SchedulerProvider"/>, so nothing substitutes

@@ -141,7 +141,7 @@
         },
         "Solution": {
           "type": "string",
-          "description": "Path to a solution file that is automatically loaded. Default is Transponder.slnx"
+          "description": "Path to a solution file that is automatically loaded. Default is Transporter.slnx"
         }
       }
     },

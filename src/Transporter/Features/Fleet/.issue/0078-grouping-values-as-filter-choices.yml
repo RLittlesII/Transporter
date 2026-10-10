@@ -1,0 +1,53 @@
+id: "0078"
+type: task
+title: Offer the values the data holds as filter choices, and clear them when the grouping changes
+
+status: ready-for-architecture
+
+priority: low
+value: 2
+risk: 2
+rank: 34
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0056"
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-039
+
+created: "2026-10-08"
+updated: "2026-10-08"
+closed: null
+
+summary: |
+  The filter control offers, beside the choices the description curates
+  (`fleet-pipeline` B-029), one choice per value the tracker publishes for the
+  current grouping key (`fleet-pipeline` B-030), and withdraws one when the
+  last vehicle carrying it leaves (B-039). When the grouping changes, a selected
+  value of the old key is cleared; a curated choice and the search text stay,
+  as B-011 keeps them apart.
+
+  Waits on `fleet-pipeline` `0056`, which publishes the values.
+
+  Two traps. Offering the values by enumerating the bound collection is the
+  loop B-009 and B-018 forbid, and it reads the fleet after the filter, so
+  choosing one country withdraws the rest. And clearing every selection on a
+  grouping change looks tidy and is B-011's bug moved: the user loses a filter
+  that still means what it meant.
+
+acceptance_criteria:
+  - "B-039 — the published values offered beside the curated choices, added and withdrawn with the changeset; a value of the old key cleared on a grouping change, a curated choice and the search text kept."
+  - "§ 9 Traceability Matrix carries a row naming a test for B-039."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The values themselves — `fleet-pipeline` `0056`."

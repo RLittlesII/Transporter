@@ -3,13 +3,13 @@ using System.Reactive.Subjects;
 using AwesomeAssertions;
 using DynamicData;
 using Microsoft.Reactive.Testing;
-using Transponder.Model;
-using Transponder.Scheduling;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Model;
+using Transporter.Scheduling;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Tracking;
+namespace Transporter.UnitTests.Tracking;
 
 public class FleetNoticeTests
 {

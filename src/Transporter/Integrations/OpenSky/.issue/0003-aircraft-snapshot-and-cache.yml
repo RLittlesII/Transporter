@@ -1,0 +1,84 @@
+id: "0003"
+type: task
+title: Add the aircraft snapshot record and its cache
+
+status: done
+
+priority: high
+risk: 1
+rank: 102
+
+parent: "0001"
+children: []
+
+depends_on: []
+blocks:
+  - "0004"
+spikes: []
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-030
+  - B-031
+  - B-032
+
+created: "2026-10-04"
+updated: "2026-10-05"
+closed: "2026-10-05"
+
+summary: |
+  The snapshot — the server's record with names on it, value-equal over every
+  member so the differ emits nothing for an unchanged aircraft — and the plain
+  keyed store it lives in. The cache has no diff policy, no projection and no
+  clock: the writer owns the write, which is what lets a push client add and
+  remove directly instead of assembling a full set.
+
+  Adds `DynamicData` to `Directory.Packages.props` — the first item that builds
+  a cache does, per § 4 row 17.
+
+  The highest-ranked startable item: nothing blocks it, and 0004 waits on it.
+
+acceptance_criteria:
+  - "B-011, B-012 — the snapshot's value equality and its key."
+  - "B-013, B-014 — what the snapshot carries, and what it may not."
+  - "B-030, B-031 — the cache's shape and its lifetime."
+  - "B-032 — no domain type in the cache."
+  - "§ 9 Traceability Matrix carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-04 — spec-author — the snapshot and its cache are one item rather
+    than two. The cache's whole specification is three negative claims, and a
+    store with nothing to store cannot be reviewed against a diff."
+  - "2026-10-04 — implementer — B-014, B-030 and B-031 move to the analyzer
+    before a test is written for them. § 9 named them `WhenItsMembersAreInspected`
+    and `WhenItIsInspected`, which is a test of a declaration wearing a method
+    name; all three are absences or registration shapes, which ADR-0006 makes
+    the analyzer's. Three of this item's seven claims are therefore `Missing`
+    on delivery. Recorded against lesson 0006, which is the same move made
+    three times now."
+  - "2026-10-04 — implementer — the cache is registered as
+    `SourceCache<AircraftSnapshot, string>` in `AddOpenSky` rather than given a
+    type of its own, per § 7. There is nothing else to build for B-030: the
+    absence of a wrapper is the claim."
+  - "2026-10-05 — spec-author — this item landed in pull request #2 and is
+    `blocked` rather than `done`. Three of its seven claims stand `Missing` in
+    § 9: B-014 is now proven by the analyzer's `TRN0012`, but B-030 and B-031
+    wait on `TRN0016` and `TRN0017`, which are `boundary-analyzer`'s `0024`.
+    `deliver-change` says an item whose claims are unbuilt is not done, and
+    `0002` carries the same status for the same reason. The blocker is § 11
+    row 3."
+
+  - "2026-10-05 — implementer — `done`. All seven claims are `Verified`: B-014,
+    B-030 and B-031 were the three waiting on the analyzer, and `0023` and
+    `0024` built the rules that prove them. It was `blocked` for one day."
+out_of_scope:
+  - "The differential write itself — B-023, which belongs to the client (0004).
+    This item builds the store; the writer owns the write."
+  - "Mapping anything into the snapshot (0004) or out of it (0005)."
+  - "The domain projection and `Option<T>` handling — B-033 – B-036, which is
+    0005."

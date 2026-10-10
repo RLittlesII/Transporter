@@ -4,14 +4,14 @@ using LanguageExt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Container;
-using Transponder.Integrations.OpenSky.Contracts;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.Tracking.Sources;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Container;
+using Transporter.Integrations.OpenSky.Contracts;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.Tracking.Sources;
 
-namespace Transponder.UnitTests.Integrations.OpenSky.Replay;
+namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 public class ReplayOpenSkyApiTests
 {

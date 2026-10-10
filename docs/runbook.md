@@ -10,7 +10,7 @@ The code is only half the deliverable; the other half is it working in a room
 with bad wifi. The facts behind each step are in
 [`README.md`](../README.md) §§ "Limits", "Gotchas", "Demo resilience" and
 "Closing act", and in
-[decision 0001](../src/Transponder/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md);
+[decision 0001](../src/Transporter/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md);
 this file is the order to do them in.
 
 ## Before the talk

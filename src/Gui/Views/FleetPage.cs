@@ -9,9 +9,9 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
 using ReactiveMarbles.ObservableEvents;
-using Transponder.Features.Fleet.ViewModels;
-using Transponder.Tracking;
-using Transponder.Tracking.Fleet;
+using Transporter.Features.Fleet.ViewModels;
+using Transporter.Tracking;
+using Transporter.Tracking.Fleet;
 
 namespace Gui.Views;
 

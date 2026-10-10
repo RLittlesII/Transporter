@@ -3,10 +3,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Rocket.Surgery.Extensions.Testing.SourceGenerators;
-using Transponder.Analyzers;
-using Transponder.CodeFixes;
+using Transporter.Analyzers;
+using Transporter.CodeFixes;
 
-namespace Transponder.UnitTests.Analyzers;
+namespace Transporter.UnitTests.Analyzers;
 
 /// <summary>The two fixes B-020 asks for, and the shape of a pass that applies one.</summary>
 /// <remarks>
@@ -225,7 +225,7 @@ public class BoundaryCodeFixTests
         return (await (changed ?? action.TargetDocument).GetTextAsync()).ToString();
     }
 
-    private const string SpecificationPath = "src/Transponder.Analyzers/.spec/README.md";
+    private const string SpecificationPath = "src/Transporter.Analyzers/.spec/README.md";
 
     private static readonly string Specification = SpecificationTables.Read(SpecificationPath);
 }

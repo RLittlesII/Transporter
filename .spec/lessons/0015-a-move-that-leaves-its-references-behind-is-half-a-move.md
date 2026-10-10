@@ -11,14 +11,14 @@ type: lesson
 
 ## Symptom
 
-[1563e5b](https://github.com/RLittlesII/Transponder/commit/1563e5b) moved
+[1563e5b](https://github.com/RLittlesII/Transporter/commit/1563e5b) moved
 `aircraft-source`'s specification and items out of `features/` and into the
-integration they describe, `src/Transponder/Integrations/OpenSky/`. A day later
+integration they describe, `src/Transporter/Integrations/OpenSky/`. A day later
 the repository held sixty-nine references to where they had been.
 
 - **Forty-four relative links inside the moved tree** resolved one directory
   short. `features/aircraft-source/.spec/` is three directories deep and
-  `src/Transponder/Integrations/OpenSky/.spec/` is four, so every `../../../`
+  `src/Transporter/Integrations/OpenSky/.spec/` is four, so every `../../../`
   in the specification and its four lessons — to the root ADRs, the templates,
   the skills, `Directory.Packages.props`, and nineteen source files — pointed
   one level above its target. The specification's own § 7 type table, where a

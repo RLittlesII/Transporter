@@ -10,15 +10,15 @@ using Microsoft.Extensions.Options;
 using Microsoft.Reactive.Testing;
 using NSubstitute;
 using Rocket.Surgery.Airframe;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Contracts;
-using Transponder.Integrations.OpenSky.Model;
-using Transponder.Integrations.OpenSky.Polling;
-using Transponder.Messages;
-using Transponder.Scheduling;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Contracts;
+using Transporter.Integrations.OpenSky.Model;
+using Transporter.Integrations.OpenSky.Polling;
+using Transporter.Messages;
+using Transporter.Scheduling;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class AircraftPollActorTests : TestKit
 {

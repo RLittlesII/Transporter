@@ -1,0 +1,137 @@
+id: "0001"
+type: feature
+title: Poll OpenSky for aircraft and project them into the fleet
+
+status: blocked
+
+priority: high
+value: 5
+risk: 3
+rank: 91
+
+parent: null
+children:
+  - "0002"
+  - "0003"
+  - "0004"
+  - "0005"
+  - "0006"
+  - "0007"
+  - "0057"
+  - "0068"
+  - "0080"
+
+depends_on:
+  - "0039"
+blocks: []
+spikes: []
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+  - B-001
+  - B-002
+  - B-003
+  - B-004
+  - B-005
+  - B-006
+  - B-007
+  - B-008
+  - B-009
+  - B-010
+  - B-011
+  - B-012
+  - B-013
+  - B-014
+  - B-015
+  - B-016
+  - B-017
+  - B-018
+  - B-019
+  - B-020
+  - B-021
+  - B-022
+  - B-023
+  - B-024
+  - B-025
+  - B-026
+  - B-027
+  - B-028
+  - B-029
+  - B-030
+  - B-031
+  - B-032
+  - B-033
+  - B-034
+  - B-035
+  - B-036
+  - B-037
+  - B-038
+  - B-039
+  - B-040
+  - B-041
+  - B-042
+  - B-043
+  - B-044
+  - B-045
+  - B-046
+  - B-047
+  - B-048
+  - B-049
+  - B-050
+  - B-051
+  - B-052
+  - B-053
+  - B-054
+  - B-055
+  - B-056
+  - B-057
+
+created: "2026-10-04"
+updated: "2026-10-09"
+closed: null
+
+summary: |
+  As a line-of-business .NET developer in the talk audience I want to see the
+  single point where a request/response feed becomes a reactive collection, and
+  to find one name per layer when I read the repository afterwards, so that I
+  can apply the pattern to my own REST-backed app without reverse-engineering
+  which component holds which type.
+
+  This is the parent of the whole aircraft path: a typed API contract that
+  mirrors what OpenSky publishes, a client that reads the positional rows and
+  diffs them into its cache, a per-type strategy that is the only place a domain
+  object is built, a decorator that swaps strategies at runtime, and
+  `IFleetTracker` wrapping that seam. Its six children slice it one layer at a
+  time; it holds no work of its own.
+
+acceptance_criteria:
+  - "All 52 claims in § 3 of the spec — the children carry them in slices, and
+    no claim is delivered twice. Which child takes which claims is each
+    child's own `claims:` list, indexed in the specification's `## Tasks`."
+  - "§ 9 Traceability Matrix has no Missing row once every child is done — that
+    is the ship gate, not a green build (§ 4 row 13)."
+
+decisions:
+  - "2026-10-07 — `0055` — `blocked` rather than `ready-for-architecture`, and `depends_on` now names `0039`. The architecture this asked for shipped and all six children are `done`; the one § 9 row still `Missing` is B-041's \"what view models depend on\" half, which needs a container-built view model and is owed by `fleet-dashboard` `0039` under that Feature's B-020 — the row says so already, citing lesson `0011`. So this parent is waiting on another Feature's item rather than on a design, and the field says which one."
+  - "2026-10-04 — spec-author — the layering is cut into six children, one per
+    component boundary, rather than one item per claim group. Rejected: a
+    single item for all 52 claims, which no review could judge against a diff."
+  - "2026-10-04 — spec-author — the three layer-boundary claims (B-045 – B-047)
+    are assigned to the child that makes each falsifiable rather than to a
+    seventh item of their own: B-045 to 0004, B-046 to 0005, B-047 to 0007. A
+    boundary cannot be asserted before both sides of it exist."
+
+out_of_scope:
+  - "Everything in § 5 of the spec — in particular the pipeline operators
+    themselves (row 1), the vessel feed (row 3), the replay and simulated
+    strategies (row 4), the swap control and stage choreography (row 5), and
+    all UI (row 7)."
+  - "Writing the spec's §§ 6-9. All four have landed — §§ 6-7 the
+    implementer's, §§ 8-9 the test-writer's — so `0002`, `0003`, `0005` and
+    `0006` and `0007` are ready for implementation. `0004` waits on § 11
+    question 2."
+  - "Building the boundary analyzer. ADR-0006 makes it the mechanism for
+    eleven of this Feature's claims and its own Feature, not work under this
+    parent. Until it exists those eleven § 9 rows stay `Missing`, so every
+    child but `0006` can be implemented and none can reach `done`."

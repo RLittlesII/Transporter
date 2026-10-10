@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <!-- Roslyn hosts analyzers as netstandard2.0; a net10.0 one does not load at all. -->
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <IsPackable>false</IsPackable>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Tests reach internals through this, not by widening the types. -->
+        <InternalsVisibleTo Include="Transporter.UnitTests"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Every id handed out: B-007 needs the record, RS2008 asks for it. -->
+        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Roslyn is the host's, not ours to carry anywhere (B-015). -->
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>
+    </ItemGroup>
+
+</Project>

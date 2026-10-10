@@ -6,7 +6,7 @@ type: instructions
 
 # Role agents
 
-Four roles own the specification chain for Transponder. Each is a **documented
+Four roles own the specification chain for Transporter. Each is a **documented
 contract for whoever takes that role** — a person or an agent. This repository
 ships no loadable agents: the directory is `.agents/`, not `.claude/agents/`,
 so nothing here is resolved by name. Read the file, take the role, honour the

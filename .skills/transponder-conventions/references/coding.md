@@ -66,10 +66,10 @@ it. The traps:
 
 ## Project structure
 
-- `src/Transponder` — the model, the feature logic and the integrations;
+- `src/Transporter` — the model, the feature logic and the integrations;
   `src/Gui` — the MAUI host, pages and container wiring; `test/UnitTests` — the
-  test project, root namespace `Transponder.UnitTests`.
-- **`src/Transponder` references no MAUI package.** The model, the pipeline,
+  test project, root namespace `Transporter.UnitTests`.
+- **`src/Transporter` references no MAUI package.** The model, the pipeline,
   the integrations and the view models are plain .NET, and a page is the
   host's. `FeatureAssemblyTests` fails on a MAUI type the assembly compiles
   against; a package reference nothing uses compiles away, so that half is
@@ -88,11 +88,11 @@ it. The traps:
   reading of it, and a hazard like an unreadable row cannot be expressed as one
   at all.
 - Feature code lives under
-  `src/Transponder/Features/<FeatureName>/{ViewModels,Actors}`.
+  `src/Transporter/Features/<FeatureName>/{ViewModels,Actors}`.
 - **Integration code does not live under `Features/`.** A provider's API
   contract, its implementation, and the client and cache above it belong to that
   provider, not to one feature, and two features can want the same provider.
-  They go under `src/Transponder/Integrations/<Provider>/`, split `Contracts/`
+  They go under `src/Transporter/Integrations/<Provider>/`, split `Contracts/`
   (the interface callers name), `Http/` (the implementation) and `Container/`
   (its registration). Nothing under `Features/` holds a contract, a wire type or
   a cache.
@@ -101,10 +101,10 @@ it. The traps:
   `Http/` the implementation and its converters, `Container/` the registration
   and nothing else. A snapshot record, the client that fills a cache from it,
   and the options and credentials the provider needs sit directly under
-  `src/Transponder/Integrations/<Provider>/` — they belong to the provider but
+  `src/Transporter/Integrations/<Provider>/` — they belong to the provider but
   are not its wire surface. The domain model and the per-type strategies are
-  not the provider's at all: they go under `src/Transponder/Model/` and
-  `src/Transponder/Tracking/`, because they survive the provider being
+  not the provider's at all: they go under `src/Transporter/Model/` and
+  `src/Transporter/Tracking/`, because they survive the provider being
   replaced.
 - **`Features/` holds view models and actors, and the layer below them is not a
   Feature.** The domain model is `Model/`; the tracker seam, the pipeline over
@@ -112,9 +112,9 @@ it. The traps:
   and the replay source all consume that layer, so filing it under one of them
   would make the other two reach into a sibling Feature's folder — the same
   reason integrations are not under `Features/` either.
-- **A message a consumer tells an actor lives in `src/Transponder/Messages/`.**
+- **A message a consumer tells an actor lives in `src/Transporter/Messages/`.**
   Not in the integration that receives it — a view model naming
-  `Transponder.Integrations.OpenSky.Polling.PollAircraft` puts a provider's name
+  `Transporter.Integrations.OpenSky.Polling.PollAircraft` puts a provider's name
   on a surface that must survive the provider being swapped. Not in `Tracking/`
   either: `TRN0006` lets a view model name a class there only when
   `IFleetTracker` publishes it, and a message is not something the seam

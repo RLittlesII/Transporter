@@ -1,9 +1,9 @@
 using AwesomeAssertions;
 using LanguageExt;
-using Transponder.Integrations.OpenSky;
-using Transponder.UnitTests.Integrations.OpenSky.Fixtures;
+using Transporter.Integrations.OpenSky;
+using Transporter.UnitTests.Integrations.OpenSky.Fixtures;
 
-namespace Transponder.UnitTests.Integrations.OpenSky;
+namespace Transporter.UnitTests.Integrations.OpenSky;
 
 public class AircraftSnapshotTests
 {

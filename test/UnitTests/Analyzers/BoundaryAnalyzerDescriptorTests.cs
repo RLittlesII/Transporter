@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using Microsoft.CodeAnalysis;
-using Transponder.Analyzers;
+using Transporter.Analyzers;
 
-namespace Transponder.UnitTests.Analyzers;
+namespace Transporter.UnitTests.Analyzers;
 
 public class BoundaryAnalyzerDescriptorTests
 {
@@ -90,7 +90,7 @@ public class BoundaryAnalyzerDescriptorTests
         // Given
         var sut = new BoundaryAnalyzer();
         var released = SpecificationTables
-            .Read("src/Transponder.Analyzers/AnalyzerReleases.Unshipped.md")
+            .Read("src/Transporter.Analyzers/AnalyzerReleases.Unshipped.md")
             .Split('\n')
             .Select(static line => Regex.Match(line, @"^\|?\s*(TRN\d{4})\s*(?:\||$)"))
             .Where(static match => match.Success)
@@ -233,9 +233,9 @@ public class BoundaryAnalyzerDescriptorTests
             .Where(cells => takeTest(cells[2]))
             .Select(static cells => cells[0]);
 
-    private const string SpecificationPath = "src/Transponder.Analyzers/.spec/README.md";
+    private const string SpecificationPath = "src/Transporter.Analyzers/.spec/README.md";
 
-    private const string AircraftSpecificationPath = "src/Transponder/Integrations/OpenSky/.spec/README.md";
+    private const string AircraftSpecificationPath = "src/Transporter/Integrations/OpenSky/.spec/README.md";
 
     private static readonly string Specification = SpecificationTables.Read(SpecificationPath);
 

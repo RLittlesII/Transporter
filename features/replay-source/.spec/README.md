@@ -43,7 +43,7 @@ swapping to see a recording on screen.
 
 Claim ids are per-Feature, per spec-and-traceability § "Claims and
 traceability". `B-001` here and `B-001` in
-[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md) are different
+[`aircraft-source`](../../../src/Transporter/Integrations/OpenSky/.spec/README.md) are different
 claims: an `.issue/` item names its spec, and its `claims:` ids resolve
 against that spec.
 
@@ -133,7 +133,7 @@ implementation rather than a second client. Those are two readings of one
 decision, and the **Both** rows below are where they are written as two.
 
 The classifications are applied as
-[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+[`aircraft-source`](../../../src/Transporter/Integrations/OpenSky/.spec/README.md)
 § 6 applies them: **Business** where the shape could have gone either way
 technically and a product judgment picked it; **Technical** where a constraint
 or a skill decided it and no business party expressed a preference; **Both**
@@ -187,7 +187,7 @@ same classes is constructed and registered.
 
 **Not applicable — replay introduces no type of its own (B-021).** The vehicles
 a recording produces are the recorded provider's: `Aircraft` and its base are
-[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+[`aircraft-source`](../../../src/Transporter/Integrations/OpenSky/.spec/README.md)
 § 7's and [ADR-0005](../../../.spec/adr/0005-an-abstract-base-carries-the-tracked-item.md)'s,
 and `Vessel` is unspecified (§ 5 row 2). The only shapes below are transport
 and configuration ones, and none of them crosses the projection.
@@ -211,16 +211,16 @@ beside its code in the change that builds it (`transponder-conventions`
 § "Where a specification lives",
 [lesson 0015](../../../.spec/lessons/0015-a-move-that-leaves-its-references-behind-is-half-a-move.md)).
 Two homes are in play — the recording spine serves both feeds, where the
-aircraft substitution is OpenSky's — so the move picks `src/Transponder/Recording`
+aircraft substitution is OpenSky's — so the move picks `src/Transporter/Recording`
 and the OpenSky half registers from the integration it substitutes inside.
 
 | Component                            | Proposed home                                 | Item   | Owns                                                                                                                                                                                                               |
 | ------------------------------------ | --------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `RecordingWriter`                    | `src/Transponder/Recording`                   | `0009` | Appends one NDJSON line per observed payload. Knows the format and nothing about who observed it. B-001, B-002.                                                                                                    |
-| The tap                              | `src/Transponder/Integrations/OpenSky/Http`   | `0009` | Hands the writer the response body before anything parses it, on traffic the live client already paid for. B-003, B-004.                                                                                           |
-| `RecordingPacer`                     | `src/Transponder/Recording`                   | `0010` | Reads an opened stream forward, discards a torn final line, rewinds at the end, and releases each payload when the recorded spacing says it is due. B-007, B-008, B-012, B-027.                                    |
-| `ReplayOpenSkyApi`                   | `src/Transponder/Integrations/OpenSky/Replay` | `0011` | `IOpenSkyApi` over a pacer. Deserializes `body` into the provider's envelope and returns it; ignores the box and the extended flag, because a recording was taken with the ones it was taken with. B-013, B-022.   |
-| `ReplayOptions` and its registration | `src/Transponder/Recording`                   | `0012` | One key per replay source, the recordings root, resolution to an opened stream, the startup report, and the construction of the second chain. B-024, B-025, B-026, and B-015 – B-018 by registering as a strategy. |
+| `RecordingWriter`                    | `src/Transporter/Recording`                   | `0009` | Appends one NDJSON line per observed payload. Knows the format and nothing about who observed it. B-001, B-002.                                                                                                    |
+| The tap                              | `src/Transporter/Integrations/OpenSky/Http`   | `0009` | Hands the writer the response body before anything parses it, on traffic the live client already paid for. B-003, B-004.                                                                                           |
+| `RecordingPacer`                     | `src/Transporter/Recording`                   | `0010` | Reads an opened stream forward, discards a torn final line, rewinds at the end, and releases each payload when the recorded spacing says it is due. B-007, B-008, B-012, B-027.                                    |
+| `ReplayOpenSkyApi`                   | `src/Transporter/Integrations/OpenSky/Replay` | `0011` | `IOpenSkyApi` over a pacer. Deserializes `body` into the provider's envelope and returns it; ignores the box and the extended flag, because a recording was taken with the ones it was taken with. B-013, B-022.   |
+| `ReplayOptions` and its registration | `src/Transporter/Recording`                   | `0012` | One key per replay source, the recordings root, resolution to an opened stream, the startup report, and the construction of the second chain. B-024, B-025, B-026, and B-015 – B-018 by registering as a strategy. |
 | The vessel replay strategy           | with the vessel integration, once one exists  | `0013` | `ITrackerSourceStrategy` fed by a pacer directly, since there is no contract to stand in for. B-019 – B-021, B-023.                                                                                                |
 
 **Where the cadence lives**
@@ -427,26 +427,26 @@ names is `internal`, and the registration method is the only public surface.
 
 | Type                  | File                                                                                  | Claims it makes visible                                           |
 | --------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `IRecordingWriter`    | [`IRecordingWriter.cs`](../../../src/Transponder/Recording/IRecordingWriter.cs)       | B-001's shape, and that a tap never faults into a poll (B-004)    |
-| `RecordingWriter`     | [`RecordingWriter.cs`](../../../src/Transponder/Recording/RecordingWriter.cs)         | B-001, B-002                                                      |
-| `UnrecordedPayloads`  | [`UnrecordedPayloads.cs`](../../../src/Transponder/Recording/UnrecordedPayloads.cs)   | B-004 — the null object is what makes the tap branch-free         |
-| `RecordingOptions`    | [`RecordingOptions.cs`](../../../src/Transponder/Recording/RecordingOptions.cs)       | The one recordings root a rehearsal writes and a replay reads     |
-| `IRecordingPacer`     | [`IRecordingPacer.cs`](../../../src/Transponder/Recording/IRecordingPacer.cs)         | B-007's shape, and that a payload leaves still raw (B-014)        |
-| `RecordingPacer`      | [`RecordingPacer.cs`](../../../src/Transponder/Recording/RecordingPacer.cs)           | B-007, B-008, B-012, B-027                                        |
-| `RecordedLine`        | [`RecordedLine.cs`](../../../src/Transponder/Recording/RecordedLine.cs)               | One reader of ADR-0004's line, for the pacer and the report both  |
-| `ReplayOptions`       | [`ReplayOptions.cs`](../../../src/Transponder/Recording/ReplayOptions.cs)             | B-024 — one key per source, and no default to be wrong            |
-| `IRecordingLibrary`   | [`IRecordingLibrary.cs`](../../../src/Transponder/Recording/IRecordingLibrary.cs)     | B-025's resolving, as the seam a test supplies recordings through |
-| `RecordingLibrary`    | [`RecordingLibrary.cs`](../../../src/Transponder/Recording/RecordingLibrary.cs)       | B-025 — the only file system in the replay half                   |
-| `RecordingDefect`     | [`RecordingDefect.cs`](../../../src/Transponder/Recording/RecordingDefect.cs)         | What B-026 reports, named rather than described                   |
-| `CheckedRecording`    | [`CheckedRecording.cs`](../../../src/Transponder/Recording/CheckedRecording.cs)       | B-024, B-026 — the check that decides whether a source registers  |
-| `ReplayStartupReport` | [`ReplayStartupReport.cs`](../../../src/Transponder/Recording/ReplayStartupReport.cs) | B-026 — a report at startup, and never a refusal                  |
+| `IRecordingWriter`    | [`IRecordingWriter.cs`](../../../src/Transporter/Recording/IRecordingWriter.cs)       | B-001's shape, and that a tap never faults into a poll (B-004)    |
+| `RecordingWriter`     | [`RecordingWriter.cs`](../../../src/Transporter/Recording/RecordingWriter.cs)         | B-001, B-002                                                      |
+| `UnrecordedPayloads`  | [`UnrecordedPayloads.cs`](../../../src/Transporter/Recording/UnrecordedPayloads.cs)   | B-004 — the null object is what makes the tap branch-free         |
+| `RecordingOptions`    | [`RecordingOptions.cs`](../../../src/Transporter/Recording/RecordingOptions.cs)       | The one recordings root a rehearsal writes and a replay reads     |
+| `IRecordingPacer`     | [`IRecordingPacer.cs`](../../../src/Transporter/Recording/IRecordingPacer.cs)         | B-007's shape, and that a payload leaves still raw (B-014)        |
+| `RecordingPacer`      | [`RecordingPacer.cs`](../../../src/Transporter/Recording/RecordingPacer.cs)           | B-007, B-008, B-012, B-027                                        |
+| `RecordedLine`        | [`RecordedLine.cs`](../../../src/Transporter/Recording/RecordedLine.cs)               | One reader of ADR-0004's line, for the pacer and the report both  |
+| `ReplayOptions`       | [`ReplayOptions.cs`](../../../src/Transporter/Recording/ReplayOptions.cs)             | B-024 — one key per source, and no default to be wrong            |
+| `IRecordingLibrary`   | [`IRecordingLibrary.cs`](../../../src/Transporter/Recording/IRecordingLibrary.cs)     | B-025's resolving, as the seam a test supplies recordings through |
+| `RecordingLibrary`    | [`RecordingLibrary.cs`](../../../src/Transporter/Recording/RecordingLibrary.cs)       | B-025 — the only file system in the replay half                   |
+| `RecordingDefect`     | [`RecordingDefect.cs`](../../../src/Transporter/Recording/RecordingDefect.cs)         | What B-026 reports, named rather than described                   |
+| `CheckedRecording`    | [`CheckedRecording.cs`](../../../src/Transporter/Recording/CheckedRecording.cs)       | B-024, B-026 — the check that decides whether a source registers  |
+| `ReplayStartupReport` | [`ReplayStartupReport.cs`](../../../src/Transporter/Recording/ReplayStartupReport.cs) | B-026 — a report at startup, and never a refusal                  |
 
 | Type                           | File                                                                                                                   | Claims it makes visible                                            |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `ReplayOpenSkyApi`             | [`ReplayOpenSkyApi.cs`](../../../src/Transponder/Integrations/OpenSky/Replay/ReplayOpenSkyApi.cs)                      | B-007's client half, B-009, B-013, B-014, B-022                    |
-| `IAircraftReplayTrackerSource` | [`IAircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/IAircraftReplayTrackerSource.cs)         | The seam the selector tells two instances of one class apart by    |
-| `AircraftReplayTrackerSource`  | [`AircraftReplayTrackerSource.cs`](../../../src/Transponder/Tracking/Sources/AircraftReplayTrackerSource.cs)           | B-022 — it delegates `Connect` and projects nothing                |
-| `OpenSkyReplayRegistration`    | [`OpenSkyReplayRegistration.cs`](../../../src/Transponder/Integrations/OpenSky/Container/OpenSkyReplayRegistration.cs) | B-007's zero interval, B-015, B-016's separate cache, B-022, B-024 |
+| `ReplayOpenSkyApi`             | [`ReplayOpenSkyApi.cs`](../../../src/Transporter/Integrations/OpenSky/Replay/ReplayOpenSkyApi.cs)                      | B-007's client half, B-009, B-013, B-014, B-022                    |
+| `IAircraftReplayTrackerSource` | [`IAircraftReplayTrackerSource.cs`](../../../src/Transporter/Tracking/Sources/IAircraftReplayTrackerSource.cs)         | The seam the selector tells two instances of one class apart by    |
+| `AircraftReplayTrackerSource`  | [`AircraftReplayTrackerSource.cs`](../../../src/Transporter/Tracking/Sources/AircraftReplayTrackerSource.cs)           | B-022 — it delegates `Connect` and projects nothing                |
+| `OpenSkyReplayRegistration`    | [`OpenSkyReplayRegistration.cs`](../../../src/Transporter/Integrations/OpenSky/Container/OpenSkyReplayRegistration.cs) | B-007's zero interval, B-015, B-016's separate cache, B-022, B-024 |
 
 Every declaration this section wrote out now has a file, so the table above is
 the whole of it. `ReplayOptions` arrived with `0012` carrying exactly the two
@@ -457,7 +457,7 @@ first declared `Root` on `ReplayOptions`, beside the recording names. `0009`
 needed the same root to write to, and two types each carrying one would be two
 places for one answer — with the second one edited being the one that is wrong
 on stage. It lives on
-[`RecordingOptions`](../../../src/Transponder/Recording/RecordingOptions.cs)
+[`RecordingOptions`](../../../src/Transporter/Recording/RecordingOptions.cs)
 instead, which `0009` built, and `ReplayOptions` reads it from there. That is
 what "a rehearsal writes and a replay reads the same place" requires in code
 rather than in prose.
@@ -514,7 +514,7 @@ unregistered, which is what B-024 already does for a source with no recording
 named: the control is absent rather than offering a wrong recording.
 
 This departs deliberately from
-[`OpenSkyConfigurationValidator`](../../../src/Transponder/Integrations/OpenSky/Configuration/OpenSkyConfigurationValidator.cs),
+[`OpenSkyConfigurationValidator`](../../../src/Transporter/Integrations/OpenSky/Configuration/OpenSkyConfigurationValidator.cs),
 which fails the host. An absent credential means nothing works; an unusable
 recording means the fallback is gone while the live demo is fine, and stopping
 the application for it would turn a degraded talk into no talk.
@@ -530,7 +530,7 @@ than a preference.
   container is built — so the check has to run while the collection is still
   open, which is before anything can resolve a logger. What is left for startup
   is saying so, which
-  [`ReplayStartupReport`](../../../src/Transponder/Recording/ReplayStartupReport.cs)
+  [`ReplayStartupReport`](../../../src/Transporter/Recording/ReplayStartupReport.cs)
   does as an `IHostedService` holding rows it did not produce. Rejected: an
   `IValidateOptions<ReplayOptions>`, which runs after the container is closed
   and could only fail the host — the one thing this report must not do.
@@ -595,7 +595,7 @@ registrations are two classes in one assembly — which is the objection that
 ruled out building the replay chain outside `AddOpenSky` altogether. And it is not a
 credential becoming optional — a composition that registers the live transport
 validates exactly as it does today, so
-[`aircraft-source`](../../../src/Transponder/Integrations/OpenSky/.spec/README.md)
+[`aircraft-source`](../../../src/Transporter/Integrations/OpenSky/.spec/README.md)
 B-029 stays true as written for every composition it was written against. What
 is new is a composition it never contemplated: one with no live transport at
 all, where there is no credential to be missing.
@@ -634,7 +634,7 @@ was looked at, on which item, and what change re-does it.
 There is no third mechanism here. The boundary analyzer
 ([ADR-0006](../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md))
 carries no rule bearing on this Feature, and asking for one is
-`Transponder.Analyzers`' own Feature rather than a line in this section. A test
+`Transporter.Analyzers`' own Feature rather than a line in this section. A test
 over `typeof(...)` is not an option: it executes, so it looks like the first
 mechanism, and it asserts a declaration, so it does the second's job badly.
 
@@ -681,7 +681,7 @@ exists at all cannot be driven through the file system, because what it reads is
 operational data no test may hold (B-006). The seam is the answer: the
 registration takes the recordings root, a test supplies one held in memory, and
 B-025's resolving is asserted against the real
-[`RecordingLibrary`](../../../src/Transponder/Recording/RecordingLibrary.cs)
+[`RecordingLibrary`](../../../src/Transporter/Recording/RecordingLibrary.cs)
 instead — which is also the only type in the replay half with a file system in
 it.
 
@@ -709,7 +709,7 @@ section marks Review; B-024 is the odd one, a registration a host test observes.
 Nothing central. The stack `transponder-conventions` mandates is already
 referenced, `Akka.TestKit.Xunit2` arrived with `0006`, and `test/UnitTests`
 already stands up the application's own composition in
-`TransponderCompositionTests` — which is the shape every host-level row below
+`TransporterCompositionTests` — which is the shape every host-level row below
 reuses rather than assembling a graph by hand.
 
 Five traps are worth carrying, because each cost a cycle in this Feature
@@ -893,9 +893,9 @@ allowed the transport namespace and a `Client` name suffix rather than asking
 what a class implements. `aircraft-source` B-045 names "the class implementing
 the API contract", and B-022 is what makes a second one of those ordinary — so
 the rule was stricter than any claim, which is
-[the analyzer Feature's lesson 0002](../../../src/Transponder.Analyzers/.spec/lessons/0002-a-rule-that-reads-a-folder.md)
+[the analyzer Feature's lesson 0002](../../../src/Transporter.Analyzers/.spec/lessons/0002-a-rule-that-reads-a-folder.md)
 and item
-[`0053`](../../../src/Transponder.Analyzers/.issue/0053-contract-implementation-read-from-its-folder.yml).
+[`0053`](../../../src/Transporter.Analyzers/.issue/0053-contract-implementation-read-from-its-folder.yml).
 Nothing here changed: § 4 row 4 still reads "satisfied rather than relaxed",
 and it is now true in the analyzer as well as in prose.
 

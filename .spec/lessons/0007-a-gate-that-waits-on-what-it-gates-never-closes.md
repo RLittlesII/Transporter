@@ -16,14 +16,14 @@ specification:
 
 > I wonder how we have full implementation before I EVER approved the SPEC?!
 
-At that point `src/Transponder.Analyzers/.spec/README.md` carried
+At that point `src/Transporter.Analyzers/.spec/README.md` carried
 `spec_status: draft`, all three § 12 rows read 🟡 Draft, and § 11 held three
 open questions — while its `0020`, `0021` and `0022` were implemented, tested
 and pushed as pull requests #5, #6 and #7, with `0019` – `0022` marked
 `in-progress`.
 
 It is not new to that Feature.
-[`aircraft-source`](../../src/Transponder/Integrations/OpenSky/.spec/README.md) and
+[`aircraft-source`](../../src/Transporter/Integrations/OpenSky/.spec/README.md) and
 [`replay-source`](../../features/replay-source/.spec/README.md) are both
 `spec_status: draft` as well, and `aircraft-source`'s `0002` and `0003` were
 built, reviewed and merged against the draft in pull requests #1 and #2. The

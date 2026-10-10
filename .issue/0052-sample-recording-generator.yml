@@ -58,12 +58,12 @@ summary: |
   step 3 performable for the first time.
 
   Two homes, and the split is the point. `RecordingWriter` is `0009`'s and
-  lives in the application, in `src/Transponder/Recording` — it is how a live
+  lives in the application, in `src/Transporter/Recording` — it is how a live
   rehearsal records, so it ships. The **synthetic payload generator** is dev
   tooling and does not ship: it lives in its own console project,
-  `tools/Transponder.SampleRecording`, which references the application and is
+  `tools/Transporter.SampleRecording`, which references the application and is
   named in one more `InternalsVisibleTo` beside the two
-  [`Transponder.csproj`](../src/Transponder/Transponder.csproj) already
+  [`Transporter.csproj`](../src/Transporter/Transporter.csproj) already
   carries. It builds wire-shaped payloads and hands each to `RecordingWriter`,
   so the format still has exactly one writer and no invented data sits in the
   product assembly.
@@ -84,7 +84,7 @@ acceptance_criteria:
   - "One writer of the format. The generator emits payloads and hands them to
     `0009`'s `RecordingWriter`; it does not spell out a line itself."
   - "No invented data in the product assembly. The generator is its own
-    project; `src/Transponder` gains the `InternalsVisibleTo` and nothing
+    project; `src/Transporter` gains the `InternalsVisibleTo` and nothing
     else."
   - "`.build` references no project of the application's. The target shells
     `dotnet run`, so a build still runs when the application does not
@@ -144,7 +144,7 @@ decisions:
     is the poll that reports nothing, which the criteria ask for separately."
   - "2026-10-07 — implementer — the generated recording is tested from
     `test/UnitTests`, which gains a project reference to
-    `tools/Transponder.SampleRecording` and reaches its internals through one
+    `tools/Transporter.SampleRecording` and reaches its internals through one
     `InternalsVisibleTo`. Determinism and the hazard list are claims about
     behaviour, and the criteria for them read as tests rather than as a review;
     the alternative was a second test project for one tool, which is a harness
@@ -156,11 +156,11 @@ decisions:
     `RecordingWriter` stays in the application. The question as first filed was
     wrong: it asked where the writer could live such that a build target could
     see it, when the writer was never going anywhere — `0009` builds it in
-    `src/Transponder/Recording` because recording a live rehearsal is the
+    `src/Transporter/Recording` because recording a live rehearsal is the
     application's job. What is actually dev tooling is the synthetic payload
     generator, and putting that in the product assembly would ship invented
     callsigns and positions as dead code. So it gets
-    `tools/Transponder.SampleRecording`, one more `InternalsVisibleTo` beside
+    `tools/Transporter.SampleRecording`, one more `InternalsVisibleTo` beside
     the two already there, and reaches `RecordingWriter` the same way the test
     project reaches everything else. Rejected: letting `.build` reference the
     application, which is lighter by one project and makes the build

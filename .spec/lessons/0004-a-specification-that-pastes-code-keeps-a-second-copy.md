@@ -17,7 +17,7 @@ files were written in the same session, from that section.
 
 Changing the contract's return shape then took two edits of the same
 signature — once in
-[`IOpenSkyApi.cs`](../../src/Transponder/Integrations/OpenSky/Contracts/IOpenSkyApi.cs)
+[`IOpenSkyApi.cs`](../../src/Transporter/Integrations/OpenSky/Contracts/IOpenSkyApi.cs)
 and once in § 7 — and it happened twice in a day: `Either` went in, then
 [ADR-0008](../adr/0008-the-contract-is-the-boundary-and-may-throw.md) took it
 out. The Mermaid diagrams held the type names a third time.

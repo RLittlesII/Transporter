@@ -11,20 +11,20 @@
 
     <PropertyGroup>
         <!-- Named so the one project whose metadata differs can Update by the same evaluated path. -->
-        <TransponderAnalyzerProject>$(MSBuildThisFileDirectory)src/Transponder.Analyzers/Transponder.Analyzers.csproj</TransponderAnalyzerProject>
-        <TransponderCodeFixProject>$(MSBuildThisFileDirectory)src/Transponder.CodeFixes/Transponder.CodeFixes.csproj</TransponderCodeFixProject>
+        <TransporterAnalyzerProject>$(MSBuildThisFileDirectory)src/Transporter.Analyzers/Transporter.Analyzers.csproj</TransporterAnalyzerProject>
+        <TransporterCodeFixProject>$(MSBuildThisFileDirectory)src/Transporter.CodeFixes/Transporter.CodeFixes.csproj</TransporterCodeFixProject>
     </PropertyGroup>
 
-    <ItemGroup Condition="!$(MSBuildProjectName.StartsWith('Transponder.Analyzers')) AND !$(MSBuildProjectName.StartsWith('Transponder.CodeFixes'))">
+    <ItemGroup Condition="!$(MSBuildProjectName.StartsWith('Transporter.Analyzers')) AND !$(MSBuildProjectName.StartsWith('Transporter.CodeFixes'))">
         <!-- This repository's own analyzer and the fixes beside it, next to the Airframe set: every
              project gets both. Analyzer references, not assembly ones — csc and the editor load
              them, the application never sees them (B-014). The paths are anchored because MSBuild
              resolves a ProjectReference against the importing project, and the condition keeps the
              two out of their own lists and out of each other's. -->
-        <ProjectReference Include="$(TransponderAnalyzerProject)"
+        <ProjectReference Include="$(TransporterAnalyzerProject)"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"/>
-        <ProjectReference Include="$(TransponderCodeFixProject)"
+        <ProjectReference Include="$(TransporterCodeFixProject)"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"/>
     </ItemGroup>

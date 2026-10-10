@@ -3,13 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Airframe;
-using Transponder.Integrations.OpenSky;
-using Transponder.Integrations.OpenSky.Container;
-using Transponder.Recording;
-using Transponder.Scheduling;
-using Transponder.UnitTests.Scheduling;
+using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Container;
+using Transporter.Recording;
+using Transporter.Scheduling;
+using Transporter.UnitTests.Scheduling;
 
-namespace Transponder.UnitTests.Integrations.OpenSky.Replay;
+namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 /// <summary>
 /// The replay chain as an application composes it: the OpenSky integration's own registrations,

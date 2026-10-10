@@ -26,8 +26,8 @@ closed: "2026-10-06"
 
 summary: |
   `aircraft-source` already moved out of `features/` and into the code it
-  specifies — `src/Transponder/Integrations/OpenSky/.spec/` with its
-  `.issue/` beside it ([1563e5b](https://github.com/RLittlesII/Transponder/commit/1563e5b)) —
+  specifies — `src/Transporter/Integrations/OpenSky/.spec/` with its
+  `.issue/` beside it ([1563e5b](https://github.com/RLittlesII/Transporter/commit/1563e5b)) —
   but the move was made for one Feature and never became the rule. Three
   specifications are still at the repository root in `features/`, and
   `transponder-conventions` still teaches `features/<slug>/` as the home, so
@@ -44,9 +44,9 @@ summary: |
 
   | specification     | home                                 |
   | ----------------- | ------------------------------------ |
-  | boundary-analyzer | `src/Transponder.Analyzers/`         |
-  | fleet-pipeline    | `src/Transponder/Tracking/`          |
-  | fleet-dashboard   | `src/Transponder/Features/Fleet/`    |
+  | boundary-analyzer | `src/Transporter.Analyzers/`         |
+  | fleet-pipeline    | `src/Transporter/Tracking/`          |
+  | fleet-dashboard   | `src/Transporter/Features/Fleet/`    |
   | replay-source     | stays in `features/` — no code yet   |
 
 acceptance_criteria:
@@ -58,7 +58,7 @@ acceptance_criteria:
   - "`transponder-conventions` teaches the new placement as the rule, and no skill or template still teaches `features/<slug>/` as the only home."
 
 decisions:
-  - "2026-10-06 — rlittlesii: `fleet-dashboard` goes to `src/Transponder/Features/Fleet/`, beside the view models. Rejected `src/Gui/` and `src/Gui/Views/`: the page there is the thin head, and the specification's subject is the view model layer."
+  - "2026-10-06 — rlittlesii: `fleet-dashboard` goes to `src/Transporter/Features/Fleet/`, beside the view models. Rejected `src/Gui/` and `src/Gui/Views/`: the page there is the thin head, and the specification's subject is the view model layer."
   - "2026-10-06 — rlittlesii: `replay-source` stays in `features/`. It has no implementation to sit beside, and inventing `Integrations/Replay/` to hold a specification would name a home before the code chooses one. It moves when it is built."
   - "2026-10-06 — rlittlesii: the dangling `features/aircraft-source/...` links from 1563e5b are repaired here rather than left for a separate item. They are the same defect this work exists to stop repeating."
 

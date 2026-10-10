@@ -1,11 +1,11 @@
 using LanguageExt;
-using Transponder.Features.Fleet;
-using Transponder.Model;
-using Transponder.Tracking;
-using Transponder.UnitTests.Model.Fixtures;
-using Transponder.UnitTests.Tracking.Fixtures;
+using Transporter.Features.Fleet;
+using Transporter.Model;
+using Transporter.Tracking;
+using Transporter.UnitTests.Model.Fixtures;
+using Transporter.UnitTests.Tracking.Fixtures;
 
-namespace Transponder.UnitTests.Features.Fleet;
+namespace Transporter.UnitTests.Features.Fleet;
 
 /// <summary>An element and the mark its card's badge carries (B-032).</summary>
 /// <remarks>
