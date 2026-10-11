@@ -1,0 +1,70 @@
+id: "0087"
+type: chore
+title: Copy the head's recordings out of its container to the repository root
+
+status: done
+
+priority: medium
+value: 3
+risk: 1
+rank: 58
+
+parent: null
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: null
+
+claims: []
+
+created: "2026-10-10"
+updated: "2026-10-10"
+closed: "2026-10-10"
+
+summary: |
+    The Mac Catalyst head records only into its own container (`0061`), under
+    `~/Library/Containers/com.companyname.gui/Data/Documents/recordings/` — a
+    directory nobody browses, and one that goes when the container is reset. A
+    rehearsal recording is wanted where the rest of the work is: `.recordings/`
+    at the repository root, ignored, so it is at hand and never in history
+    (ADR-0004).
+
+    One script copies what the head recorded into that directory. The head
+    keeps writing to, and replay keeps reading from, the container root;
+    `.recordings/` is a copy for keeping, not a second root.
+
+    Turning recording on is not this item's: `Recording:Enabled` is the
+    developer's own setting in the user-secrets store (`0086`), so no run
+    records unless someone asked it to (`replay-source` B-006).
+
+acceptance_criteria:
+    - "One command copies every recording the head wrote into `.recordings/` at
+      the root of the checkout it is run from, creating the directory, and
+      copies nothing when nothing has changed."
+    - "A recording still being written is brought up to date by the next run,
+      a copy edited since it was made is left alone, and the generated sample
+      is not copied — it is not a recording of anything."
+    - "`.recordings/` is ignored, so a recording cannot be committed by
+      accident."
+    - "`docs/runbook.md` names the command beside the rehearsal recording."
+
+decisions:
+    - "2026-10-10 — the person — the head records into its container and a
+      script copies out, rather than the head writing to the repository root.
+      Writing there directly needs the sandbox loosened, and `0061`'s
+      2026-10-07 decision rejected disabling it. Also rejected: a Debug-only
+      entitlements file without the sandbox, which reverses that decision for
+      the configuration everyone runs; and a temporary-exception entitlement
+      for the repository's path, which commits a per-machine path."
+    - "2026-10-10 — no scenario and no claim: no product code moves and no
+      behaviour of the application changes, so there is nothing to claim. A
+      shell script rather than a build target, because it runs no part of the
+      build and touches nothing the build produces."
+
+out_of_scope:
+    - "Where the head's default root is, and the sandbox — `0061`."
+    - "Where the sample recording is written — `0079`."
+    - "Whether a run records — the developer's user-secrets store."
