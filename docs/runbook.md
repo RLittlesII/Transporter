@@ -30,7 +30,9 @@ this file is the order to do them in.
 - **Record replay data in rehearsal**, aircraft _and_ vessels
   ([`features/replay-source`](../features/replay-source/.spec/README.md)).
   Record long enough that items go stale on playback, or the staleness part of
-  the talk has nothing to show.
+  the talk has nothing to show. The head records into its own container;
+  `tools/copy-recordings.sh` copies what it wrote to `.recordings/` at the
+  repository root, which is ignored.
 - **Add the citation slide** the provider's terms ask for
   (`README.md` § "Gotchas").
 - **Check the box has traffic at the talk's hour.** The vessel subscription uses
