@@ -2,7 +2,7 @@ id: "0061"
 type: bug
 title: A recording the sandboxed head cannot open leaves the grid empty with nothing said
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 value: 4
@@ -24,7 +24,7 @@ claims:
   - B-026
 
 created: "2026-10-07"
-updated: "2026-10-09"
+updated: "2026-10-14"
 closed: null
 
 summary: |
@@ -83,11 +83,23 @@ acceptance_criteria:
     no readable line, since the two are one `RecordingDefect` today and the
     first is the sandbox's signature."
   - "The stage-day runbook (`docs/runbook.md`) says where a recording lives on
-    the Mac and how a presenter checks the report before the talk."
-  - "§ 9 Traceability Matrix carries a row naming a test for each id above, and
-    § 10 carries the delta if `adr/0001` item 2's wording moves."
+    the Mac and how a presenter captures and checks startup console output in
+    Debug or Release; the existing export helper follows the effective default
+    root instead of the old Documents workaround."
+  - "§ 9 records the B-025 and B-026 tests and the two head-only reviews named
+    in the specification; § 10 indexes the Feature lesson and spec delta."
 
 decisions:
+  - "2026-10-14 — specification preparation requested by the person. B-025 and
+    B-026, their scenarios, §§ 6-9 and proposed replay ADR-0001 now describe
+    the platform default, focused MAUI startup invocation and separate
+    unreadable/no-readable-line diagnostics. Implementation has not started;
+    no approval-gate waiver is claimed. An independent spec-reviewer approved
+    all three § 12 section groups on 2026-10-14; the item is now ready for
+    implementation. B-025 and B-026 remain Missing until the fix proves them.
+    The review also requires an enabled console sink in every head build and
+    runbook capture steps, because invoking a logger with no output would
+    leave the presenter unaware of the same recording defect."
   - "2026-10-09 — the-architect, agreed by the person — the default root half:
     the head layers `Recording:Root` as its application-data directory's
     `recordings/` (`FileSystem.AppDataDirectory`) beneath the packaged
@@ -96,8 +108,8 @@ decisions:
     platform value). `Transporter.csproj` names no MAUI type; `FileSystem` is
     named only in `src/Gui`, so that one expression is a § 9 review rather
     than a test. `0079` writes the sample recording to the same root. The
-    B-026 half — reaching the startup report in a head that starts no hosted
-    service — stays architecture's, so the status does not move."
+    B-026 half was left to architecture then; the 2026-10-14 preparation
+    above resolves it using the existing reporter and a focused startup call."
   - "2026-10-07 — the person — filed as a bug under `0008` rather than folded
     into `0039`: the swap control is what selects replay, and this is what
     makes replay registrable at all on the platform the demo runs on. Separate
