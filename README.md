@@ -211,6 +211,8 @@ To install this repository's skills and role agents for Claude Code and Codex,
 follow [local agent setup](docs/agent-tooling.md).
 
 Requires the .NET SDK pinned in [`global.json`](global.json).
+For synthetic replay data in the Mac Catalyst app container, follow
+[recording setup](docs/runbook.md#recordings-on-mac-catalyst).
 
 ```sh
 dotnet tool restore

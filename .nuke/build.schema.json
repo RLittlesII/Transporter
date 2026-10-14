@@ -31,6 +31,7 @@
         "NugetRestore",
         "Restore",
         "SampleRecording",
+        "SampleRecordingForApp",
         "Test",
         "WorkflowRestore"
       ]
