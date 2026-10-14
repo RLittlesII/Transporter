@@ -350,6 +350,9 @@ secrets.json
 # skillfile
 .skillfile/cache/
 .skillfile/conflict
+/.agents/skills/
+/.codex/skills/
+/.codex/agents/
 
 # Claude
 .claude/

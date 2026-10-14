@@ -166,8 +166,12 @@ All versions live in
 - **Skills and agent files declare `name` and `description` only**, with the
   type derived from the path. No `permalink` and no `metadata` block — a skill
   carrying either was copied from another repository.
-- `.skills/` and `.agents/` files are edited directly; there is no install
-  manifest or generated copy here.
+- Edit `.skills/` and `.agents/` sources, never installed copies. Register a new
+  source in [Skillfile](../../../Skillfile) and rerun
+  [local agent setup](../../../docs/agent-tooling.md). Skill entries name the
+  directory so their references travel with them; `.agents/README.md` is
+  documentation, not an agent. Keep generated installations out of version
+  control and preserve source-relative links when adapting a role for a client.
 - Diagrams are Mermaid, inline in the markdown that needs them.
 
 ---

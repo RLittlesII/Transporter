@@ -1,0 +1,35 @@
+id: "0088"
+type: chore
+title: Install repository skills and agents for Claude Code and Codex
+status: done
+priority: medium
+value: 3
+risk: 2
+rank: 54
+parent: null
+children: []
+depends_on: []
+blocks: []
+spikes: []
+spec: null
+claims: []
+created: "2026-10-14"
+updated: "2026-10-14"
+closed: "2026-10-14"
+summary: |
+  Declare the local skills and four role agents in a Skillfile and provide
+  project-local setup for Claude Code and Codex from those canonical sources.
+acceptance_criteria:
+  - "The manifest includes every local skill directory with its references and every role agent, excluding the roles README."
+  - "One documented setup command installs skills and usable agents for both tools without changing global configuration."
+  - "Generated installations and cache are ignored; the manifest and lock are tracked."
+  - "A second setup succeeds and a changed source is reflected on the next run."
+decisions:
+  - "2026-10-14 — the person — use eljulians/skillfile for both Claude and Codex."
+  - "2026-10-14 — Codex — project-local targets keep repository instructions scoped to this checkout. Skillfile 1.7.1 is already installed. Its Codex adapter skips agents and writes skills into .codex/skills; the setup adapter exposes skills at .agents/skills and generates the native .codex/agents/*.toml format from the installed role contracts. Rejected claiming that copied Markdown files are native Codex agents."
+  - "2026-10-14 — Codex — tooling-only chore: no product claim or scenario changes. All Feature claims are preserved because no application or test code changes."
+  - "2026-10-14 — Codex — read local entries from Skillfile, because Skillfile 1.7.1 deliberately omits them from the lock. Use install --update because plain install preserves an existing destination; a synthetic source-change and removed-reference check demonstrated the difference. The adapter rejects global targets and remote sources before installing. Native agents inherit model and permissions. No product claim changes. Confirmed all 18 skills and references byte-for-byte, all four role bodies in parsed native TOML, repeat setup, changed skill and role sources, removed references, unrelated-entry preservation, and symlink refusal in a temporary checkout. Sources use one-line name/description frontmatter, as the existing role files do."
+  - "2026-10-14 — Codex — ./build.sh passed: compile, format, and all 303 tests. Markdown formatting and new relative links checked. The formatter's unrelated edits to the two platform Program.cs files were discarded. App launch omitted for this tooling-only change; setup itself was executed end-to-end in this worktree and a temporary checkout. Generated artifacts are ignored."
+out_of_scope:
+  - "Global tool settings, permissions, model choices, and installing the Claude or Codex clients."
+  - "Changing role responsibilities or the application's behavior."
