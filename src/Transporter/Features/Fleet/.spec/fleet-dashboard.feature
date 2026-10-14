@@ -109,15 +109,59 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When the swap control is invoked
      Then the actor is told, not asked
       And the busy indicator is showing
-      And it stops showing when the new fleet's first change arrives
+      And outgoing removals do not stop it
+      And it stops showing at the first visible addition after the gesture
+
+  @B-016
+  Scenario: An addition immediately after dispatch ends the indicator window
+    Given a source choice whose first visible addition follows immediately after the swap is dispatched
+     When that choice is made
+     Then the indicator window is opened before dispatch
+      And that first visible addition closes it
+      And no source acknowledgement was awaited
+
+  @B-016
+  Scenario: The indicator observes visible additions without identifying their source
+    Given a swap gesture whose message has not yet changed the source
+     When the outgoing source adds a visible vehicle after the gesture
+     Then the busy indicator stops showing
+      And that is no acknowledgement that the requested source is live
+
+  @B-016
+  Scenario: A silent swap ends its indicator window without disabling recovery
+    Given a swap gesture with no visible addition after the gesture
+     When ten seconds have passed since the gesture
+     Then the busy indicator has stopped showing
+      And it was still showing immediately before the deadline
+      And the selected source has not been cancelled by the deadline
+      And another offered source can still be chosen
+
+  @B-016
+  Scenario: A second swap replaces the indicator deadline
+    Given a swap gesture with no visible addition after the gesture
+     When another offered source is chosen five seconds later
+      And six more seconds pass with no visible addition
+     Then the busy indicator is still showing
+     When ten seconds have passed since the second gesture
+     Then the busy indicator stops showing
 
   @B-040
   Scenario: The swap control offers every registered source, and only those
     Given a run registering the live aircraft source and a recorded one
      When the swap control is opened
-     Then it offers one choice per target the swap actor answered, by the name it answered
+     Then it offers one choice per target the swap actor answered, in the order and by the name it answered
       And choosing the recording tells the actor as any swap does, carrying that target
       And a run naming no recording offers no recorded choice
+
+  @B-040
+  Scenario: Target discovery neither sorts the answer nor selects a source
+    Given the available targets are answered as "Zeta feed" followed by "Alpha feed"
+     When the dashboard receives that answer
+     Then the picker offers "Zeta feed" followed by "Alpha feed"
+      And no choice has been made on the user's behalf
+      And no source-swap message has been sent
+     When the second offered choice is selected
+     Then exactly that answered target is sent once
 
   @B-040
   Scenario: The swap control offers nothing until the actor answers
@@ -126,6 +170,7 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      Then it offers no choice
      When the actor fails to answer within the timeout
      Then it still offers no choice, and nothing is retried
+      And no swap can be invoked without an offered choice
 
   @B-028
   Scenario: The refresh control tells an actor a poll is wanted
@@ -170,7 +215,7 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
 
   @B-017
   Scenario: A view model that blocks or holds a transport is reported
-    Given a view model holding an HttpClient, a timer, a socket, a cache write, a blocking call or an untimed Ask
+    Given a view model holding an HttpClient, a repeating timer, a socket, a cache write, a blocking call or an untimed Ask
      When the project is built
      Then each is reported at the member that holds it
       And the diagnostic names what owns that concern instead
@@ -182,6 +227,15 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When the project is built
      Then nothing is reported, because the animation fetches, derives and polls nothing
       And the same ring driven by a timer in the view model is reported
+
+  @B-017
+  Scenario: An injected one-shot deadline only closes presentation state
+    Given a view model using an injected scheduler for a one-shot refresh or swap indicator deadline
+      And the deadline only closes that indicator window
+     When the project is built
+     Then no timer violation is reported for that deadline
+      And a repeating timer is reported
+      And a deadline that fetches, polls, writes a cache or derives domain state is reported
 
   # ─────────────────────────── Validation failure ───────────────────────────
 
@@ -232,7 +286,7 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
     Given a view or view model naming a contract, client, cache, snapshot, strategy, concrete tracker source or the decorator
      When the project is built
      Then the reference is reported at the line that writes it
-      And the fleet view models depend on the tracker, the query and the actors only
+      And the fleet view models depend on the tracker, the injected scheduler and the actors only
 
   @B-021
   Scenario: Swapping the source edits no view
