@@ -2,7 +2,7 @@ id: "0079"
 type: chore
 title: Write the sample recording where the sandboxed head reads it
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -23,7 +23,7 @@ claims: []
 
 created: "2026-10-09"
 updated: "2026-10-14"
-closed: null
+closed: "2026-10-14"
 
 summary: |
     `0052`'s generator writes `recordings/aircraft-sample.ndjson` at the
@@ -75,6 +75,19 @@ decisions:
       Verify by executing both targets, comparing seeded output, and starting
       the sandboxed head with only the recording name configured. No product
       scenario or specification amendment is needed."
+
+    - "2026-10-14 — implementer — verified ./build.sh (both Apple heads and
+      318 tests), plus 20 focused generator/root/head-startup tests. Executed
+      default generation (40 payloads/585 seconds), parameter forwarding
+      (seed 79, 41 payloads, 10-second spacing/400 seconds), byte equivalence
+      with SampleRecording's explicit destination, and rejection of
+      --recording on the app target. Default did not rewrite the sample."
+    - "2026-10-14 — implementer — launched the sandboxed Mac Catalyst head
+      with only Replay:Aircraft=aircraft-sample.ndjson in a temporary secrets
+      asset, no credentials and no root override. Startup reported that file
+      under Data/Library/recordings with a 585-second span. Stopped the head;
+      the generated sample remains available locally. Source selection is
+      still 0039; availability does not select replay."
 
 out_of_scope:
     - "Where the head's default root is — `0061`."
