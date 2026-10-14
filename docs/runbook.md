@@ -39,6 +39,58 @@ this file is the order to do them in.
   the same box as the aircraft, which is why the box contains a port. An empty
   sea is a bad slide.
 
+## Recordings on Mac Catalyst
+
+The head's default input directory is
+`~/Library/Containers/<application-id>/Data/Library/recordings/`.
+The application id is declared in [`src/Gui/Gui.csproj`](../src/Gui/Gui.csproj)
+(currently `com.companyname.gui`). The head obtains this location through
+`FileSystem.AppDataDirectory`; it is not a path committed to settings.
+Rehearsal recording and replay both use the effective `Recording:Root`.
+
+1. Put the intended recording in that directory and name it under
+   `Replay:Aircraft` (or `Replay:Vessels` when that source exists). For a local
+   name without a settings-file edit:
+
+    ```sh
+    dotnet user-secrets set "Replay:Aircraft" "aircraft-rehearsal.ndjson" --id transporter-gui
+    ```
+
+2. Build the head after changing its user-secrets store. The platform root is
+   the lowest-priority default; a `Recording:Root` in packaged settings wins
+   over it, and one in user secrets wins over both. An override must still be
+   accessible inside the sandbox. Existing files under the earlier
+   `Data/Documents/recordings/` workaround are not moved automatically.
+
+3. Capture startup output before rehearsing or presenting. Set `demo_bundle`
+   to the built `Gui.app` (the example is Debug on Apple Silicon; use the
+   corresponding Release or `maccatalyst-x64` output when appropriate):
+
+    ```sh
+    demo_bundle="$(pwd)/src/Gui/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/Gui.app"
+    replay_log="$(mktemp -t transporter-replay)"
+    open -n --stdout "$replay_log" --stderr "$replay_log" "$demo_bundle"
+    ```
+
+4. Once the window opens, inspect `cat "$replay_log"`. For every named
+   recording, confirm the source, resolved path and span. A usable recording
+   is reported as available without selecting it. An absent file, a file
+   that cannot be opened or read, a file with no readable recorded line, and
+   a recording below the staleness threshold have distinct diagnostics.
+   Those sources are unavailable; the application still starts. Console
+   reporting is enabled in Debug and Release, so a debugger is not required.
+
+5. Export rehearsal captures with `tools/copy-recordings.sh`. It reads the
+   default `Data/Library/recordings/` directory and copies captures to ignored
+   `.recordings/` at the repository root. That export is not replay's input
+   directory. If you overrode `Recording:Root`, copy from that location
+   yourself; the helper does not discover overrides. The sample generator's
+   container setup is item `0079`, separate from this check.
+
+Configuration names the recording; the source selector determines which feed
+is live. The startup report neither selects replay nor starts its source.
+Do not treat a usable-recording message as proof that replay is selected.
+
 ## On the day
 
 - **Run from a laptop, not a cloud VM.** The provider blocks hyperscaler IPs
