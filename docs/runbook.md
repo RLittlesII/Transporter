@@ -48,21 +48,48 @@ The application id is declared in [`src/Gui/Gui.csproj`](../src/Gui/Gui.csproj)
 `FileSystem.AppDataDirectory`; it is not a path committed to settings.
 Rehearsal recording and replay both use the effective `Recording:Root`.
 
-1. Put the intended recording in that directory and name it under
-   `Replay:Aircraft` (or `Replay:Vessels` when that source exists). For a local
-   name without a settings-file edit:
+1. For a synthetic aircraft sample on macOS, run this from the checkout:
 
     ```sh
-    dotnet user-secrets set "Replay:Aircraft" "aircraft-rehearsal.ndjson" --id transporter-gui
+    ./build.sh --target SampleRecordingForApp
     ```
 
-2. Build the head after changing its user-secrets store. The platform root is
+    The target reads the application id from the MAUI project and writes
+    `aircraft-sample.ndjson` directly into the directory above. Check the printed
+    destination, payload count and span; the defaults produce 40 payloads
+    spanning 9 minutes 45 seconds. It needs no provider credentials and is
+    deliberately outside the normal build. Rerunning it replaces that sample;
+    it does not copy or bundle a recording. To choose a different synthetic
+    sequence, length or cadence:
+
+    ```sh
+    ./build.sh --target SampleRecordingForApp --seed 79 --polls 41 --poll-interval 10
+    ```
+
+    This spans 6 minutes 40 seconds. A span must exceed the five-minute staleness
+    threshold or the generator refuses it. For a destination outside the default
+    app container, use the existing `SampleRecording --recording <path>` target;
+    `SampleRecordingForApp` rejects `--recording` and requires macOS. If you
+    overrode `Recording:Root`, use that explicit destination instead.
+
+2. Name the sample under `Replay:Aircraft` without a settings-file edit:
+
+    ```sh
+    dotnet user-secrets set "Replay:Aircraft" "aircraft-sample.ndjson" --id transporter-gui
+    ```
+
+    For rehearsal traffic, put the intended recording in the same directory
+    and name that file instead (`Replay:Vessels` when that source exists).
+    To undo sample setup, delete only `aircraft-sample.ndjson` from the directory
+    above and remove or replace its `Replay:Aircraft` setting, then rebuild.
+
+3. Build the head after changing its user-secrets store. The platform root is
    the lowest-priority default; a `Recording:Root` in packaged settings wins
    over it, and one in user secrets wins over both. An override must still be
    accessible inside the sandbox. Existing files under the earlier
    `Data/Documents/recordings/` workaround are not moved automatically.
 
-3. Capture startup output before rehearsing or presenting. Set `demo_bundle`
+4. Capture startup output before rehearsing or presenting. Set `demo_bundle`
    to the built `Gui.app` (the example is Debug on Apple Silicon; use the
    corresponding Release or `maccatalyst-x64` output when appropriate):
 
@@ -72,7 +99,7 @@ Rehearsal recording and replay both use the effective `Recording:Root`.
     open -n --stdout "$replay_log" --stderr "$replay_log" "$demo_bundle"
     ```
 
-4. Once the window opens, inspect `cat "$replay_log"`. For every named
+5. Once the window opens, inspect `cat "$replay_log"`. For every named
    recording, confirm the source, resolved path and span. A usable recording
    is reported as available without selecting it. An absent file, a file
    that cannot be opened or read, a file with no readable recorded line, and
@@ -80,12 +107,12 @@ Rehearsal recording and replay both use the effective `Recording:Root`.
    Those sources are unavailable; the application still starts. Console
    reporting is enabled in Debug and Release, so a debugger is not required.
 
-5. Export rehearsal captures with `tools/copy-recordings.sh`. It reads the
+6. Export rehearsal captures with `tools/copy-recordings.sh`. It reads the
    default `Data/Library/recordings/` directory and copies captures to ignored
    `.recordings/` at the repository root. That export is not replay's input
    directory. If you overrode `Recording:Root`, copy from that location
-   yourself; the helper does not discover overrides. The sample generator's
-   container setup is item `0079`, separate from this check.
+   yourself; the helper does not discover overrides. The export deliberately
+   excludes `aircraft-sample.ndjson`; regenerate that sample with step 1.
 
 Configuration names the recording; the source selector determines which feed
 is live. The startup report neither selects replay nor starts its source.

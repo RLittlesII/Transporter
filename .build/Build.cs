@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Nuke.Common;
 using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.IO;
@@ -52,6 +55,22 @@ class Build : NukeBuild
         Recording is null
             ? RootDirectory / "recordings" / "aircraft-sample.ndjson"
             : (AbsolutePath) Path.GetFullPath(Recording);
+
+    private AbsolutePath AppSampleRecordingFile
+    {
+        get
+        {
+            var applicationId = XDocument.Load(SourceDirectory / "Gui" / "Gui.csproj")
+                .XPathSelectElement("/Project/PropertyGroup/ApplicationId")?.Value;
+            if (string.IsNullOrWhiteSpace(applicationId))
+            {
+                throw new InvalidOperationException("Gui.csproj must declare ApplicationId.");
+            }
+
+            return (AbsolutePath) Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+                / "Library" / "Containers" / applicationId / "Data" / "Library" / "recordings" / "aircraft-sample.ndjson";
+        }
+    }
 
     /// What this host can build. The MAUI heads in src/Gui target net10.0-ios and
     /// net10.0-maccatalyst, and no Linux SDK can build either, so a Linux run restores,
@@ -121,20 +140,27 @@ class Build : NukeBuild
     /// build that wrote there would overwrite one. It shells `dotnet run` rather than referencing
     /// the project, so this build still runs when the application does not compile.
     private Target SampleRecording => definition => definition
-        .Executes(() => DotNetRun(settings => settings
-            .SetProjectFile(RootDirectory / "tools" / "Transporter.SampleRecording" / "Transporter.SampleRecording.csproj")
-            .SetApplicationArguments(SampleRecordingArguments())));
+        .Executes(() => GenerateSampleRecording(SampleRecordingFile));
+
+    private Target SampleRecordingForApp => definition => definition
+        .Requires(() => EnvironmentInfo.IsOsx)
+        .Requires(() => Recording == null)
+        .Executes(() => GenerateSampleRecording(AppSampleRecordingFile));
+
+    private void GenerateSampleRecording(AbsolutePath output) => DotNetRun(settings => settings
+        .SetProjectFile(RootDirectory / "tools" / "Transporter.SampleRecording" / "Transporter.SampleRecording.csproj")
+        .SetApplicationArguments(SampleRecordingArguments(output)));
 
     /// What the generator is told: the seed and the output always, the length and the cadence only
     /// when they were asked for, so the tool's own defaults stay the one answer for them.
-    private string[] SampleRecordingArguments()
+    private string[] SampleRecordingArguments(AbsolutePath output)
     {
         var arguments = new List<string>
         {
             "--seed",
             Seed.ToString(CultureInfo.InvariantCulture),
             "--output",
-            SampleRecordingFile.ToString(),
+            output.ToString(),
         };
 
         if (Polls is { } polls)

@@ -2,7 +2,7 @@ id: "0079"
 type: chore
 title: Write the sample recording where the sandboxed head reads it
 
-status: ready
+status: in-progress
 
 priority: medium
 value: 3
@@ -22,7 +22,7 @@ spec: null
 claims: []
 
 created: "2026-10-09"
-updated: "2026-10-09"
+updated: "2026-10-14"
 closed: null
 
 summary: |
@@ -59,6 +59,22 @@ decisions:
       gets the same result with nothing in history, and it would narrow `0052`'s
       2026-10-06 decision against a committed sample and `replay-source`
       `adr/0001`'s rejection of an embedded recording."
+
+    - "2026-10-14 — implementer — one dependent branch on 0061 (PR #93),
+      because verifying that the generated file is found without a root override
+      requires that head's platform default. PR #93 merged during verification;
+      rebased onto main, so this item opens against main with no stack."
+    - "2026-10-14 — implementer — SampleRecordingForApp derives the Mac Catalyst
+      container from the current user's home and Gui's ApplicationId. It reuses
+      the existing generator and its seed, polls and poll-interval parameters;
+      SampleRecording retains the explicit --recording destination. The app
+      target requires macOS and rejects --recording rather than silently
+      ignoring an explicit destination. Neither generator runs in Default."
+    - "2026-10-14 — implementer — scenario exemption: build-machine setup only;
+      replay-source B-001, B-002, B-006, B-024, B-025 and B-027 remain unchanged.
+      Verify by executing both targets, comparing seeded output, and starting
+      the sandboxed head with only the recording name configured. No product
+      scenario or specification amendment is needed."
 
 out_of_scope:
     - "Where the head's default root is — `0061`."
