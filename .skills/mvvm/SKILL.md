@@ -49,8 +49,10 @@ own API, see
 
 - Business rules or domain invariants — those live on the domain types
   ([`domain-model`](../domain-model/SKILL.md)).
-- `HttpClient`, a socket, a poll loop, a timer, a token refresh. Actors own time
-  and failure.
+- `HttpClient`, a socket, a poll loop, a repeating timer, a token refresh.
+  Actors own domain time and failure. A one-shot deadline on an injected
+  scheduler may close presentation state when the specification permits it;
+  it must not fetch, poll, derive domain state or write a cache.
 - Filtering, sorting, grouping or expiry logic. The pipeline owns those
   ([`dynamic-data-pipeline`](../dynamic-data-pipeline/SKILL.md)); the view model
   only supplies the predicate or comparer the user chose.
@@ -88,13 +90,10 @@ gesture — to drive an indicator, to open a window, to debounce — listens to 
 command and holds no subject beside it. A hand-written command forces that
 subject, which is a second place the gesture lives.
 
-```csharp
-SwapCommand = RxCommand
-    .Create(() => registry.Get<SwapSource>().Tell(SwapSource.To(selected)), outputScheduler: schedulers.UserInterfaceThread)
-    .DisposeWith(_garbage);
-
-_isSwapping = SwapCommand.Select(...).Switch().AsValue(…); // the command is the stream
-```
+Compose the command's gesture stream with the domain response and any specified
+presentation deadline, then expose the result through `AsValue`. Where dispatch
+can produce a response immediately, arm response observation before sending
+the message. Do not keep a second subject or assign a flag beside that stream.
 
 Assign the command to its property and read the property — no local to pass
 around, and no second field. Type the property as the command rather than as
@@ -184,7 +183,9 @@ be tested, it is doing something that belongs elsewhere.
 - A domain rule, validation, or calculation that is not display formatting.
 - A unit conversion or a `switch` on a subclass. The description does both.
 - A setter that raises another property, assigns another object, or calls out.
-- `HttpClient`, a socket, a timer, or a poll in a view model.
+- `HttpClient`, a socket, a repeating timer, or a poll in a view model.
+- A one-shot presentation deadline that is not specified, uses an ambient
+  scheduler, or performs transport, cache or domain work.
 - A cache write from a view model.
 - A blocking call — no `.Result`, no `.Wait()`, no `GetAwaiter().GetResult()`.
 - An `Ask` without a timeout, or a `ContinueWith` that reads `.Result`.
