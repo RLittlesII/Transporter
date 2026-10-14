@@ -1,0 +1,26 @@
+install claude-code local
+install codex local
+
+local agent implementer .agents/implementer.md
+local agent spec-author .agents/spec-author.md
+local agent spec-reviewer .agents/spec-reviewer.md
+local agent test-writer .agents/test-writer.md
+
+local skill akka-actor .skills/akka-actor
+local skill analyzer-testing .skills/analyzer-testing
+local skill api-contract .skills/api-contract
+local skill clarify-requirements .skills/clarify-requirements
+local skill coding-conventions .skills/coding-conventions
+local skill deliver-change .skills/deliver-change
+local skill domain-model .skills/domain-model
+local skill dynamic-data-pipeline .skills/dynamic-data-pipeline
+local skill flurl-http-client .skills/flurl-http-client
+local skill hot-swap-source .skills/hot-swap-source
+local skill language-ext-usage .skills/language-ext-usage
+local skill mapping .skills/mapping
+local skill maui-ui .skills/maui-ui
+local skill mvvm .skills/mvvm
+local skill nuke-build .skills/nuke-build
+local skill spec-and-traceability .skills/spec-and-traceability
+local skill test-from-scenarios .skills/test-from-scenarios
+local skill transporter-conventions .skills/transporter-conventions

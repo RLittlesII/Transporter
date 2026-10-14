@@ -207,6 +207,9 @@ Replace the polled source with a push source and show that everything downstream
 
 ## Build
 
+To install this repository's skills and role agents for Claude Code and Codex,
+follow [local agent setup](docs/agent-tooling.md).
+
 Requires the .NET SDK pinned in [`global.json`](global.json).
 
 ```sh

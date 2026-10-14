@@ -23,7 +23,7 @@ Claims are numbered rows in § 3 Acceptance Criteria of a Feature's `.spec/READM
 
 ## Roles and Workflow
 
-Four roles own the specification chain — `spec-author`, `test-writer`, `implementer`, `spec-reviewer` — each declared under [`.agents/`](.agents/README.md), each owning named sections of a Feature's `.spec/README.md` and writing no others. Which role owns which section is written in exactly one place: [`transporter-conventions`](.skills/transporter-conventions/SKILL.md) § "Section ownership". Each role trusts only the artifact from the preceding role. These files are documented contracts for whoever takes the role, a person or an agent; this repository ships no loadable agents, since the directory is `.agents/`, not `.claude/agents/`.
+Four roles own the specification chain — `spec-author`, `test-writer`, `implementer`, `spec-reviewer` — each declared under [`.agents/`](.agents/README.md), each owning named sections of a Feature's `.spec/README.md` and writing no others. Which role owns which section is written in exactly one place: [`transporter-conventions`](.skills/transporter-conventions/SKILL.md) § "Section ownership". Each role trusts only the artifact from the preceding role. These files are the canonical role contracts. [Local agent setup](docs/agent-tooling.md) installs them for Claude Code and Codex from the [Skillfile](Skillfile).
 
 ## Lessons and Bug Fixes
 
@@ -84,7 +84,7 @@ A knowledge graph can live at `graphify-out/`. **When `graphify-out/graph.json` 
 
 ## Skills Reference
 
-**Project skills live in `.skills/`**, one directory per skill, each a `SKILL.md` declaring `name` and `description`. A skill holds the rule, the trap and the `Never add` list; facts live where they are authoritative and the skill links them (`coding-conventions` § "Skills", [lesson 0001](.spec/lessons/0001-a-skill-holds-the-rule-not-the-facts.md)).
+**Project skills live in `.skills/`**, one directory per skill, each a `SKILL.md` declaring `name` and `description`. Edit these sources and the role contracts in `.agents/`, then rerun [local agent setup](docs/agent-tooling.md); never edit installed copies. When reading an installed copy, resolve its Markdown links against the corresponding canonical source path under `.skills/` or `.agents/`. A skill holds the rule, the trap and the `Never add` list; facts live where they are authoritative and the skill links them (`coding-conventions` § "Skills", [lesson 0001](.spec/lessons/0001-a-skill-holds-the-rule-not-the-facts.md)).
 
 Skills come in three kinds, and a skill is never a mixture of them.
 
