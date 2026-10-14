@@ -12,8 +12,11 @@ internal enum RecordingDefect
     /// <summary>The named recording is not under the recordings root.</summary>
     Absent,
 
-    /// <summary>It is there and could not be opened, or holds no line a pacer can read.</summary>
+    /// <summary>It could not be opened or read, or its stream cannot seek.</summary>
     Unreadable,
+
+    /// <summary>It opened, but holds no readable recorded line.</summary>
+    NoReadableLine,
 
     /// <summary>It spans less than the staleness threshold, so staleness never shows on stage (B-005).</summary>
     TooShort,

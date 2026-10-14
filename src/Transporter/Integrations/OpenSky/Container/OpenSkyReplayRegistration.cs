@@ -57,6 +57,11 @@ public static class OpenSkyReplayRegistration
         },
     };
 
+    /// <summary>Reports checked recordings at startup in a head that does not start hosted services.</summary>
+    /// <param name="services">The application's built provider.</param>
+    public static void ReportReplayStartup(this IServiceProvider services) =>
+        services.GetRequiredService<ReplayStartupReport>().Report();
+
     /// <summary>
     /// Adds the replay half: the recordings configuration names, checked, and a source over each one
     /// that is usable.

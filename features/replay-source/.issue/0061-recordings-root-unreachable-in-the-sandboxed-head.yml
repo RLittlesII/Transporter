@@ -2,7 +2,7 @@ id: "0061"
 type: bug
 title: A recording the sandboxed head cannot open leaves the grid empty with nothing said
 
-status: ready-for-implementation
+status: done
 
 priority: high
 value: 4
@@ -25,7 +25,7 @@ claims:
 
 created: "2026-10-07"
 updated: "2026-10-14"
-closed: null
+closed: "2026-10-14"
 
 summary: |
   Found 2026-10-07 while trying to see `0052`'s generated recording on screen,
@@ -90,6 +90,16 @@ acceptance_criteria:
     in the specification; § 10 indexes the Feature lesson and spec delta."
 
 decisions:
+  - "2026-10-14 — implementation — the approved B-025/B-026 design is built.
+    Fifteen new scenario cases cover root precedence, plain-provider reporting
+    and inspection failures; 11 first failed on behavior, then the focused
+    21-test run and full 318-test build passed. The built head's documented
+    capture route reported a usable synthetic recording at the platform root
+    and a distinct empty-recording defect, with no provider credentials.
+    § 9 records the tests and head/runbook/export reviews; Feature lesson 0001
+    records the bug. The item closes in its delivering pull request, while
+    stage recordings, vessel replay, the source picker and sample setup stay
+    with their existing owners."
   - "2026-10-14 — specification preparation requested by the person. B-025 and
     B-026, their scenarios, §§ 6-9 and proposed replay ADR-0001 now describe
     the platform default, focused MAUI startup invocation and separate
