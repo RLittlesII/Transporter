@@ -2,7 +2,7 @@ id: "0061"
 type: bug
 title: A recording the sandboxed head cannot open leaves the grid empty with nothing said
 
-status: ready-for-implementation
+status: in-progress
 
 priority: high
 value: 4

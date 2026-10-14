@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-container="$HOME/Library/Containers/com.companyname.gui/Data/Documents/recordings"
+container="$HOME/Library/Containers/com.companyname.gui/Data/Library/recordings"
 destination="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.recordings"
 
 if [[ ! -d "$container" ]]; then

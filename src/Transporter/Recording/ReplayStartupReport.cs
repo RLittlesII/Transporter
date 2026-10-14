@@ -45,6 +45,17 @@ internal sealed class ReplayStartupReport : IHostedService
     /// </remarks>
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        Report();
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    /// <summary>Writes the registration-time findings without starting a source.</summary>
+    internal void Report()
+    {
         foreach (var recording in Recordings)
         {
             switch (recording.Defect)
@@ -70,7 +81,13 @@ internal sealed class ReplayStartupReport : IHostedService
                     break;
                 case RecordingDefect.Unreadable:
                     _logger.LogWarning(
-                        "The {Source} replay source is not registered: {Path} could not be read, or holds no recorded line.",
+                        "The {Source} replay source is not registered: {Path} could not be opened or read.",
+                        recording.Source,
+                        recording.Path);
+                    break;
+                case RecordingDefect.NoReadableLine:
+                    _logger.LogWarning(
+                        "The {Source} replay source is not registered: {Path} holds no readable recorded line.",
                         recording.Source,
                         recording.Path);
                     break;
@@ -84,12 +101,7 @@ internal sealed class ReplayStartupReport : IHostedService
                     break;
             }
         }
-
-        return Task.CompletedTask;
     }
-
-    /// <inheritdoc/>
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     private readonly ILogger<ReplayStartupReport> _logger;
 }

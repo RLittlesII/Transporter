@@ -1,3 +1,4 @@
+using System.IO;
 using System.Reactive.Concurrency;
 using System.Threading;
 using CommunityToolkit.Maui.Markup;
@@ -49,7 +50,12 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        builder.Logging.AddConsole();
+
+        var app = builder.Build();
+        app.Services.ReportReplayStartup();
+
+        return app;
     }
 
     // The settings packaged beside the application carry no credential (0047). The developer's
@@ -61,6 +67,6 @@ public static class MauiProgram
             ? FileSystem.OpenAppPackageFileAsync("secrets.json").GetAwaiter().GetResult()
             : null;
 
-        return TransporterConfiguration.Compose(settings, secrets);
+        return TransporterConfiguration.Compose(settings, secrets, Path.Combine(FileSystem.AppDataDirectory, "recordings"));
     }
 }

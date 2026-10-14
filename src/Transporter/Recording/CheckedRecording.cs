@@ -92,13 +92,24 @@ internal sealed class CheckedRecording
             return new CheckedRecording(source, name, path, RecordingDefect.Unreadable, TimeSpan.Zero, payloads: null);
         }
 
-        var span = Spans(payloads);
+        TimeSpan? span;
+
+        try
+        {
+            span = Spans(payloads);
+        }
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            payloads.Dispose();
+
+            return new CheckedRecording(source, name, path, RecordingDefect.Unreadable, TimeSpan.Zero, payloads: null);
+        }
 
         if (span is not { } covered)
         {
             payloads.Dispose();
 
-            return new CheckedRecording(source, name, path, RecordingDefect.Unreadable, TimeSpan.Zero, payloads: null);
+            return new CheckedRecording(source, name, path, RecordingDefect.NoReadableLine, TimeSpan.Zero, payloads: null);
         }
 
         if (covered < shortest)
