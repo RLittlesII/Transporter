@@ -64,17 +64,26 @@ absent.
 2. **Paths resolve against one configured recordings root**, defaulting to
    `recordings/` relative to the running application, so rehearsal writes and
    replay reads the same place without either naming an absolute path. The root
-   is overridable for the platforms where a working directory is not where a
-   person would look.
+   is overridable. The MAUI head supplies its application-data directory's
+   `recordings/` as a platform default beneath packaged settings and optional
+   user secrets; those layers may override it. A plain host retains the
+   relative default. The head alone names the platform API, while both writer
+   and reader consume the same effective `Recording:Root` (B-025).
 3. **Configuration never decides whether replay is live.** It names which
    recording a replay source would read; the source selector (B-015) decides
    whether that source is the live one. A recording named in configuration and
    never selected is normal.
-4. **A configured recording that is absent, unreadable, or shorter than the
-   staleness threshold is reported when the application starts**, not when the
-   presenter swaps. This is the same shape as aircraft-source B-029: a missing
-   credential is the application's behaviour at startup, not a surprise at a
-   call site.
+4. **Each named recording is checked before the service collection closes
+   and reported at application startup**, including the MAUI head, rather
+   than at selection. A defective recording leaves its source unregistered
+   without refusing application startup. The report distinguishes an absent
+   file, an unreadable file, an opened file with no readable recorded line,
+   and a span below the staleness threshold, and also reports usable recordings
+   (B-026). The existing reporter retains its generic-host adapter; the MAUI
+   composition calls that same report through a focused public entry point
+   after building the app. Starting unrelated hosted services or adding a
+   second reporter would change lifecycles or duplicate diagnostics for no
+   replay requirement.
 5. **The pacer is handed an opened payload stream, not a path.** Resolving
    configuration to a stream happens once, where the source is registered. The
    pacer performs no file resolution, so a test feeds it synthetic lines with no
@@ -104,3 +113,12 @@ Claims B-024 – B-027 carry these in § 3.
   resolution strategy behind the same configuration key without touching the
   pacer, the contract substitution, or the selector — which is why this record
   is scoped to this Feature rather than the repository.
+
+**2026-10-14, `0061` preparation.** The proposed record is corrected in place:
+item 2 now records the platform-default decision of 2026-10-09, and item 4
+states the two stages registration and startup actually need. The cost is one
+head-owned default and one explicit head startup call, both review obligations
+in § 9; the reporting logic remains testable without MAUI. Disabling the sandbox
+or committing an absolute container path is rejected: either hides the failure
+on one machine and does not make the startup report run. This changes no
+recording format, selection mechanism or provider contract.

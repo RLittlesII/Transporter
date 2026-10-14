@@ -59,7 +59,7 @@ replace it with a timestamp of the recorder's own.
 ## Decision
 
 Recordings are an **NDJSON append log** — one JSON object per line, one line
-per snapshot:
+per snapshot, for providers whose JSON payload is newline-free:
 
 ```
 recordings/aircraft-2026-10-04T14-22-01Z.ndjson
@@ -68,7 +68,14 @@ recordings/aircraft-2026-10-04T14-22-01Z.ndjson
 ```
 
 - **`body` is the provider's payload verbatim**, unparsed and unreshaped. That
-  is what makes a recording re-playable after a converter fix.
+  is what makes a recording re-playable after a converter fix. It must contain
+  no raw carriage return or newline; escaped characters inside a JSON string
+  do not break the line format. OpenSky's compact JSON fits this boundary.
+  A multiline payload is still preserved and a warning names the unsupported
+  shape, but replay of it is outside this format. Minifying, escaping the whole
+  body into a new encoding, or dropping it would change the chosen format or
+  lose the raw input. A provider that requires multiline JSON needs a separate
+  format decision before its recordings are supported.
 - **`receivedAt` paces playback and nothing else.** It is the recorder's
   arrival instant, used to space snapshots on replay at their original
   cadence. It is **not** the observed instant: that stays on the provider's own
@@ -110,3 +117,8 @@ the tests that use them, per `test-from-scenarios` § "Fixtures are synthetic".
   § "Technology Decisions" gains no line. Like
   [ADR-0011](0011-the-swap-decorator-selects-among-registered-strategies.md) as it now stands,
   this record costs the talk no explaining.
+
+**2026-10-14, replay sign-off review.** This proposed record now states the
+newline-free payload precondition exposed by the 2026-10-06 replay spec delta.
+The existing writer preserves multiline input and warns; this correction
+claims no new format support and changes no implementation.

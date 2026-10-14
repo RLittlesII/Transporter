@@ -2,7 +2,7 @@
 title: "Specification: Replay source"
 description: "Record a live provider's payloads verbatim and feed them back at their recorded cadence through the same seam and the same selector the live sources use, so the demo survives a dead venue network and the closing act has a fallback."
 type: spec
-spec_status: draft
+spec_status: approved
 ---
 
 # Specification: Replay source
@@ -20,7 +20,7 @@ The talk's claim is that polled data can still be reactive, and it is proved by 
 | #   | Persona                                                                                  | Need                                                                    | Pain point today                                                                                                                                             |
 | --- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | The presenter running the demo on stage (README.md § "Demo resilience")                  | To finish the talk when the venue network dies mid-sentence             | The only source of data is a provider reached over a network nobody in the room controls, and there is nothing to fall back to                               |
-| 2   | The presenter at the closing act (README.md § "Closing act"; run-the-demo § "Never add") | The ships ending to survive the same failure as the main demo           | The closing act is the one part with no fallback at all, so the riskiest minute of the talk is also the least protected                                      |
+| 2   | The presenter at the closing act (README.md § "Closing act"; docs/runbook.md § "Never")  | The ships ending to survive the same failure as the main demo           | The closing act is the one part with no fallback at all, so the riskiest minute of the talk is also the least protected                                      |
 | 3   | Line-of-business .NET developer in the talk audience (README.md § "Audience")            | To see that the pipeline is indifferent to its source, not be told it   | "Swap the source and nothing downstream changes" is an assertion until the audience watches a recording drive the same grid the live feed drove              |
 | 4   | The same developer, reading this repository afterwards — the repository is the takeaway  | One switch between sources, not a live path and a separate offline path | Most codebases grow an "offline mode" flag that only runs under pressure, and it is the code least exercised and most likely to be broken when it is needed  |
 | 5   | The same developer, whose CI cannot reach the provider                                   | To exercise the pipeline end to end with no network and no credential   | OpenSky blocks hyperscaler IPs (README.md § "Gotchas"), so a build agent can never run the live path, and a test that needs a key passes only on one machine |
@@ -47,55 +47,55 @@ traceability". `B-001` here and `B-001` in
 claims: an `.issue/` item names its spec, and its `claims:` ids resolve
 against that spec.
 
-| ID    | Claim                                                                                                                                                                                                                                                                                                                                                  | Source                                                              |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| B-001 | A recording SHALL be written in the format [ADR-0004](../../../.spec/adr/0004-ndjson-recording-format.md) fixes: one line per payload, the provider's payload verbatim, beside the instant it arrived.                                                                                                                                                 | ADR-0004; api-mock § "Recording"                                    |
-| B-002 | The recorder SHALL NOT reshape, filter, reorder or omit a payload, including an empty or sparse one; what the provider sent SHALL be what the line holds.                                                                                                                                                                                              | api-mock § "Recording" — raw, not parsed                            |
-| B-003 | Recording SHALL NOT issue a request of its own; it SHALL record what a live source already fetched, so recording costs no additional credit and opens no additional socket.                                                                                                                                                                            | README.md § "Limits"; § 4 row 10                                    |
-| B-004 | Recording SHALL be observationally transparent: the changesets reaching the fleet SHALL be identical whether recording is on or off.                                                                                                                                                                                                                   | Decided call — a recorder is a tap, not a second source             |
-| B-005 | A recording intended for stage use SHALL span at least the staleness threshold, so appearance, update and staleness are all reproducible from it.                                                                                                                                                                                                      | api-mock § "Recording"; aircraft-source B-051                       |
-| B-006 | A rehearsal recording SHALL NOT be committed to the repository, and SHALL NOT be used as a test fixture unless it has been scrubbed of real traffic first.                                                                                                                                                                                             | api-mock § "Never add"; § 4 row 7                                   |
-| B-007 | Replay SHALL emit payloads in recorded order at the recorded inter-arrival spacing, derived from the recorded instants, and SHALL NOT substitute a fixed interval.                                                                                                                                                                                     | api-mock § "Replay"                                                 |
-| B-008 | On reaching the end of a recording, replay SHALL continue from its first payload; the stream SHALL NOT complete, fault, or emit a changeset that removes every vehicle at the loop boundary.                                                                                                                                                           | api-mock § "Replay"                                                 |
-| B-009 | The observed instant downstream SHALL be the replayed payload's own reported time — never the recorded arrival instant, and never an ambient clock.                                                                                                                                                                                                    | aircraft-source B-003; ADR-0004 § "Decision"                        |
-| B-010 | Staleness under replay SHALL be driven by the recording's time base, so a vehicle becomes observably stale at the same point in the recording at which it did live; the staleness clock SHALL be injected, not ambient.                                                                                                                                | api-mock § "Replay"; dynamic-data-pipeline § "Staleness and expiry" |
-| B-011 | Replay SHALL make no network request and SHALL require no credential; it SHALL run to completion with the provider unreachable and no secrets configured.                                                                                                                                                                                              | api-mock § "Strategies on the same seam"; § 4 row 2                 |
-| B-012 | A torn or unparseable final line SHALL be discarded and the stream SHALL continue; a recording truncated mid-write SHALL NOT fault replay.                                                                                                                                                                                                             | ADR-0004 § "Decision"                                               |
-| B-013 | Replay SHALL produce domain vehicles through the same projection the live strategy uses; there SHALL NOT be a second converter, parser or mapper for recorded payloads.                                                                                                                                                                                | mapping § "One mapper per boundary"; api-mock § "Recording"         |
-| B-014 | A recording SHALL remain replayable after a converter fix, with no re-recording — which is what recording the payload raw is for.                                                                                                                                                                                                                      | api-mock § "Recording"; ADR-0004 § "Decision drivers"               |
-| B-015 | Replay SHALL be selected through the same mechanism as any live source, and there SHALL be no offline-mode flag, no replay-only selector, and no second selection path.                                                                                                                                                                                | api-mock § "Replay"; hot-swap-source § "Never add"                  |
-| B-016 | No consumer SHALL be able to observe from the seam that replay rather than a live provider is selected.                                                                                                                                                                                                                                                | aircraft-source B-039; hot-swap-source § "Never add"                |
-| B-017 | Swapping to replay SHALL stop the outgoing live source, so a swapped-out poller stops spending credits and a swapped-out socket stops reading.                                                                                                                                                                                                         | aircraft-source B-040; hot-swap-source § "Disposal discipline"      |
-| B-018 | Swapping to or from replay SHALL NOT rebuild the tracker, its collection, its filters, its sorts, its groups or its bindings.                                                                                                                                                                                                                          | hot-swap-source § "What must not be rebuilt"                        |
-| B-019 | A vessel recording SHALL use the same format and the same selection path as an aircraft recording, with one line per received message; messages SHALL NOT be batched into poll-shaped snapshots to make a push feed resemble a polled one.                                                                                                             | api-mock § "Strategies on the same seam"; ais-stream                |
-| B-020 | A recorded vessel fallback SHALL exist before the closing act is presented.                                                                                                                                                                                                                                                                            | run-the-demo § "Never add"                                          |
-| B-021 | Replay SHALL introduce no vehicle, record or snapshot type of its own; it SHALL reproduce whatever the recorded provider's own Feature defines.                                                                                                                                                                                                        | aircraft-source § 5 row 3; § 5 row 2 below                          |
-| B-022 | Replay SHALL substitute at the provider's own API contract, handing back recorded envelopes, and SHALL introduce no snapshot client, cache, converter or projection of its own; the live path's snapshot client SHALL be the one constructed over it.                                                                                                  | ADR-0002 § "Decision" item 2; § 11 row 1                            |
-| B-023 | Vessel replay SHALL substitute at the strategy — an `ITrackerSource` fed by a recording — because a push provider has no contract to stand in for; it SHALL reach the seam the same way every other source does.                                                                                                                                       | ADR-0002 § "Consequences"; § 4 row 5                                |
-| B-024 | The recording each replay source reads SHALL be named in configuration, one key per source, through the same mechanism the interval and the bounding box use; no recording SHALL be compiled in as a default, a source with none named SHALL NOT be registered or selectable, and configuration SHALL NOT determine whether replay is the live source. | adr/0001; aircraft-source B-050                                     |
-| B-025 | A named recording SHALL resolve against a single configured recordings root, defaulting to `recordings/` relative to the running application and overridable, so a rehearsal writes and a replay reads the same place without either naming an absolute path.                                                                                          | adr/0001; ADR-0004 § "Decision"                                     |
-| B-026 | A configured recording that is absent, unreadable, or shorter than the staleness threshold SHALL be reported when the application starts, and SHALL NOT first be discovered when replay is selected.                                                                                                                                                   | adr/0001; aircraft-source B-029                                     |
-| B-027 | The component that paces a recording SHALL be handed an opened payload stream rather than a path, and SHALL perform no file resolution of its own.                                                                                                                                                                                                     | adr/0001; § 4 row 8                                                 |
-| B-028 | The source live when a run starts SHALL be a live provider's: replay SHALL be registered after every live source, so the first registered strategy is never a recording, and no configuration, environment variable or launch argument SHALL change which source is live at startup (B-015, B-024). Replay is reached by a swap.                       |
+| ID    | Claim                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Source                                                                        |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| B-001 | For a provider whose JSON payload contains no raw line break, a recording SHALL use the NDJSON format fixed by [ADR-0004](../../../.spec/adr/0004-ndjson-recording-format.md): one line per payload, the payload verbatim beside its arrival instant. A payload containing a raw line break SHALL produce a warning that the recording is outside that format; B-002 still forbids reshaping or omitting it.                                                                       | ADR-0004 § "Decision"; § 10 delta of 2026-10-06                               |
+| B-002 | The recorder SHALL NOT reshape, filter, reorder or omit a payload, including an empty or sparse one; what the provider sent SHALL be what the line holds.                                                                                                                                                                                                                                                                                                                          | ADR-0004 § "Decision"                                                         |
+| B-003 | Recording SHALL NOT issue a request of its own; it SHALL record what a live source already fetched, so recording costs no additional credit and opens no additional socket.                                                                                                                                                                                                                                                                                                        | README.md § "Limits"; § 4 row 10                                              |
+| B-004 | Recording SHALL be observationally transparent: the changesets reaching the fleet SHALL be identical whether recording is on or off.                                                                                                                                                                                                                                                                                                                                               | Decided call — a recorder is a tap, not a second source                       |
+| B-005 | A recording intended for stage use SHALL span at least the staleness threshold, so appearance, update and staleness are all reproducible from it.                                                                                                                                                                                                                                                                                                                                  | ADR-0004 § "Decision"; aircraft-source B-051                                  |
+| B-006 | A rehearsal recording SHALL NOT be committed to the repository, and SHALL NOT be used as a test fixture unless it has been scrubbed of real traffic first.                                                                                                                                                                                                                                                                                                                         | ADR-0004 § "Decision"; § 4 row 7                                              |
+| B-007 | Replay SHALL emit payloads in recorded order at the recorded inter-arrival spacing, derived from the recorded instants, and SHALL NOT substitute a fixed interval.                                                                                                                                                                                                                                                                                                                 | README.md § "Demo resilience"                                                 |
+| B-008 | On reaching the end of a recording, replay SHALL continue from its first payload; the stream SHALL NOT complete, fault, or emit a changeset that removes every vehicle at the loop boundary.                                                                                                                                                                                                                                                                                       | README.md § "Demo resilience"                                                 |
+| B-009 | The observed instant downstream SHALL be the replayed payload's own reported time — never the recorded arrival instant, and never an ambient clock.                                                                                                                                                                                                                                                                                                                                | aircraft-source B-003; ADR-0004 § "Decision"                                  |
+| B-010 | Staleness under replay SHALL be driven by the recording's time base, so a vehicle becomes observably stale at the same point in the recording at which it did live; the staleness clock SHALL be injected, not ambient.                                                                                                                                                                                                                                                            | README.md § "Demo resilience"; dynamic-data-pipeline § "Staleness and expiry" |
+| B-011 | Replay SHALL make no network request and SHALL require no credential; it SHALL run to completion with the provider unreachable and no secrets configured.                                                                                                                                                                                                                                                                                                                          | ADR-0002 § "Decision"; § 4 row 2                                              |
+| B-012 | A torn or unparseable final line SHALL be discarded and the stream SHALL continue; a recording truncated mid-write SHALL NOT fault replay.                                                                                                                                                                                                                                                                                                                                         | ADR-0004 § "Decision"                                                         |
+| B-013 | Replay SHALL produce domain vehicles through the same projection the live strategy uses; there SHALL NOT be a second converter, parser or mapper for recorded payloads.                                                                                                                                                                                                                                                                                                            | mapping § "One mapper per boundary"; ADR-0004 § "Decision"                    |
+| B-014 | A recording SHALL remain replayable after a converter fix, with no re-recording — which is what recording the payload raw is for.                                                                                                                                                                                                                                                                                                                                                  | ADR-0004 § "Decision"; ADR-0004 § "Decision drivers"                          |
+| B-015 | Replay SHALL be selected through the same mechanism as any live source, and there SHALL be no offline-mode flag, no replay-only selector, and no second selection path.                                                                                                                                                                                                                                                                                                            | README.md § "Demo resilience"; hot-swap-source § "Never add"                  |
+| B-016 | No consumer SHALL be able to observe from the seam that replay rather than a live provider is selected.                                                                                                                                                                                                                                                                                                                                                                            | aircraft-source B-039; hot-swap-source § "Never add"                          |
+| B-017 | Swapping to replay SHALL stop the outgoing live source, so a swapped-out poller stops spending credits and a swapped-out socket stops reading.                                                                                                                                                                                                                                                                                                                                     | aircraft-source B-040; hot-swap-source § "Disposal discipline"                |
+| B-018 | Swapping to or from replay SHALL NOT rebuild the tracker, its collection, its filters, its sorts, its groups or its bindings.                                                                                                                                                                                                                                                                                                                                                      | hot-swap-source § "What must not be rebuilt"                                  |
+| B-019 | A vessel recording SHALL use the same format and the same selection path as an aircraft recording, with one line per received message; messages SHALL NOT be batched into poll-shaped snapshots to make a push feed resemble a polled one.                                                                                                                                                                                                                                         | ADR-0002 § "Decision"; § 4 row 5                                              |
+| B-020 | A recorded vessel fallback SHALL exist before the closing act is presented.                                                                                                                                                                                                                                                                                                                                                                                                        | docs/runbook.md § "Never"                                                     |
+| B-021 | Replay SHALL introduce no vehicle, record or snapshot type of its own; it SHALL reproduce whatever the recorded provider's own Feature defines.                                                                                                                                                                                                                                                                                                                                    | aircraft-source § 5 row 3; § 5 row 2 below                                    |
+| B-022 | Replay SHALL substitute at the provider's own API contract, handing back recorded envelopes, and SHALL introduce no snapshot client, cache, converter or projection of its own; the live path's snapshot client SHALL be the one constructed over it.                                                                                                                                                                                                                              | ADR-0002 § "Decision" item 2; § 11 row 1                                      |
+| B-023 | Vessel replay SHALL substitute at the strategy — an `ITrackerSource` fed by a recording — because a push provider has no contract to stand in for; it SHALL reach the seam the same way every other source does.                                                                                                                                                                                                                                                                   | ADR-0002 § "Consequences"; § 4 row 5                                          |
+| B-024 | The recording each replay source reads SHALL be named in configuration, one key per source, through the same mechanism the interval and the bounding box use; no recording SHALL be compiled in as a default, a source with none named SHALL NOT be registered or selectable, and configuration SHALL NOT determine whether replay is the live source.                                                                                                                             | adr/0001; aircraft-source B-050                                               |
+| B-025 | A named recording SHALL resolve against one overridable `Recording:Root` used by both rehearsal recording and replay. In the MAUI head its default SHALL be `recordings/` beneath the application-data directory, supplied before packaged settings and user secrets so either can override it; a host supplying no platform default SHALL retain `recordings/` relative to the running application. Neither a committed setting nor a recording name SHALL need an absolute path. | adr/0001 item 2; `0061` decision of 2026-10-09                                |
+| B-026 | At application startup, including the MAUI head, every named recording SHALL be reported with its source and resolved path as usable, absent, unreadable, containing no readable recorded line, or shorter than the staleness threshold. An unusable recording SHALL leave its replay source unregistered without preventing application startup; its defect SHALL NOT first be discovered at selection.                                                                           | adr/0001 item 4; `0061`                                                       |
+| B-027 | The component that paces a recording SHALL be handed an opened payload stream rather than a path, and SHALL perform no file resolution of its own.                                                                                                                                                                                                                                                                                                                                 | adr/0001; § 4 row 8                                                           |
+| B-028 | In a composition registering a live provider, the source selected at startup SHALL be a live provider: replay SHALL register after every live strategy, so the first registered strategy is live. No configuration, environment or launch value SHALL choose the starting source. A replay-only composition with no live provider is permitted by B-011.                                                                                                                           | `0081`; `0039` decision of 2026-10-07; B-011                                  |
 
 ## 4. Constraints
 
 <!-- Rules: ../../../.spec/templates/feature.md § 4 -->
 
-| #   | Constraint                                                                                                                                                                      | Source                                             | Impact                                                                                                                                                                                                                                                                                                                 |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | The recording format is fixed repository-wide: NDJSON, one line per payload, payload verbatim beside its arrival instant.                                                       | ADR-0004                                           | Rules out choosing a format here, and rules out a per-feed format. An accepted ADR is immutable, so a different format is a new ADR superseding it — not a claim in this section.                                                                                                                                      |
-| 2   | OpenSky blocks AWS and other hyperscaler IPs, and the venue network is outside our control.                                                                                     | README.md § "Gotchas"; run-the-demo                | Rules out treating replay as a test convenience: it is the stage contingency and a CI prerequisite. Also rules out any replay path that needs the provider reachable to start.                                                                                                                                         |
-| 3   | The observed instant comes from the provider's own envelope, and no consumer reads an ambient clock to supply one.                                                              | aircraft-source B-003                              | Rules out the recorded arrival instant being used as the observed instant. The arrival instant paces playback (B-007) and nothing else — two times on one line, one job each.                                                                                                                                          |
-| 4   | The response envelope and the positional row may be referenced only by the class implementing the API contract and by the snapshot client; the snapshot dies at the projection. | aircraft-source B-045, B-046                       | Satisfied rather than relaxed. Replay substitutes at the contract and brings no client of its own (B-022), so the envelope and the positional row stay referenced by exactly the two components B-045 names. **B-045 is not widened**, and a replay component that parses a recorded payload itself remains ruled out. |
-| 5   | A contract layer exists only where the provider is request/response shaped; a push provider's strategy has none.                                                                | aircraft-source B-049; § 4 row 4 of that spec      | Rules out one uniform substitution point across both feeds. Aircraft replay has a contract it could stand in for; vessel replay has none, so the two halves substitute at different depths — B-022 for aircraft, B-023 for vessels. Both reach the seam, which is the only symmetry a swap target needs.               |
-| 6   | `Vessel`, the vessel client, its cache and its tracker source are unspecified — deferred by the aircraft-source specification.                                                  | aircraft-source § 5 row 3                          | Rules out any claim here about a vessel record's members, keys or units. B-019 and B-021 claim replay behavior over whatever that Feature defines, and no more.                                                                                                                                                        |
-| 7   | A rehearsal recording is operational data — real callsigns, real positions — and credentials are never committed, logged, or placed in a fixture.                               | api-mock § "Never add"; aircraft-source § 4 row 12 | Rules out committing a recording, shipping one as a fixture, and any test that reads one. `recordings/` is git-ignored (ADR-0004); fixtures stay synthetic and committed beside their tests.                                                                                                                           |
-| 8   | No test may touch a network or the wall clock.                                                                                                                                  | api-mock § "Tests"; test-from-scenarios            | Rules out `Thread.Sleep`, a real delay, and a test that replays in real time. Replay's cadence is driven by an injected scheduler, so a test advances time deliberately — in production as well as in tests.                                                                                                           |
-| 9   | There is no Gherkin runner in this repository — no Reqnroll, no bindings, no step definitions.                                                                                  | AGENTS.md; spec-and-traceability                   | Rules out the `.feature` file being the executing artifact, and rules out an `@ignore` tag. A scenario existing never means a claim is covered; the § 9 row pointing at an xUnit test does.                                                                                                                            |
-| 10  | Credits are the budget — a ≤25 sq° box costs 1 credit per poll against 4,000 per day, polled every 15 seconds.                                                                  | README.md § "Limits"; aircraft-source B-050        | Rules out a recorder that polls independently of the live source (B-003), which would double rehearsal spend. Recording is a tap on traffic already paid for.                                                                                                                                                          |
-| 11  | A vehicle past the staleness threshold is marked and kept, never removed, at a configurable five minutes.                                                                       | aircraft-source B-051                              | Fixes the minimum useful recording length (B-005): a recording shorter than the threshold can never show staleness, so it cannot rehearse the part of the talk staleness is in.                                                                                                                                        |
-| 12  | Nothing but the swap decorator is registered as `ITrackerSource`; a strategy registers as `ITrackerSourceStrategy`, which is what the decorator is handed as an enumerable.     | ADR-0011 § "Decision"                              | Rules out registering replay as `ITrackerSource` itself, which hands replay to consumers in place of the selector and makes the swap do nothing. Replay registers as a strategy, in one line, and the selector finds it there. Ordering no longer matters — the record said it did until `0049` ran the library.       |
+| #   | Constraint                                                                                                                                                                      | Source                                                                | Impact                                                                                                                                                                                                                                                                                                                                                                      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | The recording format is fixed repository-wide: NDJSON, one line per payload, payload verbatim beside its arrival instant.                                                       | ADR-0004                                                              | Rules out choosing a format here, and rules out a per-feed format. An accepted ADR is immutable, so a different format is a new ADR superseding it — not a claim in this section.                                                                                                                                                                                           |
+| 2   | OpenSky blocks AWS and other hyperscaler IPs, and the venue network is outside our control.                                                                                     | README.md § "Gotchas"; docs/runbook.md                                | Rules out treating replay as a test convenience: it is the stage contingency and a CI prerequisite. Also rules out any replay path that needs the provider reachable to start.                                                                                                                                                                                              |
+| 3   | The observed instant comes from the provider's own envelope, and no consumer reads an ambient clock to supply one.                                                              | aircraft-source B-003                                                 | Rules out the recorded arrival instant being used as the observed instant. The arrival instant paces playback (B-007) and nothing else — two times on one line, one job each.                                                                                                                                                                                               |
+| 4   | The response envelope and the positional row may be referenced only by the class implementing the API contract and by the snapshot client; the snapshot dies at the projection. | aircraft-source B-045, B-046                                          | Satisfied rather than relaxed. Replay substitutes at the contract and brings no client of its own (B-022), so the envelope and the positional row stay referenced by exactly the two components B-045 names. **B-045 is not widened**, and a replay component that parses a recorded payload itself remains ruled out.                                                      |
+| 5   | A contract layer exists only where the provider is request/response shaped; a push provider's strategy has none.                                                                | aircraft-source B-049; § 4 row 4 of that spec                         | Rules out one uniform substitution point across both feeds. Aircraft replay has a contract it could stand in for; vessel replay has none, so the two halves substitute at different depths — B-022 for aircraft, B-023 for vessels. Both reach the seam, which is the only symmetry a swap target needs.                                                                    |
+| 6   | `Vessel`, the vessel client, its cache and its tracker source are unspecified — deferred by the aircraft-source specification.                                                  | aircraft-source § 5 row 3                                             | Rules out any claim here about a vessel record's members, keys or units. B-019 and B-021 claim replay behavior over whatever that Feature defines, and no more.                                                                                                                                                                                                             |
+| 7   | A rehearsal recording is operational data — real callsigns, real positions — and credentials are never committed, logged, or placed in a fixture.                               | AGENTS.md § "Code Conventions"; § 4 row 7; aircraft-source § 4 row 12 | Rules out committing a recording, shipping one as a fixture, and any test that reads one. `recordings/` is git-ignored (ADR-0004); fixtures stay synthetic and committed beside their tests.                                                                                                                                                                                |
+| 8   | No test may touch a network or the wall clock.                                                                                                                                  | AGENTS.md § "Core Principles"; test-from-scenarios                    | Rules out `Thread.Sleep`, a real delay, and a test that replays in real time. Replay's cadence is driven by an injected scheduler, so a test advances time deliberately — in production as well as in tests.                                                                                                                                                                |
+| 9   | There is no Gherkin runner in this repository — no Reqnroll, no bindings, no step definitions.                                                                                  | AGENTS.md; spec-and-traceability                                      | Rules out the `.feature` file being the executing artifact, and rules out an `@ignore` tag. A scenario existing never means a claim is covered; the § 9 row pointing at an xUnit test does.                                                                                                                                                                                 |
+| 10  | Credits are the budget — a ≤25 sq° box costs 1 credit per poll against 4,000 per day, polled every 15 seconds.                                                                  | README.md § "Limits"; aircraft-source B-050                           | Rules out a recorder that polls independently of the live source (B-003), which would double rehearsal spend. Recording is a tap on traffic already paid for.                                                                                                                                                                                                               |
+| 11  | A vehicle past the staleness threshold is marked and kept, never removed, at a configurable five minutes.                                                                       | aircraft-source B-051                                                 | Fixes the minimum useful recording length (B-005): a recording shorter than the threshold can never show staleness, so it cannot rehearse the part of the talk staleness is in.                                                                                                                                                                                             |
+| 12  | Nothing but the swap decorator is registered as `ITrackerSource`; a strategy registers as `ITrackerSourceStrategy`, which is what the decorator is handed as an enumerable.     | ADR-0011 § "Decision"                                                 | Rules out registering replay as `ITrackerSource` itself, which hands replay to consumers in place of the selector and makes the swap do nothing. Replay registers as a strategy, in one line, and the selector finds it there. Decoration no longer depends on registration order; B-028 still requires live strategies before replay so the first selected source is live. |
 
 ## 5. Out of Scope
 
@@ -116,6 +116,8 @@ against that spec.
 | 11  | The pipeline operators, the grid, and every other UI concern                                   | Downstream of the seam and untouched by a swap (B-018). `maui-ui` and `mvvm` own them; no scenario here names a UI mechanic.                                                                                                                              |
 | 12  | A Gherkin runner, Reqnroll, step definitions, or bindings                                      | § 4 row 9. Scenarios are documentation; a runner would move the coverage gate off § 9, which is where AGENTS.md puts it.                                                                                                                                  |
 | 13  | The `airplanes.live` backup source                                                             | Its access terms are unresolved (README.md § "Backup source"). A second live provider is a different contingency from a recording, and it gets its own contract and strategy if and when the terms clear.                                                 |
+
+| 14 | Replay of provider JSON containing raw line breaks | ADR-0004's NDJSON format requires a newline-free payload. The writer preserves and warns about unsupported multiline input; supporting its replay requires a separate format decision, not minification or silent omission here. |
 
 ## 6. Concern Separation
 
@@ -205,16 +207,13 @@ B-009 and B-010 are separate claims about.
 
 **What this Feature adds**
 
-Six components, none of which exists yet. The home each lands in is the
-implementer's to create, and the Feature's specification and `.issue/` move
-beside its code in the change that builds it (`transporter-conventions`
-§ "Where a specification lives",
-[lesson 0015](../../../.spec/lessons/0015-a-move-that-leaves-its-references-behind-is-half-a-move.md)).
-Two homes are in play — the recording spine serves both feeds, where the
-aircraft substitution is OpenSky's — so the move picks `src/Transporter/Recording`
-and the OpenSky half registers from the integration it substitutes inside.
+The recording spine is in `src/Transporter/Recording`; the aircraft
+substitution registers from the OpenSky integration. The type tables below
+link the built components. The vessel strategy alone awaits its provider
+specification (§ 5 row 2); that conditional design does not hold the aircraft
+startup repair. Relocating this specification is outside `0061`.
 
-| Component                            | Proposed home                                 | Item   | Owns                                                                                                                                                                                                               |
+| Component                            | Home                                          | Item   | Owns                                                                                                                                                                                                               |
 | ------------------------------------ | --------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `RecordingWriter`                    | `src/Transporter/Recording`                   | `0009` | Appends one NDJSON line per observed payload. Knows the format and nothing about who observed it. B-001, B-002.                                                                                                    |
 | The tap                              | `src/Transporter/Integrations/OpenSky/Http`   | `0009` | Hands the writer the response body before anything parses it, on traffic the live client already paid for. B-003, B-004.                                                                                           |
@@ -234,9 +233,8 @@ amount nobody notices on stage.
 **The cadence lives in the pacer, and the replay chain's client is given an
 interval of zero.** `GetStates` on the replay contract completes when the pacer
 says the next payload is due, so the only wait in the loop is the recorded one.
-The zero interval is not a global setting: the replay chain is hand-constructed
-at registration (below), so it is handed its own `OpenSkyOptions` instance and
-the live chain's is untouched.
+The zero interval is not a global setting: keyed registrations give the
+replay chain its own `OpenSkyOptions` instance, leaving the live chain's untouched.
 
 Two consequences are worth stating rather than discovering:
 
@@ -269,8 +267,7 @@ three are registration-time:
   with no seam to tell them apart make every swap throw.
 - **Registration is a method of its own**, taking configuration the way
   `AddOpenSky` does, so an application and a test compose the same graph and
-  differ only in what configuration they supply (B-052's reading, applied here
-  before there is a second chain to get wrong).
+  differ only in what configuration they supply (`aircraft-source` B-052).
 
 **Opening a recording, and looping it**
 
@@ -420,10 +417,9 @@ sequenceDiagram
 
 **Interface changes**
 
-Every file below is new, so the declarations are written out; each becomes a row
-in this table once its file exists (`transporter-conventions` § "Declarations in
-§ 7"). Accessibility follows the repository's rule — a type a consumer never
-names is `internal`, and the registration method is the only public surface.
+The tables link the declarations that exist. Types a consumer never names
+remain `internal`; registration and the focused startup entry point below
+are the public composition surface.
 
 | Type                  | File                                                                                  | Claims it makes visible                                           |
 | --------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -513,11 +509,9 @@ recording and the defect. A recording that fails any of them leaves its source
 unregistered, which is what B-024 already does for a source with no recording
 named: the control is absent rather than offering a wrong recording.
 
-This departs deliberately from
-[`OpenSkyConfigurationValidator`](../../../src/Transporter/Integrations/OpenSky/Configuration/OpenSkyConfigurationValidator.cs),
-which fails the host. An absent credential means nothing works; an unusable
-recording means the fallback is gone while the live demo is fine, and stopping
-the application for it would turn a degraded talk into no talk.
+An unusable recording affects the fallback, so its report must not stop the
+application. Live credential validation remains the live transport's concern;
+this repair neither starts that transport nor changes its validation.
 
 **What `0012` settled in building it**
 
@@ -531,7 +525,8 @@ than a preference.
   open, which is before anything can resolve a logger. What is left for startup
   is saying so, which
   [`ReplayStartupReport`](../../../src/Transporter/Recording/ReplayStartupReport.cs)
-  does as an `IHostedService` holding rows it did not produce. Rejected: an
+  does over rows it did not produce. Its generic-host adapter remains an
+  `IHostedService`; the MAUI call is specified below. Rejected: an
   `IValidateOptions<ReplayOptions>`, which runs after the container is closed
   and could only fail the host — the one thing this report must not do.
 - **The recordings root is a seam, not a path.** A rehearsal recording is
@@ -550,6 +545,76 @@ than a preference.
   act's recording to be cleared by this report, so the row is produced for a
   configured vessel recording even though nothing can consume one until `0013`.
   Its handle is released rather than held open for a run nobody reads it in.
+
+**`0061`: the head supplies the root and invokes the report**
+
+The root decision of 2026-10-09 is retained. `MauiProgram.Settings` supplies
+`Path.Combine(FileSystem.AppDataDirectory, "recordings")` as the lowest-priority
+`Recording:Root` value, before `TransporterConfiguration.Compose` layers the
+packaged settings and optional secrets. `Compose` gains an optional default
+root argument; existing callers that omit it keep their current relative
+root. `RecordingOptions` remains the one option both writer and reader bind.
+Only `src/Gui` names `FileSystem`; no MAUI dependency enters `Transporter`.
+MAUI maps this Apple-platform API to the Library directory
+([platform implementation](https://github.com/dotnet/maui/blob/main/src/Essentials/src/FileSystem/FileSystem.ios.tvos.watchos.macos.cs)).
+An explicit root still wins, including one the sandbox cannot open: the
+startup diagnostic explains that failure instead of changing configuration.
+
+Registration still resolves, opens and measures recordings before the service
+collection closes. Startup reports those same `CheckedRecording` rows and
+performs no second file check. `ReplayStartupReport` gains an internal
+synchronous `Report` operation; its required `IHostedService.StartAsync`
+adapter calls that operation and returns a completed task. The existing
+singleton registration and hosted-service alias remain the same object.
+
+`OpenSkyReplayRegistration` gains the public composition entry point
+`void ReportReplayStartup(this IServiceProvider services)`, which resolves
+that singleton and calls `Report`. After `builder.Build()`, and before
+returning the `MauiApp`, `MauiProgram.CreateMauiApp` calls it on `app.Services`.
+Generic hosts continue to reach the same operation through `IHostedService`.
+Each composition uses its own startup route; a plain `ServiceCollection`
+test calls the explicit route without starting a generic host. The report
+resolves no tracker or actor, selects no source, polls nothing, and only logs
+the rows registration already produced.
+
+The head adds the existing console logging provider in every build
+configuration, before building the app; `AddDebug` alone cannot make startup
+output available to a presenter in Release. `Microsoft.Extensions.Logging.Console`
+is already available through the head's resolved dependencies. The report's
+Information and Warning messages must reach that provider. The runbook gives
+a terminal launch using `open -n --stdout <log-file> --stderr <log-file>
+<app-bundle>` and steps to read the captured report before a talk. The head
+review checks both the explicit invocation and an enabled output sink; a
+resolved logger with no sink does not satisfy B-026. No UI notification,
+second reporter or file-logging service is introduced.
+
+Rejected: starting every `IHostedService` from the head. That changes the
+lifecycle of unrelated services to make one report run and leaves stop
+ownership unclear. Rejected: reporting from a view or view model, which makes
+B-026 depend on navigation and puts startup work downstream of the seam.
+Rejected: a second MAUI-specific reporter, which duplicates the messages the
+presenter must understand. This is a focused composition call, not a new
+startup framework or service interface.
+
+`RecordingDefect.Unreadable` covers a file that cannot be opened or read, or
+whose stream cannot seek. A separate `NoReadableLine` value covers an opened,
+seekable stream with no line `RecordedLine` accepts. The check retains
+`Absent`, `TooShort`, `Unnamed` and `None`; the report names the source and
+resolved path for each named recording, and the measured span for a usable
+or too-short one. An I/O or access failure while scanning or rewinding also
+becomes `Unreadable`, releases the handle and excludes the source. A rejected
+recording holds no stream; a usable aircraft stream is rewound and handed to
+the existing pacer. No payload or credential is logged.
+
+`docs/runbook.md` will give the Mac container's `Data/Library/recordings/`
+location (derived from the head's bundle identifier), the root override, and
+steps to inspect startup output before rehearsal or a talk. It must distinguish
+that input directory from the ignored `.recordings/` export produced by
+`tools/copy-recordings.sh`. That helper currently reads the old
+`Data/Documents/recordings/` workaround; `0061` aligns it with the platform
+default so the root repair does not strand rehearsal exports. Existing files
+are not migrated or selected automatically. The sample writer remains `0079`'s and the source
+picker remains `0039`'s.
 
 **The vessel half**
 
@@ -614,13 +679,13 @@ it. Whether its wording should gain the clause out loud is `aircraft-source`'s
 Against § 7's design, not against the claims alone — the assessment of a shape
 nobody has committed to is worth nothing.
 
-| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Recommendation                                                                                                                                                                                                                                                                                     |
-| ------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DI seams           | Pass          | The substitution point is already an interface, and `adr/0001` item 5 hands the pacer an opened stream rather than a path — so the one component with time-base logic has no I/O to stub and a `MemoryStream` of synthetic lines reaches it whole. The replay chain is hand-constructed at registration, which is itself the seam a composition test uses.                                                                                                | —                                                                                                                                                                                                                                                                                                  |
-| Behavior isolation | **Qualified** | The cadence lives in the pacer, and the loop that calls it lives in `AircraftSnapshotClient`. B-007 is provable at the pacer in one statement, and a pacer that paces correctly proves nothing about an outer loop that adds its own interval on top — which is the failure § 7 rejected an option to avoid.                                                                                                                                              | B-007 takes two tests: one at the pacer for the spacing, one through the client for the zero interval. `test-from-scenarios` § "A claim proven only against an inner method" is the rule; § 9 gives B-007 one row and names both.                                                                  |
-| Coverage potential | **Qualified** | Twenty-two claims are about a value or an observable sequence and are ordinary tests. Five are not: B-005 is about what a captured recording contains, B-006 about what is committed, B-020 about what exists before a talk is given, and B-021 and half of B-022 about what types a component may introduce. This repository's answer to a structural claim is a compiler diagnostic, and the boundary analyzer carries no rule bearing on any of these. | Four are marked **Review** rather than given a test that reads a declaration ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)); B-022's other half is an ordinary composition test, so its row names both. B-005's review cannot be performed yet — see below. |
-| Fixtures           | **Qualified** | Every fixture is synthetic NDJSON: two or three lines as a `static readonly string`, in a `*Cases.cs` beside the tests, parsed the way production parses it. The hazard is specific to this Feature and stated as a claim: **a rehearsal recording is operational data and is never a fixture** (B-006), so the one artefact that would make these tests easy to write is the one thing they may not read.                                                | A torn line is a fixture whose last line is cut mid-token, not a file truncated by a test. Keep the loop cases short — three lines is enough for a boundary.                                                                                                                                       |
-| Determinism        | Pass          | Nothing here reads the wall clock. Spacing comes from recorded instants advanced on `ISchedulerProvider`, and staleness from the observed clock the replayed envelope writes — so a test advances time deliberately and a recording's whole span passes in microseconds. No test reaches a network, and B-011's own scenario is that none can.                                                                                                            | —                                                                                                                                                                                                                                                                                                  |
+| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Recommendation                                                                                                                                                                                                                                                                                     |
+| ------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DI seams           | Pass          | The substitution point is already an interface, and `adr/0001` item 5 hands the pacer an opened stream rather than a path — so the one component with time-base logic has no I/O to stub and a `MemoryStream` of synthetic lines reaches it whole. The replay chain is composed through keyed registrations, which is itself the seam a composition test uses.                                                                                                           | —                                                                                                                                                                                                                                                                                                  |
+| Behavior isolation | **Qualified** | The cadence lives in the pacer, and the loop that calls it lives in `AircraftSnapshotClient`. B-007 is provable at the pacer in one statement, and a pacer that paces correctly proves nothing about an outer loop that adds its own interval on top — which is the failure § 7 rejected an option to avoid.                                                                                                                                                             | B-007 takes two tests: one at the pacer for the spacing, one through the client for the zero interval. `test-from-scenarios` § "A claim proven only against an inner method" is the rule; § 9 gives B-007 one row and names both.                                                                  |
+| Coverage potential | **Qualified** | Most claims are about a value or an observable sequence and take ordinary tests. Five include a review obligation: B-005 is about what a captured recording contains, B-006 about what is committed, B-020 about what exists before a talk is given, and B-021 and half of B-022 about what types a component may introduce. This repository's answer to a structural claim is a compiler diagnostic, and the boundary analyzer carries no rule bearing on any of these. | Four are marked **Review** rather than given a test that reads a declaration ([lesson 0006](../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)); B-022's other half is an ordinary composition test, so its row names both. B-005's review cannot be performed yet — see below. |
+| Fixtures           | **Qualified** | Every fixture is synthetic NDJSON: two or three lines as a `static readonly string`, in a `*Cases.cs` beside the tests, parsed the way production parses it. The hazard is specific to this Feature and stated as a claim: **a rehearsal recording is operational data and is never a fixture** (B-006), so the one artefact that would make these tests easy to write is the one thing they may not read.                                                               | A torn line is a fixture whose last line is cut mid-token, not a file truncated by a test. Keep the loop cases short — three lines is enough for a boundary.                                                                                                                                       |
+| Determinism        | Pass          | Nothing here reads the wall clock. Spacing comes from recorded instants advanced on `ISchedulerProvider`, and staleness from the observed clock the replayed envelope writes — so a test advances time deliberately and a recording's whole span passes in microseconds. No test reaches a network, and B-011's own scenario is that none can.                                                                                                                           | —                                                                                                                                                                                                                                                                                                  |
 
 **Two mechanisms, and which proves what**
 
@@ -687,13 +752,14 @@ it.
 
 **Scenarios**
 
-Twenty-eight scenarios in [`replay-source.feature`](replay-source.feature)
-beside this file, one per claim, each tagged with the `@B-00n` it proves.
-Scenarios are documentation; the xUnit tests are what execute, and none is
-written yet.
+Scenarios in [`replay-source.feature`](replay-source.feature) beside this file
+carry the `@B-00n` they prove. B-025 and B-026 have additional failure and
+composition cases; multiple scenarios may exercise one claim.
+Scenarios are documentation; xUnit tests execute. Existing evidence is in § 9;
+the B-025 and B-026 amendments and B-028 still await their implementation tests.
 
 - Happy path → B-001, B-003, B-004, B-007, B-009, B-011, B-013 – B-016, B-018,
-  B-019, B-022, B-023, B-025, B-027
+  B-019, B-022, B-023, B-025, B-027, B-028
 - Failure mode → B-008, B-010, B-012, B-017, B-026
 - Validation failure → B-005, B-006, B-020, B-021, B-024
 - Data-driven → B-002
@@ -704,7 +770,27 @@ payloads — empty, sparse, and ordinary. Four of the five validation-failure ro
 assert an absence rather than a behaviour, and they are exactly the four the next
 section marks Review; B-024 is the odd one, a registration a host test observes.
 
-**What the tests need before any of them can be written**
+**Startup repair: testable core and head review**
+
+B-025 is held by configuration-composition tests using an invented application-
+data root, with no configured root, then with a different packaged override and
+a different secret-store override. A check that varies only a path combine
+cannot prove configuration precedence. Existing relative-root resolution stays
+covered. B-026 is held through the public startup entry point over a plain
+service provider as well as the generic-host adapter, with recordings supplied
+through `IRecordingLibrary`. These exercise the same checked rows and messages;
+no test starts MAUI or reaches a provider. Synthetic opened streams distinguish
+an I/O failure from no readable line and a too-short recording; unusable sources
+remain absent and their handles are released.
+
+Two head-only expressions require review under ADR-0016: that `Settings` supplies
+the platform directory beneath packaged settings and secrets, and that
+`CreateMauiApp` invokes the focused report after build and before returning.
+The implementation records those reviews and the runbook check in § 9, with
+what was inspected and what change re-does each. Passing a generic-host test
+alone cannot mark B-026 `Verified`.
+
+**Test infrastructure**
 
 Nothing central. The stack `transporter-conventions` mandates is already
 referenced, `Akka.TestKit.Xunit2` arrived with `0006`, and `test/UnitTests`
@@ -754,8 +840,10 @@ specifically or would have:
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and six of the twenty-eight rows read `Missing`.**
-Twenty-two are `Verified`. Five arrived with `0009`, which built the recorder:
+**This is the gate: eight of the twenty-eight rows read `Missing`; twenty are
+`Verified`.** B-025 and B-026 reopen for `0061`: their existing tests prove
+relative resolution and generic-host reporting, not the head's root or startup
+route. The historical evidence below remains valid for those narrower cases. Five arrived with `0009`, which built the recorder:
 B-001 – B-004 against `RecordingWriterTests` and `RecordingTapTests`, and
 B-006 as a review a reader can now perform. Three arrived with `0010`, which
 built the pacer: B-008, B-012 and B-027 against `RecordingPacerTests`. Six
@@ -770,8 +858,9 @@ B-016 – B-018 against `ReplaySwapTests`, B-024 and B-025 against
 the row `0010` held and could not move — against a host composed of the replay
 half alone.
 
-What is left is the vessel half, which waits on a specification rather than on
-work, and B-005, which waits on a recording nobody has captured. Those rows name
+What remains is the vessel half, which waits on a specification; B-005, which
+waits on a stage recording; the `0061` startup repair; and `0081`'s initial
+source composition test. Those rows name
 what will prove each claim rather than leaving the section empty, which is the
 difference between a gate that says what is owed and one that says only that
 something is.
@@ -788,12 +877,11 @@ recording exists. **Waiting** marks a row whose subject belongs to a Feature tha
 has no specification yet — B-019 and B-023, the vessel half.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
-retitled scenario does not silently orphan a row. Every claim carries exactly one
-scenario here, so no tag anchors two.
+retitled scenario does not silently orphan a row. Each claim has one matrix row; its tag may anchor several scenarios.
 
 | Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Status   |
 | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| B-001    | `@B-001` | `RecordingWriterTests.GivenAPayloadAndTheInstantItArrived_WhenTheLineIsWritten_ThenItHoldsBothInTheFormatADR0004Fixes`, with `GivenAnArrivalInstantOffFromUtc_...ThenTheInstantIsWrittenAsUtc` and `GivenThreePayloads_WhenEachIsRecorded_ThenThereIsOneLinePerPayload` — `0009`                                                                                                                                                                                                                                                                                                                                  | Verified |
+| B-001    | `@B-001` | `RecordingWriterTests.GivenAPayloadAndTheInstantItArrived_WhenTheLineIsWritten_ThenItHoldsBothInTheFormatADR0004Fixes`, with `GivenAnArrivalInstantOffFromUtc_...ThenTheInstantIsWrittenAsUtc` and `GivenThreePayloads_WhenEachIsRecorded_ThenThereIsOneLinePerPayload` and `GivenAPayloadCarryingALineBreak_WhenItIsRecorded_ThenItIsWrittenAndTheBrokenShapeIsLogged` for the unsupported-input warning — `0009`                                                                                                                                                                                                | Verified |
 | B-002    | `@B-002` | `RecordingWriterTests.GivenAPayloadTheProviderSent_WhenItIsRecorded_ThenTheLineHoldsThoseBytesUnchanged`, over `RecordingWriterCases` — `0009`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Verified |
 | B-003    | `@B-003` | `RecordingTapTests.GivenRecordingIsOn_WhenOnePollCompletes_ThenOnlyThePollsOwnRequestWasMade`, asserting the calls Flurl's `HttpTest` saw rather than counting in the tap — `0009`                                                                                                                                                                                                                                                                                                                                                                                                                                | Verified |
 | B-004    | `@B-004` | `RecordingTapTests.GivenOnePayloadPolledWithRecordingOnAndOff_WhenEachEnvelopeIsRead_ThenTheyAreIdenticalAndSoAreTheRequests`, with `RecordingWriterTests.GivenADestinationThatThrows_...ThenTheTaskCompletesAndTheFailureIsLogged` for the failing-write half — `0009`                                                                                                                                                                                                                                                                                                                                           | Verified |
@@ -817,10 +905,10 @@ scenario here, so no tag anchors two.
 | B-022    | `@B-022` | Both halves: `ReplayCompositionTests.GivenTheReplayChainIsRegistered_WhenItIsResolved_ThenTheClientIsTheLiveClassOverTheReplayContract`, with `GivenBothChainsAreRegistered_WhenEachIsResolved_ThenTheReplayChainHasItsOwnCacheAndAnIntervalOfZero` for the second instance; and a **Review**, performed on `0011`: `Integrations/OpenSky/Replay/` declares one type, `ReplayOpenSkyApi`, and the chain's only other additions are a seam interface and a strategy that delegates `Connect` — no client, cache, converter or projection in either. Re-done by any type added under the replay namespaces — `0011` | Verified |
 | B-023    | `@B-023` | **Waiting** on the vessel feed's specification (§ 5 row 2). The test it will take is `VesselReplayTrackerSourceTests.GivenARecordingAndNoContractToStandInFor_WhenTheStrategyIsRegistered_ThenItReachesTheSeamLikeEveryOtherSource` — `0013`                                                                                                                                                                                                                                                                                                                                                                      | Missing  |
 | B-024    | `@B-024` | `ReplayRegistrationTests.GivenAnAircraftRecordingNamedAndNoVesselOne_WhenTheHostStarts_ThenOnlyTheAircraftReplaySourceIsSelectableAndTheLiveSourceIsStillSelected` — two strategies, one of them replay, and the vessel key reported as unnamed rather than registered — `0012`                                                                                                                                                                                                                                                                                                                                   | Verified |
-| B-025    | `@B-025` | `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` — asserted against `RecordingLibrary`, the one type here that touches a file system, over a root holding nothing — `0012`                                                                                                                                                                                                                                                                                                                                | Verified |
-| B-026    | `@B-026` | `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` — the host starts, two warnings name the two recordings, and no strategy is registered for either — `0012`                                                                                                                                                                                                                                                                                                                                              | Verified |
+| B-025    | `@B-025` | Existing `ReplayRegistrationTests.GivenAConfiguredRootAndARecordingName_WhenTheRecordingIsOpened_ThenItResolvesUnderThatRootAndNeitherValueCarriedAnAbsolutePath` proves relative resolution. `0061` owes configuration precedence tests and a review of the head supplying `FileSystem.AppDataDirectory`; repeat the review when the head's settings composition changes.                                                                                                                                                                                                                                        | Missing  |
+| B-026    | `@B-026` | Existing `ReplayStartupReportTests.GivenOneRecordingSpanningNinetySecondsAndOneThatDoesNotExist_WhenTheHostStarts_ThenBothAreReportedAndNeitherSourceIsRegistered` proves generic-host reporting only. `0061` owes the plain-provider startup test, distinct unreadable/no-readable-line diagnostics, rejected-stream disposal, and reviews of the head's report call, console sink in all build configurations, runbook launch/capture instructions, and export helper root; repeat when startup wiring or recording diagnostics change.                                                                         | Missing  |
 | B-027    | `@B-027` | `RecordingPacerTests.GivenSyntheticLinesInAMemoryStream_WhenThePacerIsDriven_ThenItReplaysThemWithNoFileSystemAndReadsNoConfiguration` — proven by a test that has no file system rather than by reading the constructor — `0010`, with `GivenAStreamThatCannotSeek_WhenThePacerIsConstructed_ThenItSaysSoRatherThanFailingAtTheLoopBoundary` for the precondition the handover carries                                                                                                                                                                                                                           | Verified |
-| B-028    | `@B-028` | [`0081`](../.issue/0081-startup-source-is-live.yml) — no test yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| B-028    | `@B-028` | [`0081`](../.issue/0081-startup-source-is-live.yml) — composition test of the application's own registration order; no test yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Missing  |
 
 **What the matrix says about the items.** Every claim has a row and a named
 mechanism, so no item is waiting on this section. Three rows are blocked on
@@ -911,11 +999,29 @@ that they were unwritten rather than carrying a template row until the design
 and coverage passes wrote them. All four are written now; a `Missing` row in
 § 9 is the only place this Feature's build state is recorded.
 
+**Spec delta prepared 2026-10-14, `0061`.** B-025 now names the head's
+application-data default and configuration precedence; B-026 covers the MAUI
+startup path and separates an unreadable file from an opened one with no readable
+recorded line. Existing evidence for both rows is retained, with their status
+reopened to `Missing`. The implementation must add the Feature-scoped lesson
+recording the sandbox and unstarted-hosted-service symptoms and the tests that
+prove this delta. No runtime fix is claimed here.
+
+**Agreement corrections, 2026-10-14, independent review of `0061` preparation.**
+B-001 and proposed root ADR-0004 now make the existing newline-free input
+boundary explicit; the writer's existing multiline warning test proves the
+unsupported case. The 2026-10-06 delta above is resolved as a format
+precondition, not a new encoding or a changed writer. B-028 is qualified to
+compositions with a live provider, as its scenario already was; B-011's
+credential-free replay-only composition remains valid. B-026's startup design
+also names an enabled console sink in every head build configuration and a
+runbook capture route. These corrections change no runtime code.
+
 ## 11. Open Questions
 
 <!-- Rules: ../../../.spec/templates/feature.md § 11 -->
 
-None. All four questions this specification opened have been answered and are
+None. The four original questions and the startup repair below are answered and are
 recorded below rather than deleted — an answered question is a record of what
 was asked. A question arriving later is added here as a row — `#`, Question,
 Owner, Target date — rather than settled in conversation.
@@ -966,8 +1072,8 @@ replay source names the recording, through the same configuration mechanism the
 interval and the bounding box use, with **no default compiled in** — a source
 with no recording named is not registered and so is not selectable, which is a
 visible absence rather than a wrong recording. Paths resolve against one
-configured recordings root, defaulting to `recordings/` beside the running
-application. Configuration never decides _whether_ replay is live; the selector
+configured recordings root; B-025 now specifies the MAUI platform default
+without changing a plain host's relative default. Configuration never decides _whether_ replay is live; the selector
 does (B-015), and a recording named but never selected is normal. B-024 – B-027
 carry it.
 
@@ -1011,20 +1117,45 @@ it never contemplated. The claim is not amended here — it is another Feature's
 delivered, with a § 9 row and a test behind it — so whether its wording should
 say so out loud is `aircraft-source`'s `spec-author`'s call.
 
+**Row 5 — resolved in `0061` preparation, 2026-10-14: the MAUI head supplies
+the platform root and invokes the existing report explicitly.** The root keeps
+the person's 2026-10-09 decision: application data by default, with packaged
+settings and secrets able to override it. MAUI does not start the report's
+generic-host adapter, so § 7 gives the head a focused composition call to the
+same reporter after build. It starts no unrelated hosted service and requires
+no UI or second reporter. The unreadable-file diagnosis is separated from an
+opened file with no readable recorded line. B-025 and B-026 and their scenarios
+carry the obligations; `adr/0001` remains proposed and is updated with the
+options and costs. Independent sign-off remains § 12's.
+
 ## 12. Sign-off
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
+
+**Independent review, 2026-10-14.** A second reader, who authored none of
+§§ 1-9, reviewed the complete replay agreement, scenarios, replay items,
+Feature ADR-0001 and the applicable root architecture records. No blocking
+specification findings remain. B-025 specifies the shared platform default
+and override precedence. B-026 specifies the focused startup route, an enabled
+console sink in every head build, separate recording defects and stream
+release. The newline-free format boundary and replay-only composition
+exception resolve the two wider agreement inconsistencies found in review.
+
+The matrix has twenty-eight unique claim rows, each anchored to scenarios.
+Its eight `Missing` rows remain unchanged: this approval settles the agreement
+and makes `0061` ready for implementation, not ready to ship. `0061` still owes
+its tests, head wiring and output reviews, runbook/export checks and bug lesson.
+Vessel replay remains conditional on its provider specification; `0013` stays
+blocked, and approval supplies neither that provider nor a stage recording.
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../.spec/templates/feature.md).
-
-**B-028 added 2026-10-09**, while every row above was 🟡, so nothing is lowered.
 
 ## Decisions
 
@@ -1052,18 +1183,21 @@ this specification rather than a call made and reversed inside it.
 
 <!-- Rules: ../../../.spec/templates/feature.md § Tasks -->
 
-| Item                                                  | Claims                                          |
-| ----------------------------------------------------- | ----------------------------------------------- |
-| [`0008`](../.issue/0008-replay-source.yml)            | all 28 — the parent; its children hold the work |
-| [`0009`](../.issue/0009-recording-tap.yml)            | B-001 – B-006                                   |
-| [`0010`](../.issue/0010-playback-pacer.yml)           | B-007, B-008, B-011, B-012, B-014, B-027        |
-| [`0011`](../.issue/0011-aircraft-replay-contract.yml) | B-009, B-010, B-013, B-022                      |
-| [`0012`](../.issue/0012-replay-selection.yml)         | B-015 – B-018, B-024 – B-026                    |
-| [`0013`](../.issue/0013-vessel-replay-strategy.yml)   | B-019 – B-021, B-023                            |
-| [`0081`](../.issue/0081-startup-source-is-live.yml)   | B-028                                           |
+| Item                                                                           | Claims                                          |
+| ------------------------------------------------------------------------------ | ----------------------------------------------- |
+| [`0008`](../.issue/0008-replay-source.yml)                                     | all 28 — the parent; its children hold the work |
+| [`0009`](../.issue/0009-recording-tap.yml)                                     | B-001 – B-006                                   |
+| [`0010`](../.issue/0010-playback-pacer.yml)                                    | B-007, B-008, B-011, B-012, B-014, B-027        |
+| [`0011`](../.issue/0011-aircraft-replay-contract.yml)                          | B-009, B-010, B-013, B-022                      |
+| [`0012`](../.issue/0012-replay-selection.yml)                                  | B-015 – B-018, B-024 – B-026                    |
+| [`0013`](../.issue/0013-vessel-replay-strategy.yml)                            | B-019 – B-021, B-023                            |
+| [`0061`](../.issue/0061-recordings-root-unreachable-in-the-sandboxed-head.yml) | B-025, B-026 — platform startup repair          |
+| [`0081`](../.issue/0081-startup-source-is-live.yml)                            | B-028                                           |
 
-Every claim is carried by exactly one child, and `0008` carries all of them
-because the children are slices of it rather than work beside it. The cut
+The original delivery cut assigns each claim to one child, and `0008` carries
+all of them because the children are slices of it. `0061` reopens B-025 and
+B-026 after `0012` exposed the platform startup gap; its evidence replaces
+those rows' narrower coverage rather than adding duplicate matrix rows. The cut
 follows the component boundaries § 3 is grouped by, with one departure:
 playback splits from the substitution point, so `0010` holds the claims about
 reading a recording and pacing it — true wherever replay stands in — while

@@ -16,7 +16,7 @@ Feature: Replay source — recording, playback, and selection
 
   @B-001
   Scenario: A recorded line holds the payload verbatim beside the instant it arrived
-    Given a live aircraft source that has just received a payload reporting a time of 14:32:10
+    Given a live aircraft source that has just received a newline-free JSON payload reporting a time of 14:32:10
       And that payload arrived at 14:32:11.113
      When the payload is recorded
      Then the recording gains exactly one line
@@ -143,7 +143,7 @@ Feature: Replay source — recording, playback, and selection
     Given a recording of vessel messages
       And the vessel provider is a socket with no contract layer
      When vessel replay is built
-     Then it is an `ITrackerSource` fed by the recording
+     Then it is an `ITrackerSourceStrategy` fed by the recording
       And it reaches the seam the same way the live vessel source does
       And no contract is invented for the socket so that replay can substitute below it
 
@@ -161,7 +161,7 @@ Feature: Replay source — recording, playback, and selection
     Given replay is the selected source
      When a consumer observes the seam
      Then it cannot determine which source produced any change
-      And it cannot determine that a swap occurred at all
+      And no replay marker or source identity is added to the seam
 
   @B-017
   Scenario: Swapping to replay stops the outgoing live source
@@ -246,3 +246,54 @@ Feature: Replay source — recording, playback, and selection
      Then the live source is the one selected
       And the recorded source is registered after it, reachable only by a swap
       And no configuration, environment or launch value changes which is selected
+
+  @B-025
+  Scenario: The sandboxed head uses its application-data directory when no root is configured
+    Given the sandboxed head has an application-data directory
+      And no recordings root is supplied by packaged settings or user secrets
+     When rehearsal records a payload and replay resolves its recording name
+     Then both use the recordings directory beneath that application-data directory
+      And no absolute machine path was needed in committed configuration
+
+  @B-025
+  Scenario: An explicit root overrides the platform default
+    Given a platform default recordings root
+      And packaged settings name a different recordings root
+     When application configuration is composed
+     Then recording and replay both use the packaged root
+      And a root in user secrets overrides that packaged root when supplied
+
+  @B-026
+  Scenario: The head reports recording defects without starting a generic host
+    Given a staleness threshold of five minutes
+      And named recordings that are absent, cannot be opened, contain no readable recorded line, or span ninety seconds
+      And the application is built without starting generic hosted services
+     When the head invokes its startup report before returning the built application
+     Then every named recording is reported with its source, resolved path and distinct defect
+      And no unusable replay source is registered
+      And the application still starts
+      And no provider request or source selection was needed to produce the report
+
+  @B-026
+  Scenario: A recording that fails while being inspected is reported and released
+    Given a named recording whose opened stream fails with an I/O error during inspection
+     When the application starts
+     Then the recording is reported as unreadable
+      And its stream is released
+      And its replay source is not registered
+      And the application still starts
+
+  @B-026
+  Scenario: A usable recording is reported without being selected
+    Given a named recording spanning at least the staleness threshold
+     When the application starts
+     Then the report names its source, resolved path and measured span as usable
+      And the report does not select that recording or start its source
+
+  @B-001
+  Scenario: A multiline payload is preserved with an unsupported-format warning
+    Given a provider payload containing a raw line break
+     When the payload is recorded
+     Then the payload is preserved verbatim
+      And a warning says the one-line recording format is broken
+      And replay of that payload is outside the supported recording format
