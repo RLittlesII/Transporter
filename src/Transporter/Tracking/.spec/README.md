@@ -1482,14 +1482,20 @@ because a stage that holds the old key's values after a regroup passes a count
 and fails the removes. The cases are the `@B-030` scenarios.
 
 Each published choice is also run against vehicles, because B-030 as amended
-binds what admits a value and not only the value. Two cases hold it. First,
-each of the three country choices admits exactly the aircraft registered in
-its country and rejects the fourth, which fails a predicate that compares
-case-insensitively or reads the vehicle's filtered position. Second, a choice
-captured before a regroup is gone from the changesets after it, and is still
-run against a vehicle: it admits by country, the key that produced it, and not
-by staleness. That fails a predicate reading `_groupBy`'s current value
-instead of the stage's own grouping, which a value-only assertion passes. The
+binds what admits a value and not only the value. The four aircraft are two
+from Germany, one from France and one from Brazil, and no callsign is a
+country's name. Two cases hold it. First, each of the three country choices is
+run against all four aircraft. Germany admits both German aircraft and
+rejects the other two; France and Brazil each admit their one and reject the
+other three. That fails a predicate that admits everything, one that reads a
+member other than the grouping key, and one that closes over another choice's
+value, each of which a value-only assertion passes. Second, the fleet is
+regrouped with the callsign grouping `FleetGroupTests` already declares, and
+the Germany choice captured before it is gone from the changesets after it.
+That captured choice is still run against the aircraft: it admits the two
+German aircraft and rejects the rest, by country, the key that produced it.
+That fails a predicate reading `_groupBy`'s current value instead of the
+stage's own grouping, because no callsign equals "Germany". The
 test class is `FleetGroupingValuesTests`, first test
 `GivenFourAircraftInThreeCountries_WhenTheGroupingValuesAreRead_ThenEachChoiceAdmitsExactlyItsCountry`.
 
@@ -1763,7 +1769,7 @@ the draft it replaced.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 1-5   | spec-author | 🟡 Draft    |
 | §§ 6-7   | implementer | 🟢 Approved |
 | §§ 8-9   | test-writer | 🟡 Draft    |
 
@@ -2229,6 +2235,24 @@ re-read. `spec_status` stays `in-review`. §§ 8-9 already cover `0063`
 since the agreement of 2026-10-09, and neither depends on B-030. What they lack
 is `0056`'s two corrections. Finding 1 is answered beside finding 2, because
 § 8's second case follows the scenario.
+
+**Answered 2026-10-14, by the owning roles.**
+
+1. `spec-author`: the `@B-030` scenario "A new grouping key replaces the
+   values" now regroups by callsign, a key the vehicle answers, and its values
+   are the callsign values. B-030 itself is unchanged. The scenario changed, so
+   §§ 1-5 are lowered to 🟡 until the person agrees.
+   `fleet-dashboard`'s `@B-039` wording is left to that Feature, as the finding
+   said.
+2. `test-writer`: § 8's choice cases for `0056` name their arrangement. It has
+   two German aircraft, one French and one Brazilian, and no callsign is a
+   country's name. Each case says which wrong predicate it fails: one admitting
+   everything, one reading another member, one closing over another value, and
+   one reading `_groupBy`'s current value. The case-insensitive claim and
+   "filtered position" are dropped. The regroup case names the callsign grouping
+   `FleetGroupTests` declares. § 9's B-030 row is unchanged and stays `Missing`.
+
+The `spec-reviewer` re-reads §§ 1-5 and 8-9 next.
 
 ## Decisions
 

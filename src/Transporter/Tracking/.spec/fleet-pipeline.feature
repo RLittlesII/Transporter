@@ -144,9 +144,9 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   @B-030
   Scenario: A new grouping key replaces the values
     Given the distinct values of the grouping by country are observed
-     When the fleet is grouped by staleness instead
-     Then the country values are replaced by the staleness values
-      And a consumer subscribing now reads the staleness values at once
+     When the fleet is grouped by callsign instead
+     Then the country values are replaced by the callsign values
+      And a consumer subscribing now reads the callsign values at once
 
   # ────────────────────────────── Failure mode ──────────────────────────────
 
