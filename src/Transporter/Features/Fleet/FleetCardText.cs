@@ -5,8 +5,8 @@ using LanguageExt;
 namespace Transporter.Features.Fleet;
 
 /// <summary>
-/// The two values a card shows that the description does not: a distance, and how long ago the
-/// vehicle was last heard from (B-030, B-031).
+/// The two values a card shows that the description does not — a distance, and how long ago the
+/// vehicle was last heard from — and how long until the next poll (B-030, B-031, B-036).
 /// </summary>
 /// <remarks>
 /// Display formatting under B-019 and nothing more: the metres arrive on the element from the
@@ -53,6 +53,21 @@ public static class FleetCardText
             : elapsed.TotalMinutes >= 1
                 ? string.Create(CultureInfo.InvariantCulture, $"{elapsed.Minutes}m {elapsed.Seconds:00}s")
                 : string.Create(CultureInfo.InvariantCulture, $"{elapsed.Seconds}s");
+    }
+
+    /// <summary>How long after the observed instant the next poll is due, which the countdown animates over (B-036).</summary>
+    /// <param name="nextDue">When the source said its next poll is due.</param>
+    /// <param name="observed">The instant the provider last reported, never the wall clock.</param>
+    /// <returns>The gap, or zero when the poll is already due or no poll has landed yet.</returns>
+    /// <remarks>Measured from the observed instant for the reason <see cref="Age"/> is (B-031).</remarks>
+    public static TimeSpan DueIn(DateTimeOffset nextDue, DateTimeOffset observed)
+    {
+        if (observed == DateTimeOffset.MinValue || nextDue <= observed)
+        {
+            return TimeSpan.Zero;
+        }
+
+        return nextDue - observed;
     }
 
     private const double MetresPerKilometre = 1000;

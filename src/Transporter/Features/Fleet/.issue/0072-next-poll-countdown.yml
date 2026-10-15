@@ -2,7 +2,7 @@ id: "0072"
 type: task
 title: Show when the next poll is due, and when the provider is refusing
 
-status: ready-for-architecture
+status: in-review
 
 priority: medium
 value: 3
@@ -23,7 +23,7 @@ claims:
   - B-036
 
 created: "2026-10-08"
-updated: "2026-10-08"
+updated: "2026-10-15"
 closed: null
 
 summary: |
@@ -47,7 +47,11 @@ acceptance_criteria:
   - "B-036 — next poll and throttling shown from the tracker's status, counted down by a view animation, absent for a push source."
   - "§ 9 Traceability Matrix carries a row naming a test or a performed review for B-036."
 
-decisions: []
+decisions:
+  - "2026-10-15 — `FleetCardText.DueIn` returns a `TimeSpan`, zero when no instant is observed or the due instant has passed; the view formats it, so the arithmetic stays in the one static B-031 permits."
+  - "2026-10-15 — `FleetPollViewModel` exposes `NextDue` and `RefusedFor` as nullable values through `ToNullable()`, since a binding cannot read an `Option` (`language-ext-usage` § \"Where it stops\")."
+  - "2026-10-15 — The throttled interval is a caption beside the badge, not the badge's text: `StatusBadge` reads its text from its kind. § 7 amended."
+  - "2026-10-15 — The countdown sits in the summary strip after the three counts. Until `aircraft-source` `0068` lands OpenSky reports `PollStatus.None`, so the strip shows neither the countdown nor the badge, and the owed animation review waits on `0068`."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
