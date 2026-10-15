@@ -2,7 +2,7 @@ id: "0056"
 type: task
 title: Publish the distinct values the current grouping key takes
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: medium
 value: 3

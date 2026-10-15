@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Fleet pipeline
@@ -1486,8 +1486,8 @@ aircraft would pass a stage that drops a value on any removal.
 
 Each published choice is also run against vehicles, because B-030 as amended
 binds what admits a value and not only the value. The four aircraft are two
-from Germany, one from France and one from Brazil, and no callsign is a
-country's name. Three cases hold it. First, each of the three country choices is
+from Germany, one from France and one from Brazil. They carry four distinct
+callsigns, and no callsign is a country's name. Three cases hold it. First, each of the three country choices is
 run against all four aircraft. Germany admits both German aircraft and
 rejects the other two; France and Brazil each admit their one and reject the
 other three. That fails a predicate that admits everything, one that reads a
@@ -1778,9 +1778,9 @@ the draft it replaced.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 1-5   | spec-author | 🟢 Approved |
 | §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟡 Draft    |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2296,6 +2296,24 @@ row was lowered for the person. §§ 6-7 stay 🟢. §§ 8-9 stay 🟡 on findin
 4. `0056`'s acceptance criterion now names the predicate each value carries.
 
 The independent `spec-reviewer` re-reads §§ 8-9 next.
+
+**Re-read 2026-10-14, the third — the same independent `spec-reviewer`.**
+All four findings are answered. The callsign case fails a predicate fixed to
+the default key, which both country cases pass. The one-at-a-time removal
+fails a stage that drops a value on any removal. The scenario's count agrees
+with its fleet, and `0056`'s criterion matches B-030 as amended.
+Mechanically clean: forty-three claims, forty-three § 9 rows, seventy-five
+scenarios. One finding was not blocking: the third case needs the two German
+aircraft to carry different callsigns, which the arrangement did not say. §
+8 now says "four distinct callsigns", in the reviewer's words, and changes
+nothing else. **§§ 8-9 are 🟢.** §§ 1-5 were recommended 🟢 for the person to
+agree. `0056`, `0063` and `0066` are covered in full by §§ 1-9.
+
+**Agreed 2026-10-14 by the person: §§ 1-5.** All three rows are 🟢 and
+`spec_status` is `approved`. § 9 still has six `Missing` rows: B-030, B-034,
+B-035 and B-037 – B-039. They block those items reaching `done`, not this
+agreement (lesson 0007). `0056`, `0063` and `0066` move to
+`ready-for-implementation`.
 
 ## Decisions
 

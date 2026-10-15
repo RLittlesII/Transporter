@@ -2,7 +2,7 @@ id: "0066"
 type: task
 title: Keep a window of the twenty most recent notices on the tracker
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: medium
 value: 2
@@ -23,7 +23,7 @@ claims:
   - B-039
 
 created: "2026-10-08"
-updated: "2026-10-08"
+updated: "2026-10-14"
 closed: null
 
 summary: |
