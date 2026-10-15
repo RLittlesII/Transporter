@@ -119,7 +119,21 @@ public sealed class FleetViewModel : RxObject, IDisposable
             .Subscribe(_ => Filter())
             .DisposeWith(_garbage);
         this.WhenChanged(static model => model.SelectedGrouping)
-            .Subscribe(grouping => grouping.IfSome(tracker.GroupBy))
+            .Where(static grouping => grouping is not null)
+            .Subscribe(grouping => tracker.GroupBy(grouping!))
+            .DisposeWith(_garbage);
+        this.WhenChanged(static model => model.SortColumn)
+            .Where(static column => column is not null)
+            .Subscribe(column => ChooseColumn(column!))
+            .DisposeWith(_garbage);
+        ReverseCommand = RxCommand
+            .Create(
+                () => { SortedColumn.IfSome(sorted => ChooseColumn(sorted.Column)); },
+                this.WhenChanged(static model => model.SortedColumn).Select(static sorted => sorted.IsSome),
+                schedulers.UserInterfaceThread)
+            .DisposeWith(_garbage);
+        ClearFilterCommand = RxCommand
+            .Create(() => { SelectedFilter = null; }, outputScheduler: schedulers.UserInterfaceThread)
             .DisposeWith(_garbage);
         Detail = new FleetDetailViewModel(
                 this.WhenChanged(static model => model.Selected).Select(Prelude.Optional),
@@ -220,15 +234,25 @@ public sealed class FleetViewModel : RxObject, IDisposable
         set => RaiseAndSetIfChanged(ref field, value);
     }
 
-    /// <summary>Gets or sets the control's choice, absent when the user has cleared it (B-011).</summary>
-    /// <remarks>Absent is a value rather than a null, so clearing the choice is a state the predicate reads rather than a case it guards.</remarks>
-    public Option<FleetFilterChoice> SelectedFilter { get; set => RaiseAndSetIfChanged(ref field, value); }
+    /// <summary>Gets or sets the filter picker's choice, null when the user has cleared it (B-011).</summary>
+    /// <remarks>A binding target, so a plain reference (`language-ext-usage` § "Where it stops"); the predicate reads it as an <c>Option</c>.</remarks>
+    public FleetFilterChoice? SelectedFilter { get; set => RaiseAndSetIfChanged(ref field, value); }
+
+    /// <summary>Gets the command that clears the filter picker's choice and leaves the search (B-011).</summary>
+    public RxCommand<Unit, Unit> ClearFilterCommand { get; }
 
     /// <summary>Gets which header is active and in which direction, absent until one is chosen (B-012).</summary>
     public Option<(FleetColumn Column, bool Descending)> SortedColumn { get; private set => RaiseAndSetIfChanged(ref field, value); }
 
-    /// <summary>Gets or sets which grouping the chooser has, absent while the tracker keeps the default it seeded (B-012).</summary>
-    public Option<FleetGrouping> SelectedGrouping { get; set => RaiseAndSetIfChanged(ref field, value); }
+    /// <summary>Gets or sets the sort picker's choice, which reaches <see cref="ChooseColumn"/> (B-012).</summary>
+    /// <remarks>A picker cannot re-choose the item it holds, so the reverse is <see cref="ReverseCommand"/>.</remarks>
+    public FleetColumn? SortColumn { get; set => RaiseAndSetIfChanged(ref field, value); }
+
+    /// <summary>Gets the command that hands the tracker the active column's reverse (B-012).</summary>
+    public RxCommand<Unit, Unit> ReverseCommand { get; }
+
+    /// <summary>Gets or sets the grouping picker's choice, null while the tracker keeps the default it seeded (B-012).</summary>
+    public FleetGrouping? SelectedGrouping { get; set => RaiseAndSetIfChanged(ref field, value); }
 
     /// <summary>Hands the tracker a column's comparer, or its reverse when the same column is chosen again (B-012).</summary>
     /// <param name="column">The header the user chose.</param>
@@ -284,7 +308,7 @@ public sealed class FleetViewModel : RxObject, IDisposable
     }
 
     /// <summary>Hands the tracker the one predicate the two inputs compose into (B-009).</summary>
-    private void Filter() => _tracker.Filter(FleetSearch.Composed(SearchText, Columns, SelectedFilter));
+    private void Filter() => _tracker.Filter(FleetSearch.Composed(SearchText, Columns, Prelude.Optional(SelectedFilter)));
 
     private bool ValidTarget(int position) => position >= 0 && position < _answered.Targets.Count;
 

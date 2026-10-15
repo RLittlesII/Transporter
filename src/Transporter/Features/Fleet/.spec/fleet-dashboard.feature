@@ -61,7 +61,7 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And four aircraft, two airborne and matching, one on the ground and matching, one neither
      When the fleet is read
      Then one aircraft is visible
-      And clearing the filter leaves the search applied
+      And clearing the filter from its control leaves the search applied
       And clearing the search leaves the filter applied
 
   @B-039
@@ -81,11 +81,11 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And the on-ground choice and the search text still apply
 
   @B-012
-  Scenario: A header tap sorts, a second reverses, and a grouping is published
+  Scenario: A sort choice sorts, reverse reverses, and a grouping is published
     Given a description whose altitude column carries a comparer
-     When the altitude header is chosen, chosen again, and the category grouping is chosen
+     When the altitude column is chosen in the sort picker, reverse is pressed, and the category grouping is chosen in the grouping picker
      Then the first choice publishes the description's comparer
-      And the second publishes its reverse
+      And reverse publishes its reverse
       And the grouping published is the description's category grouping
 
   @B-013
@@ -253,6 +253,7 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
     Given the fleet page
      When it is reviewed
      Then it carries the grid, the search and filter controls, the grouping selection, the summary and the detail pane
+      And choosing a filter, a grouping or a sort on the running page changes the fleet
 
   @B-002
   Scenario: No XAML and no template page remain

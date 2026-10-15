@@ -96,6 +96,13 @@ its colour, that a colour comes from a token — is a review, and so are the
 tokens' contrast and colour-vision distinctness, and what a platform draws:
 pixels, a map's rendering, an animation. Each is recorded in its matrix row.
 
+**An input is delivered when the page binds it, not when the view model has
+it.** A test sets a view-model member directly, so it cannot see a picker that
+lists its choices and binds no selection. The review that proves a page
+performs each gesture on the running head — chooses, types, presses — rather
+than counting the controls
+([lesson 0006](../../src/Transporter/Features/Fleet/.spec/lessons/0006-a-picker-that-lists-and-binds-no-choice.md)).
+
 Keep the view empty of logic: anything it computes is something only a reader
 can check. What a view would decide is a static or a view model beside the
 feature, where a test reaches it.

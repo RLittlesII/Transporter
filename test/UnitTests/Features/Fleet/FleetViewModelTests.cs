@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Windows.Input;
 using Akka.Hosting;
 using AwesomeAssertions;
 using DynamicData;
@@ -196,6 +197,90 @@ public class FleetViewModelTests
         comparers[1].Compare(first, second).Should().BePositive("the second choice is its reverse");
         sut.SortedColumn.IfNone(() => (unsortable, true)).Should().Be((sortable, true), "the active header and its direction are what the grid reads");
         groupings.Should().Equal([category], "the grouping handed over is the description's");
+    }
+
+    /// <summary>
+    /// B-012, from the page's controls. A picker cannot choose the item it already holds, so the
+    /// reverse is a command, and the grouping is a plain reference a picker can bind. The hazard is
+    /// lesson 0006's: a control that lists the choices and binds no selection, which renders and does
+    /// nothing.
+    /// </summary>
+    [Fact]
+    public void GivenTheSortAndGroupingControls_WhenAColumnIsChosenReversedAndAGroupingChosen_ThenTheTrackerReceivedEach()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var byLabel = Comparer<TransportVehicle>.Create(static (left, right) => string.CompareOrdinal(left.Label, right.Label));
+        var sortable = new FleetColumn { Name = "Callsign", Value = static vehicle => vehicle.Label, Comparer = byLabel };
+        var category = new FleetGrouping { Name = "Category", Key = static vehicle => vehicle.GroupKey };
+        FleetSourceDescription description = new FleetSourceDescriptionFixture().WithColumns([sortable]).WithGroupings([category]);
+        var comparers = new List<IComparer<TransportVehicle>>();
+        var groupings = new List<FleetGrouping>();
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(Observable.Never<IChangeSet<TrackedVehicle, string>>());
+        tracker.Order.Returns(Observable.Return(ByKey));
+        tracker.Description.Returns(Observable.Return(description));
+        tracker.When(static substitute => substitute.SortBy(Arg.Any<IComparer<TransportVehicle>>()))
+            .Do(call => comparers.Add(call.Arg<IComparer<TransportVehicle>>()));
+        tracker.When(static substitute => substitute.GroupBy(Arg.Any<FleetGrouping>()))
+            .Do(call => groupings.Add(call.Arg<FleetGrouping>()));
+        FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
+        scheduler.Start();
+        var reversible = ((ICommand) sut.ReverseCommand).CanExecute(null);
+        TransportVehicle first = new AircraftFixture().WithKey("a1b2c3").WithCallsign("AAA");
+        TransportVehicle second = new AircraftFixture().WithKey("d4e5f6").WithCallsign("ZZZ");
+
+        // When
+        sut.SortColumn = sortable;
+        scheduler.Start();
+        ((ICommand) sut.ReverseCommand).Execute(null);
+        scheduler.Start();
+        sut.SelectedGrouping = category;
+
+        // Then
+        reversible.Should().BeFalse("there is nothing to reverse before a column is chosen");
+        comparers.Should().HaveCount(2, "the picker's choice and the reverse each hand the tracker a comparer");
+        comparers[0].Compare(first, second).Should().BeNegative("the picker hands over the description's own comparer");
+        comparers[1].Compare(first, second).Should().BePositive("reverse hands over its reverse");
+        groupings.Should().Equal([category], "the picker's grouping reaches the tracker");
+    }
+
+    /// <summary>
+    /// B-011, from the page's controls. A picker cannot choose nothing, so clearing the filter is a
+    /// command, and the search must survive it. The hazard is a clear that resets every input,
+    /// which looks like a working reset until the audience sees their search vanish.
+    /// </summary>
+    [Fact]
+    public void GivenASearchAndAFilter_WhenTheFilterIsClearedFromItsControl_ThenOnlyTheSearchApplies()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var onTheGround = new FleetFilterChoice { Name = "On the ground", Matches = static vehicle => vehicle is Aircraft { OnGround: true } };
+        FleetSourceDescription description = new FleetSourceDescriptionFixture().WithFilters([onTheGround]);
+        var predicates = new List<Func<TransportVehicle, bool>>();
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(Observable.Never<IChangeSet<TrackedVehicle, string>>());
+        tracker.Order.Returns(Observable.Return(ByKey));
+        tracker.Description.Returns(Observable.Return(description));
+        tracker.When(static substitute => substitute.Filter(Arg.Any<Func<TransportVehicle, bool>>()))
+            .Do(call => predicates.Add(call.Arg<Func<TransportVehicle, bool>>()));
+        FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
+        scheduler.Start();
+        sut.SearchText = "a1b";
+        sut.SelectedFilter = onTheGround;
+
+        // When
+        ((ICommand) sut.ClearFilterCommand).Execute(null);
+        scheduler.Start();
+
+        // Then
+        sut.SelectedFilter.Should().BeNull("the control's choice is cleared");
+        sut.SearchText.Should().Be("a1b", "clearing the filter leaves the search text");
+        var composed = predicates[^1];
+        composed(new AircraftFixture().WithKey("a1b2c3").WithOnGround(false)).Should().BeTrue("the choice no longer constrains");
+        composed(new AircraftFixture().WithKey("zzz999").WithOnGround(true)).Should().BeFalse("the search still does");
     }
 
     /// <summary>
