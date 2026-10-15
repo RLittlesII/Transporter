@@ -1148,6 +1148,22 @@ the same day found them (its § 12 finding 3). Both are amended to the reworded
 claim. Owed: a read of the two edits by a reader who wrote neither, then the
 person's agreement. Until then no item of this Feature moves to `in-progress`.
 
+**Read 2026-10-15 by an independent `spec-reviewer` — §§ 6-7 recommended 🟢
+once R1 is fixed.** The § 6 row and § 7's paragraphs are correct against
+`OpenSkyReplayRegistration`, which calls only the shared registration, and
+against `aircraft-source` B-029 as reworded. Three findings:
+
+- **R1 — § 7 still says `AddOpenSky`'s `ValidateOnStart` "refuses" — blocking
+  the 🟢, `implementer`.** The withdrawn behaviour in the present tense, in the
+  subsection the note above says was amended.
+- R2 — § 11 row 4's answer still states the old behaviour in the present tense;
+  a dated line saying B-029 was reworded on 2026-10-15 closes it.
+- R3 — § 6's "the two no longer depart" overstates it: B-026 reports at
+  startup, B-029 at the first poll; they agree only that neither stops the
+  application.
+
+`0081` waits on this row.
+
 **Independent agreement review, 2026-10-14.** A second reader, who authored
 none of §§ 1-9, reviewed the complete replay agreement, scenarios, replay
 items, Feature ADR-0001 and the applicable root architecture records. No

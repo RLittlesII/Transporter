@@ -1905,6 +1905,43 @@ finding 2 (finding 7). **What is owed before §§ 6-7 and §§ 8-9 are 🟢:** a
 read of these answers by a reader who did not write them, then the person's
 agreement. `0068` waits on that.
 
+**Re-read 2026-10-15 by an independent `spec-reviewer` — §§ 6-7 recommended
+🟢, §§ 8-9 held at 🟡.** A reader who wrote none of the answers. By reading.
+Validation on read works as § 7 says: the validator is registered on its own
+and runs on every `IOptions<OpenSkyCredentials>.Value` read, so removing the
+credentials' `ValidateOnStart` leaves it running at the token source's first
+read, inside a poll. § 9's counts check out. The code still validates on start;
+that is delivery work behind a `Missing` row, not an agreement defect (lesson
+0007). Eight findings, one blocking:
+
+1. **§ 8 — the B-029 plan cannot be carried out with what it names —
+   blocking, `test-writer`.** `RecordingLogger` keeps the formatted template and
+   drops the exception the assertion is to read; `OpenSkyStartupTests.Host`
+   offers no way to install it as the client's logger; and the arrangement
+   carries no box, so case 1 would fail a correct implementation on
+   `OpenSky:Box`. "The stream neither completes nor errors" cannot fail alone.
+2. § 8's new bullets are the list of planned tests root lesson 0025 bars; the
+   falsifying cases belong in the `@B-029` scenario, the names in § 9.
+3. § 7's "the box is first read while the window is built" is likely wrong:
+   the actor system starts in an initialize service and its actors resolve the
+   live chain during `Build()`. Reword to the first resolve of the live chain.
+4. § 7's "the options keep `ValidateOnStart` for B-050's box" cites a claim
+   that says only "no default compiled in"; the box tests are cited by no row.
+5. § 9's paragraph on the one row keeping the Feature open still treats B-041
+   as unproven.
+6. § 8's coverage row still says the analyzer does not exist yet.
+7. § 10's delta says § 6's "constraint" row; § 6 rows are concern-separation
+   rows.
+8. Earlier finding 10 is still owed: § 6's intro counts, the poll diagram's
+   failure branch, and § 7 not saying the name travels as the logged exception.
+
+The person's: which item delivers B-029's tests and the code (earlier finding
+7), and whether a started host stopping on an absent box is a claim, an
+unclaimed guard stated in § 7, or removed like the credentials' check
+(finding 4). **Recommended: §§ 6-7 to 🟢** with findings 3 and 4 fixed beside
+it, which is the person's to agree; §§ 8-9 stay 🟡 until finding 1 is answered
+and re-read. `0068` waits on §§ 8-9.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
