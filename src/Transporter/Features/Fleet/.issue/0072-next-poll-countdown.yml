@@ -2,7 +2,7 @@ id: "0072"
 type: task
 title: Show when the next poll is due, and when the provider is refusing
 
-status: ready-for-architecture
+status: in-progress
 
 priority: medium
 value: 3
@@ -23,7 +23,7 @@ claims:
   - B-036
 
 created: "2026-10-08"
-updated: "2026-10-08"
+updated: "2026-10-15"
 closed: null
 
 summary: |
