@@ -456,6 +456,90 @@ public class FleetSwapTests : TestKit
         sut.IsSwapping.Should().BeFalse();
     }
 
+    /// <summary>
+    /// B-025. The swap completing is the new source's first addition after the choice, which the page
+    /// toasts. The hazard is a signal on the gesture or on the outgoing removes, which would announce
+    /// a swap before anything from the new source is on screen.
+    /// </summary>
+    [Fact]
+    public void GivenASwapChosen_WhenRemovalsThenAnAdditionArrive_ThenItSignalsOnceAtTheAddition()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        using var fleet = new SourceCache<TrackedVehicle, string>(static item => item.Vehicle.Key);
+        var probe = CreateTestProbe();
+        var answer = new SwapTargets([new SwapTarget("Zeta feed", 17), new SwapTarget("Alpha feed", 3)]);
+        var actor = ActorOfAsTestActorRef<SelectorActor>(Props.Create(() => new SelectorActor(
+            answer,
+            probe.Ref,
+            null)));
+        var registry = new ActorRegistry();
+        registry.Register<SwapSource>(actor);
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(fleet.Connect());
+        tracker.Order.Returns(Observable.Return(Comparer<TrackedVehicle>.Create(static (a, b) => string.CompareOrdinal(a.Vehicle.Key, b.Vehicle.Key))));
+        tracker.Description.Returns(Observable.Never<FleetSourceDescription>());
+        tracker.Observed.Returns(Observable.Return(DateTimeOffset.MinValue));
+        using FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers).WithRegistry(registry);
+        var swapped = 0;
+        using var subscription = sut.Swapped.Subscribe(_ => swapped++);
+        TrackedVehicle existing = new TrackedVehicleFixture();
+        fleet.AddOrUpdate(existing);
+        Flush(scheduler);
+        sut.SelectedTarget = 1;
+        Flush(scheduler);
+        fleet.RemoveKey(existing.Vehicle.Key);
+        Flush(scheduler);
+        var afterRemovals = swapped;
+
+        // When
+        fleet.AddOrUpdate(new TrackedVehicleFixture().WithVehicle(new AircraftFixture().WithKey("d4e5f6")));
+        fleet.AddOrUpdate(new TrackedVehicleFixture().WithVehicle(new AircraftFixture().WithKey("070809")));
+        Flush(scheduler);
+
+        // Then
+        afterRemovals.Should().Be(0, "neither the gesture nor the outgoing removes complete a swap");
+        swapped.Should().Be(1, "the first addition completes it, and later ones are ordinary updates");
+    }
+
+    /// <summary>
+    /// B-025. An addition the dispatch delivers synchronously still completes the swap. The hazard is
+    /// a signal armed after the actor is told, which misses it and waits for the next addition.
+    /// </summary>
+    [Fact]
+    public void GivenAnImmediateAddition_WhenTheSwapIsDispatched_ThenItSignalsTheSwapCompleted()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        using var fleet = new SourceCache<TrackedVehicle, string>(static item => item.Vehicle.Key);
+        var probe = CreateTestProbe();
+        var answer = new SwapTargets([new SwapTarget("Zeta feed", 17), new SwapTarget("Alpha feed", 3)]);
+        var actor = ActorOfAsTestActorRef<SelectorActor>(Props.Create(() => new SelectorActor(
+            answer,
+            probe.Ref,
+            () => fleet.AddOrUpdate(new TrackedVehicleFixture()))));
+        var registry = new ActorRegistry();
+        registry.Register<SwapSource>(actor);
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(fleet.Connect());
+        tracker.Order.Returns(Observable.Return(Comparer<TrackedVehicle>.Create(static (a, b) => string.CompareOrdinal(a.Vehicle.Key, b.Vehicle.Key))));
+        tracker.Description.Returns(Observable.Never<FleetSourceDescription>());
+        tracker.Observed.Returns(Observable.Return(DateTimeOffset.MinValue));
+        using FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers).WithRegistry(registry);
+        var swapped = 0;
+        using var subscription = sut.Swapped.Subscribe(_ => swapped++);
+
+        // When
+        Flush(scheduler);
+        sut.SelectedTarget = 1;
+        Flush(scheduler);
+
+        // Then
+        swapped.Should().Be(1);
+    }
+
     /// <summary>B-016: the documented outgoing-add race is an observable presentation signal.</summary>
     [Fact]
     public void GivenAVisiblePostGestureAddition_WhenItArrives_ThenNoSourceAcknowledgementIsRequired()

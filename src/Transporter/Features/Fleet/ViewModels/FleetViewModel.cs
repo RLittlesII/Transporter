@@ -62,6 +62,16 @@ public sealed class FleetViewModel : RxObject, IDisposable
                 this.WhenChanged(static model => model.SelectedTarget).Select(ValidTarget),
                 schedulers.UserInterfaceThread)
             .DisposeWith(_garbage);
+
+        // Armed before the swap window below, which tells the actor: RxCommand notifies its
+        // subscribers in order, so an addition the dispatch delivers synchronously is seen here too.
+        var swapped = SwapCommand
+            .Where(ValidTarget)
+            .Select(_ => _arrivals.Where(static changes => changes.Adds != 0).Take(1).Select(static _ => Unit.Default))
+            .Switch()
+            .Publish();
+        Swapped = swapped.ObserveOn(schedulers.UserInterfaceThread);
+        swapped.Connect().DisposeWith(_garbage);
         _isSwapping = SwapCommand
             .Where(ValidTarget)
             .Select(position => SwapWindow(_answered.Targets[position], swapActor!, schedulers.UserInterfaceThread))
@@ -152,6 +162,14 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
     /// <summary>Gets whether the swap presentation window is open.</summary>
     public bool IsSwapping => _isSwapping.Value;
+
+    /// <summary>Gets a signal each time a swap chosen here completes: the new source's first addition after the choice (B-025).</summary>
+    /// <remarks>
+    /// The page turns it into a toast; this type names none (B-027). It waits for the addition with
+    /// no deadline, because a swap that never delivers has not completed, and the next choice
+    /// replaces the wait.
+    /// </remarks>
+    public IObservable<Unit> Swapped { get; }
 
     /// <summary>Gets the command that says a poll is wanted: one <c>Tell</c>, and no answer waited for (B-028).</summary>
     /// <remarks>
