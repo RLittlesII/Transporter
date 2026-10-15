@@ -55,6 +55,13 @@ public interface IFleetTracker : IDisposable
     /// </remarks>
     IObservable<PollStatus> PollStatus { get; }
 
+    /// <summary>Gets the twenty most recent changes the source made, and their totals (fleet-pipeline B-039).</summary>
+    /// <remarks>
+    /// One window for every subscriber: a later one reads it at once, and it is emptied when the last
+    /// one leaves. A search is not a change, and a silence enters nothing.
+    /// </remarks>
+    IObservable<FleetNoticeWindow> Recent { get; }
+
     /// <summary>Notices, paced by the caller (fleet-pipeline B-025 - B-027).</summary>
     /// <param name="minimumInterval">
     /// The least time between notices; a new value takes effect without rebuilding anything, and

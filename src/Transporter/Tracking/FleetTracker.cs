@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -41,7 +42,8 @@ internal sealed class FleetTracker : IFleetTracker
         _clock = clock;
         _ticks = ticks;
         _schedulers = schedulers;
-        _arrivals = source.Connect().Move().Filter(_predicate.Select(Over)).RefCount();
+        _reported = source.Connect().Move().RefCount();
+        _arrivals = _reported.Filter(_predicate.Select(Over)).RefCount();
         Fleet = _arrivals
             .Transform(Mark, Reevaluate(ticks))
             .RefCount()
@@ -66,12 +68,18 @@ internal sealed class FleetTracker : IFleetTracker
             .TakeUntil(_shutdown);
         Observed = ticks.Instant.TakeUntil(_shutdown);
         PollStatus = status.Status.TakeUntil(_shutdown);
+        Recent = Windowed()
+            .ShareLatest()
+            .TakeUntil(_shutdown);
         Order = _sortBy
             .CombineLatest(Description, static (chosen, offered) => chosen.IfNone(() => FirstSortable(offered)))
             .Select(static comparer => (IComparer<TrackedVehicle>) new FleetOrder(comparer))
             .DistinctUntilChanged()
             .TakeUntil(_shutdown);
     }
+
+    /// <summary>How many changes the window holds (fleet-pipeline B-039); nothing configures it.</summary>
+    internal const int RecentWindowSize = 20;
 
     /// <summary>How long a vehicle may be silent before it is marked, until a caller says otherwise (B-051).</summary>
     internal static readonly TimeSpan DefaultStaleAfter = TimeSpan.FromMinutes(5);
@@ -130,6 +138,14 @@ internal sealed class FleetTracker : IFleetTracker
     /// timer and no <c>ObserveOn</c> (fleet-pipeline B-005, B-040).
     /// </remarks>
     public IObservable<PollStatus> PollStatus { get; }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Read from the seam's stream before the filter, so a search is not a change (fleet-pipeline
+    /// B-039). One window for every subscriber, emptied when the last one leaves, and no scheduler
+    /// and no pacing: a window paced by one consumer would be thinned for every other (B-005, B-026).
+    /// </remarks>
+    public IObservable<FleetNoticeWindow> Recent { get; }
 
     /// <inheritdoc/>
     public void Filter(Func<TransportVehicle, bool> predicate) => _predicate.OnNext(predicate);
@@ -259,6 +275,55 @@ internal sealed class FleetTracker : IFleetTracker
         };
     }
 
+    /// <summary>Enters a changeset that changed something, dropping the oldest beyond the window's size (fleet-pipeline B-039).</summary>
+    /// <param name="state">What the previous changeset left behind.</param>
+    /// <param name="changeset">The changeset the seam reported.</param>
+    /// <param name="connecting">Whether it was delivered while the window was connecting.</param>
+    /// <param name="instant">The observed instant, read as <see cref="Raised"/> reads it.</param>
+    /// <returns>The state, carrying a window when the changeset entered.</returns>
+    /// <remarks>
+    /// Every entry is <see cref="FleetNoticeKind.Updated"/>: there is no quiet state, so the
+    /// changeset after a silence enters with its own counts (B-027).
+    /// </remarks>
+    private static WindowState Entered(WindowState state, IChangeSet<MovedVehicle, string> changeset, bool connecting, DateTimeOffset instant)
+    {
+        var tracked = state.Tracked + changeset.Adds - changeset.Removes;
+        if (connecting || changeset.Adds + changeset.Updates + changeset.Removes == 0)
+        {
+            return state with { Tracked = tracked, Window = Option<FleetNoticeWindow>.None };
+        }
+
+        var notices = state.Notices.Enqueue(new FleetNotice
+        {
+            Kind = FleetNoticeKind.Updated,
+            Instant = instant,
+            Tracked = tracked,
+            Added = changeset.Adds,
+            Updated = changeset.Updates,
+            Removed = changeset.Removes,
+        });
+        var held = state.Held + 1;
+        if (held > RecentWindowSize)
+        {
+            notices = notices.Dequeue();
+            held--;
+        }
+
+        return new WindowState
+        {
+            Tracked = tracked,
+            Notices = notices,
+            Held = held,
+            Window = new FleetNoticeWindow
+            {
+                Notices = [.. notices],
+                Added = notices.Sum(static notice => notice.Added),
+                Updated = notices.Sum(static notice => notice.Updated),
+                Removed = notices.Sum(static notice => notice.Removed),
+            },
+        };
+    }
+
     /// <summary>Builds one group's value: its key, its counts, and its rows as a stream (fleet-pipeline B-014).</summary>
     /// <param name="grouped">The group as the operator formed it.</param>
     /// <returns>The group.</returns>
@@ -336,6 +401,27 @@ internal sealed class FleetTracker : IFleetTracker
                 .SelectMany(static carried => carried.Notice.ToArray());
         });
 
+    /// <summary>The window's fold over what the seam reported, started empty (fleet-pipeline B-039).</summary>
+    /// <returns>An empty window, then one per changeset that changed something.</returns>
+    /// <remarks>
+    /// The changeset delivered while the subscribe call is still running is the fleet handed to a
+    /// stage as it connects: it moves the tracked count and enters nothing. Rejected:
+    /// DynamicData's <c>SkipInitial()</c>, which on an empty seam skips the first poll.
+    /// </remarks>
+    private IObservable<FleetNoticeWindow> Windowed() =>
+        Observable.Create<FleetNoticeWindow>(observer =>
+        {
+            var connecting = true;
+            observer.OnNext(new FleetNoticeWindow());
+            var subscription = _reported
+                .Scan(WindowState.Empty, (carried, changeset) => Entered(carried, changeset, connecting, _clock.Current))
+                .SelectMany(static carried => carried.Window.ToArray())
+                .Subscribe(observer);
+            connecting = false;
+
+            return subscription;
+        });
+
     /// <summary>The cap a caller paces the notices with, defaulted until one arrives (fleet-pipeline B-026).</summary>
     /// <param name="minimumInterval">The least time between notices.</param>
     /// <returns>A tick per window, switching when the caller changes the interval.</returns>
@@ -378,6 +464,31 @@ internal sealed class FleetTracker : IFleetTracker
             new() { Tracked = 0, Arrived = instant, Quiet = false, Notice = Option<FleetNotice>.None };
     }
 
+    /// <summary>What the window's fold carries: the tracked count, the entries held, and the window this changeset produced.</summary>
+    private sealed record WindowState
+    {
+        /// <summary>The state a connection starts in: nothing counted and nothing held.</summary>
+        public static readonly WindowState Empty = new()
+        {
+            Tracked = 0,
+            Notices = ImmutableQueue<FleetNotice>.Empty,
+            Held = 0,
+            Window = Option<FleetNoticeWindow>.None,
+        };
+
+        /// <summary>Gets how many vehicles the source reports, the connecting fleet included.</summary>
+        public required int Tracked { get; init; }
+
+        /// <summary>Gets the entries held, oldest first.</summary>
+        public required ImmutableQueue<FleetNotice> Notices { get; init; }
+
+        /// <summary>Gets how many entries are held, which the queue does not count.</summary>
+        public required int Held { get; init; }
+
+        /// <summary>Gets the window this changeset produced, if it entered one.</summary>
+        public required Option<FleetNoticeWindow> Window { get; init; }
+    }
+
     /// <summary>The chosen comparer, read off the published element, with the key as the tie-break (fleet-pipeline B-011).</summary>
     /// <param name="comparer">The order the description offered, over the abstract vehicle (B-010).</param>
     /// <remarks>
@@ -418,6 +529,7 @@ internal sealed class FleetTracker : IFleetTracker
     private readonly IObservedClock _clock;
     private readonly IObservedClockTicks _ticks;
     private readonly ISchedulerProvider _schedulers;
+    private readonly IObservable<IChangeSet<MovedVehicle, string>> _reported;
     private readonly IObservable<IChangeSet<MovedVehicle, string>> _arrivals;
     private readonly BehaviorSubject<Func<TransportVehicle, bool>> _predicate = new(DefaultPredicate);
     private readonly BehaviorSubject<Option<IComparer<TransportVehicle>>> _sortBy = new(Option<IComparer<TransportVehicle>>.None);
