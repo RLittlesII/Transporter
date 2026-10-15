@@ -2,7 +2,7 @@ id: "0066"
 type: task
 title: Keep a window of the twenty most recent notices on the tracker
 
-status: ready-for-implementation
+status: done
 
 priority: medium
 value: 2
@@ -23,8 +23,8 @@ claims:
   - B-039
 
 created: "2026-10-08"
-updated: "2026-10-14"
-closed: null
+updated: "2026-10-15"
+closed: "2026-10-15"
 
 summary: |
   The tracker publishes the last twenty notices, oldest first (B-039), so the
@@ -63,6 +63,19 @@ decisions:
     publishes the window's totals rather than the banner summing them.
     Rejected: changing B-025 with it; rewording `fleet-dashboard` B-037 to show
     entries instead of totals."
+
+  - "2026-10-15 — implementer — the fold runs inside an `Observable.Create`
+    whose `connecting` flag is true for the length of the subscribe call, so
+    the changeset the cache-aware `RefCount()` hands a stage as it connects
+    moves the tracked count and enters nothing (§ 7). Each new connection
+    emits an empty window before it subscribes, which is what a subscriber
+    after the last one left reads. `ShareLatest()` holds one gate across
+    recording, forwarding and joining, so a joiner neither misses a value nor
+    reads one twice. Rejected: `SkipInitial()`, `Replay(1).RefCount()`, as
+    § 7 says."
+  - "2026-10-15 — implementer — each test was checked against a mutation:
+    the window read over `_arrivals` fails the search case; dropping the
+    connecting flag fails the bound-fleet and shared-window cases."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
