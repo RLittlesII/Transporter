@@ -1,0 +1,60 @@
+id: "0090"
+type: bug
+title: Bind the filter, grouping and sort choosers back to the view model, so choosing one changes the fleet
+
+status: in-review
+
+priority: high
+value: 5
+risk: 2
+rank: 94
+
+parent: "0035"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-001
+  - B-009
+  - B-011
+  - B-012
+
+created: "2026-10-15"
+updated: "2026-10-15"
+closed: null
+
+summary: |
+  On the Mac Catalyst head the Filter and Group by pickers list the
+  description's choices, and choosing one changes nothing: `FleetPage.Controls`
+  binds each picker's `ItemsSource` and never its selection, so
+  `SelectedFilter` and `SelectedGrouping` are never set from the screen. No
+  control calls `ChooseColumn` either — the header tap it was written for left
+  with the grid in `0070`. The view model's half of B-009, B-011 and B-012 is
+  tested and correct; the page's half was never wired, and B-001's review
+  counted the pickers without choosing from them.
+
+  `SelectedFilter` and `SelectedGrouping` become plain references, because a
+  picker binds a plain value (`language-ext-usage` § "Where it stops"), and a
+  `SortColumn` binding target, a `ReverseCommand` and a `ClearFilterCommand`
+  give the sort and the clear a surface. Lesson 0006 holds the incident.
+
+acceptance_criteria:
+  - "B-001 — the filter, grouping and sort choosers are on the page and each choice moves the fleet."
+  - "B-009 — the filter picker's choice reaches the one predicate."
+  - "B-011 — clearing the filter leaves the search."
+  - "B-012 — the sort picker hands the comparer, reverse hands its reverse, the grouping picker hands the grouping."
+  - "§ 9 carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-15 — implementer — the sort surface is a picker over `Columns` plus a Reverse button, not restored headers: the cards have no header row since `0070`, and a picker cannot re-choose its item, so the reverse is `ReverseCommand`. Rejected: filtering the picker to sortable columns, which `TRN0020` reports as a view model deriving fleet state; an unsortable choice changes nothing, as B-012 already says."
+  - "2026-10-15 — implementer — B-001 stays `Missing` until the person chooses a filter, a grouping and a sort on the running Mac Catalyst head against the 2026-10-10 recording; computer use was not available to this session."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Rendering the fleet in groups — the grouping still reaches `GroupBy`, and the summary counts groups; drawing them is its own item."
+  - "Making altitude and ground speed sortable — the description's columns are `fleet-pipeline`'s."

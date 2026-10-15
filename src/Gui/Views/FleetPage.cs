@@ -109,7 +109,7 @@ public class FleetPage : ContentPage
         }
     }
 
-    /// <summary>The search box, the filter and grouping choosers and the refresh control, on one panel (B-001, B-028).</summary>
+    /// <summary>The search box, the filter, grouping and sort choosers and the refresh control, on one panel (B-001, B-011, B-012, B-028).</summary>
     /// <returns>The controls bar.</returns>
     /// <remarks>
     /// The refresh button binds a command and the indicator beside it binds a value; neither reads
@@ -131,9 +131,33 @@ public class FleetPage : ContentPage
                     .Margins(right: FlightDeck.Space3, bottom: FlightDeck.Space1),
                 new Picker { Title = "Filter", ItemDisplayBinding = new Binding(nameof(FleetFilterChoice.Name)), WidthRequest = 180 }
                     .Bind(Picker.ItemsSourceProperty, static (FleetViewModel model) => model.Filters)
+                    .Bind(
+                        Picker.SelectedItemProperty,
+                        static (FleetViewModel model) => model.SelectedFilter,
+                        static (FleetViewModel model, FleetFilterChoice? choice) => model.SelectedFilter = choice,
+                        BindingMode.TwoWay)
+                    .Margins(right: FlightDeck.Space1, bottom: FlightDeck.Space1),
+                new Button { Text = "Clear" }
+                    .Bind(Button.CommandProperty, static (FleetViewModel model) => model.ClearFilterCommand)
                     .Margins(right: FlightDeck.Space3, bottom: FlightDeck.Space1),
                 new Picker { Title = "Group by", ItemDisplayBinding = new Binding(nameof(FleetGrouping.Name)), WidthRequest = 180 }
                     .Bind(Picker.ItemsSourceProperty, static (FleetViewModel model) => model.Groupings)
+                    .Bind(
+                        Picker.SelectedItemProperty,
+                        static (FleetViewModel model) => model.SelectedGrouping,
+                        static (FleetViewModel model, FleetGrouping? grouping) => model.SelectedGrouping = grouping,
+                        BindingMode.TwoWay)
+                    .Margins(right: FlightDeck.Space3, bottom: FlightDeck.Space1),
+                new Picker { Title = "Sort by", ItemDisplayBinding = new Binding(nameof(FleetColumn.Name)), WidthRequest = 180 }
+                    .Bind(Picker.ItemsSourceProperty, static (FleetViewModel model) => model.Columns)
+                    .Bind(
+                        Picker.SelectedItemProperty,
+                        static (FleetViewModel model) => model.SortColumn,
+                        static (FleetViewModel model, FleetColumn? column) => model.SortColumn = column,
+                        BindingMode.TwoWay)
+                    .Margins(right: FlightDeck.Space1, bottom: FlightDeck.Space1),
+                new Button { Text = "Reverse" }
+                    .Bind(Button.CommandProperty, static (FleetViewModel model) => model.ReverseCommand)
                     .Margins(right: FlightDeck.Space3, bottom: FlightDeck.Space1),
                 new Picker { Title = "Source", WidthRequest = 200 }
                     .Bind(Picker.ItemsSourceProperty, static (FleetViewModel model) => model.Targets)
