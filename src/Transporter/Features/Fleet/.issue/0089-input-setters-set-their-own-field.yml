@@ -1,0 +1,65 @@
+id: "0089"
+type: task
+title: Make the fleet view model's three input setters set their own field and nothing else
+
+status: done
+
+priority: low
+value: 2
+risk: 2
+rank: 34
+
+parent: "0035"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transponder/Features/Fleet/.spec/README.md
+
+claims:
+  - B-009
+  - B-011
+  - B-012
+
+created: "2026-10-14"
+updated: "2026-10-14"
+closed: "2026-10-14"
+
+summary: |
+  A behaviour-preserving refactor. `mvvm` now says a setter sets its own field
+  and nothing else, and lesson 0005 names three `FleetViewModel` setters that
+  predate the rule: `SearchText` and `SelectedFilter` call `Filter()`, and
+  `SelectedGrouping` calls the tracker's `GroupBy`. Each becomes a plain
+  `RaiseAndSetIfChanged` setter, and the constructor composes `WhenChanged`
+  streams that hand the tracker `FleetSearch.Composed(...)` and the grouping,
+  disposed with the view model. The description's arrival keeps re-filtering.
+
+  No new scenario: the exemption cites B-009, B-011 and B-012, whose behaviour
+  is preserved and whose existing tests must keep passing unchanged.
+
+  The trap is the description's re-filter: folding it into the setters'
+  stream drops it, and a swap then leaves the old predicate's columns in force.
+
+acceptance_criteria:
+  - "B-009 — one predicate from both inputs, no collection enumerated."
+  - "B-011 — clearing the choice leaves the search text."
+  - "B-012 — a chosen grouping reaches `GroupBy`; absent keeps the seed."
+  - "No setter of `SearchText`, `SelectedFilter` or `SelectedGrouping` does more than set its field."
+  - "§ 9 carries a row naming a test for each id above."
+
+decisions:
+  - "2026-10-14 — implementer — filed as `0082` on 2026-10-09 and held at
+    `ready-for-architecture` while § 12 was 🟡; that id never reached `main`,
+    whose sequence had moved past it, so the item was re-cut as `0089` once
+    § 12 was approved."
+  - "2026-10-14 — implementer — the streams subscribe synchronously rather
+    than on the user-interface scheduler: a setter already runs there, so no
+    test advances a scheduler for them. The filter stream skips its first
+    emission, the values at construction, so the tracker receives exactly the
+    calls it did before; the description's arrival still filters."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Any setter outside `FleetViewModel` — lesson 0005 names only these three."

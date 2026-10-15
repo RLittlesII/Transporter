@@ -224,9 +224,10 @@ exposes — `Filter`, `SortBy`, `GroupBy` and `StaleAfter` — because the four
 things the pipeline reacts to are four things the user changes. It implements no
 interface to do it and constructs no observable for it: `IFleetQuery` was deleted
 by the § 11 row 4 review, and the tracker owns the subject behind each method and
-the default it starts at (`fleet-pipeline` § 7, ADR-0009). So a keystroke is a
-property setter composing a predicate and one call; the pipeline still never
-names the view model.
+the default it starts at (`fleet-pipeline` § 7, ADR-0009). So a keystroke sets
+one property, and a `WhenChanged` stream composed in the constructor turns it
+into a predicate and one call (`mvvm` § "Projecting state back", lesson 0005);
+the pipeline still never names the view model.
 
 **The matching rule is a static of its own, `FleetSearch`, not a method on the
 view model.** It takes the text and the description's columns and returns the
@@ -272,13 +273,13 @@ No domain type is added or changed. The types below are view state.
 | Field                                    | Type                                              | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `FleetViewModel.Fleet`                   | `ReadOnlyObservableCollection<TrackedVehicle>`    | **The one collection, materialised here.** `_tracker.Fleet.ObserveOn(schedulers.UserInterfaceThread).SortAndBind(out field, _tracker.Order).Subscribe()` in the constructor, disposed with the view model. The tracker publishes a stream and owns no collection (ADR-0009), so this is where it becomes one — and the only place (B-005).                                                                                              |
-| `FleetViewModel.SearchText`              | `string`                                          | `RaiseAndSetIfChanged`; published into the predicate (B-009).                                                                                                                                                                                                                                                                                                                                                                           |
+| `FleetViewModel.SearchText`              | `string`                                          | `RaiseAndSetIfChanged` and nothing else; observed with `SelectedFilter` through `WhenChanged`, which hands the tracker one predicate (B-009).                                                                                                                                                                                                                                                                                           |
 | `FleetViewModel.Filters`                 | `IReadOnlyList<FleetFilterChoice>`                | What the dropdown offers, published by the description (`fleet-pipeline` B-029). Not composed here: a choice this view model invented would be one a swap could not replace (§ 11 row 5). `0078` replaces it with `Choices`, below.                                                                                                                                                                                                     |
-| `FleetViewModel.SelectedFilter`          | `Option<FleetFilterChoice>`                       | Absent means no dropdown constraint, which is a value rather than a null (B-011).                                                                                                                                                                                                                                                                                                                                                       |
+| `FleetViewModel.SelectedFilter`          | `Option<FleetFilterChoice>`                       | Absent means no dropdown constraint, which is a value rather than a null (B-011). Its setter sets it and nothing else; it reaches the predicate with `SearchText`.                                                                                                                                                                                                                                                                      |
 | `FleetViewModel.Columns`                 | `IReadOnlyList<FleetColumn>`                      | From the description, in its order (B-007).                                                                                                                                                                                                                                                                                                                                                                                             |
 | `FleetViewModel.SortedColumn`            | `Option<(FleetColumn Column, bool Descending)>`   | Which column orders the cards, and in which direction (B-012).                                                                                                                                                                                                                                                                                                                                                                          |
 | `FleetViewModel.Groupings`               | `IReadOnlyList<FleetGrouping>`                    | From the description.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `FleetViewModel.SelectedGrouping`        | `Option<FleetGrouping>`                           | Which grouping the chooser has; setting it calls `GroupBy` with one of `Groupings` (B-012). Absent leaves the tracker on the default it seeded itself with, which is the vehicle's own answer.                                                                                                                                                                                                                                          |
+| `FleetViewModel.SelectedGrouping`        | `Option<FleetGrouping>`                           | Which grouping the chooser has; its setter sets it and nothing else, and a `WhenChanged` stream calls `GroupBy` with the chosen one of `Groupings` (B-012). Absent leaves the tracker on the default it seeded itself with, which is the vehicle's own answer.                                                                                                                                                                          |
 | `FleetViewModel.Selected`                | `TrackedVehicle?`                                 | The element whose card is selected, null for none. A binding target, so a plain reference rather than an `Option` (`language-ext-usage` § "Where it stops"). Its setter sets it and nothing else; the pane observes it through `WhenChanged` (B-013). A newer reading moves it onto the new instance and the vehicle leaving the collection clears it (B-014).                                                                          |
 | `FleetViewModel.Detail`                  | `FleetDetailViewModel`                            | Built by `FleetViewModel` from `WhenChanged(Selected)` and the tracker's `Description`, and disposed with it: its inputs are this view model's selection and the description, so a second owner could only disagree.                                                                                                                                                                                                                    |
 | `FleetViewModel.IsSwapping`              | `bool`                                            | Drives the busy indicator (B-016). A **derived value** read from `SwapCommand`, as `IsRefreshing` is from its command: true from a press, false at the first visible addition after the gesture or at `SwapClearsAfter` — "The swap picker", below.                                                                                                                                                                                     |
@@ -632,10 +633,10 @@ both.
   predicate for a value, names no grouping key, and so keeps no record of the
   tracker's default (finding 9). It hands the choice to `FleetSearch` exactly
   as it hands a description's choice.
-- **A regroup clears a value and nothing else.** The `SelectedGrouping` setter
-  asks the value choices' cache, by `Lookup` on the choice's key, whether
-  `SelectedFilter` is one of them, and clears it if so. A description's choice
-  and `SearchText` are left as they were (B-011, B-039).
+- **A regroup clears a value and nothing else.** The stream observing
+  `SelectedGrouping` asks the value choices' cache, by `Lookup` on the choice's
+  key, whether `SelectedFilter` is one of them, and clears it if so. A
+  description's choice and `SearchText` are left as they were (B-011, B-039).
 
 **What the description's columns do now.** They fill a card's roles and feed
 the search; nothing builds a header from them. `FleetViewModel.Card` is the
@@ -1686,22 +1687,23 @@ whose item 6 is why the detail pane exists as a named exception.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Tasks -->
 
-| Item                                                           | Claims                                             |
-| -------------------------------------------------------------- | -------------------------------------------------- |
-| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 40 — the parent; its children hold the work    |
-| [`0036`](../.issue/0036-fleet-page-and-grid.yml)               | B-001 – B-007                                      |
-| [`0037`](../.issue/0037-search-sort-and-grouping-input.yml)    | B-009 – B-012                                      |
-| [`0038`](../.issue/0038-detail-pane-and-summary.yml)           | B-013 – B-015, B-019                               |
-| [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022, B-040                |
-| [`0041`](../.issue/0041-arrival-banner-and-toast.yml)          | B-023 – B-027, B-037                               |
-| [`0044`](../.issue/0044-page-level-claim-proof.yml)            | B-003, B-004, B-006 — their proof, not their build |
-| [`0058`](../.issue/0058-refresh-control.yml)                   | B-028                                              |
-| [`0069`](../.issue/0069-dark-theme-and-status-marks.yml)       | B-032, B-033                                       |
-| [`0070`](../.issue/0070-cards-replace-the-grid.yml)            | B-008, B-029 – B-031                               |
-| [`0071`](../.issue/0071-trail-map-and-list.yml)                | B-034, B-035                                       |
-| [`0072`](../.issue/0072-next-poll-countdown.yml)               | B-036                                              |
-| [`0073`](../.issue/0073-readout-change-and-pulse.yml)          | B-038                                              |
-| [`0078`](../.issue/0078-grouping-values-as-filter-choices.yml) | B-039                                              |
+| Item                                                           | Claims                                               |
+| -------------------------------------------------------------- | ---------------------------------------------------- |
+| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 40 — the parent; its children hold the work      |
+| [`0036`](../.issue/0036-fleet-page-and-grid.yml)               | B-001 – B-007                                        |
+| [`0037`](../.issue/0037-search-sort-and-grouping-input.yml)    | B-009 – B-012                                        |
+| [`0038`](../.issue/0038-detail-pane-and-summary.yml)           | B-013 – B-015, B-019                                 |
+| [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022, B-040                  |
+| [`0041`](../.issue/0041-arrival-banner-and-toast.yml)          | B-023 – B-027, B-037                                 |
+| [`0044`](../.issue/0044-page-level-claim-proof.yml)            | B-003, B-004, B-006 — their proof, not their build   |
+| [`0058`](../.issue/0058-refresh-control.yml)                   | B-028                                                |
+| [`0069`](../.issue/0069-dark-theme-and-status-marks.yml)       | B-032, B-033                                         |
+| [`0070`](../.issue/0070-cards-replace-the-grid.yml)            | B-008, B-029 – B-031                                 |
+| [`0071`](../.issue/0071-trail-map-and-list.yml)                | B-034, B-035                                         |
+| [`0072`](../.issue/0072-next-poll-countdown.yml)               | B-036                                                |
+| [`0073`](../.issue/0073-readout-change-and-pulse.yml)          | B-038                                                |
+| [`0078`](../.issue/0078-grouping-values-as-filter-choices.yml) | B-039                                                |
+| [`0089`](../.issue/0089-input-setters-set-their-own-field.yml) | B-009, B-011, B-012 — a refactor that preserves them |
 
 **B-029 – B-038 were cut on 2026-10-08**, once the person had answered § 11
 rows 7 and 8 and asked for the items. Two moves came with them. B-008 left

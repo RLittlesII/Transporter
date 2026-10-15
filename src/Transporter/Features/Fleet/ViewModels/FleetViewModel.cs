@@ -112,6 +112,15 @@ public sealed class FleetViewModel : RxObject, IDisposable
                 Filter();
             })
             .DisposeWith(_garbage);
+
+        // Skipped once: the first emission is the values at construction, which the description's arrival filters on.
+        this.WhenChanged(static model => model.SearchText, static model => model.SelectedFilter, static (_, _) => Unit.Default)
+            .Skip(1)
+            .Subscribe(_ => Filter())
+            .DisposeWith(_garbage);
+        this.WhenChanged(static model => model.SelectedGrouping)
+            .Subscribe(grouping => grouping.IfSome(tracker.GroupBy))
+            .DisposeWith(_garbage);
         Detail = new FleetDetailViewModel(
                 this.WhenChanged(static model => model.Selected).Select(Prelude.Optional),
                 tracker.Description,
@@ -208,38 +217,18 @@ public sealed class FleetViewModel : RxObject, IDisposable
     public string SearchText
     {
         get => field ?? string.Empty;
-        set
-        {
-            RaiseAndSetIfChanged(ref field, value);
-            Filter();
-        }
+        set => RaiseAndSetIfChanged(ref field, value);
     }
 
     /// <summary>Gets or sets the control's choice, absent when the user has cleared it (B-011).</summary>
     /// <remarks>Absent is a value rather than a null, so clearing the choice is a state the predicate reads rather than a case it guards.</remarks>
-    public Option<FleetFilterChoice> SelectedFilter
-    {
-        get;
-        set
-        {
-            RaiseAndSetIfChanged(ref field, value);
-            Filter();
-        }
-    }
+    public Option<FleetFilterChoice> SelectedFilter { get; set => RaiseAndSetIfChanged(ref field, value); }
 
     /// <summary>Gets which header is active and in which direction, absent until one is chosen (B-012).</summary>
     public Option<(FleetColumn Column, bool Descending)> SortedColumn { get; private set => RaiseAndSetIfChanged(ref field, value); }
 
     /// <summary>Gets or sets which grouping the chooser has, absent while the tracker keeps the default it seeded (B-012).</summary>
-    public Option<FleetGrouping> SelectedGrouping
-    {
-        get;
-        set
-        {
-            RaiseAndSetIfChanged(ref field, value);
-            value.IfSome(_tracker.GroupBy);
-        }
-    }
+    public Option<FleetGrouping> SelectedGrouping { get; set => RaiseAndSetIfChanged(ref field, value); }
 
     /// <summary>Hands the tracker a column's comparer, or its reverse when the same column is chosen again (B-012).</summary>
     /// <param name="column">The header the user chose.</param>
