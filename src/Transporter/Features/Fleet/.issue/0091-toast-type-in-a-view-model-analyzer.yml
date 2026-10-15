@@ -1,0 +1,52 @@
+id: "0091"
+type: task
+title: Report a toast, snackbar or alert type named in a view model
+
+status: ready-for-architecture
+
+priority: low
+value: 1
+risk: 1
+rank: 90
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0041"
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-027
+
+created: "2026-10-15"
+updated: "2026-10-15"
+closed: null
+
+summary: |
+  `fleet-dashboard` B-027 says no view model names a toast, snackbar, alert or
+  other platform notification type, and § 9 names an analyzer as its proof.
+  `0041` built the banner and the toast without it: the view models publish
+  notices and `FleetPage` calls `Toast.Make`, so nothing is broken today, but
+  nothing stops the next view model from calling it.
+
+  The rule belongs beside TRN0019 – TRN0021 in `DashboardBoundaryRules`, and
+  needs a new TRN id and a boundary-analyzer claim first. It reports a type
+  from `CommunityToolkit.Maui.Alerts`, or `DisplayAlert` and its kin, named
+  from a type deriving `RxObject`, and stays silent in a page.
+
+acceptance_criteria:
+  - "B-027 — a toast, snackbar or alert type named in a view model is reported
+    at the reference, and the same call inside a page is not."
+  - "§ 9 Traceability Matrix names the analyzer test for B-027."
+
+decisions:
+  - "2026-10-15 — implementer — cut from `0041`, which kept the banner and the
+    toast. Rejected: holding the banner for the rule."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "Any other boundary rule."

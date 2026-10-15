@@ -1,6 +1,7 @@
 using System.IO;
 using System.Reactive.Concurrency;
 using System.Threading;
+using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Markup;
 using Gui.Container;
 using Gui.Views;
@@ -24,6 +25,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
             .UseMauiCommunityToolkitMarkup()
 
             // Which actors exist is Transporter's to say: they and what they are handed are internal there.

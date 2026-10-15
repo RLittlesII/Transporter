@@ -69,4 +69,41 @@ public class FleetCardTextTests
         // Then
         text.Should().Be(FleetCardText.Missing);
     }
+
+    /// <summary>
+    /// B-036. The time left before a poll is the gap between the due instant and the observed one,
+    /// which the countdown animates over. The hazard is a wall-clock read, which disagrees with a
+    /// replayed or lagging feed by the drift between the two clocks.
+    /// </summary>
+    /// <param name="seconds">How far after the observed instant the poll is due.</param>
+    /// <param name="expected">The time left, in seconds.</param>
+    [Theory]
+    [InlineData(15, 15)]
+    [InlineData(0, 0)]
+    [InlineData(-4, 0)]
+    public void GivenADueInstantAndAnObservedInstant_WhenTheTimeRemainingIsRead_ThenItIsTheGap(int seconds, int expected)
+    {
+        // Given
+        var observed = new DateTimeOffset(2026, 10, 8, 14, 32, 10, TimeSpan.Zero);
+
+        // When
+        var remaining = FleetCardText.DueIn(observed.AddSeconds(seconds), observed);
+
+        // Then
+        remaining.Should().Be(TimeSpan.FromSeconds(expected), "a poll already due has no time left, not a negative one");
+    }
+
+    /// <summary>B-036. Before any poll has landed there is no instant to measure from, so nothing is left to count.</summary>
+    [Fact]
+    public void GivenNoObservedInstant_WhenTheTimeRemainingIsRead_ThenItIsZero()
+    {
+        // Given
+        var due = new DateTimeOffset(2026, 10, 8, 14, 32, 25, TimeSpan.Zero);
+
+        // When
+        var remaining = FleetCardText.DueIn(due, DateTimeOffset.MinValue);
+
+        // Then
+        remaining.Should().Be(TimeSpan.Zero);
+    }
 }

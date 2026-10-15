@@ -7,6 +7,7 @@
     <PackageVersion Include="Akka" Version="1.5.8" />
     <PackageVersion Include="Akka.Hosting" Version="1.5.8" />
     <PackageVersion Include="Akka.Hosting.Maui" Version="1.5.8" />
+    <PackageVersion Include="CommunityToolkit.Maui" Version="14.0.1" />
     <PackageVersion Include="CommunityToolkit.Maui.Markup" Version="8.0.0" />
     <PackageVersion Include="Flurl" Version="4.0.0" />
     <PackageVersion Include="Flurl.Http" Version="4.0.2" />
