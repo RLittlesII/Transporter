@@ -1786,6 +1786,63 @@ and its § 9 row, which reads `Missing`. All three rows stay 🟡. Owed: a read 
 the eleven answers and of today's B-029 change by a reader who wrote neither,
 then the person's agreement. `0068` waits on that read.
 
+**Read 2026-10-15 by an independent `spec-reviewer` — §§ 1-5 recommended 🟢,
+§§ 6-7 and §§ 8-9 held at 🟡.** A reader who wrote none of it, handed the text
+and the code and not the author's conclusion. By reading: it ran no build. All
+eleven answers of 2026-10-09 landed. The 2026-10-15 change is true of the head
+as the code stands: nothing in it runs start-up validators, the token source's
+read of the credentials throws the validator's message — keys, never values —
+and `AircraftSnapshotClient` logs it as the warning's exception and keeps
+polling. The § 9 counts are right: five `Missing`, fifty-two `Verified`. Eleven
+findings, three blocking:
+
+1. **§§ 8-9 — § 8 has no plan for B-029's reworded first half — blocking,
+   `test-writer`.** The owed test sits on a substituted `IOpenSkyApi`, which
+   proves nothing about the validator. § 8 must say the graph is `AddOpenSky`
+   with `HttpTest`, that it asserts on the exception logged with the warning,
+   and what proves "SHALL NOT stop the application" — a review of
+   `MauiProgram`, re-done by a change to it, or a container test.
+2. **§§ 6-7 — `ValidateOnStart` on the credentials is kept with no reason —
+   blocking, `implementer`.** Its only purpose was the withdrawn behaviour; any
+   composition that starts a host still stops, and `OpenSkyStartupTests` proves
+   it. B-029 holds only while the head starts none. Remove it and retire that
+   test, or have § 7 state the reason and the head-only scope. The same reading
+   applies to `OpenSkyOptions`, whose absent box throws while the window is
+   built; not blocking alone, since the packaged settings carry the box.
+3. **§§ 6-7 — `replay-source`, approved, still states the withdrawn behaviour
+   — blocking, `replay-source`'s `implementer`.** Its § 6 row and § 7 say an
+   absent credential stops the application and B-029 is true as written;
+   fixing them lowers that Feature's §§ 6-7. Here, § 10's delta does not name
+   `replay-source`, and § 7's hand-off sentence on B-029's wording is moot and
+   should close.
+4. § 10's delta and this section say § 4 where § 6's row changed.
+5. § 9's closing paragraph names B-041 as unproven and omits B-029; "three
+   different ways" sums to fifty-one of fifty-two; seventeen rules against
+   eighteen; B-058's prose says review where its row says launch.
+6. Code comments and tests still state the withdrawn wording —
+   `OpenSkyConfigurationValidator`, `OpenSkyRegistration`, `OpenSkyTokenSource`,
+   `AircraftSnapshotClient`, `OpenSkyStartupTests`, `OpenSkyOptionsTests` — and
+   the validator's message still offers the environment, which the head does
+   not read.
+7. B-029's owed test has no item; `0004` (done) still describes the old
+   wording; `## Tasks` and `0001`'s count are stale.
+8. The `@B-029` scenario's "no value" line cannot fail: its Given configures no
+   client id.
+9. `docs/credentials.md` still calls row 7 open, its troubleshooting table does
+   not send the presenter to the warning, and it and `README.md` say the live
+   source "is refused" where no request is made.
+10. § 7's poll diagram omits an absent credential, § 7 does not say the name
+    travels as the logged exception, and § 6's intro counts are stale.
+11. No lesson is cited for a `Verified` row proven on a host the head never
+    builds — root lesson 0014's shape.
+
+Two are the person's: whether agreeing this change reopens `replay-source`'s
+§§ 6-7 (finding 3), and which item delivers B-029's owed test and retires the
+startup test and comments (finding 7) — `0004` is done. **Recommended: §§ 1-5
+to 🟢**, which is the person's to agree, with finding 8 fixed beside it; §§ 6-7
+and §§ 8-9 stay 🟡 until findings 1 – 3 are answered and re-read. `0068` waits
+on that re-read.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
