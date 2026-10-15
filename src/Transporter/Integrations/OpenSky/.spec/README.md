@@ -609,13 +609,19 @@ arrangement to get wrong.
 
 **The registration takes configuration, and is the only composition there is.**
 `AddOpenSky(IConfiguration)` binds `OpenSkyOptions` and `OpenSkyCredentials`
-from the `OpenSky` section, validates both on start, and wires the chain. An
+from the `OpenSky` section, validates the options on start and the credentials
+when they are read, and wires the chain. An
 application and a test call that same method and differ only in what
 configuration they supply, so there is no second graph to keep in step — which is
 what makes B-029's failure at the first poll provable against the graph the
-head builds. `ValidateOnStart` stays registered, but the head starts no generic
-host and so never runs it (§ 11 row 7): the validator runs when the token source
-first reads the credentials, inside a poll. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
+head builds. **The credentials are validated on read, not on start**: the token
+source's first read of them, inside a poll, runs the validator. Validating them
+on start would stop any composition that starts a host — the behaviour B-029
+withdrew — and would leave B-029 true only while the head starts none, which
+nothing claims (§ 11 row 7). The options keep `ValidateOnStart` for B-050's
+box: a host that starts stops on an absent box, and in the head, which starts
+none, the box is first read while the window is built — a path the packaged
+settings, which always carry the box, leave unreached. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
 box: the URL is the provider's and nobody here chooses it, while B-050 leaves the
 box with no default on purpose.
 
@@ -624,15 +630,16 @@ transport.** It is still the only composition of this integration and still the
 only method an application calls for it; what changed is that the shared part —
 the options, the observed clock's aliases, the projection and the scheduler
 provider — is an `internal` method `AddOpenSky` calls first, and
-`AddAircraftReplay` calls instead. `OpenSkyCredentials`, their `ValidateOnStart`,
+`AddAircraftReplay` calls instead. `OpenSkyCredentials`, their validator,
 the token source, the Flurl client cache and the transport stay in `AddOpenSky`.
-A composition that registers the live transport therefore validates exactly as
-it did before, which is what keeps B-029 true; what is new is a
+A composition that registers the live transport therefore reads and validates
+its credentials exactly as it did before, which is what keeps B-029 true; what is new is a
 composition this specification never contemplated, with no live transport and so
 no credential to be missing. The reasoning and the alternatives are
 [replay-source](../../../../../features/replay-source/.spec/README.md) § 11
-row 4, and whether B-029's wording should say so out loud is this
-specification's `spec-author`'s call.
+row 4. B-029's wording needed no clause for it: since 2026-10-15 it claims
+what an absent credential does wherever one is registered, and a composition
+with none has nothing to claim.
 
 Options and credentials are **two types, not one**, because B-027 bans a
 credential reaching a log line and a single options object invites being logged
@@ -1089,6 +1096,28 @@ session does not do, and no credential was in the store. So B-058's § 9 row
 reads `Missing` and names the launch, which the person can perform now that
 the credentials exist (root lesson 0011).
 
+**What B-029's reworded first half will prove, planned 2026-10-15.** Both
+cases build the graph `AddOpenSky` builds, in a generic host, with `HttpTest`
+standing in for the network and configuration carrying a synthetic client id
+and no client secret. The graph is what B-029 is about: a substituted
+`IOpenSkyApi` throwing a message the test wrote would prove nothing about the
+validator.
+
+- **Nothing stops.** The host starts — `StartAsync` completes — and `HttpTest`
+  records no call. It fails while the credentials validate on start (§ 7).
+- **The first poll names it.** One poll runs through the resolved client. A
+  `RecordingLogger` holds one warning whose exception is the validator's: its
+  message names `OpenSky:ClientSecret`, and neither the message nor the
+  exception's string contains the configured client id. No request reaches
+  `HttpTest`, and the client's stream neither completes nor errors. The name
+  travels as the exception logged with the warning, not in the warning's own
+  text, so the assertion reads the exception.
+
+The head is not a third case. It starts no host, and with validation on read
+nothing at start is left for it to run; a test cannot reference the head in
+any case (root lesson 0014). `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne`
+proves the withdrawn wording and retires with the item that delivers these.
+
 **What the tests need before any of them can be written**
 
 `transporter-conventions` mandates AwesomeAssertions, NSubstitute and
@@ -1109,8 +1138,9 @@ row 17.
 
 **This is the gate, and five of the fifty-seven rows read `Missing`** —
 B-029, whose first half was reworded on § 11 row 7 and is owed a test,
-B-054 – B-056, cut into `0068`, and B-058, whose head-store review remains
-owed. Fifty-two are `Verified`, and they arrived three different ways.
+B-054 – B-056, cut into `0068`, and B-058, whose launch of the head beside
+the store remains owed. Fifty-two are `Verified`, and they arrived four
+different ways.
 Thirty-four came from
 items: `0002` built the contract, its envelope, the positional row's converter
 and the HTTP transport, `0003` the snapshot and its
@@ -1132,10 +1162,12 @@ decides on is now complete, and all seventeen of its rules report — the refere
 rules (B-004, B-032, B-044 – B-047), the declaration rules (B-002,
 B-005 – B-007, B-014, B-048), and the call-site rules (B-008, B-030,
 B-031). Each is reported at the line that violates it, and each by the test this
-section named for it.
+section named for it. **One came from both an analyzer rule and another
+Feature's item**: B-041's negative half is analyzer and its consumer half is
+`fleet-dashboard` `0039`'s composition test.
 
-**Fifty-four rows, not fifty-five, and seventeen rules, not eighteen.** B-010 is
-Withdrawn (§ 4 row 18), so it has no row here, and the analyzer's eighteenth
+**Fifty-seven rows for fifty-eight identifiers, and seventeen rules, not
+eighteen.** B-010 is Withdrawn (§ 4 row 18), so it has no row here, and the analyzer's eighteenth
 rule retired with it — ADR-0006 § "What the analyzer carries" records the
 amendment.
 
@@ -1165,7 +1197,7 @@ An **analyzer diagnostic** proves a claim about what may name what — the
 mechanism is [ADR-0006](../../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md),
 specified and built as
 [`src/Transporter.Analyzers`](../../../../Transporter.Analyzers/.spec/README.md). All
-eighteen of its rules exist and report, so no row here is waiting on one.
+seventeen of its rules exist and report, so no row here is waiting on one.
 A **review** proves a claim that constrains code the repository does not yet
 contain, where there is no value to compute and no declaration to analyze; § 8
 says why those two claims take neither of the other mechanisms. It appears
@@ -1205,7 +1237,7 @@ is B-049 and the clause waiting on `0005`.
 | B-026    | `@B-026` | `OpenSkyHttpApiTests.GivenAnExpiredTokenAndGivenAnUnauthorizedResponse_WhenAPollIsSent_ThenTheTokenRefreshesAndTheRequestRetriesOnce`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-027    | `@B-027` | `OpenSkyHttpApiTests.GivenAPollAndATokenRefresh_WhenBothAreLogged_ThenRemainingCreditIsRecordedAtDebugAndNoSecretAppears`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verified |
 | B-028    | `@B-028` | `OpenSkyHttpApiTests.GivenAThrottledResponseAndGivenAServerError_WhenEachIsHandled_ThenTheFirstDefersByTheHeaderAndTheSecondStaysAnException`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
-| B-029    | `@B-029` | Owed, no item cut yet: `AircraftSnapshotClientTests.GivenAnAbsentCredential_WhenTheFirstPollRuns_ThenAWarningNamesItAndTheStreamStaysOpen`. Holding: `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors`. `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` proved the withdrawn wording against a generic host the head never starts (§ 11 row 7)                                                                                                                                                                                                                           | Missing  |
+| B-029    | `@B-029` | Planned (§ 8), no item cut yet: `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheHostStarts_ThenItStartsAndNoRequestIsMade` and `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheFirstPollRuns_ThenTheLoggedFailureNamesItAndTheStreamStaysOpen`. Holding: `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors`. `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` proved the withdrawn wording against a generic host the head never starts (§ 11 row 7)                                                                                                               | Missing  |
 | B-030    | `@B-030` | analyzer — `BoundaryAnalyzerTests.GivenACacheWrappedInATypeOfItsOwn_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-031    | `@B-031` | analyzer — `BoundaryAnalyzerTests.GivenACacheRegisteredWithAnyLifetimeButTheApplicationsOrSharedBetweenClients_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-032    | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
@@ -1239,11 +1271,9 @@ is B-049 and the clause waiting on `0005`.
 Fifty-seven rows, fifty-seven live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
 only place a claim's build state is written, and five of its rows still say
-their claim is not proven: B-054 – B-056 wait on `0068`, B-058 waits on one
-launch of the head beside the store, and B-041 does not wait
-on a mechanism: the analyzer is complete, and
-B-041's remaining half waits on `fleet-dashboard` `0039` building the view model
-whose dependencies it is about. The Feature cannot reach `done` until it does.
+their claim is not proven: B-029's reworded first half waits on the two tests
+§ 8 plans for it, B-054 – B-056 wait on `0068`, and B-058 waits on one launch
+of the head beside the store. The Feature cannot reach `done` until they are.
 
 ## 10. Lessons / Spec Deltas
 
@@ -1285,13 +1315,15 @@ three questions § 12 left to the person are decided.** Trigger: § 11 row 7,
 answered by the person. The head builds a `MauiApp` and starts no generic host,
 so `ValidateOnStart` never runs there, and an absent credential has always
 surfaced at the first poll. B-029 now claims that: the poll fails with a warning
-naming the absent credential, and nothing stops. § 4's constraint row is
+naming the absent credential, and nothing stops. § 6's constraint row is
 rewritten, § 5 row 20 leaves a message on the page to `fleet-dashboard`, § 7
 says where the validator runs, the scenario is rewritten, and the § 9 row reads
 `Missing` until a test proves the warning — `OpenSkyStartupTests` proved the
 withdrawn wording against a host the head never starts. `0047`'s criterion that
 the application starts against configuration carrying no credential now holds
-beside B-029 rather than against it. B-058 is unchanged: the person kept its
+beside B-029 rather than against it. `replay-source`'s § 6 row and § 7, which
+stated the withdrawn behaviour, are amended the same day, which lowers its
+§§ 6-7. B-058 is unchanged: the person kept its
 breadth (§ 3). Lesson 0006 stays here (§ 12).
 
 **Delta, 2026-10-09 — B-058 is added, and § 4 row 12 gains a claim under it.**
@@ -1585,11 +1617,11 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟡 Draft    |
+| §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
@@ -1781,7 +1813,7 @@ its rule already binds every Feature from `spec-and-traceability` § "Claims and
 traceability", and the lesson is the incident under B-058 — the rule in the
 skill, the facts in the lesson
 ([root lesson 0001](../../../../../.spec/lessons/0001-a-skill-holds-the-rule-not-the-facts.md)).
-§ 11 row 7 is (b): B-029 is reworded, with § 4, § 5 row 20, § 7, its scenario
+§ 11 row 7 is (b): B-029 is reworded, with § 6, § 5 row 20, § 7, its scenario
 and its § 9 row, which reads `Missing`. All three rows stay 🟡. Owed: a read of
 the eleven answers and of today's B-029 change by a reader who wrote neither,
 then the person's agreement. `0068` waits on that read.
@@ -1842,6 +1874,36 @@ startup test and comments (finding 7) — `0004` is done. **Recommended: §§ 1-
 to 🟢**, which is the person's to agree, with finding 8 fixed beside it; §§ 6-7
 and §§ 8-9 stay 🟡 until findings 1 – 3 are answered and re-read. `0068` waits
 on that re-read.
+
+**Agreed 2026-10-15 by the person — §§ 1-5 to 🟢**, with finding 8 fixed in the
+text agreed: the `@B-029` scenario now configures a client id and asserts the
+warning does not contain it.
+
+**Answered 2026-10-15, by the owning roles — findings 1 – 3.**
+
+1. `test-writer`: § 8 plans B-029's reworded half — two cases on the graph
+   `AddOpenSky` builds, in a generic host with `HttpTest`: the host starts and
+   makes no request; the first poll logs a warning whose exception names
+   `OpenSky:ClientSecret` and carries no configured value, and the stream stays
+   open. The head is no third case. § 9's row names both tests, and § 9's
+   closing paragraph now names the five `Missing` rows (finding 5), with the
+   "four different ways" B-041 accounts for, and seventeen rules throughout.
+2. `implementer`: § 7 now validates the credentials on read, not on start, and
+   says why — on start, any host that starts would stop, and B-029 would hold
+   only while the head starts none. The options keep `ValidateOnStart` for
+   B-050, and § 7 says where the head first reads the box. Removing the
+   credentials' `ValidateOnStart`, retiring the startup test and correcting the
+   comments of finding 6 is the delivering item's work.
+3. `implementer`: § 7's hand-off sentence on B-029's wording is closed, and
+   § 10's delta names `replay-source`. `replay-source`'s § 6 row and § 7 now
+   state the reworded claim; its §§ 6-7 row is lowered to 🟡 and its
+   `spec_status` is `in-review`, owed a read of its own. Finding 4 is fixed
+   beside these.
+
+Still open, and the person's: which item delivers B-029's tests and the code of
+finding 2 (finding 7). **What is owed before §§ 6-7 and §§ 8-9 are 🟢:** a
+read of these answers by a reader who did not write them, then the person's
+agreement. `0068` waits on that.
 
 ## Decisions
 

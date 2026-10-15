@@ -212,12 +212,13 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
 
   @B-029
   Scenario: A missing credential is named at the first poll and stops nothing
-    Given no OpenSky client secret has been configured
+    Given an OpenSky client id has been configured
+      And no OpenSky client secret has been configured
      When the application starts
       And the first poll runs
      Then the application is still running
       And a warning names the client secret as the absent credential
-      And the warning does not contain the value of any credential that was configured
+      And the warning does not contain the configured client id
       And the client's stream neither completed nor errored
 
   @B-058
