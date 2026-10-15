@@ -1764,7 +1764,7 @@ the draft it replaced.
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟡 Draft    |
+| §§ 6-7   | implementer | 🟢 Approved |
 | §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
@@ -2170,6 +2170,65 @@ choice admits exactly its own aircraft, and a choice captured before a regroup
 is removed and still admits by the key that produced it. § 9's B-030 row
 names `FleetGroupingValuesTests` and stays `Missing` until `0056` builds it.
 §§ 8-9 are lowered to 🟡. The `spec-reviewer` re-reads §§ 6-9 next.
+
+**Re-read 2026-10-14 — `spec-reviewer`, §§ 6-9.** This reader wrote none of
+§§ 1-9 or the scenarios. Read: every change to this file since the agreement of
+2026-10-09 (`f6f14de`), which is B-030 as amended, § 7's `GroupingValues`, § 8's
+plan for `0056`, the B-030 and B-040 rows of § 9, the poll-status design `0067`
+turned into a type-table row, and the rename `0084` made. Also read: the
+`@B-030` scenarios, `FleetTracker.cs`, `FleetGrouping.cs`,
+`FleetFilterChoice.cs`, `MovedVehicle.cs`, `NoPollStatus.cs`,
+`FleetTrackerPollStatusTests.cs`, `FleetGroupTests.cs`, `fleet-dashboard`
+B-039 with its scenarios, and the items `0056`, `0063` and `0066` these rows
+would unblock. Mechanically clean: forty-three claims and forty-three § 9 rows,
+seventy-five scenarios with every `@B-0nn` present, and six `Missing` rows
+(B-030, B-034, B-035 and B-037 – B-039), which matches § 9's own count.
+
+**§§ 6-7 hold.** `GroupingValues` publishes the type a description's choices
+already are, so B-030's "a consumer names no grouping key" holds without a new
+type. The predicate closes over the stage's own grouping rather than
+`_groupBy.Value`, so a choice admits by the key that produced it in the instant
+before `Switch` removes it. It reads `_reported`, before the filter, through
+the cache-aware `RefCount()`, as the window's design does, so the seam stays
+one connection (B-006, B-028). The poll-status text now describes what
+`0067` built: `NoPollStatus` is internal and reads `PollStatus.None` at once,
+never completing, and the tracker re-publishes the seam with nothing in
+between. § 7 holds no declaration whose file exists.
+
+Two findings, both on B-030 and neither in §§ 6-7.
+
+1. **The `@B-030` regroup scenario groups by something no grouping can key on
+   — blocking, `spec-author`.** "When the fleet is grouped by staleness
+   instead" cannot be arranged. `FleetGrouping.Key` reads `TransportVehicle`
+   (B-022), and staleness is not on the vehicle. It is the mark `Mark` puts on
+   the element against the observed clock, downstream of `_reported`, which is
+   where § 7 takes the values from. § 7 states it outright: "staleness does not
+   touch them". So "the staleness values" would change on a clock tick with no
+   changeset, which B-030's design rules out. The scenario has to name a key
+   the vehicle answers, as `FleetGroupTests` regroups by callsign. Changing it
+   lowers §§ 1-5. `fleet-dashboard`'s `@B-039` scenario "Changing the grouping
+   clears a selection only the old grouping meant" uses the same wording. There
+   the view model hands the tracker whatever grouping the test builds, so it
+   can be arranged, but it names a grouping no description can offer. That is
+   for `fleet-dashboard`'s `spec-author`, and it does not hold this row.
+2. **§ 8's choice cases for `0056` claim failures their arrangement cannot
+   reach — blocking, `test-writer`.** First, "four aircraft in three countries"
+   cannot fail "a predicate that compares case-insensitively", because no two
+   keys in it differ only by case. To fail that predicate the arrangement has
+   to name such a pair, or the sentence should drop the claim.
+   "Rejects the fourth" does not count right when two of the four share a
+   country. "Reads the vehicle's filtered position" names nothing
+   `TransportVehicle` carries. Second, the regroup case's "not by staleness"
+   inherits finding 1. It should name the second grouping the test hands
+   `GroupBy`. The mechanism it describes is sound: a choice captured before the
+   regroup still admits by country, which fails a predicate reading `_groupBy`.
+
+**Verdict.** §§ 6-7 are 🟢. §§ 8-9 stay 🟡 until finding 2 is answered and
+re-read. `spec_status` stays `in-review`. §§ 8-9 already cover `0063`
+(B-034, B-035, B-037) and `0066` (B-039) in full: neither plan has changed
+since the agreement of 2026-10-09, and neither depends on B-030. What they lack
+is `0056`'s two corrections. Finding 1 is answered beside finding 2, because
+§ 8's second case follows the scenario.
 
 ## Decisions
 
