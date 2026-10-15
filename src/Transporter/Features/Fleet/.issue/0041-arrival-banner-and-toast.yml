@@ -2,7 +2,7 @@ id: "0041"
 type: task
 title: Show the arrival notice — a banner always, a toast when it earns one
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 value: 4
@@ -30,7 +30,7 @@ claims:
   - B-037
 
 created: "2026-10-05"
-updated: "2026-10-08"
+updated: "2026-10-15"
 closed: null
 
 summary: |
