@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Converters;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Markup;
 using Gui.Components;
@@ -29,7 +30,8 @@ public class FleetPage : ContentPage
     /// <param name="viewModel">The page's view model, by constructor and resolved from nothing (B-003).</param>
     /// <param name="summary">The summary strip's view model, which projects the tracker's counts (B-015).</param>
     /// <param name="banner">The banner's and the toast's notices, each at its own cadence (B-023 – B-026, B-037).</param>
-    public FleetPage(FleetViewModel viewModel, FleetSummaryViewModel summary, FleetBannerViewModel banner)
+    /// <param name="poll">When the next poll is due, and whether the provider is refusing (B-036).</param>
+    public FleetPage(FleetViewModel viewModel, FleetSummaryViewModel summary, FleetBannerViewModel banner, FleetPollViewModel poll)
     {
         BindingContext = ViewModel = viewModel;
         Title = "Fleet";
@@ -85,7 +87,7 @@ public class FleetPage : ContentPage
             Children =
             {
                 Controls().Row(0),
-                Summary(summary).Row(1),
+                Summary(summary, poll, viewModel).Row(1),
                 Banner(banner).Row(2),
                 fleet.Row(3),
                 Detail(viewModel.Detail).Row(4),
@@ -154,10 +156,15 @@ public class FleetPage : ContentPage
             },
         });
 
-    /// <summary>The summary strip: three counts the tracker derived, bound and never recounted here (B-015).</summary>
+    /// <summary>
+    /// The summary strip: three counts the tracker derived, bound and never recounted here (B-015),
+    /// and when the next poll is due and whether the provider is refusing (B-036).
+    /// </summary>
     /// <param name="summary">The strip's view model.</param>
+    /// <param name="poll">The poll status's view model; the countdown and the badge hide together for a source that does not poll.</param>
+    /// <param name="fleet">Where the observed instant the countdown measures from is read.</param>
     /// <returns>The summary panel.</returns>
-    private static Border Summary(FleetSummaryViewModel summary) =>
+    private static Border Summary(FleetSummaryViewModel summary, FleetPollViewModel poll, FleetViewModel fleet) =>
         Panel(new HorizontalStackLayout
         {
             Spacing = FlightDeck.Space6,
@@ -166,6 +173,22 @@ public class FleetPage : ContentPage
                 new Readout { Caption = "Tracked" }.Bind(Readout.ValueProperty, nameof(FleetSummaryViewModel.Tracked), source: summary, stringFormat: "{0:N0}"),
                 new Readout { Caption = "Stale" }.Bind(Readout.ValueProperty, nameof(FleetSummaryViewModel.Stale), source: summary, stringFormat: "{0:N0}"),
                 new Readout { Caption = "Groups" }.Bind(Readout.ValueProperty, nameof(FleetSummaryViewModel.Groups), source: summary, stringFormat: "{0:N0}"),
+                new HorizontalStackLayout
+                {
+                    Spacing = FlightDeck.Space2,
+                    Children =
+                    {
+                        new PollCountdown()
+                            .Bind(PollCountdown.ObservedProperty, nameof(FleetViewModel.Observed), source: fleet)
+                            .Bind(PollCountdown.NextDueProperty, nameof(FleetPollViewModel.NextDue), source: poll),
+                        new StatusBadge { Kind = StatusKind.Throttled }
+                            .Bind(IsVisibleProperty, nameof(FleetPollViewModel.RefusedFor), source: poll, converter: new IsNotNullConverter()),
+                        new Label { Style = FlightDeckStyles.Caption, VerticalTextAlignment = TextAlignment.Center }
+                            .Bind(Label.TextProperty, nameof(FleetPollViewModel.RefusedFor), source: poll, stringFormat: "for {0:m\\:ss}")
+                            .Bind(IsVisibleProperty, nameof(FleetPollViewModel.RefusedFor), source: poll, converter: new IsNotNullConverter()),
+                    },
+                }
+                    .Bind(IsVisibleProperty, nameof(FleetPollViewModel.IsPolling), source: poll),
             },
         });
 

@@ -66,6 +66,7 @@ public static class TransporterRegistration
         services.AddTransient<FleetViewModel>();
         services.AddTransient<FleetSummaryViewModel>();
         services.AddTransient<FleetBannerViewModel>();
+        services.AddTransient<FleetPollViewModel>();
 
         return services;
     }
