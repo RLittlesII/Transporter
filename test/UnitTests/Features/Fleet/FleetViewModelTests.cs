@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Akka.Hosting;
 using AwesomeAssertions;
 using DynamicData;
@@ -287,6 +288,39 @@ public class FleetViewModelTests
         // Then
         sut.Selected.Should().BeSameAs(newer, "the selection is the instance the collection now holds");
         sut.Detail.Rows.Should().Contain(new FleetDetailRow("Squawk", "7700"));
+    }
+
+    /// <summary>B-021: replacing the description changes offered controls without replacing the bound collection.</summary>
+    [Fact]
+    public void GivenASecondDescription_WhenItArrives_ThenTheColumnsGroupingsAndFiltersChangeWithNoMarkupEdit()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var first = AircraftFleetDescription.Offered;
+        FleetSourceDescription second = new FleetSourceDescriptionFixture()
+            .WithColumns(first.Columns.Reverse().ToArray())
+            .WithGroupings([])
+            .WithFilters(first.Filters.Reverse().ToArray());
+        using var descriptions = new BehaviorSubject<FleetSourceDescription>(first);
+        var tracker = Substitute.For<IFleetTracker>();
+        tracker.Fleet.Returns(Observable.Never<IChangeSet<TrackedVehicle, string>>());
+        tracker.Order.Returns(Observable.Return(ByKey));
+        tracker.Description.Returns(descriptions);
+        tracker.Observed.Returns(Observable.Return(DateTimeOffset.MinValue));
+        using FleetViewModel sut = new FleetViewModelFixture().WithTracker(tracker).WithProvider(schedulers);
+        scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
+        var collection = sut.Fleet;
+
+        // When
+        descriptions.OnNext(second);
+        scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
+
+        // Then
+        sut.Columns.Should().Equal(second.Columns);
+        sut.Groupings.Should().Equal(second.Groupings);
+        sut.Filters.Should().Equal(second.Filters);
+        sut.Fleet.Should().BeSameAs(collection);
     }
 
     /// <summary>One vehicle as the pipeline publishes it, keyed so the bound order is readable.</summary>

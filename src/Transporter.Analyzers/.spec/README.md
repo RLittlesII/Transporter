@@ -141,30 +141,33 @@ the claim's text lives in
 [`aircraft-source`](../../Transporter/Integrations/OpenSky/.spec/README.md) § 3 and the test
 that proves it in that specification's § 9, so neither is copied here.
 
-| Diagnostic | Enforces                | What it examines                                                                                                                   |
-| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `TRN0001`  | `aircraft-source` B-004 | Every reference to the positional row from outside the integration                                                                 |
-| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the implementations of the contract and the snapshot client                    |
-| `TRN0003`  | `aircraft-source` B-046 | Every reference to a snapshot, against the client, its cache and the projection                                                    |
-| `TRN0004`  | `aircraft-source` B-047 | References from below `IFleetTracker` to a contract, client, cache, snapshot or concrete source, excluding what the seam publishes |
-| `TRN0005`  | `aircraft-source` B-032 | References to a domain type from the cache                                                                                         |
-| `TRN0006`  | `aircraft-source` B-041 | References from a view model to a strategy, a client, a cache or the decorator, excluding what the seam publishes                  |
-| `TRN0007`  | `aircraft-source` B-044 | Imperative mutation of a bound collection                                                                                          |
-| `TRN0008`  | `aircraft-source` B-002 | The envelope's members                                                                                                             |
-| `TRN0009`  | `aircraft-source` B-005 | The contract's method signatures                                                                                                   |
-| `TRN0010`  | `aircraft-source` B-006 | The types the contract's declarations name                                                                                         |
-| `TRN0011`  | `aircraft-source` B-007 | Implementations of the contract: count per transport, accessibility, sealedness, explicit implementation                           |
-| `TRN0012`  | `aircraft-source` B-014 | The snapshot's members                                                                                                             |
-| `TRN0013`  | `aircraft-source` B-037 | The per-type tracker source interface's members                                                                                    |
-| `TRN0014`  | `aircraft-source` B-048 | The contract's name and any interface above it                                                                                     |
-| `TRN0015`  | `aircraft-source` B-008 | Registration and resolution call sites naming an implementation type                                                               |
-| `TRN0016`  | `aircraft-source` B-030 | The cache's declaration and the type it is registered as                                                                           |
-| `TRN0017`  | `aircraft-source` B-031 | The cache's registration: lifetime, and one per client                                                                             |
+| Diagnostic | Enforces                | What it examines                                                                                                                        |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `TRN0001`  | `aircraft-source` B-004 | Every reference to the positional row from outside the integration                                                                      |
+| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the implementations of the contract and the snapshot client                         |
+| `TRN0003`  | `aircraft-source` B-046 | Every reference to a snapshot, against the client, its cache and the projection                                                         |
+| `TRN0004`  | `aircraft-source` B-047 | References from below `IFleetTracker` to a contract, client, cache, snapshot or concrete source, excluding what the seam publishes      |
+| `TRN0005`  | `aircraft-source` B-032 | References to a domain type from the cache                                                                                              |
+| `TRN0006`  | `aircraft-source` B-041 | References from a semantic view or view model to a strategy, client, cache or decorator, excluding what the seam publishes              |
+| `TRN0007`  | `aircraft-source` B-044 | Imperative mutation of a bound collection                                                                                               |
+| `TRN0008`  | `aircraft-source` B-002 | The envelope's members                                                                                                                  |
+| `TRN0009`  | `aircraft-source` B-005 | The contract's method signatures                                                                                                        |
+| `TRN0010`  | `aircraft-source` B-006 | The types the contract's declarations name                                                                                              |
+| `TRN0011`  | `aircraft-source` B-007 | Implementations of the contract: count per transport, accessibility, sealedness, explicit implementation                                |
+| `TRN0012`  | `aircraft-source` B-014 | The snapshot's members                                                                                                                  |
+| `TRN0013`  | `aircraft-source` B-037 | The per-type tracker source interface's members                                                                                         |
+| `TRN0014`  | `aircraft-source` B-048 | The contract's name and any interface above it                                                                                          |
+| `TRN0015`  | `aircraft-source` B-008 | Registration and resolution call sites naming an implementation type                                                                    |
+| `TRN0016`  | `aircraft-source` B-030 | The cache's declaration and the type it is registered as                                                                                |
+| `TRN0017`  | `aircraft-source` B-031 | The cache's registration: lifetime, and one per client                                                                                  |
+| `TRN0019`  | `fleet-dashboard` B-017 | Semantic view/view-model transport, blocking calls, untimed Ask and timer operations; permits injected one-shot presentation deadlines. |
+| `TRN0020`  | `fleet-dashboard` B-018 | Competing collection filters, sorts, groups, expiry and domain staleness arithmetic in semantic views/view models.                      |
+| `TRN0021`  | `fleet-dashboard` B-022 | Concrete-vehicle casts and type tests throughout Fleet, including statics and semantic head views.                                      |
 
 **What a fix can do, and where it cannot**
 
 B-020 asks for a code fix per diagnostic or a reason there is none. Three rules
-admit one; fourteen do not, and the pattern is the same one Airframe records for
+admit one; the others do not, and the pattern is the same one Airframe records for
 its own `RSA2008`, `RSA2009` and `RSA2012` — a fix exists where the compliant
 form is _determined_, and nowhere else.
 
@@ -177,6 +180,7 @@ form is _determined_, and nowhere else.
 | `TRN0008`, `TRN0012`, `TRN0013` | No  | The compliant form is a member that is not there. Deleting a member is destructive and the author may instead want it moved, so the fix is a conversation.                                                                                            |
 | `TRN0010`, `TRN0014`            | No  | Both are satisfied by renaming or re-siting a type. Either changes a public surface, and `TRN0014`'s compliant form depends on whether the provider has published a version.                                                                          |
 | `TRN0015`, `TRN0016`            | No  | A registration that reaches an implementation type is fixed by introducing or using an alias that may not exist yet.                                                                                                                                  |
+| `TRN0019` – `TRN0021`           | No  | Moving transport, state derivation or concrete-vehicle knowledge requires choosing its owner; removing the expression would discard behavior rather than repair the boundary.                                                                         |
 
 A fix ships with the rule it fixes, in the item that builds it and in
 `src/Transporter.CodeFixes`, and its own test applies one action per pass and
@@ -258,8 +262,8 @@ that creates each file, per
 § "A declaration belongs to the file that compiles".
 
 ```csharp
-// One analyzer, seventeen descriptors. One analyzer class per rule would give
-// seventeen copies of the layer identification below, which is the part most
+// One analyzer with scoped descriptors. One analyzer class per rule would give
+// repeated copies of the layer identification below, which is the part most
 // likely to change once § 11 row 1 is answered.
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
@@ -276,7 +280,7 @@ registering operation actions over bodies rather than symbol actions over
 signatures. A descriptor carries the `TRN` id (B-002), the enforced claim in
 its title and message format (B-003), and `error` as its default severity
 (B-006); `Diagnostics.cs` holds them so the conventions B-001 – B-007 are
-checkable in one place by one test class rather than seventeen.
+checkable in one place by one test class rather than one per diagnostic.
 
 **Decision required**
 
@@ -343,7 +347,7 @@ describes.
 | B-005    | `@B-005` | `BoundaryAnalyzerTests.GivenAViolationInGeneratedSource_WhenAnalyzed_ThenNothingIsReported`                                                                                                                              | Verified |
 | B-006    | `@B-006` | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheDefaultSeveritiesAreRead_ThenEveryOneIsError`                                                                                                       | Verified |
 | B-007    | `@B-007` | `BoundaryAnalyzerDescriptorTests.GivenTheSupportedDiagnostics_WhenTheIdsAreCompared_ThenNoneIsDuplicatedAndNoRetiredIdIsReused`                                                                                          | Verified |
-| B-008    | `@B-008` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheSeventeenAndNothingMore`                                                                                       | Verified |
+| B-008    | `@B-008` | `BoundaryAnalyzerDescriptorTests.GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheScopedSetAndNothingMore`                                                                                       | Verified |
 | B-009    | `@B-009` | `BoundaryAnalyzerTests.GivenATypeNamingAForbiddenTypeOnlyInsideAMethodBody_WhenAnalyzed_ThenItIsReported`                                                                                                                | Verified |
 | B-010    | `@B-010` | `BoundaryAnalyzerTests.GivenAForbiddenShapeOnADeclaration_WhenAnalyzed_ThenItIsReportedOnThatDeclaration`                                                                                                                | Verified |
 | B-011    | `@B-011` | `BoundaryAnalyzerTests.GivenAForbiddenRegistration_WhenAnalyzed_ThenItIsReportedAtTheRegistrationCall`                                                                                                                   | Verified |
@@ -523,6 +527,24 @@ supersession. Its number is not reused and rows 3 and 4 keep theirs.
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../.spec/templates/feature.md).
+
+**Independent re-read 2026-10-14 — `spec-reviewer`, `0039`.** Read the
+§§ 6-7 mapping and no-fix rationale, the § 9 B-008 test-name delta, scoped
+metadata tests, and the new dashboard rules against fleet-dashboard B-017,
+B-018 and B-022. TRN0019, TRN0020 and TRN0021 preserve the independent id
+sequence and reserved TRN0018 gap; TRN0006 gains semantic head/view-model
+classification without a second claim store. The new rules report at violating
+expressions, and no safe mechanical fix is claimed. Real DynamicData mutation,
+filter/sort/group/expiry and allowed binding cases supplement semantic transport,
+blocking, timer and concrete-vehicle cases. Deadline negatives include downstream
+work through aliases, named callbacks, assignment and escape; allowed cases
+include the actual presentation notification/observer flow.
+
+Scoped descriptor identities distinguish aircraft-source from fleet-dashboard
+claims sharing the same number. The final `./build.sh` log records 379 passing
+tests with none failed or skipped. **Clean review: §§ 6-7 are 🟢 Approved;
+the §§ 8-9 evidence delta is independently re-approved.** All owner rows are
+approved; the frontmatter returns to `approved`.
 
 ## Decisions
 

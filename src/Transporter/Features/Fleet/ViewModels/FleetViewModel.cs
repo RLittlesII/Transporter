@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Akka.Actor;
@@ -15,6 +16,7 @@ using Transporter.Messages;
 using Transporter.Model;
 using Transporter.Tracking;
 using Transporter.Tracking.Fleet;
+using IScheduler = System.Reactive.Concurrency.IScheduler;
 using Unit = System.Reactive.Unit;
 
 namespace Transporter.Features.Fleet.ViewModels;
@@ -38,6 +40,38 @@ public sealed class FleetViewModel : RxObject, IDisposable
     public FleetViewModel(IFleetTracker tracker, ISchedulerProvider schedulers, IActorRegistry registry)
     {
         _tracker = tracker;
+        _arrivals = tracker.Fleet.Publish().RefCount();
+        var targets = registry.TryGet<SwapSource>(out var swapActor)
+            ? Observable.FromAsync(token => swapActor.Ask<SwapTargets>(GetSwapTargets.Instance, TargetsWithin, token))
+                .Catch(Observable.Return(new SwapTargets([])))
+            : Observable.Return(new SwapTargets([]));
+        _targets = targets
+            .Do(answer => _answered = answer)
+            .Select(static answer => (IReadOnlyList<string>) answer.Targets.Select(static target => target.Name).ToArray())
+            .AsValue(
+                _ =>
+                {
+                    RaisePropertyChanged(nameof(Targets));
+                    RaisePropertyChanged(nameof(HasTargets));
+                },
+                schedulers.UserInterfaceThread,
+                static () => Array.Empty<string>())
+            .DisposeWith(_garbage);
+        SwapCommand = RxCommand.Create(
+                () => SelectedTarget,
+                this.WhenChanged(static model => model.SelectedTarget).Select(ValidTarget),
+                schedulers.UserInterfaceThread)
+            .DisposeWith(_garbage);
+        _isSwapping = SwapCommand
+            .Where(ValidTarget)
+            .Select(position => SwapWindow(_answered.Targets[position], swapActor!, schedulers.UserInterfaceThread))
+            .Switch()
+            .AsValue(_ => RaisePropertyChanged(nameof(IsSwapping)), schedulers.UserInterfaceThread, static () => false)
+            .DisposeWith(_garbage);
+        this.WhenChanged(static model => model.SelectedTarget)
+            .Where(ValidTarget)
+            .Select(static _ => Unit.Default)
+            .InvokeCommand(this, x => x.SwapCommand).DisposeWith(_garbage);
 
         // The scheduler is passed rather than left to default: an unset one is resolved from
         // ReactiveMarbles' service locator, which is the ambient read B-005 forbids.
@@ -61,8 +95,7 @@ public sealed class FleetViewModel : RxObject, IDisposable
                 schedulers.UserInterfaceThread,
                 static () => false)
             .DisposeWith(_garbage);
-        tracker
-            .Fleet
+        _arrivals
             .ObserveOn(schedulers.UserInterfaceThread)
             .SortAndBind(out _fleet, tracker.Order)
             .Subscribe(Follow)
@@ -95,6 +128,21 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
     /// <summary>Gets the collection the grid binds, materialised here and in no other place (B-005).</summary>
     public ReadOnlyObservableCollection<TrackedVehicle> Fleet => _fleet;
+
+    /// <summary>Gets the discovered target names.</summary>
+    public IReadOnlyList<string> Targets => _targets.Value;
+
+    /// <summary>Gets whether any target can be chosen.</summary>
+    public bool HasTargets => Targets.Count != 0;
+
+    /// <summary>Gets or sets the selected picker position.</summary>
+    public int SelectedTarget { get; set => RaiseAndSetIfChanged(ref field, value); } = -1;
+
+    /// <summary>Gets the command that requests the selected source.</summary>
+    public RxCommand<Unit, int> SwapCommand { get; }
+
+    /// <summary>Gets whether the swap presentation window is open.</summary>
+    public bool IsSwapping => _isSwapping.Value;
 
     /// <summary>Gets the command that says a poll is wanted: one <c>Tell</c>, and no answer waited for (B-028).</summary>
     /// <remarks>
@@ -249,6 +297,23 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// <summary>Hands the tracker the one predicate the two inputs compose into (B-009).</summary>
     private void Filter() => _tracker.Filter(FleetSearch.Composed(SearchText, Columns, SelectedFilter));
 
+    private bool ValidTarget(int position) => position >= 0 && position < _answered.Targets.Count;
+
+    private IObservable<bool> SwapWindow(SwapTarget target, IActorRef actor, IScheduler scheduler) =>
+        Observable.Create<bool>(observer =>
+        {
+            observer.OnNext(true);
+            var window = _arrivals
+                .Where(static changes => changes.Adds != 0)
+                .Select(static _ => false)
+                .Merge(Observable.Timer(SwapClearsAfter, scheduler).Select(static _ => false))
+                .Take(1)
+                .Subscribe(observer);
+            actor.Tell(SwapSource.To(target));
+
+            return window;
+        });
+
     /// <summary>How long the indicator shows before it gives up waiting for a poll that was refused (decisions/0001).</summary>
     /// <remarks>
     /// This Feature's number, chosen by feel and checked by the first rehearsal. Not read from
@@ -257,10 +322,15 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// costs.
     /// </remarks>
     private static readonly TimeSpan ClearsAfter = TimeSpan.FromSeconds(3);
-
+    private static readonly TimeSpan TargetsWithin = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan SwapClearsAfter = TimeSpan.FromSeconds(10);
     private readonly CompositeDisposable _garbage = [];
     private readonly IValueBinder<bool> _isRefreshing;
+    private readonly IValueBinder<bool> _isSwapping;
+    private readonly IValueBinder<IReadOnlyList<string>> _targets;
+    private readonly IObservable<IChangeSet<TrackedVehicle, string>> _arrivals;
     private readonly IValueBinder<DateTimeOffset> _observed;
     private readonly ReadOnlyObservableCollection<TrackedVehicle> _fleet;
     private readonly IFleetTracker _tracker;
+    private SwapTargets _answered = new([]);
 }

@@ -136,6 +136,21 @@ internal static class Diagnostics
         "one cache per client, at the application's lifetime",
         "the cache is registered {0}");
 
+    /// <summary>A view or view model owns transport, domain time or blocking work.</summary>
+    internal static readonly DiagnosticDescriptor PresentationOwnsTransportOrTime = Rule(
+        "TRN0019", "fleet-dashboard B-017", "Presentation owns transport, recurring time or blocking work",
+        "Keep transport and domain time below the view; bound presentation deadlines need an injected scheduler and an explicit Ask timeout");
+
+    /// <summary>Presentation performs a pipeline-owned collection or domain operation.</summary>
+    internal static readonly DiagnosticDescriptor PresentationDerivesFleetState = Rule(
+        "TRN0020", "fleet-dashboard B-018", "Presentation derives fleet state",
+        "Pass the chosen predicate, comparer or grouping to the tracker and project its answer");
+
+    /// <summary>Presentation inspects a concrete vehicle instead of its description.</summary>
+    internal static readonly DiagnosticDescriptor PresentationNamesConcreteVehicle = Rule(
+        "TRN0021", "fleet-dashboard B-022", "Presentation tests a concrete vehicle",
+        "Read the source description instead of casting or testing a concrete vehicle");
+
     /// <summary>Every descriptor the analyzer supports, in id order.</summary>
     internal static ImmutableArray<DiagnosticDescriptor> All { get; } = ImmutableArray.Create(
         WireTypeOutsideIntegration,
@@ -154,7 +169,10 @@ internal static class Diagnostics
         ContractCarriesAVersion,
         ImplementationTypeIsReachable,
         CacheIsMoreThanAKeyedStore,
-        CacheLifetimeIsNotTheApplications);
+        CacheLifetimeIsNotTheApplications,
+        PresentationOwnsTransportOrTime,
+        PresentationDerivesFleetState,
+        PresentationNamesConcreteVehicle);
 
     private static DiagnosticDescriptor Rule(string id, string claim, string summary, string message) =>
         new(

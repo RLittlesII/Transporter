@@ -37,10 +37,16 @@ public class BoundaryAnalyzerDescriptorTests
 
         // Then
         ids.Should().AllSatisfy(static id => id.Should().MatchRegex(@"^TRN\d{4}$"));
+        var active = SpecificationTables.Rows(
+                SpecificationTables.Read("src/Transporter.Analyzers/AnalyzerReleases.Unshipped.md"),
+                @"^\|\s*TRN\d{4}\s*\|")
+            .Where(static cells => !cells[3].Contains("Retired", StringComparison.Ordinal))
+            .Select(static cells => cells[0])
+            .OrderBy(NumberOf);
         ids.Should().BeEquivalentTo(
-            Enumerable.Range(1, ids.Length).Select(static number => $"TRN{number:D4}"),
+            active,
             static options => options.WithStrictOrdering(),
-            "the ids run on the analyzer's own sequence from TRN0001");
+            "the active release sequence preserves retired ids without reusing or closing their gaps");
         sut.SupportedDiagnostics.Should().AllSatisfy(static descriptor =>
             NumberOf(descriptor.Id).Should().NotBe(
                 NumberOf(ClaimOf(descriptor)),
@@ -61,7 +67,9 @@ public class BoundaryAnalyzerDescriptorTests
         {
             var claim = ClaimOf(descriptor);
 
-            claim.Should().StartWith("aircraft-source ", "a build message says which specification's agreement broke");
+            claim.Should().MatchRegex(
+                @"^(aircraft-source|fleet-dashboard) B-\d{3}$",
+                "the specification is part of a claim identity");
             descriptor.MessageFormat.ToString().Should().Contain(claim);
             descriptor.Description.ToString().Should().Contain(claim);
         });
@@ -107,17 +115,18 @@ public class BoundaryAnalyzerDescriptorTests
     }
 
     [Fact]
-    public void GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheSeventeenAndNothingMore()
+    public void GivenTheMappingTable_WhenComparedWithTheAssignedClaims_ThenItIsExactlyTheScopedSetAndNothingMore()
     {
         // Given
         var sut = new BoundaryAnalyzer();
 
         // When
-        var enforced = sut.SupportedDiagnostics.Select(ClaimOf).Select(ClaimId).ToArray();
+        var enforced = sut.SupportedDiagnostics.Select(ClaimOf).ToArray();
 
         // Then
         enforced.Should().BeEquivalentTo(
-            AssignedClaims(),
+            AssignedClaims().Select(static id => "aircraft-source " + id)
+                .Concat(["fleet-dashboard B-017", "fleet-dashboard B-018", "fleet-dashboard B-022"]),
             "ADR-0006 assigns the set; a rule no claim asked for and a claim with no rule are both defects");
     }
 
@@ -128,11 +137,11 @@ public class BoundaryAnalyzerDescriptorTests
         var sut = new BoundaryAnalyzer();
 
         // When
-        var enforced = sut.SupportedDiagnostics.Select(ClaimOf).Select(ClaimId).ToArray();
+        var enforced = sut.SupportedDiagnostics.Select(ClaimOf).ToArray();
 
         // Then
         enforced.Should().NotIntersectWith(
-            BehaviouralClaims(),
+            BehaviouralClaims().Select(static id => "aircraft-source " + id),
             "a claim another specification proves with an xUnit test is not a claim this analyzer may assert as well");
     }
 
@@ -160,7 +169,7 @@ public class BoundaryAnalyzerDescriptorTests
 
         // The Enforces cell is what makes a row the mapping table's: § 7 also carries a table of
         // which diagnostics can have a code fix, and its rows open with a TRN id too.
-        var rows = SpecificationTables.Rows(Specification, @"^\|\s*`TRN\d{4}`\s*\|\s*`?aircraft-source`? B-\d{3}");
+        var rows = SpecificationTables.Rows(Specification, @"^\|\s*`TRN\d{4}`\s*\|\s*`?[a-z-]+`? B-\d{3}");
 
         // When
         var mapped = rows.Select(static cells => (Diagnostic: cells[0].Trim('`'), Claim: cells[1])).ToArray();
@@ -171,7 +180,7 @@ public class BoundaryAnalyzerDescriptorTests
             "the table and the descriptors are one mapping, not two");
         mapped.Should().AllSatisfy(row =>
         {
-            row.Claim.Should().MatchRegex(@"^`?aircraft-source`? B-\d{3}$");
+            row.Claim.Should().MatchRegex(@"^`?(aircraft-source|fleet-dashboard)`? B-\d{3}$");
             row.Claim.Should().NotContain("SHALL", "the claim's text lives in that specification's § 3");
             row.Claim.Should().NotContain("BoundaryAnalyzerTests", "the test that proves it lives in that specification's § 9");
         });
