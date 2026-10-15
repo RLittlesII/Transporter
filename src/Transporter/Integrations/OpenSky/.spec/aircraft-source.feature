@@ -211,13 +211,14 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And it records neither the token nor the credentials that obtained it
 
   @B-029
-  Scenario: A missing credential stops the application at startup and names which one
+  Scenario: A missing credential is named at the first poll and stops nothing
     Given no OpenSky client secret has been configured
      When the application starts
-     Then startup fails
-      And the failure message names the client secret as the absent credential
-      And no poll was attempted
-      And the message does not contain the value of any credential that was configured
+      And the first poll runs
+     Then the application is still running
+      And a warning names the client secret as the absent credential
+      And the warning does not contain the value of any credential that was configured
+      And the client's stream neither completed nor errored
 
   @B-058
   Scenario: A credential in the developer's secret store is the one the application binds

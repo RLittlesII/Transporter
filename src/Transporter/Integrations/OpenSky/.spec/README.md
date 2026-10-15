@@ -70,7 +70,13 @@ layering is, and the claim says it rather than leaving it to be found: a
 setting the store names takes the store's value. Nothing asked for that
 breadth — § 4 row 12 and the person's choice are about credentials — and
 narrowing it to the two credential keys is a filter nobody asked for either.
-It is the store's ordinary behaviour, written down, and the person's to narrow.
+It is the store's ordinary behaviour, written down. **Decided 2026-10-15 by
+the person: any setting, as written** — narrowing it is a filter for a machine
+nobody else runs.
+
+**B-029's first half was reworded on 2026-10-15**, from § 11 row 7: the head
+starts no generic host, so an absent credential is named at the first poll and
+stops nothing. The second half is unchanged.
 
 B-054 and B-055 were added on 2026-10-08, from
 [`fleet-dashboard` decision 0002](../../../Features/Fleet/.spec/decisions/0002-cards-and-a-trail-map-replace-the-grid.md):
@@ -157,7 +163,7 @@ than being slotted into the sequence.
 | B-026 | The HTTP transport SHALL refresh its OAuth2 token both when the current token has expired and when a request returns `401`, retrying that request once after a successful refresh; it SHALL NOT rely on expiry alone.                                                                                                                                                                                                                                                                                                                                                 | README.md § "Authentication"; § 11 row 2                                            |
 | B-027 | The HTTP transport SHALL log the `X-Rate-Limit-Remaining` header value at debug level on every poll, and no log line, exception message, test fixture or diagnostic SHALL contain a token, `client_id` or `client_secret` value.                                                                                                                                                                                                                                                                                                                                      | README.md § "Limits"; api-contract § "Credentials"; § 11 row 2                      |
 | B-028 | A `429` response SHALL be inspected for `X-Rate-Limit-Retry-After-Seconds` in the HTTP transport, and SHALL defer the snapshot client's next poll by exactly that many seconds; no exception SHALL reach a subscriber of the client's stream and no backoff SHALL be invented; every other non-2xx status SHALL remain an exception.                                                                                                                                                                                                                                  | README.md § "Limits"; flurl-http-client; ADR-0008; § 11 row 2                       |
-| B-029 | A missing OpenSky credential SHALL fail at application startup with a message naming which credential is absent; and a failed poll — timeout, `429`, `5xx`, or an unreadable body — SHALL NOT complete or error-terminate the client's stream.                                                                                                                                                                                                                                                                                                                        | api-contract § "Credentials"; hot-swap-source                                       |
+| B-029 | A missing OpenSky credential SHALL NOT stop the application: the first poll that needs it SHALL fail with a logged warning naming which credential is absent and containing no credential's value; and a failed poll — timeout, `429`, `5xx`, an unreadable body, or an absent credential — SHALL NOT complete or error-terminate the client's stream.                                                                                                                                                                                                                | api-contract § "Credentials"; hot-swap-source; § 11 row 7                           |
 | B-058 | The configuration the application composes SHALL be its packaged settings with the developer's user-secrets store layered over them: a setting the store names takes the store's value, so an OpenSky credential held in the store reaches the live transport, and no packaged setting the store does not name changes. With no store, the configuration SHALL be the packaged settings unchanged, carrying no credential.                                                                                                                                            | § 4 row 12; `0086`; api-contract § "Credentials"                                    |
 | B-030 | The cache SHALL be a plain keyed store of snapshots: no diff policy of its own, no projection, and no clock.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Decided call — the cache is dumb                                                    |
 | B-031 | There SHALL be one cache per client, typed to that client's snapshot, and its lifetime SHALL be the application's rather than the client's.                                                                                                                                                                                                                                                                                                                                                                                                                           | Decided call; hot-swap-source § "What must not be rebuilt"; ADR-0009                |
@@ -233,6 +239,7 @@ than being slotted into the sequence.
 | 17  | A `Test` target in the Nuke build                                                                                                                | A repository-wide call, and `0017` made it outside this Feature. Deciding it inside a feature specification would have settled a build convention by side effect.                                                                                                                                                                                                                                                                                                                                |
 | 18  | The bind into a collection, and the marshal to the user-interface thread                                                                         | ADR-0009 moved both out of the pipeline and into its consumer, so they are `fleet-dashboard` B-005's — one `Bind` in a view model, disposed with it. Nothing here owns a `ReadOnlyObservableCollection`, and no claim in § 3 is satisfied by one. The obligation is not lost, only unprovable until a view model exists to carry it.                                                                                                                                                             |
 | 19  | Distributing a built bundle, a keychain, a settings screen for the credentials, and any run-time read of the developer's home directory          | B-058 packages the store into the bundle when it is built, so a bundle built on a machine holding the store contains the secret. It is a rehearsal and stage artefact on the presenter's own machine, never shipped, attached or committed. A keychain or a settings screen would keep the secret out of the bundle, and each is a feature nobody asked for (`fleet-dashboard` § 5 row 4); a sandboxed head cannot open the home directory at run time at all.                                   |
+| 20  | Showing on the page that a credential is absent                                                                                                  | B-029 names it in the log at the first poll. A message on the dashboard is a page surface, `fleet-dashboard`'s to claim, and it claims none yet.                                                                                                                                                                                                                                                                                                                                                 |
 
 ## 6. Concern Separation
 
@@ -276,7 +283,7 @@ why it was allowed.
 | Houston specifically                                                | Business       | `decisions/0001`: chosen for the variety the grouped view needs, and so the vessel closing act shares one geography. Any box works technically.                                                                                                                                                                                                                                                                                                                                    |
 | Token lifecycle, the credit header, and the throttle                | Technical      | § 4 rows 7 and 9 are the provider's terms, not ours to simplify. B-026, B-028, which name the transport: it is the only thing holding the response, and B-006 keeps the credential off the contract.                                                                                                                                                                                                                                                                               |
 | A credential never reaches a log, a fixture or a screenshot         | Both           | Technically § 4 row 12. The business reason is that this runs in front of a room and is recorded, so "it is only a debug log" does not apply. B-027.                                                                                                                                                                                                                                                                                                                               |
-| A missing credential stops the application at startup               | Business       | Chosen so the presenter learns before the stage rather than during it (§ 2 need 5). Failing lazily on the first poll compiles equally well and is the natural implementation. B-029, first half.                                                                                                                                                                                                                                                                                   |
+| A missing credential is named at the first poll, and stops nothing  | Business       | The person's choice on § 11 row 7, 2026-10-15. The head starts no generic host, so a failure at startup was never what happened; and stopping the application would also stop a clone with no credential running from a recording (`0047`). The presenter learns at rehearsal, from the log. A message on the page is § 5 row 20. B-029, first half.                                                                                                                               |
 | A credential kept outside the tree still reaches the application    | Both           | Technically § 4 row 12, and a sandbox: the store is in the home directory, which a Mac Catalyst or iOS head cannot open, so it is packaged at build rather than read at run. The business half is the person's choice of the store over an ignored settings file — one place for every worktree, and no copy outside ignored build output. B-058.                                                                                                                                  |
 | A failed poll does not end the stream                               | Both           | Technically an `IObservable` that errors is finished for good. Why it is claimed at all: the grid must not go dead mid-sentence on a venue network. B-029, second half.                                                                                                                                                                                                                                                                                                            |
 | The swap is unobservable from the stream                            | Both           | § 2 need 6: if the pipeline can tell which source is live, the claim the talk is making is false while it is being made. The decorator is the technical shape that buys it. B-038, B-039.                                                                                                                                                                                                                                                                                          |
@@ -605,8 +612,10 @@ arrangement to get wrong.
 from the `OpenSky` section, validates both on start, and wires the chain. An
 application and a test call that same method and differ only in what
 configuration they supply, so there is no second graph to keep in step — which is
-what makes B-029's startup failure provable against the thing that actually
-starts. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
+what makes B-029's failure at the first poll provable against the graph the
+head builds. `ValidateOnStart` stays registered, but the head starts no generic
+host and so never runs it (§ 11 row 7): the validator runs when the token source
+first reads the credentials, inside a poll. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
 box: the URL is the provider's and nobody here chooses it, while B-050 leaves the
 box with no default on purpose.
 
@@ -618,7 +627,7 @@ provider — is an `internal` method `AddOpenSky` calls first, and
 `AddAircraftReplay` calls instead. `OpenSkyCredentials`, their `ValidateOnStart`,
 the token source, the Flurl client cache and the transport stay in `AddOpenSky`.
 A composition that registers the live transport therefore validates exactly as
-it did before, which is what keeps B-029 true as written; what is new is a
+it did before, which is what keeps B-029 true; what is new is a
 composition this specification never contemplated, with no live transport and so
 no credential to be missing. The reasoning and the alternatives are
 [replay-source](../../../../../features/replay-source/.spec/README.md) § 11
@@ -628,8 +637,8 @@ specification's `spec-author`'s call.
 Options and credentials are **two types, not one**, because B-027 bans a
 credential reaching a log line and a single options object invites being logged
 whole. The polling interval defaults to fifteen seconds and the bounding box has
-no default compiled in (B-050); `ValidateOnStart` on the credentials is what
-makes B-029's startup failure name the absent one.
+no default compiled in (B-050); the credentials' validator is what makes
+B-029's failed first poll name the absent one.
 
 **The credentials reach configuration from the user-secrets store, packaged at
 build.** The store is a JSON file in the developer's home directory, keyed by
@@ -1098,10 +1107,11 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and four of the fifty-seven rows read `Missing`** —
+**This is the gate, and five of the fifty-seven rows read `Missing`** —
+B-029, whose first half was reworded on § 11 row 7 and is owed a test,
 B-054 – B-056, cut into `0068`, and B-058, whose head-store review remains
-owed. Fifty-three are `Verified`, and they arrived three different ways.
-Thirty-five came from
+owed. Fifty-two are `Verified`, and they arrived three different ways.
+Thirty-four came from
 items: `0002` built the contract, its envelope, the positional row's converter
 and the HTTP transport, `0003` the snapshot and its
 cache, `0004` the snapshot client, the token source, the observed clock and
@@ -1112,7 +1122,7 @@ resolves, `0057` the poll a user demands and the window that refuses one, and
 `0080` the targets the swap actor answers from registration —
 the tests
 this section names against B-001, B-003, B-011 – B-013,
-B-015 – B-029, B-033 – B-040, B-042, B-043, B-050 – B-053, B-057 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
+B-015 – B-028, B-033 – B-040, B-042, B-043, B-050 – B-053, B-057 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
 second contract interface would have to be and B-049 what a push provider's
 strategy may not be given, so for each there is no value to compute and
 no declaration to analyze, and the row records what was looked at and when it is
@@ -1195,7 +1205,7 @@ is B-049 and the clause waiting on `0005`.
 | B-026    | `@B-026` | `OpenSkyHttpApiTests.GivenAnExpiredTokenAndGivenAnUnauthorizedResponse_WhenAPollIsSent_ThenTheTokenRefreshesAndTheRequestRetriesOnce`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-027    | `@B-027` | `OpenSkyHttpApiTests.GivenAPollAndATokenRefresh_WhenBothAreLogged_ThenRemainingCreditIsRecordedAtDebugAndNoSecretAppears`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verified |
 | B-028    | `@B-028` | `OpenSkyHttpApiTests.GivenAThrottledResponseAndGivenAServerError_WhenEachIsHandled_ThenTheFirstDefersByTheHeaderAndTheSecondStaysAnException`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
-| B-029    | `@B-029` | `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` and `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Verified |
+| B-029    | `@B-029` | Owed, no item cut yet: `AircraftSnapshotClientTests.GivenAnAbsentCredential_WhenTheFirstPollRuns_ThenAWarningNamesItAndTheStreamStaysOpen`. Holding: `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors`. `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` proved the withdrawn wording against a generic host the head never starts (§ 11 row 7)                                                                                                                                                                                                                           | Missing  |
 | B-030    | `@B-030` | analyzer — `BoundaryAnalyzerTests.GivenACacheWrappedInATypeOfItsOwn_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-031    | `@B-031` | analyzer — `BoundaryAnalyzerTests.GivenACacheRegisteredWithAnyLifetimeButTheApplicationsOrSharedBetweenClients_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-032    | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
@@ -1269,6 +1279,20 @@ is `0086`'s credentials: § 4 row 12 said where they come from, no claim made
 anything read them, and two exclusions pointed past the gap — so every row a
 credential touches read `Verified` on an application that could not be given
 one.
+
+**Delta, 2026-10-15 — B-029's first half says what the head does, and the
+three questions § 12 left to the person are decided.** Trigger: § 11 row 7,
+answered by the person. The head builds a `MauiApp` and starts no generic host,
+so `ValidateOnStart` never runs there, and an absent credential has always
+surfaced at the first poll. B-029 now claims that: the poll fails with a warning
+naming the absent credential, and nothing stops. § 4's constraint row is
+rewritten, § 5 row 20 leaves a message on the page to `fleet-dashboard`, § 7
+says where the validator runs, the scenario is rewritten, and the § 9 row reads
+`Missing` until a test proves the warning — `OpenSkyStartupTests` proved the
+withdrawn wording against a host the head never starts. `0047`'s criterion that
+the application starts against configuration carrying no credential now holds
+beside B-029 rather than against it. B-058 is unchanged: the person kept its
+breadth (§ 3). Lesson 0006 stays here (§ 12).
 
 **Delta, 2026-10-09 — B-058 is added, and § 4 row 12 gains a claim under it.**
 Trigger: bug `0086`. The application's configuration is now claimed to be its
@@ -1458,20 +1482,29 @@ instance of it is.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 11 -->
 
-Two open, of seven asked. The first two were opened by § 7, the third by § 8,
+One open, of seven asked. The first two were opened by § 7, the third by § 8,
 the fourth by review of pull request #1, the fifth by `0002` running out of
 ways to reach `done`, the sixth by running the application against a
 recording, and the seventh by reading the head on `0086`; writing a section surfaces a question, reading the code it produced
 surfaces another, and so does an item whose last two rows name no test anything
 can write, or a grid that fills only when two registration lines trade places.
-The first five have been answered and moved to the paragraphs below. Their
+Rows 1 – 5 and 7 have been answered and moved to the paragraphs below. Their
 numbers are not reused, so a reference written while one was open still points
 at the question it meant.
 
 | #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Owner      | Target date |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------- |
 | 6   | **Which registered strategy is live when the application starts?** Nothing decides it today: `SwappingTrackerSource` begins on the first `ITrackerSourceStrategy` the container hands it, so the starting source is whichever registration `TransporterRegistration` makes first — live OpenSky, by an order nobody recorded. Surfaced 2026-10-07, when the only way to watch `0052`'s generated recording run in the head was to put `AddAircraftReplay` before `AddOpenSky`: a local edit, never committed, because `replay-source` B-015 and its `adr/0001` item 3 say nothing but the selector decides whether replay is live, and an order that decides it is a second selector hiding in the composition root. Three readings to weigh. **(a)** Live first, as now, but stated in B-038 — a visitor with no credential sees an empty grid until `fleet-dashboard` `0039`'s control exists. **(b)** Replay first whenever a recording is registered, so a clone runs from the sample with no account — at the cost of the presenter opening on a recording and swapping to live on stage, and of configuration deciding what is live by deciding what is registered. **(c)** An explicit starting choice handed to the decorator by the composition root, so neither order nor configuration carries it and the choice is one line a reader finds. Whichever is chosen, B-038 gains the sentence, `0039` reads it before the control is designed, and `0061`'s fix knows whether an unregistered replay source changes what starts. | the person | 2026-10-14  |
-| 7   | **Does B-029's startup failure happen in the application, or only in the host its test builds?** `AddOpenSky` registers the credentials with `ValidateOnStart`, which is run by a generic host's start. The head builds a `MauiApp`, which starts no generic host: the Akka host it adds runs as a MAUI initialize service, and nothing in either calls the start-up validators. Read from the code on `0086`, not observed in a run — launching the head polls the live provider, and no credential was held to launch with. If the reading is right, an absent credential does not stop the head: the validator runs when the token source first reads the options, inside a poll, and B-029's own second clause keeps that failure off the stream, so the presenter sees an empty fleet and no message. B-058 makes the case rarer and does not close it. Three readings. **(a)** The head calls the validators itself before the window is built, so B-029 holds as written. **(b)** B-029 is reworded to what happens — the first poll fails and the page says why — which needs `fleet-dashboard` to show it. **(c)** It stays as it is, and § 5 says a missing credential is found at rehearsal. Two things the answer owes: B-029's § 9 row reads `Verified` beside this doubt, and `0047`'s criterion that the application starts with no exception against configuration carrying no credential cannot hold together with B-029 as written.                                                                                    | the person | 2026-10-16  |
+
+**Row 7 — answered 2026-10-15 by the person: (b), B-029 says what happens.**
+The reading held: nothing in the head calls the start-up validators, so the
+failure B-029 claimed happened only in the generic host its test builds. (a)
+would have stopped a clone with no credential running from a recording, which
+`0047` forbids; (c) would have kept a claim false of the application with a
+`Verified` row beside it. B-029 now claims a warning naming the absent
+credential at the first poll, and that nothing stops; its row reads `Missing`
+until a test proves it. A message on the page is § 5 row 20, `fleet-dashboard`'s
+to claim. Its number is not reused.
 
 **Row 4 — answered: B-010 is withdrawn, both halves.** The question asked
 whether a substitute may stand in at the contract seam. The person asked the
@@ -1741,6 +1774,17 @@ any setting or only the two credentials (§ 3); whether lesson 0006 binds every
 Feature and belongs at the root; and § 11 row 7. B-058's row is `Missing`
 until the head is launched beside the store, which blocks `0086` reaching
 `done` and not this agreement (lesson 0007).
+
+**Decided 2026-10-15 by the person — the three questions above.** The store may
+name any setting, as B-058 is written (§ 3). Lesson 0006 stays this Feature's:
+its rule already binds every Feature from `spec-and-traceability` § "Claims and
+traceability", and the lesson is the incident under B-058 — the rule in the
+skill, the facts in the lesson
+([root lesson 0001](../../../../../.spec/lessons/0001-a-skill-holds-the-rule-not-the-facts.md)).
+§ 11 row 7 is (b): B-029 is reworded, with § 4, § 5 row 20, § 7, its scenario
+and its § 9 row, which reads `Missing`. All three rows stay 🟡. Owed: a read of
+the eleven answers and of today's B-029 change by a reader who wrote neither,
+then the person's agreement. `0068` waits on that read.
 
 ## Decisions
 
