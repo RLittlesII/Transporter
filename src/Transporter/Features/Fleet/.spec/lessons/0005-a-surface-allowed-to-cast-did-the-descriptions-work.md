@@ -62,4 +62,5 @@ Three setters predate the rule and break it: `FleetViewModel.SearchText` and
 `SelectedFilter` call `Filter()`, and `SelectedGrouping` calls `GroupBy`. They
 are named here so the rule is not read as already met; changing them is a
 behaviour-preserving refactor of B-009, B-011 and B-012 that belongs to its own
-item.
+item. That item is [`0089`](../../.issue/0089-input-setters-set-their-own-field.yml),
+which on 2026-10-14 made all three plain setters observed through `WhenChanged`.
