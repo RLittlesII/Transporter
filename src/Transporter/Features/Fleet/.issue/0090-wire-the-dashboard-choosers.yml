@@ -2,7 +2,7 @@ id: "0090"
 type: bug
 title: Bind the filter, grouping and sort choosers back to the view model, so choosing one changes the fleet
 
-status: in-progress
+status: in-review
 
 priority: high
 value: 5
@@ -50,7 +50,9 @@ acceptance_criteria:
   - "B-012 — the sort picker hands the comparer, reverse hands its reverse, the grouping picker hands the grouping."
   - "§ 9 carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-15 — implementer — the sort surface is a picker over `Columns` plus a Reverse button, not restored headers: the cards have no header row since `0070`, and a picker cannot re-choose its item, so the reverse is `ReverseCommand`. Rejected: filtering the picker to sortable columns, which `TRN0020` reports as a view model deriving fleet state; an unsortable choice changes nothing, as B-012 already says."
+  - "2026-10-15 — implementer — B-001 stays `Missing` until the person chooses a filter, a grouping and a sort on the running Mac Catalyst head against the 2026-10-10 recording; computer use was not available to this session."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
