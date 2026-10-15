@@ -132,7 +132,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When the distinct values of the current grouping key are observed
      Then three values are published, one per country
       And each value admits exactly the aircraft registered in its country
-      And a fourth aircraft from a fourth country adds one value
+      And an aircraft from a fourth country adds one value
       And the last aircraft from a country leaving removes its value
 
   @B-030

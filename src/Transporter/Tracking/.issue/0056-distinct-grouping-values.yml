@@ -24,7 +24,7 @@ claims:
   - B-030
 
 created: "2026-10-07"
-updated: "2026-10-07"
+updated: "2026-10-14"
 closed: null
 
 summary: |
@@ -48,10 +48,12 @@ summary: |
   a view model is the loop the demo exists to replace.
 
 acceptance_criteria:
-  - "B-030 — the distinct grouping-key values, published as a changeset that
-    adds a value on the first vehicle carrying it and removes it on the last,
-    taken before the filter, replaced when the grouping key changes, and read at
-    once by a consumer subscribing."
+  - "B-030 — a choice per distinct grouping-key value, published as a
+    changeset that adds a value on the first vehicle carrying it and removes it
+    on the last, each carrying the predicate that admits exactly the vehicles
+    answering it under the key that produced it, taken before the filter,
+    replaced when the grouping key changes, and read at once by a consumer
+    subscribing."
   - "§ 9 Traceability Matrix carries a row naming a test for B-030, replacing
     the row that names this item."
 

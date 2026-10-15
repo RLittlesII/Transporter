@@ -1479,12 +1479,15 @@ the arrangement `FleetGroupTests` uses — a `SourceCache` the test writes to, a
 `GroupBy` called with a second grouping — and no scheduler. The values are
 asserted as the changesets a consumer receives, not as a list read at the end,
 because a stage that holds the old key's values after a regroup passes a count
-and fails the removes. The cases are the `@B-030` scenarios.
+and fails the removes. The cases are the `@B-030` scenarios. The removal
+case takes the German aircraft away one at a time. The first to leave removes
+nothing, and the second removes Germany. Removing the French or Brazilian
+aircraft would pass a stage that drops a value on any removal.
 
 Each published choice is also run against vehicles, because B-030 as amended
 binds what admits a value and not only the value. The four aircraft are two
 from Germany, one from France and one from Brazil, and no callsign is a
-country's name. Two cases hold it. First, each of the three country choices is
+country's name. Three cases hold it. First, each of the three country choices is
 run against all four aircraft. Germany admits both German aircraft and
 rejects the other two; France and Brazil each admit their one and reject the
 other three. That fails a predicate that admits everything, one that reads a
@@ -1495,7 +1498,13 @@ the Germany choice captured before it is gone from the changesets after it.
 That captured choice is still run against the aircraft: it admits the two
 German aircraft and rejects the rest, by country, the key that produced it.
 That fails a predicate reading `_groupBy`'s current value instead of the
-stage's own grouping, because no callsign equals "Germany". The
+stage's own grouping, because no callsign equals "Germany". Third, after the
+regroup, the choice for one German aircraft's callsign is run against all
+four aircraft. It admits that aircraft alone and rejects the other German one.
+That fails a predicate fixed to the default key, such as one reading
+`GroupKey` or one capturing `_groupBy`'s first value: it rejects all four,
+because no country is a callsign. Both country cases pass that predicate,
+because every choice they run was made under the country key. The
 test class is `FleetGroupingValuesTests`, first test
 `GivenFourAircraftInThreeCountries_WhenTheGroupingValuesAreRead_ThenEachChoiceAdmitsExactlyItsCountry`.
 
@@ -2253,6 +2262,40 @@ is `0056`'s two corrections. Finding 1 is answered beside finding 2, because
    `FleetGroupTests` declares. § 9's B-030 row is unchanged and stays `Missing`.
 
 The `spec-reviewer` re-reads §§ 1-5 and 8-9 next.
+
+**Re-read 2026-10-14, the second — an independent `spec-reviewer`.** This
+reader wrote none of these answers. Mechanically clean: forty-three claims,
+forty-three § 9 rows, seventy-five scenarios and forty-three distinct tags.
+The callsign scenario agrees with B-030 and § 7's `Switch`, and it can be
+arranged: `ByCallsign` reads `Label` on the abstract vehicle, within B-022.
+One finding blocks and three do not.
+
+1. **No case runs a choice made under the non-default key — blocking,
+   `test-writer`.** A predicate fixed to the default key, such as `GroupKey`
+   read directly or `_groupBy`'s first value captured, passes both country
+   cases. That is the defect B-030's amendment removed.
+2. **"A fourth aircraft from a fourth country" miscounts a fleet that already
+   holds four — `spec-author`.**
+3. **The removal case cannot fail a stage that drops a value on any removal,
+   if the aircraft removed is the only one from its country — `test-writer`.**
+4. **`0056`'s acceptance criterion predates B-030's amendment** and omits the
+   predicate.
+
+Verdict: §§ 1-5 🟢 recommended, which is the person's to agree, since the
+row was lowered for the person. §§ 6-7 stay 🟢. §§ 8-9 stay 🟡 on finding 1.
+`0063` and `0066` are covered in full. `0056` lacks finding 1's case.
+
+**Answered 2026-10-14, the second, by the owning roles.**
+
+1. `test-writer`: § 8 adds a third choice case. After the regroup, one German
+   aircraft's callsign choice admits that aircraft alone and rejects the other
+   German one, which fails a predicate fixed to the default key.
+2. `spec-author`: the scenario reads "an aircraft from a fourth country".
+3. `test-writer`: § 8's removal case takes the German aircraft away one at a
+   time. The first removes nothing, and the second removes Germany.
+4. `0056`'s acceptance criterion now names the predicate each value carries.
+
+The independent `spec-reviewer` re-reads §§ 8-9 next.
 
 ## Decisions
 
