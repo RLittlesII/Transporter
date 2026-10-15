@@ -2,7 +2,7 @@ id: "0041"
 type: task
 title: Show the arrival notice — a banner always, a toast when it earns one
 
-status: in-progress
+status: in-review
 
 priority: high
 value: 4
@@ -26,7 +26,6 @@ claims:
   - B-024
   - B-025
   - B-026
-  - B-027
   - B-037
 
 created: "2026-10-05"
@@ -69,8 +68,6 @@ acceptance_criteria:
     an ordinary update, at any interval. The rendering half is a review (§ 8)."
   - "B-026 — two input fields, two observables, two cadences, both editable
     while running."
-  - "B-027 — no view model names a toast, snackbar or alert type. Analyzer
-    rule."
   - "B-037 — the latest notice's counts, after the filter, and the window's
     totals, before it, each under its own label; no list kept here."
   - "§ 9 Traceability Matrix carries a row naming a test, an analyzer rule or a
@@ -91,8 +88,29 @@ decisions:
     nobody has built cannot be finished or demonstrated alone (lesson 0008).
     Rejected: a separate item waiting on this one."
 
+  - "2026-10-15 — implementer — B-027's analyzer rule moves to `0091`. It
+    needs a TRN id and a boundary-analyzer claim, which is that Feature's
+    specification and its sign-off; holding the banner for it would hold the
+    demo for a guard. No view model names a toast type today, so nothing is
+    left unchecked that is also broken."
+  - "2026-10-15 — implementer — the swap completing is
+    `FleetViewModel.Swapped`, the first visible addition after the gesture,
+    because no notice carries a swap and none may (`aircraft-source` B-039).
+    Rejected: a description re-arriving, which a swap between two aircraft
+    sources never produces; a subject beside the swap command, which `mvvm`
+    forbids."
+  - "2026-10-15 — implementer — `Latest` is `FleetNotice?`, for the binding.
+    The interval entries take seconds, and anything that is not a positive
+    number leaves the pacing as it was, so a half-typed value cannot throw on
+    stage."
+  - "2026-10-15 — implementer — B-024, B-025 and B-037 stay `Missing` until
+    the person reviews the running head: the banner overlays no card, the
+    toast renders, and the two groups carry their headings. B-023 and B-026
+    are tests only and read `Verified`."
+
 out_of_scope:
   - "Everything in § 5 of the specification."
+  - "B-027's analyzer rule — `0091`."
   - "Raising the notices, their counts, the rate-cap operator and the quiet
     threshold (§ 5 row 1) — `fleet-pipeline` B-025 – B-027."
   - "A history or log of past notices beyond the window the tracker keeps —

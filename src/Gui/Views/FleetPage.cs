@@ -1,6 +1,9 @@
 using System;
+using System.Globalization;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Markup;
 using Gui.Components;
 using Gui.Theme;
@@ -15,7 +18,7 @@ using Transporter.Tracking.Fleet;
 
 namespace Gui.Views;
 
-/// <summary>The dashboard: the controls, the summary, the fleet as cards, and the detail pane (B-001, B-029).</summary>
+/// <summary>The dashboard: the controls, the summary, the banner, the fleet as cards, and the detail pane (B-001, B-023, B-029).</summary>
 /// <remarks>
 /// Each card is laid out from the description's roles, so a swap edits no markup here (B-007,
 /// B-021). The collection is the view model's one bound collection; cards update in place.
@@ -25,7 +28,8 @@ public class FleetPage : ContentPage
     /// <summary>Initializes a new instance of the <see cref="FleetPage"/> class.</summary>
     /// <param name="viewModel">The page's view model, by constructor and resolved from nothing (B-003).</param>
     /// <param name="summary">The summary strip's view model, which projects the tracker's counts (B-015).</param>
-    public FleetPage(FleetViewModel viewModel, FleetSummaryViewModel summary)
+    /// <param name="banner">The banner's and the toast's notices, each at its own cadence (B-023 – B-026, B-037).</param>
+    public FleetPage(FleetViewModel viewModel, FleetSummaryViewModel summary, FleetBannerViewModel banner)
     {
         BindingContext = ViewModel = viewModel;
         Title = "Fleet";
@@ -57,9 +61,21 @@ public class FleetPage : ContentPage
             .Subscribe(_ => Span(fleet.Width))
             .DisposeWith(_garbage);
 
+        // The toast is the page's to render: the view models publish what interrupts and name no
+        // toast type (B-025, B-027).
+        banner.Interrupting
+            .Subscribe(static notice => Interrupt(notice.Kind == FleetNoticeKind.Quiet
+                ? $"Feed quiet since {notice.Instant:HH:mm:ss}"
+                : $"Feed resumed · {notice.Tracked:N0} tracked"))
+            .DisposeWith(_garbage);
+        viewModel.Swapped
+            .Subscribe(static _ => Interrupt("Source swapped"))
+            .DisposeWith(_garbage);
+
         Content = new Grid
         {
             RowDefinitions = new RowDefinitionCollection(
+                new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Star),
@@ -70,8 +86,9 @@ public class FleetPage : ContentPage
             {
                 Controls().Row(0),
                 Summary(summary).Row(1),
-                fleet.Row(2),
-                Detail(viewModel.Detail).Row(3),
+                Banner(banner).Row(2),
+                fleet.Row(3),
+                Detail(viewModel.Detail).Row(4),
             },
         };
     }
@@ -152,6 +169,88 @@ public class FleetPage : ContentPage
             },
         });
 
+    /// <summary>
+    /// The banner: the latest notice and the window's totals, each under its own heading, and the
+    /// two intervals edited while running (B-023, B-024, B-026, B-037).
+    /// </summary>
+    /// <param name="banner">The banner's view model.</param>
+    /// <returns>The banner panel, in the page's own rows so it overlays no card (B-024).</returns>
+    /// <remarks>Every number is bound as the tracker raised it; this computes and sums none (B-023, B-037).</remarks>
+    private static Border Banner(FleetBannerViewModel banner) =>
+        Panel(new FlexLayout
+        {
+            Wrap = FlexWrap.Wrap,
+            AlignItems = FlexAlignItems.Start,
+            Children =
+            {
+                Group(
+                    "Latest update",
+                    Count(banner, "At", "Latest.Instant", "{0:HH:mm:ss}"),
+                    Count(banner, "Tracked", "Latest.Tracked"),
+                    Count(banner, "Added", "Latest.Added"),
+                    Count(banner, "Updated", "Latest.Updated"),
+                    Count(banner, "Removed", "Latest.Removed")),
+                Group(
+                    "Last 20 updates · whole fleet",
+                    Count(banner, "Added", "Window.Added"),
+                    Count(banner, "Updated", "Window.Updated"),
+                    Count(banner, "Removed", "Window.Removed")),
+                Group(
+                    "Pacing",
+                    Interval(banner, "Banner every (s)", nameof(FleetBannerViewModel.BannerInterval)),
+                    Interval(banner, "Toast every (s)", nameof(FleetBannerViewModel.ToastInterval))),
+            },
+        });
+
+    /// <summary>One headed group of the banner, so neither group reads as the other's subtotal (B-037).</summary>
+    /// <param name="heading">The group's heading, which is the page's text.</param>
+    /// <param name="items">What the group shows.</param>
+    /// <returns>The group.</returns>
+    private static View Group(string heading, params View[] items)
+    {
+        var row = new HorizontalStackLayout { Spacing = FlightDeck.Space4 };
+        foreach (var item in items)
+        {
+            row.Children.Add(item);
+        }
+
+        return new VerticalStackLayout
+        {
+            Spacing = FlightDeck.Space1,
+            Children = { new Label { Text = heading, Style = FlightDeckStyles.Caption }, row },
+        }.Margins(right: FlightDeck.Space6, bottom: FlightDeck.Space2);
+    }
+
+    /// <summary>One number the banner shows, bound off the view model and formatted only.</summary>
+    /// <param name="banner">The banner's view model.</param>
+    /// <param name="caption">What the number is.</param>
+    /// <param name="path">Where it is read; empty until the first notice.</param>
+    /// <param name="format">How it is written.</param>
+    /// <returns>The readout.</returns>
+    private static Readout Count(FleetBannerViewModel banner, string caption, string path, string format = "{0:N0}") =>
+        new Readout { Caption = caption }.Bind(Readout.ValueProperty, path, source: banner, stringFormat: format);
+
+    /// <summary>One interval, edited in seconds while the application runs (B-026).</summary>
+    /// <param name="banner">The banner's view model.</param>
+    /// <param name="caption">Which surface it paces.</param>
+    /// <param name="path">The interval property.</param>
+    /// <returns>The input.</returns>
+    /// <remarks>A value that is not a positive number of seconds leaves the interval as it was.</remarks>
+    private static View Interval(FleetBannerViewModel banner, string caption, string path) =>
+        new VerticalStackLayout
+        {
+            Children =
+            {
+                new Label { Text = caption, Style = FlightDeckStyles.Caption },
+                new Entry { Keyboard = Keyboard.Numeric, WidthRequest = 80 }
+                    .Bind(Entry.TextProperty, path, BindingMode.TwoWay, Seconds, source: banner),
+            },
+        };
+
+    /// <summary>Shows a toast; the one platform notification call in the application (B-027).</summary>
+    /// <param name="text">What it says.</param>
+    private static void Interrupt(string text) => _ = Toast.Make(text, ToastDuration.Long).Show();
+
     /// <summary>The detail pane: the selected vehicle's own fields, or a prompt when nothing is selected (B-013, B-014).</summary>
     /// <param name="detail">The pane's view model.</param>
     /// <returns>The detail panel.</returns>
@@ -228,7 +327,25 @@ public class FleetPage : ContentPage
         }
     }
 
+    /// <summary>An interval as seconds in an entry, and back only when the entry holds a positive number.</summary>
+    /// <remarks>Anything else is <see cref="Binding.DoNothing"/>, so a half-typed value leaves the pacing as it was.</remarks>
+    private sealed class SecondsConverter : IValueConverter
+    {
+        /// <inheritdoc/>
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+            value is TimeSpan interval ? interval.TotalSeconds.ToString(culture) : string.Empty;
+
+        /// <inheritdoc/>
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+            double.TryParse(value as string, NumberStyles.Float, culture, out var seconds) && seconds > 0
+                ? TimeSpan.FromSeconds(seconds)
+                : Binding.DoNothing;
+    }
+
     private const double DetailCellWidth = 150;
+
+    /// <summary>The one converter the interval entries share.</summary>
+    private static readonly SecondsConverter Seconds = new();
 
     private readonly CompositeDisposable _garbage = [];
     private readonly GridItemsLayout _layout;
