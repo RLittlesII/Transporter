@@ -116,6 +116,19 @@ public class FleetPage : ContentPage
                 new Picker { Title = "Group by", ItemDisplayBinding = new Binding(nameof(FleetGrouping.Name)), WidthRequest = 180 }
                     .Bind(Picker.ItemsSourceProperty, static (FleetViewModel model) => model.Groupings)
                     .Margins(right: FlightDeck.Space3, bottom: FlightDeck.Space1),
+                new Picker { Title = "Source", WidthRequest = 200 }
+                    .Bind(Picker.ItemsSourceProperty, static (FleetViewModel model) => model.Targets)
+                    .Bind(VisualElement.IsEnabledProperty, static (FleetViewModel model) => model.HasTargets)
+                    .Bind(
+                        Picker.SelectedIndexProperty,
+                        static (FleetViewModel model) => model.SelectedTarget,
+                        static (FleetViewModel model, int position) => model.SelectedTarget = position,
+                        BindingMode.TwoWay)
+                    .Margins(right: FlightDeck.Space2, bottom: FlightDeck.Space1),
+                new ActivityIndicator { WidthRequest = 24, HeightRequest = 24 }
+                    .Bind(ActivityIndicator.IsRunningProperty, static (FleetViewModel model) => model.IsSwapping)
+                    .Bind(VisualElement.IsVisibleProperty, static (FleetViewModel model) => model.IsSwapping)
+                    .Margins(right: FlightDeck.Space2),
                 new Button { Text = "Refresh" }
                     .Bind(Button.CommandProperty, static (FleetViewModel model) => model.RefreshCommand)
                     .Margins(right: FlightDeck.Space2, bottom: FlightDeck.Space1),

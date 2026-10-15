@@ -38,6 +38,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
         context.RegisterCompilationStartAction(static start =>
         {
             var published = Layers.PublishedByTheSeam(start.Compilation);
+            DashboardBoundaryRules.Register(start);
 
             // Three actions, because the claims are about three different things: a name (B-009), a
             // call (B-044) and a declaration (B-010).
@@ -150,7 +151,7 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (Layers.IsViewModel(enclosing))
+        if (Layers.IsViewModel(enclosing) || DashboardBoundaryRules.IsPresentation(enclosing))
         {
             // B-041.
             Report(context, Diagnostics.SourceInternalsNamedByAViewModel, Containing(enclosing), named.Name);

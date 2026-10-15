@@ -164,6 +164,13 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      Then exactly that answered target is sent once
 
   @B-040
+  Scenario: Rapid choices keep their answered targets
+    Given the swap control offers two answered targets
+     When the second choice and then the first are selected before queued output is delivered
+     Then each original target is sent once in gesture order
+      And a later invalid selection cannot discard an earlier valid gesture
+
+  @B-040
   Scenario: The swap control offers nothing until the actor answers
     Given the swap actor has not yet answered the request for its targets
      When the swap control is opened
@@ -236,6 +243,8 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      Then no timer violation is reported for that deadline
       And a repeating timer is reported
       And a deadline that fetches, polls, writes a cache or derives domain state is reported
+      And projecting a deadline to a closed indicator before doing that work is still reported
+      And keeping that projected deadline in a local variable does not hide the work
 
   # ─────────────────────────── Validation failure ───────────────────────────
 

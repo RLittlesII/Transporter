@@ -2,7 +2,7 @@ id: "0039"
 type: task
 title: Swap the source from the screen, and hold the view models to their job
 
-status: ready-for-implementation
+status: done
 
 priority: high
 value: 4
@@ -35,14 +35,13 @@ claims:
 
 created: "2026-10-05"
 updated: "2026-10-14"
-closed: null
+closed: "2026-10-14"
 
 summary: |
   The closing act is performed with this control, in front of people. A swap is
   an effect, so it is told to an actor rather than published as a value
-  (`mvvm` § "Two kinds of input, two routes"), and a busy indicator covers it
-  until the new fleet arrives — `aircraft-source` decision 0002's call, honoured
-  rather than re-decided.
+  (`mvvm` § "Two kinds of input, two routes"), and the busy indicator follows Fleet decision 0003's bounded presentation
+  window.
 
   The rest of the item is the boundaries: what a view model may not hold, what
   it may not compute, what it may not name, and the swap test — that no view is
@@ -72,6 +71,30 @@ acceptance_criteria:
     no planned test or scenario alone is implementation proof."
 
 decisions:
+  - "2026-10-14 — delivery — all seven owned fleet-dashboard § 9 rows are
+    Verified, and aircraft-source B-041 now has its container-built consumer
+    evidence. Final ./build.sh passed 379 tests and built both Apple heads.
+    MacCatalyst rendered review used generated seed-39 replay and a temporary
+    configuration holding only its filename: replay filled twelve cards, the
+    credential-free live target showed and cleared the busy indicator, and
+    replay remained selectable and refilled the fleet. The running-page image
+    is committed under .assets/screenshots/0039-source-selector.png. Fourteen
+    unrelated dashboard rows and four aircraft rows remain Missing, so neither
+    parent Feature closes. No live provider or credential was used for launch."
+  - "2026-10-14 — implementer, independent review — rapid selections must carry
+    their captured position through scheduled command output. The new command
+    returns int rather than Unit; § 7 records that shape. Regression tests first
+    failed for rapid choices and valid-then-invalid selection. Timer diagnostics
+    follow projected deadline flow through local aliases, rejecting downstream
+    callbacks; four new negative timer cases first failed on missing diagnostics.
+    No claim, actor protocol or source seam changes."
+  - "2026-10-14 — test-writer — twelve selector cases first failed on missing
+    discovery, translation, window or recovery behavior against a minimal API
+    scaffold. Nineteen semantic analyzer cases then failed on absent TRN
+    diagnostics, with six permitted counterparts passing; compilation guards
+    ensure malformed fixture source cannot count as red evidence. TestActorRef
+    uses its calling-thread dispatcher to make Ask completion and immediate
+    additions deterministic, without real timeout waits or a new production seam."
   - "2026-10-14 — the person — preparation for implementation requested, not
     implementation pickup. Approved the ten-second cap and the injected
     one-shot presentation deadline exception in fleet-dashboard decision 0003.

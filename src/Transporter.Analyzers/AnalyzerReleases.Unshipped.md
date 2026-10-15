@@ -27,3 +27,6 @@
 | TRN0016 | Transporter.Boundaries | Error    | A boundary rule; see src/Transporter.Analyzers/.spec/README.md § 7                                                      |
 | TRN0017 | Transporter.Boundaries | Error    | A boundary rule; see src/Transporter.Analyzers/.spec/README.md § 7                                                      |
 | TRN0018 | Transporter.Boundaries | Error    | **Retired** 2026-10-05 with boundary-analyzer B-012 and aircraft-source B-010; the id is reserved, never reused (B-007) |
+| TRN0019 | Transporter.Boundaries | Error    | A boundary rule; see src/Transporter.Analyzers/.spec/README.md § 7                                                      |
+| TRN0020 | Transporter.Boundaries | Error    | A boundary rule; see src/Transporter.Analyzers/.spec/README.md § 7                                                      |
+| TRN0021 | Transporter.Boundaries | Error    | A boundary rule; see src/Transporter.Analyzers/.spec/README.md § 7                                                      |
