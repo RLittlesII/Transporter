@@ -132,7 +132,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When the distinct values of the current grouping key are observed
      Then three values are published, one per country
       And each value admits exactly the aircraft registered in its country
-      And a fourth aircraft from a fourth country adds one value
+      And an aircraft from a fourth country adds one value
       And the last aircraft from a country leaving removes its value
 
   @B-030
@@ -144,9 +144,9 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
   @B-030
   Scenario: A new grouping key replaces the values
     Given the distinct values of the grouping by country are observed
-     When the fleet is grouped by staleness instead
-     Then the country values are replaced by the staleness values
-      And a consumer subscribing now reads the staleness values at once
+     When the fleet is grouped by callsign instead
+     Then the country values are replaced by the callsign values
+      And a consumer subscribing now reads the callsign values at once
 
   # ────────────────────────────── Failure mode ──────────────────────────────
 
