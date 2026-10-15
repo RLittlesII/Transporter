@@ -1686,22 +1686,23 @@ whose item 6 is why the detail pane exists as a named exception.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Tasks -->
 
-| Item                                                           | Claims                                             |
-| -------------------------------------------------------------- | -------------------------------------------------- |
-| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 40 — the parent; its children hold the work    |
-| [`0036`](../.issue/0036-fleet-page-and-grid.yml)               | B-001 – B-007                                      |
-| [`0037`](../.issue/0037-search-sort-and-grouping-input.yml)    | B-009 – B-012                                      |
-| [`0038`](../.issue/0038-detail-pane-and-summary.yml)           | B-013 – B-015, B-019                               |
-| [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022, B-040                |
-| [`0041`](../.issue/0041-arrival-banner-and-toast.yml)          | B-023 – B-027, B-037                               |
-| [`0044`](../.issue/0044-page-level-claim-proof.yml)            | B-003, B-004, B-006 — their proof, not their build |
-| [`0058`](../.issue/0058-refresh-control.yml)                   | B-028                                              |
-| [`0069`](../.issue/0069-dark-theme-and-status-marks.yml)       | B-032, B-033                                       |
-| [`0070`](../.issue/0070-cards-replace-the-grid.yml)            | B-008, B-029 – B-031                               |
-| [`0071`](../.issue/0071-trail-map-and-list.yml)                | B-034, B-035                                       |
-| [`0072`](../.issue/0072-next-poll-countdown.yml)               | B-036                                              |
-| [`0073`](../.issue/0073-readout-change-and-pulse.yml)          | B-038                                              |
-| [`0078`](../.issue/0078-grouping-values-as-filter-choices.yml) | B-039                                              |
+| Item                                                           | Claims                                               |
+| -------------------------------------------------------------- | ---------------------------------------------------- |
+| [`0035`](../.issue/0035-fleet-dashboard.yml)                   | all 40 — the parent; its children hold the work      |
+| [`0036`](../.issue/0036-fleet-page-and-grid.yml)               | B-001 – B-007                                        |
+| [`0037`](../.issue/0037-search-sort-and-grouping-input.yml)    | B-009 – B-012                                        |
+| [`0038`](../.issue/0038-detail-pane-and-summary.yml)           | B-013 – B-015, B-019                                 |
+| [`0039`](../.issue/0039-swap-control-and-thin-view-models.yml) | B-016 – B-018, B-020 – B-022, B-040                  |
+| [`0041`](../.issue/0041-arrival-banner-and-toast.yml)          | B-023 – B-027, B-037                                 |
+| [`0044`](../.issue/0044-page-level-claim-proof.yml)            | B-003, B-004, B-006 — their proof, not their build   |
+| [`0058`](../.issue/0058-refresh-control.yml)                   | B-028                                                |
+| [`0069`](../.issue/0069-dark-theme-and-status-marks.yml)       | B-032, B-033                                         |
+| [`0070`](../.issue/0070-cards-replace-the-grid.yml)            | B-008, B-029 – B-031                                 |
+| [`0071`](../.issue/0071-trail-map-and-list.yml)                | B-034, B-035                                         |
+| [`0072`](../.issue/0072-next-poll-countdown.yml)               | B-036                                                |
+| [`0073`](../.issue/0073-readout-change-and-pulse.yml)          | B-038                                                |
+| [`0078`](../.issue/0078-grouping-values-as-filter-choices.yml) | B-039                                                |
+| [`0089`](../.issue/0089-input-setters-set-their-own-field.yml) | B-009, B-011, B-012 — a refactor that preserves them |
 
 **B-029 – B-038 were cut on 2026-10-08**, once the person had answered § 11
 rows 7 and 8 and asked for the items. Two moves came with them. B-008 left
