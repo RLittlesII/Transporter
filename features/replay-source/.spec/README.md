@@ -2,7 +2,7 @@
 title: "Specification: Replay source"
 description: "Record a live provider's payloads verbatim and feed them back at their recorded cadence through the same seam and the same selector the live sources use, so the demo survives a dead venue network and the closing act has a fallback."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Replay source
@@ -1146,7 +1146,7 @@ options and costs. Independent sign-off remains § 12's.
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟡 Draft    |
+| §§ 6-7   | implementer | 🟢 Approved |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 **§§ 6-7 lowered 2026-10-15, by `aircraft-source`'s B-029 rewording.** Its
@@ -1201,9 +1201,10 @@ outside §§ 6-7, so it does not hold the row:
 **R4 answered 2026-10-15, `implementer`:** the dated line now sits after
 "What the answer costs" and names all of row 4.
 
-Owed: the person's agreement, then the row goes 🟢.
-
-`0081` waits on this row.
+**§§ 6-7 approved 2026-10-15.** R1-R4 are closed, and the person agreed: "I
+agree: flip replay-source §§ 6-7 to 🟢 Approved and set spec_status to
+approved." Every row is 🟢, so `spec_status` is `approved`, and no item of this
+Feature is held by § 12. `0081` may move to `in-progress`.
 
 **Independent agreement review, 2026-10-14.** A second reader, who authored
 none of §§ 1-9, reviewed the complete replay agreement, scenarios, replay
