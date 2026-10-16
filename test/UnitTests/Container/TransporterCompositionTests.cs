@@ -110,10 +110,12 @@ public class TransporterCompositionTests
         // When
         var tracker = host.Services.GetRequiredService<IFleetTracker>();
         var source = host.Services.GetRequiredService<ITrackerSource>();
+        var status = host.Services.GetRequiredService<IPollStatus>();
 
         // Then
         tracker.Should().NotBeNull("every dependency below it is registered");
         source.Should().BeOfType<SwappingTrackerSource>("a consumer resolving the seam gets the selector");
+        status.Should().BeSameAs(source, "the tracker reads the live strategy's poll status through the selector (B-056)");
     }
 
     /// <summary>

@@ -79,6 +79,7 @@ public static class OpenSkyRegistration
         services.AddSingleton<IOpenSkyTokenSource, OpenSkyTokenSource>();
         services.AddSingleton<IOpenSkyApi, OpenSkyHttpApi>();
         services.AddSingleton(static _ => new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
+        services.AddSingleton<AircraftPollStatus>();
         services.AddSingleton<AircraftSnapshotClient>();
         services.AddSingleton<IAircraftSnapshotClient>(static provider => provider.GetRequiredService<AircraftSnapshotClient>());
 
@@ -90,7 +91,10 @@ public static class OpenSkyRegistration
 
         // Never as ITrackerSource: that reaches consumers in place of the selector (ADR-0011).
         services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IAircraftTrackerSource>());
-        services.AddSingleton(static provider => new TrackerSourceEntry(provider.GetRequiredService<IAircraftTrackerSource>(), LiveAircraft));
+        services.AddSingleton(static provider => new TrackerSourceEntry(
+            provider.GetRequiredService<IAircraftTrackerSource>(),
+            LiveAircraft,
+            provider.GetRequiredService<AircraftPollStatus>()));
 
         return services;
     }

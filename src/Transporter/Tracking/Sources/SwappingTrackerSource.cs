@@ -8,8 +8,11 @@ using Transporter.Model;
 
 namespace Transporter.Tracking.Sources;
 
-/// <summary>Selects which strategy is live, as the only registration of <see cref="ITrackerSource"/> (ADR-0011).</summary>
-internal sealed class SwappingTrackerSource : ITrackerSource
+/// <summary>
+/// Selects which strategy is live, as the only registration of <see cref="ITrackerSource"/>
+/// (ADR-0011), and the live strategy's poll status with it (B-056).
+/// </summary>
+internal sealed class SwappingTrackerSource : ITrackerSource, IPollStatus
 {
     /// <summary>Initializes a new instance of the <see cref="SwappingTrackerSource"/> class.</summary>
     /// <param name="entries">Every strategy registration paired with a name, in registration order (ADR-0015).</param>
@@ -31,6 +34,15 @@ internal sealed class SwappingTrackerSource : ITrackerSource
 
     /// <summary>Gets every registered strategy with its name, in registration order.</summary>
     public IReadOnlyList<TrackerSourceEntry> Entries { get; }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Selected the way <see cref="Connect"/> is. Each entry's seam starts with the status in force, so a
+    /// <c>Switch</c> to it reads that status at once and nothing is buffered here; once the outgoing
+    /// status is dropped nothing it writes is published (B-056).
+    /// </remarks>
+    public IObservable<PollStatus> Status =>
+        _selected.Select(static entry => entry.Status.Status).Switch();
 
     /// <inheritdoc/>
     /// <remarks>DynamicData's <c>Switch</c>: the outgoing fleet leaves as removes rather than lingering.</remarks>

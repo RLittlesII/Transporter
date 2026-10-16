@@ -9,6 +9,7 @@ using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transporter.Integrations.OpenSky;
 using Transporter.Integrations.OpenSky.Contracts;
 using Transporter.Integrations.OpenSky.Model;
+using Transporter.Integrations.OpenSky.Polling;
 using Transporter.Scheduling;
 using Transporter.Tracking;
 using Transporter.UnitTests.Scheduling;
@@ -565,6 +566,7 @@ internal partial class AircraftSnapshotClientFixture
     {
         WithCache(new SourceCache<AircraftSnapshot, string>(static snapshot => snapshot.Icao24));
         WithWriter(new ObservedClock());
+        WithStatus(new AircraftPollStatus());
         WithLogger(new RecordingLogger<AircraftSnapshotClient>());
         WithProvider(DefaultSchedulers);
         WithOptions(

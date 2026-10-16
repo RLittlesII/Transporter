@@ -17,14 +17,14 @@ public static class TrackingRegistration
     /// <param name="services">The collection to register into.</param>
     /// <returns>The same collection, so registration chains.</returns>
     /// <remarks>
-    /// The decorator is one object behind two registrations: the actor names the class, consumers name the seam.
-    /// The poll status is none until a source writes one (fleet-pipeline B-040).
+    /// The decorator is one object behind three registrations: the actor names the class, consumers name the
+    /// seam, and the tracker reads the live strategy's poll status through it (B-056, fleet-pipeline B-040).
     /// </remarks>
     public static IServiceCollection AddFleetTracking(this IServiceCollection services)
     {
         services.AddSingleton<SwappingTrackerSource>();
         services.AddSingleton<ITrackerSource>(static provider => provider.GetRequiredService<SwappingTrackerSource>());
-        services.AddSingleton<IPollStatus, NoPollStatus>();
+        services.AddSingleton<IPollStatus>(static provider => provider.GetRequiredService<SwappingTrackerSource>());
         services.AddSingleton<IFleetTracker, FleetTracker>();
 
         return services;
