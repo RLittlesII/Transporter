@@ -1808,7 +1808,7 @@ the draft it replaced.
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟡 Draft    |
 | §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2370,6 +2370,13 @@ independent review (its § 12, finding F2). §§ 6-7 were not edited: § 7's
 staleness design is `vessel-source` [`0101`](../../../../features/vessel-source/.issue/0101-remove-a-silent-vessel.yml)'s to extend, as
 the item that builds the stage. § 9 gains B-044's row, `Missing`, which that
 item completes.
+
+**§§ 8-9 lowered 2026-10-16.** `vessel-source`'s re-review (its § 12, R7) found
+that adding B-044's § 9 row is a change to a signed section, which reopens
+its row. `aircraft-source` lowered all three rows on 2026-10-09 when B-058's
+row was added. The note above was wrong to keep this row. §§ 6-7 keep 🟢 by
+the letter, but § 7 has no design for B-044 yet, so their next review is
+held on that.
 
 ## Decisions
 

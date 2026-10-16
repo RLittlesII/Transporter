@@ -19,6 +19,7 @@ spikes: []
 spec: features/vessel-source/.spec/README.md
 
 claims:
+  - B-010
   - B-016
   - B-017
   - B-018

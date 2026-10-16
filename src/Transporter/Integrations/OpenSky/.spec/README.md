@@ -1718,7 +1718,7 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 | -------- | ----------- | ----------- |
 | §§ 1-5   | spec-author | 🟡 Draft    |
 | §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
@@ -2292,6 +2292,13 @@ lowered. It claims what
 records. §§ 6-7 were not edited: § 7's registration and decorator design is
 `vessel-source` [`0102`](../../../../../features/vessel-source/.issue/0102-vessel-strategy-on-the-seam.yml)'s to extend, as the item that
 builds it. § 9 gains B-060's row, `Missing`, which that item completes.
+
+**§§ 8-9 lowered 2026-10-16.** `vessel-source`'s re-review (its § 12, R7) found
+that adding B-060's § 9 row is a change to a signed section, which reopens
+its row. `aircraft-source` lowered all three rows on 2026-10-09 when B-058's
+row was added. The note above was wrong to keep this row. §§ 6-7 keep 🟢 by
+the letter, but § 7 has no design for B-060 yet, so their next review is
+held on that.
 
 ## Decisions
 
