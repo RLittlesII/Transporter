@@ -2,7 +2,7 @@ id: "0013"
 type: task
 title: Substitute vessel replay at the strategy
 
-status: blocked
+status: ready-for-architecture
 
 priority: medium
 value: 3
@@ -14,6 +14,9 @@ children: []
 
 depends_on:
   - "0010"
+  - "0098"
+  - "0100"
+  - "0102"
 blocks: []
 spikes: []
 
@@ -26,7 +29,7 @@ claims:
   - B-023
 
 created: "2026-10-04"
-updated: "2026-10-15"
+updated: "2026-10-16"
 closed: null
 
 summary: |
@@ -62,6 +65,7 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-16 — spec-author — `ready-for-architecture` rather than `blocked`. Its blocker, the vessel feed's unwritten specification, is `features/vessel-source/.spec/README.md`, and items `0096` – `0102` are cut from it. `depends_on` now names the three it needs: `0098` for the message shape, `0100` for the vessel, and `0102` for the seam it reaches the same way. B-021 has something to reproduce."
   - "2026-10-04 — spec-author — value 3 against the parent's 4, the only child
     scored below it. README presents the closing act as optional, while
     run-the-demo § \"Never add\" forbids presenting it without a fallback and
