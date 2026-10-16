@@ -2047,6 +2047,84 @@ has seen (root lesson 0023), so that row waits on the same read. **Owed:** a
 read of these answers by a reader who wrote none of them, then the person's
 agreement. `0068` and `0093` wait on that.
 
+**Re-read 2026-10-15 by an independent `spec-reviewer` — §§ 8-9 recommended
+🟢, §§ 1-5 and §§ 6-7 held at 🟡.** A reader who wrote none of the answers
+above, reading commit `5175bb8` against `AircraftSnapshotClient`,
+`AircraftPollActor`, `OpenSkyRegistration`, `OpenSkyReplayRegistration`,
+`OpenSkyConfigurationValidator`, `OpenSkyStartupTests` and `RecordingLogger`.
+By reading; nothing was run but the build. Every numbered answer landed where
+it says: § 8's B-029 plan names the box, the `Host` seam and the exception
+`RecordingLogger` must keep; the two `@B-029` scenarios are one case each; § 7
+names the first resolve of the live chain and cites B-059 for the box's
+`ValidateOnStart`; B-059 has its § 3 row, paragraph, scenario, § 6 row and § 9
+row; § 9's paragraph, § 8's coverage row and § 10's delta are corrected; § 6
+says fifty-eight and ten; the poll diagram has the absent-credential branch;
+and § 7 says the name travels as the logged exception. `0093` and `0001` carry
+B-059. § 9 is mechanically clean: fifty-nine identifiers, fifty-eight rows,
+six `Missing` and fifty-two `Verified`, every live claim tagged, fifty-nine
+scenarios, nine claims with two and B-029 and B-058 with three.
+
+The B-029 plan can be carried out and each case fails on its own. The host
+already builds `AddOpenSky`'s graph, a logger registered after it replaces the
+client's, and `RecordingLogger` gains the exception. Case 1 fails while the
+credentials keep `ValidateOnStart`; case 2 fails if the validator is not run on
+read, because the token request then goes out with an empty secret and nothing
+names the key, and fails if the exception carries the client id. B-059's plan
+extends a test that already starts the host without a box. Leaving the stream
+assertion to B-029's second half holds: the absent credential reaches the same
+catch in `Fetch` as a timeout. The design gaps § 7 answered
+are real in the code: `Poll()` sleeps the deferral and then sleeps the rest of
+the interval from `Due()`, so a refusal shorter than the interval polls late.
+Six findings, one blocking:
+
+1. **A demand inside a `429` deferral — B-028, B-053 and the `@B-054` scenario
+   disagree — blocking §§ 1-5 and §§ 6-7, the person's call, then
+   `spec-author` and `implementer`.** The scenario's arithmetic holds: 14:32:25
+   plus 42 seconds is 14:33:07, 14:32:45 is 20 seconds after the refused poll,
+   and 14:32:45 plus 15 is 14:33:00. But the demanded poll it performs at
+   14:32:45 is the client's next poll, 22 seconds before OpenSky said to call
+   again, which B-028's "defer the snapshot client's next poll by exactly that
+   many seconds" forbids and B-053 permits, since B-053 refuses only within the
+   interval. The code does what the scenario says — `AircraftPollActor` reads
+   `LastPoll` and nothing else — and § 7's loop bullet designs it, so no record
+   decides it. It matters beyond the scenario: while the cadence runs, every
+   demand inside the interval is refused and the loop polls when it ends, so a
+   deferral longer than the interval is the one window in which B-054's "a
+   demanded poll that is performed SHALL move it" happens at all. Either B-053
+   refuses a demand until the due instant in force, interval or deferral, and
+   the scenario's demand is rewritten — which leaves that clause of B-054
+   reachable only when no cadence runs; or B-028 and B-055 say a demand may end
+   a deferral early, spending a credit OpenSky asked the source not to spend.
+   Decision 0003 is silent on a `429`. Finding 1 touches none of `0093`'s
+   claims.
+2. § 8's scenario paragraph still says fifty-seven scenarios and ten claims
+   with two; the feature has fifty-nine, nine with two, and B-029 and B-058
+   with three. B-059 is in none of § 8's category lists. `test-writer`.
+3. § 9's planned B-054 test,
+   `GivenAPollAtAnInstant_WhenTheLoopSchedulesTheNext_ThenItIsReportedDueOneIntervalLater`,
+   names the loop as the writer, which § 7 no longer has. `test-writer`.
+4. B-059's subject, "a composition that starts a host", includes a host that
+   registers only replay: `AddAircraftReplay` calls `AddOpenSkyShared`, which
+   registers the box's validator with `ValidateOnStart`, so that host stops on
+   an absent `OpenSky:Box` it never reads — its chain carries `Replayed`'s
+   placeholder. Nothing in `replay-source` claims otherwise, so the records
+   agree; B-059 should say whether it means that host, or name `AddOpenSky`.
+   `spec-author`.
+5. § 7's "its actors resolve the chain during `Build()`" is likely imprecise:
+   `ActorOf` returns before an actor's constructor runs on its dispatcher, so
+   the resolve is started while the host is built but not held inside
+   `Build()`, and a failure there reaches the actor's supervisor rather than
+   leaving `Build()`. The read is `IFlurlClientCache`'s factory reading
+   `OpenSkyOptions.Value`. Nothing claims the head's half. `implementer`.
+6. The poll diagram's `401` branch writes no status and does not say the
+   retried request ends in one of the other branches. `implementer`.
+
+**Recommended: §§ 8-9 to 🟢** with findings 2 and 3 fixed beside it, which is
+the person's to agree; an answer to finding 1 that adds a clause to B-053 or
+B-028 adds a test and reopens it. §§ 1-5 and §§ 6-7 stay 🟡 until the person
+decides finding 1, the owning roles write the answer with findings 4 – 6, and a
+reader who wrote none of it reads it. `0068` waits on that.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
