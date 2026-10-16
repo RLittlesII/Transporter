@@ -2,7 +2,7 @@ id: "0097"
 type: task
 title: Open one compressed, subscribed AISStream connection while vessels are live
 
-status: blocked
+status: ready-for-architecture
 
 priority: high
 risk: 4
@@ -39,10 +39,10 @@ summary: |
   one. The API key comes from the user-secrets store and nowhere else, and its
   absence is a reported failure.
 
-  **`blocked` on § 11 row 6**, which § 11 times as "before the vessel
-  client's item starts": which reported instant is a message's time is read
-  from a captured message, and capturing one needs the person's AISStream key
-  in the user-secrets store. Unblocks when row 6 is answered.
+  Not blocked on § 11 row 6: which reported instant is a message's time
+  decides `0099`'s claims, not these, and every test here scripts its frames.
+  B-007's grant is still a review against the live service, so the person's
+  key is needed before the closing act is rehearsed, not before this starts.
 
 acceptance_criteria:
   - "B-001, B-002, B-007, B-011 — one box, read from the aircraft's setting, subscribed in the first frame, compressed, two message types."
@@ -50,7 +50,11 @@ acceptance_criteria:
   - "B-005, B-006 — at most one connection, open only while live, reopened without a rebuild."
   - "§ 9 carries a row naming a test or a performed review for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-16 — spec-author — `ready-for-architecture` rather than
+    `blocked`. The independent review (§ 12, F22) found § 11 row 6 timed
+    against this item while § 7 put the claims it decides in `0099`; row 6 is
+    now timed against `0099`."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

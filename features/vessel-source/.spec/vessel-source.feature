@@ -46,7 +46,7 @@ Feature: Vessel source — a push feed on the same seam
     Given no AISStream API key is configured
      When the vessel strategy is selected
      Then no connection is opened
-      And a failure naming the absent key can be read
+      And an error is logged naming the setting "AisStream:ApiKey" and no value
       And selecting the aircraft strategy afterwards still works
 
   @B-005
@@ -56,6 +56,15 @@ Feature: Vessel source — a push feed on the same seam
      Then a vessel connection was opened on each swap to vessels
       And it was closed on the swap back to aircraft
       And at no point was more than one vessel connection open
+
+  @B-005
+  Scenario: A reconnect closes the old connection first, and a swap during one leaves none
+    Given vessels are live and the service has closed the connection
+     When the vessel client reconnects
+     Then the old connection was closed before the new one was opened
+     When the service closes the new connection and the presenter swaps to aircraft before the reconnect delay passes
+     Then no vessel connection is open
+      And none is opened when the delay passes
 
   @B-006
   Scenario: A dropped connection is reopened and nothing held is lost
@@ -70,15 +79,23 @@ Feature: Vessel source — a push feed on the same seam
     Given an API key is configured
      When the vessel client opens a connection
      Then the connection requests permessage-deflate
+     When the subscription confirmation reports compression not granted
+     Then a warning saying so is logged
+      And the vessel stream stays open
 
   # ───────────────────────────────── Messages ────────────────────────────────
 
   @B-008
-  Scenario: A vessel is keyed by its nine-digit MMSI
+  Scenario Outline: A vessel is keyed by its nine-digit MMSI
     Given vessels are live
-     When a position report arrives for MMSI 366999001
-     Then the fleet holds a vessel keyed "366999001"
+     When a position report arrives reporting MMSI <reported>
+     Then the fleet holds a vessel keyed "<key>"
       And later reports for the same MMSI update that vessel without changing its key
+
+    Examples:
+      | reported  | key       |
+      | 366999001 | 366999001 |
+      | 36699900  | 036699900 |
 
   @B-009
   Scenario: Each position report is written on its own
@@ -91,7 +108,7 @@ Feature: Vessel source — a push feed on the same seam
   @B-010
   Scenario Outline: Static data names a vessel, whether it is held yet or not
     Given vessels are live and <held>
-     When a static-data message reports "366999003" as "GULF TRADER" of ship type "Cargo"
+     When a static-data message reports "366999003" as "GULF TRADER" of ship type 70
      Then "366999003" is held with ship name "GULF TRADER" and ship type "Cargo"
       And its position is <position>
 
@@ -99,6 +116,15 @@ Feature: Vessel source — a push feed on the same seam
       | held                                         | position     |
       | "366999003" is held at 29.40, -94.90         | 29.40, -94.90 |
       | no vessel "366999003" is held                | absent       |
+
+  @B-010
+  Scenario: A vessel no message has timed is held but not yet in the fleet
+    Given vessels are live and no vessel "366999006" is held
+     When a static-data message reporting no instant names "366999006"
+     Then "366999006" is held in the vessel cache
+      And it is not in the fleet
+     When a position report for "366999006" reporting 14:32:10 UTC arrives
+     Then "366999006" is in the fleet with last contact 14:32:10 UTC
 
   @B-011
   Scenario: Only position reports and static data are asked for or used
@@ -129,6 +155,8 @@ Feature: Vessel source — a push feed on the same seam
       | true heading       | 511      | true heading     |
       | speed over ground  | 102.3    | speed over ground |
       | course over ground | 360      | course over ground |
+      | latitude           | missing  | position         |
+      | longitude          | missing  | position         |
 
   # ─────────────────────────────────── Time ──────────────────────────────────
 
@@ -137,6 +165,8 @@ Feature: Vessel source — a push feed on the same seam
     Given vessels are live
      When a position report for "366999001" reporting 14:32:10 UTC arrives at 14:32:12 by the wall clock
      Then the vessel's last contact is 14:32:10 UTC
+     When a static-data message for "366999001" reporting no instant arrives
+     Then the vessel's last contact is still 14:32:10 UTC
 
   @B-015
   Scenario: A reported instant advances the observed clock; a message without one does not
@@ -144,6 +174,8 @@ Feature: Vessel source — a push feed on the same seam
      When a message reporting 14:32:25 arrives
      Then the observed clock reads 14:32:25
      When a message reporting no instant arrives
+     Then the observed clock still reads 14:32:25
+     When a message reporting 14:32:18 arrives
      Then the observed clock still reads 14:32:25
 
   # ───────────────────────────── The vessel and its description ─────────────────────────────
@@ -166,6 +198,8 @@ Feature: Vessel source — a push feed on the same seam
       | "  BAY RUNNER  " | "BAY RUNNER"  |
       | absent           | "366999005"   |
       | "   "            | "366999005"   |
+      | "BAY RUNNER@@@@" | "BAY RUNNER"  |
+      | "@@@@@@@@"       | "366999005"   |
 
   @B-018
   Scenario: Speed and course are held as the feed reports them
@@ -177,8 +211,12 @@ Feature: Vessel source — a push feed on the same seam
   Scenario: The vessel description offers ship type and flag as groupings
     Given vessels are live
      When the live description is read
-     Then it names columns, comparers, filter choices and detail lines
+     Then it names columns, filter choices and detail lines
       And its grouping keys are ship type and flag state
+      And its comparers order by label, last contact and group key
+      And its card's title is the label, its subtitle the ship type, and its readouts speed and course over ground
+      And its trail measure is speed over ground in knots, from 0 to 30
+      And its silence treatment is removal after the vessel silence threshold
       And every one of them reads a tracked item rather than naming the vessel type
 
   @B-020
@@ -189,9 +227,10 @@ Feature: Vessel source — a push feed on the same seam
 
     Examples:
       | mmsi      | static                                 | type    | flag          |
-      | 366999001 | with no static data received           | Unknown | United States |
-      | 366999003 | with static data reporting "Cargo"     | Cargo   | United States |
-      | 999999001 | with no static data received           | Unknown | Unknown       |
+      | 366999001 | with no static data received           | Unknown | United States of America |
+      | 366999003 | with static data reporting type 70     | Cargo   | United States of America |
+      | 366999007 | with static data reporting type 15     | Unknown | United States of America |
+      | 999999001 | with no static data received           | Unknown | Unknown                  |
 
   # ───────────────────────────────── Silence ─────────────────────────────────
 
@@ -215,11 +254,22 @@ Feature: Vessel source — a push feed on the same seam
 
   @B-023
   Scenario: Vessels are removed; aircraft are still only marked
-    Given the vessel silence threshold is 10 minutes and the aircraft staleness threshold is 5 minutes
+    Given no vessel silence threshold is configured and the aircraft staleness threshold is 5 minutes
      When aircraft are live and "a1b2c3" has been silent for an hour of observed time
      Then "a1b2c3" is marked stale and is still in the fleet
      When vessels are live and "366999001" has been silent for 6 minutes of observed time
+     Then "366999001" is still in the fleet and is not marked stale
+     When "366999001" has been silent for 10 minutes and 1 second of observed time
+     Then "366999001" is no longer in the fleet
+
+  @B-023
+  Scenario: The vessel silence threshold is configured, not compiled in
+    Given "AisStream:SilentAfter" is configured as 20 minutes
+      And vessels are live and "366999001" last reported at 14:00:00
+     When the observed clock reaches 14:15:00
      Then "366999001" is still in the fleet
+     When the observed clock passes 14:20:00
+     Then "366999001" is no longer in the fleet
 
   # ─────────────────────────────── Seam and swap ───────────────────────────────
 

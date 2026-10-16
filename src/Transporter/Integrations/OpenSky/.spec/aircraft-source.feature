@@ -576,3 +576,13 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And telling the actor to swap to a handle makes that strategy live
       And no target names a strategy that was not registered
       And the seam a consumer resolves declares no name or kind
+
+  @B-060
+  Scenario: Each registered source brings its description, and a swap switches both
+    Given the live aircraft source is registered with the aircraft description
+      And a second source is registered with a description of its own
+     When the swap actor is told to swap to the second source
+     Then the published description is the second source's
+      And the vehicles and the description changed in the same switch
+     When the actor is told to swap back
+     Then the published description is the aircraft description again

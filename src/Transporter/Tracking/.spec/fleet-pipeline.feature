@@ -662,3 +662,22 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When the live source is swapped for one that pushes
      Then the poll status is replaced by none
       And nothing names the source that was swapped out
+
+  @B-044
+  Scenario Outline: The live description names how silence is treated
+    Given the live source's description names <treatment>
+      And a vehicle has been silent past that threshold on the observed clock
+     When the observed clock advances with nothing arriving for it
+     Then the vehicle is <outcome>
+
+    Examples:
+      | treatment                          | outcome                                              |
+      | no treatment                       | marked stale and still in the fleet                  |
+      | removal after 10 minutes           | removed, and was never marked stale                  |
+
+  @B-044
+  Scenario: Swapping the source swaps the treatment, and nothing is rebuilt
+    Given aircraft are live, whose description names no treatment
+     When the source is swapped to one whose description names removal
+     Then its silent vehicles are removed by the same stage
+      And no pipeline stage was rebuilt

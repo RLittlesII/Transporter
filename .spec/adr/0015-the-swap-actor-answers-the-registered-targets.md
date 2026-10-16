@@ -6,7 +6,12 @@ type: adr
 
 # ADR-0015: The swap actor answers the registered targets
 
-**Status:** accepted
+**Status:** superseded by
+[ADR-0018](0018-a-registered-entry-carries-its-fleet-description.md)
+
+**Superseded 2026-10-16 (`0102`), because an entry now carries more.** The
+entry also holds its source's fleet description, and the decorator switches
+that description. Everything else here holds as written.
 
 **Accepted 2026-10-09, built by `0080`.** The route was the person's choice the
 same day, recorded in that item's `decisions`.

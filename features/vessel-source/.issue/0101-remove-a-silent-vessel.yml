@@ -38,8 +38,8 @@ summary: |
   treatment and threshold the live source's description names, so it swaps
   with the description and the vessel strategy stays a plain changeset source
   (`fleet-pipeline` § 11 row 9, answered (A) 2026-10-16). That stage is
-  `fleet-pipeline`'s to claim; the claim is owed there before this item
-  starts.
+  `fleet-pipeline`'s to claim, and it does as B-044 (2026-10-16). This item
+  builds that stage too, and completes `fleet-pipeline` § 9's B-044 row.
 
   Depends on `0099`: with no reported instant the clock never advances for
   vessels, and B-022 never fires.
