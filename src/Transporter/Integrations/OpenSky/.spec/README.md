@@ -2188,6 +2188,64 @@ the re-read's recommendation of §§ 8-9 no longer covers the text. **Owed:** a
 read of these answers by a reader who wrote none of them, then the person's
 agreement. `0068` and `0093` wait on that.
 
+**Read 2026-10-15 by an independent `spec-reviewer` — all three rows
+recommended 🟢.** A reader who wrote none of commit `5a2dce4`. I read it
+against `AircraftSnapshotClient`, `AircraftPollActor`, `IDemandedPoll`,
+`OpenSkyRegistration` and `Fleet` B-028. I checked by reading, and ran only
+the build. Every answer landed and holds:
+
+- **Finding 1.** B-053 refuses a demand until the due instant in force, and
+  B-054 reports after every performed poll. § 3 says why, and `0068` claims
+  B-053 with an acceptance criterion and the person's decision.
+- **The new `@B-053` scenario agrees with B-028 and B-053.** 14:32:45 is past
+  the interval and before 14:33:07, so no call is made and the due instant stays
+  14:33:07. Today's actor reads only `LastPoll`, so it would make the call, and
+  the scenario's planned test fails until `0068` builds the held instant.
+- **The rewritten `@B-054` scenario checks out.** 14:32:10 plus 15 is 14:32:25,
+  14:32:25 plus 42 is 14:33:07, and 14:33:07 plus 15 is 14:33:22.
+- **§ 7 matches the code.** Its new bullet reads the held instant through
+  `IDemandedPoll`, which today has only `LastPoll`; § 7 designs the change and
+  `0068` builds it. `IFlurlClientCache`'s factory is what reads
+  `OpenSkyOptions.Value` at the first resolve. `AddAircraftReplay` reaches the
+  box's validator through `AddOpenSkyShared`, so the unclaimed replay-only
+  consequence is stated where the code puts it.
+- **B-059 names `AddOpenSky`.**
+- **The `401` branch** says where the retried request ends.
+
+The counts check out:
+
+- **§ 9:** fifty-eight rows, seven `Missing` and fifty-one `Verified`.
+- **The fifty-one:** thirty-three from items (the ranges named add to
+  thirty-three, without B-053), two from reviews, fifteen from the analyzer and
+  one from both.
+- **§ 8:** sixty scenarios. Ten claims carry two, and B-029 and B-058 carry
+  three each. Every live claim is tagged, and B-059 is listed under failure
+  mode.
+
+Three findings, none blocking:
+
+1. **§ 7's B-053 bullet ends "the gesture's use is a source whose cadence has
+   stopped".** The paragraph "What this does **not** do" says the opposite: the
+   live cadence stops when a recording is selected, and then a demand spends a
+   live credit to fill a cache nothing reads. So the sentence names a use that
+   does not exist. It should say plainly that, with the cadence running, a
+   demand is performed only at the instant the loop is due. A press's visible
+   effect is then `Fleet` B-028's indicator, which that claim already drives
+   from the gesture and clears on its cap. `implementer`.
+2. **B-054 still says "cadence or demanded".** § 9's row plans "the
+   demanded-poll case beside it", but the rewritten `@B-054` scenario no longer
+   demands a poll. The scenario needs a step for a demand performed with no
+   cadence running and reported due one interval later. Without that step, the
+   planned case has no scenario. `spec-author` and `test-writer`.
+3. **`0068`'s summary was not updated.** It still describes B-054 as moved by
+   "a demanded poll that is performed", and it does not mention the held due
+   instant that its acceptance criterion for B-053 now requires. Delivery
+   text, owned by the item.
+
+**Recommended: §§ 1-5, §§ 6-7 and §§ 8-9 to 🟢**, with findings 1 and 2 fixed
+beside them. Agreeing is the person's decision. No row here is set 🟢 by this
+read.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
