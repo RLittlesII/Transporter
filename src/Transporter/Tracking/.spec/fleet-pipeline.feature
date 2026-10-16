@@ -203,12 +203,29 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And nothing in the pipeline read the wall clock to decide it
 
   @B-019
-  Scenario: Silence never removes a vehicle
+  Scenario: Silence never removes an aircraft
     Given an aircraft that last reported an hour before the observed instant
      When the fleet is read
      Then the aircraft is present and marked stale
       And no remove was emitted for it
-      And the pipeline contains no expiry stage
+
+  @B-019
+  Scenario: A source that claims removal loses a silent vehicle after its own threshold
+    Given a live source whose specification removes a vehicle silent for longer than ten minutes
+      And a vehicle from it that last reported at 14:30:00
+      And no further data arrives for it
+     When the observed instant advances from 14:36:00 to 14:41:00
+     Then the vehicle was present and marked stale at 14:36:00
+      And it was removed from the fleet at 14:41:00, with no changeset arriving from the seam
+      And nothing in the pipeline read the wall clock to decide it
+
+  @B-019
+  Scenario: A removing source's threshold is not the staleness threshold
+    Given a live source whose specification removes a vehicle silent for longer than ten minutes
+      And the staleness threshold is changed to two minutes
+     When a vehicle from it has been silent for three minutes
+     Then it is marked stale
+      And it is still in the fleet
 
   # ─────────────────────────── Validation failure ───────────────────────────
 
