@@ -2,7 +2,7 @@ id: "0092"
 type: bug
 title: Show every readout whole, keep a stale card the size of its neighbours, and lay a card's views out once
 
-status: in-progress
+status: done
 
 priority: high
 value: 4
@@ -25,7 +25,7 @@ claims:
 
 created: "2026-10-15"
 updated: "2026-10-15"
-closed: null
+closed: "2026-10-15"
 
 summary: |
   The demo-readiness review of 2026-10-15 ran the Mac Catalyst head on the
@@ -43,7 +43,10 @@ acceptance_criteria:
   - "B-006 — a card still lays its views out only when the roles change, and fills them on a poll."
   - "B-008 and B-029 — the stale mark and the description's roles are unchanged."
 
-decisions: []
+decisions:
+  - "2026-10-15 — implementer — two readout columns, not three: at the card's 320-point minimum a third of the body is about 90 points and a signed four-digit rate in feet per minute is about 140 in the 18-point monospace face. Rejected: a smaller value face, which still clips at three; a wider card minimum, which drops a column of cards from the stage; truncating with an ellipsis, which still hides the unit. The card is one readout row taller."
+  - "2026-10-15 — implementer — the stale edge overlays the body's left padding instead of taking a column, so a status never changes the body's width (B-008's mark is unchanged)."
+  - "2026-10-15 — implementer — no unit test: the three causes are the head's layout, which § 4 row 13 makes a review, and no test project references src/Gui (ADR-0016). Verified on the running head; a claim for it is § 11 row 10, owed to the person."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
