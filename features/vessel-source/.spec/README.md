@@ -124,20 +124,298 @@ page is the authority when the two disagree.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 6 -->
 
-Not written. Owed by `implementer` once §§ 1-5 are agreed.
+| Item                                                 | Classification | Notes                                                                                                                                 |
+| ---------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| One box for both fleets (B-001)                      | Business       | The person's geography (`aircraft-source` decisions/0001). Reading it from the aircraft's setting is the technical half.              |
+| Subscription first, compressed, two message types    | Technical      | The provider's protocol (§ 4 rows 2, 4, 7). B-002, B-007, B-011.                                                                      |
+| The API key's home and its absence (B-003, B-004)    | Both           | Never on screen or in the repository is the runbook's rule. Reading it from user secrets is the same mechanism as the OpenSky secret. |
+| One connection, and reconnecting (B-005, B-006)      | Technical      | The provider's three-connection limit and its dropped sockets.                                                                        |
+| The client writes its own deltas (B-009)             | Both           | The talk's contrast with `EditDiff`, and ADR-0002 item 5's ownership rule.                                                            |
+| Sentinels become absent (B-013)                      | Technical      | ITU-R M.1371's encoding, read once at the boundary.                                                                                   |
+| Time from the feed (B-014, B-015)                    | Technical      | ADR-0007. Which field carries it is § 11 row 6.                                                                                       |
+| Ship type and flag state as groupings (B-019, B-020) | Business       | The person's call of 2026-10-15. The MID table's provenance is § 11 row 5, answered.                                                  |
+| A silent vessel is removed, after 10 minutes         | Business       | The person's calls of 2026-10-15 and 2026-10-16. Where the removal runs is `fleet-pipeline` § 11 row 9 (A).                           |
+| `Vessels` on the swap control, and nothing rebuilt   | Both           | The closing act's one tap is the presenter's. The seam and the decorator are ADR-0002 and ADR-0011.                                   |
 
 ## 7. Technical Design
 
 <!-- Rules: ../../../.spec/templates/feature.md § 7 -->
 
-Not written. Owed by `implementer` once §§ 1-5 are agreed. § 11 rows 2 and 6
-are design questions it will meet first.
+Written 2026-10-16, against §§ 1-5 as they stood at that time, which were still
+🟡 in § 12. The person's four answers of that day are folded in. Two choices
+below change another Feature's boundary and wait on the person under
+**Decision required**.
+
+The aircraft path is the template wherever a vessel can follow it, and the
+places it cannot are the point. Aircraft have a contract, a positional-row
+reader, a polled client and a differ. Vessels have a socket, a message reader,
+and a client that writes one delta per message. Both meet at a plain
+`SourceCache` and a strategy that projects it onto `ITrackerSource`.
+
+**Where it lives**
+
+Integration code does not live under `Features/` (AGENTS.md). The socket, the
+message records, the reader and the client are AISStream's, under
+`src/Transporter/Integrations/AisStream/`. The vessel and the MID table are the
+domain's, under `src/Transporter/Model/`. The strategy, its mapper and its
+description sit beside the aircraft's in `src/Transporter/Tracking/Sources/`.
+
+**Domain model**
+
+| Field                     | Type                    | Notes                                                                                                                              |
+| ------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Vessel.Key`              | `string`                | The MMSI as the nine-digit string the feed reports (B-008). Never parsed to a number, so a leading zero survives.                  |
+| `Vessel.Name`             | `Option<string>`        | Trimmed. Absent until static data reports one, and absent when it reports only spaces or `@` padding (B-017).                      |
+| `Vessel.ShipType`         | `Option<int>`           | The AIS type code from static data (B-010). Absent until reported.                                                                 |
+| `Vessel.ShipTypeName`     | `string`                | Derived: the code's AIS category (Cargo, Tanker, Passenger, Tug, …), or `Unknown` while the code is absent or unallocated (B-020). |
+| `Vessel.FlagState`        | `string`                | Derived from the key's first three digits through `MaritimeIdentificationDigits`, or `Unknown` (B-020).                            |
+| `Vessel.SpeedOverGround`  | `Option<double>`        | Knots, as reported. 102.3 is absent (B-013, B-018).                                                                                |
+| `Vessel.CourseOverGround` | `Option<double>`        | Degrees from north, as reported. 360 is absent.                                                                                    |
+| `Vessel.TrueHeading`      | `Option<double>`        | Degrees from north, as reported. 511 is absent.                                                                                    |
+| `Vessel.Position`         | `Option<GeoPosition>`   | Inherited. Absent when either coordinate is missing or a sentinel (latitude 91, longitude 181). Never `0,0` (B-013).               |
+| `Vessel.LastContact`      | `DateTimeOffset`        | Inherited. The reported instant of the message that last updated it (B-014). § 11 row 6 decides which field that is.               |
+| `Vessel.Label`            | `string`                | `Name`, or the key while the name is absent (B-017).                                                                               |
+| `Vessel.GroupKey`         | `string`                | `ShipTypeName`, the first of the description's two groupings (B-019).                                                              |
+| `VesselSnapshot`          | record, keyed by `Mmsi` | What the client holds: every field above that a message reports, before projection, plus `Reported` (`Option<DateTimeOffset>`).    |
+
+**Diagrams**
+
+```mermaid
+flowchart LR
+    subgraph AisStream["Integrations/AisStream"]
+        socket["IVesselSocket<br/>(ClientWebSocket, deflate)"]
+        reader["VesselMessageReader<br/>frame → Option&lt;VesselMessage&gt;"]
+        client["VesselClient<br/>subscribe, read, write one delta"]
+    end
+    cache[("SourceCache&lt;VesselSnapshot, string&gt;")]
+    clock["IObservedClockWriter"]
+    subgraph Sources["Tracking/Sources"]
+        strategy["VesselTrackerSource<br/>Transform → Vessel"]
+        description["VesselFleetDescription"]
+    end
+    swap["SwappingTrackerSource<br/>entry: Vessels, NoPollStatus, description"]
+    tracker["FleetTracker<br/>silence stage → Filter → Bind"]
+
+    socket -->|frames| client
+    client --> reader
+    client -->|AddOrUpdate per message| cache
+    client -->|reported instant| clock
+    cache --> strategy --> swap --> tracker
+    description --> swap
+```
+
+```mermaid
+sequenceDiagram
+    participant P as Presenter
+    participant S as SwappingTrackerSource
+    participant V as VesselTrackerSource
+    participant C as VesselClient
+    participant W as IVesselSocket
+    P->>S: Select(Vessels)
+    S->>V: Connect() (Switch subscribes)
+    V->>C: Listen() inside Observable.Using
+    C->>W: Connect(wss://…/v0/stream, deflate)
+    C->>W: Send(subscription) — first frame
+    loop each frame
+        W-->>C: frame
+        C->>C: Read → AddOrUpdate one vessel, Observe(instant)
+    end
+    W--xC: closed by the service
+    C->>W: new socket, subscription first again
+    P->>S: Select(Live aircraft)
+    S-->>V: unsubscribe (Switch)
+    V-->>C: dispose Listen()
+    C->>W: Close, and dispose
+```
+
+**Interface changes**
+
+None of these files exists yet, so the declarations are written out here
+(spec-and-traceability § "A declaration belongs to the file that compiles").
+
+| Type                           | File                                                        | Claims it makes visible     |
+| ------------------------------ | ----------------------------------------------------------- | --------------------------- |
+| `AisStreamOptions`             | `Integrations/AisStream/Configuration/AisStreamOptions.cs`  | B-003, B-004                |
+| `IVesselSocket`                | `Integrations/AisStream/IVesselSocket.cs`                   | B-002, B-005, B-007         |
+| `VesselSubscription`           | `Integrations/AisStream/Messages/VesselSubscription.cs`     | B-001, B-002, B-011         |
+| `VesselMessageReader`          | `Integrations/AisStream/Messages/VesselMessageReader.cs`    | B-010 – B-013, B-014        |
+| `VesselClient`                 | `Integrations/AisStream/VesselClient.cs`                    | B-002 – B-006, B-009, B-015 |
+| `Vessel`                       | `Model/Vessel.cs`                                           | B-008, B-016 – B-018, B-020 |
+| `MaritimeIdentificationDigits` | `Model/MaritimeIdentificationDigits.cs`                     | B-020                       |
+| `VesselTrackerSource`          | `Tracking/Sources/VesselTrackerSource.cs`                   | B-016, B-024                |
+| `VesselFleetDescription`       | `Tracking/Sources/VesselFleetDescription.cs`                | B-019, B-021, B-023         |
+| `AisStreamRegistration`        | `Integrations/AisStream/Container/AisStreamRegistration.cs` | B-001, B-003, B-024, B-025  |
+
+```csharp
+// Bound from "AisStream". The key comes from the user-secrets store layered over
+// the packaged settings, never from a packaged value (B-003).
+public sealed class AisStreamOptions
+{
+    public const string Section = "AisStream";
+    public Uri Endpoint { get; init; } = new("wss://stream.aisstream.io/v0/stream");
+    public Option<string> ApiKey { get; init; }
+    public TimeSpan SilentAfter { get; init; } = TimeSpan.FromMinutes(10); // § 11 row 3, B-023
+    public TimeSpan ReconnectAfter { get; init; } = TimeSpan.FromSeconds(5);
+}
+
+// One connection. A new instance per connection, so a reconnect never reuses a
+// closed socket (B-005, B-006). The test double scripts frames; nothing here names
+// a provider operation, so it is not a contract layer (§ 5 row 1, ADR-0017).
+internal interface IVesselSocket : IAsyncDisposable
+{
+    Task Open(Uri endpoint, CancellationToken cancellation);      // requests permessage-deflate (B-007)
+    Task Send(string frame, CancellationToken cancellation);
+    IAsyncEnumerable<string> Frames(CancellationToken cancellation); // ends when the service closes it
+}
+
+// Reads one frame. Unreadable, unasked-for and unknown types are None (B-011, B-012);
+// sentinels are absent before the message leaves (B-013).
+internal static class VesselMessageReader
+{
+    public static Option<VesselMessage> Read(string frame);
+}
+
+// Owns the socket and writes the cache. Listen() is what the strategy's
+// subscription owns, as AircraftSnapshotClient.Poll() is for aircraft.
+internal sealed class VesselClient
+{
+    public VesselClient(
+        Func<IVesselSocket> sockets,
+        SourceCache<VesselSnapshot, string> vessels,
+        IObservedClockWriter clock,
+        IOptions<AisStreamOptions> options,
+        IOptions<OpenSkyOptions> box,          // the one box, from the aircraft's setting (B-001)
+        ISchedulerProvider schedulers,
+        ILogger<VesselClient> logger);
+
+    public IDisposable Listen();
+}
+
+public sealed class Vessel : TransportVehicle
+{
+    public Vessel(string mmsi, DateTimeOffset lastContact);
+    public Option<string> Name { get; set; }
+    public Option<int> ShipType { get; set; }
+    public Option<double> SpeedOverGround { get; set; }
+    public Option<double> CourseOverGround { get; set; }
+    public Option<double> TrueHeading { get; set; }
+    public string ShipTypeName { get; }
+    public string FlagState { get; }
+    public override string Label { get; }
+    public override string GroupKey { get; }
+}
+```
+
+How the parts behave:
+
+- **Connecting.** `Listen()` returns at once. On the background scheduler it
+  takes the key, and with none it logs an error naming `AisStream:ApiKey`,
+  opens nothing, and returns. The strategy's stream stays open and empty, so
+  the swap control still works (B-004, the same shape as `aircraft-source`
+  B-029's absent credential). With a key it creates a socket, opens it, and
+  sends `VesselSubscription` before it reads a frame (B-002). The subscription
+  converts `OpenSkyOptions.Box` to `[[[latMin, lonMin], [latMax, lonMax]]]` in
+  one place, latitude first (§ 4 row 2), and asks for `PositionReport` and
+  `ShipStaticData` only (B-011).
+- **Compression.** `ClientWebSocketOptions.DangerousDeflateOptions` is set
+  before the socket opens (ADR-0017). The client reads
+  `SubscriptionConfirmation.Message.CompressionEnabled` and logs a warning when
+  it is false. It does not end the stream, because a slow feed is still a feed
+  (B-007).
+- **Writing.** Each readable message is one `vessels.Edit` call. The client
+  looks the MMSI up, merges the message's fields into the snapshot held for it
+  (a new one if there is none), and calls `AddOrUpdate` with the result. A
+  position report touches position, speed, course, heading and `Reported`. A
+  static-data message touches name and type (B-009, B-010). The client never
+  builds a set and never calls `EditDiff`.
+- **Time.** When the message carries a reported instant, the client calls
+  `clock.Observe(instant)` after the cache write, as the aircraft client does
+  after a poll (B-015). Which field that is waits on § 11 row 6, and `0099`
+  holds the claims until it is answered.
+- **Reconnecting.** When `Frames` ends or throws while `Listen()` is still
+  held, the client disposes that socket, waits `ReconnectAfter` on the
+  background scheduler, and starts again from **Connecting**. The cache is left
+  alone, so vessels already held stay held (B-006).
+- **Closing.** Disposing what `Listen()` returned cancels the loop and disposes
+  the socket, and it is the only thing that does. The strategy holds it in
+  `Observable.Using`, and `SwappingTrackerSource`'s `Switch` unsubscribes on a
+  swap, so one live strategy means at most one socket (B-005).
+- **The strategy.** `VesselTrackerSource.Connect()` is
+  `Observable.Using(() => client.Listen(), _ => vessels.Connect().Transform(mapper.Project).ChangeKey(v => v.Key))`,
+  the aircraft strategy's shape. `VesselSnapshotMapper` is the only place a
+  `Vessel` is built (B-016). The cache outlives a swap, as the aircraft cache
+  does, so swapping back shows the vessels last held, and silence removes
+  those that went quiet in the meantime (B-021).
+- **Registration.** `AddAisStream(configuration)` registers the socket factory,
+  the cache, the client, the strategy as `ITrackerSourceStrategy` (never as
+  `ITrackerSource`, ADR-0011), and a `TrackerSourceEntry` named `Vessels` with
+  `NoPollStatus` (B-024, B-025). The head calls it after `AddOpenSky`, so live
+  aircraft stays the first entry and the startup source (`replay-source`
+  B-028).
+- **Silence.** `VesselFleetDescription` names the silence treatment `Remove`
+  after `AisStreamOptions.SilentAfter`, and the aircraft description names
+  `Mark`. The tracker runs one stage for both and reads the treatment from the
+  live description. That stage is `fleet-pipeline`'s to claim and build
+  (§ 11 row 9 there, answered (A)). This Feature claims only that vessels are
+  removed (B-021 – B-023) and supplies the description that says so.
+
+**Decision required**
+
+Two parts of this design change another Feature's boundary, so they are the
+person's to accept rather than this section's to settle.
+
+> **1. The live description must swap with the source (B-026).** Today the
+> description is a `BehaviorSubject` the OpenSky registration fills once with
+> the aircraft's. Nothing swaps it, so a vessel fleet would be read through
+> aircraft columns and groupings.
+>
+> | Option | Summary                                                                                                                                        | Tradeoff                                                                                                                                                                            |
+> | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | A.     | `TrackerSourceEntry` gains a `Description`, and `SwappingTrackerSource` publishes the selected entry's description, switched like its `Status` | Amends ADR-0015's record and moves the description's registration from OpenSky to tracking. One switch decides both the vehicles and their description, so the two cannot disagree. |
+> | B.     | A second subject the swap actor writes on each swap                                                                                            | Leaves the record alone, but there are now two things to keep in step and a window in which the vehicles and the description disagree.                                              |
+>
+> **Recommendation:** A.
+> **Awaiting:** the person.
+
+> **2. Removal on silence, and the operator README.md names.** README.md
+> § "DynamicData operators" promises `ExpireAfter`, but `ExpireAfter` measures
+> against a scheduler's clock, and B-022 forbids any clock but the observed one.
+>
+> | Option | Summary                                                                                                                                | Tradeoff                                                                                                                                                                |
+> | ------ | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | A.     | A dynamic `Filter` over `IsStale(clock.Current, silentAfter)`, re-evaluated on each observed tick, where the description says `Remove` | Honours B-022 with the operator the pipeline already uses for staleness. The talk shows removal with `Filter`, and README.md's `ExpireAfter` line is amended to say so. |
+> | B.     | `ExpireAfter` on a scheduler whose `Now` is the observed clock                                                                         | Shows the named operator, but adds a hand-written scheduler that must be correct for every operator that ever runs on it.                                               |
+>
+> **Recommendation:** A.
+> **Awaiting:** the person, since it amends README.md.
 
 ## 8. Testing Strategy
 
 <!-- Rules: ../../../.spec/templates/feature.md § 8 -->
 
-Not written. Owed by `test-writer` once § 7 exists.
+**Testability assessment**
+
+| Dimension          | Verdict | Finding                                                                                                                                                                                                        | Recommendation                                                                                                                   |
+| ------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| DI seams           | Pass    | The socket is a factory of `IVesselSocket`, so a test scripts frames, sees every sent frame in order, and counts open sockets. The clock writer, the schedulers and the options are injected.                  | A scripted socket that throws on an unscripted call, as `aircraft-source` B-010's fake does, so a test cannot pass on a default. |
+| Behavior isolation | Pass    | The reader is a static function of a string, and the mapper of a snapshot. The client is tested over a real `SourceCache`, and the strategy through `SwappingTrackerSource` with a `TestScheduler`.            | —                                                                                                                                |
+| Coverage potential | Partial | B-003's "never in a log, a recording or a view" is a review over the code, not a test. B-007's grant is the service's, so a test proves the request and the confirmation's reading, and the grant is a review. | Name both as reviews in § 9 and say what re-does them.                                                                           |
+
+**Scenarios**
+
+Full Gherkin is in [`vessel-source.feature`](vessel-source.feature), one
+scenario per claim. Every value is synthetic: invented MMSIs and names inside
+the Houston box, and no key.
+
+- Happy path → B-001, B-002, B-008 – B-010, B-014 – B-020, B-024 – B-026
+- Failure mode → B-004 – B-006, B-012, B-021, B-022
+- Validation failure → B-003, B-011, B-013
+- Data-driven → B-013 (each sentinel), B-017 (blank and padded names), B-020 (allocated and unallocated MIDs)
+
+Tests sit in `test/UnitTests`, under folders that mirror the files they cover,
+and build their subjects through generated fixtures (`transporter-conventions`
+§ testing). The silence tests drive the observed clock, never a wall clock or a
+`TestScheduler`'s `Now` (B-022).
 
 ## 9. Traceability Matrix
 
@@ -170,11 +448,11 @@ None yet.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status                                                               |
+| -------- | ----------- | -------------------------------------------------------------------- |
+| §§ 1-5   | spec-author | 🟡 Draft                                                             |
+| §§ 6-7   | implementer | 🟡 Draft — written 2026-10-16; two decisions in § 7 await the person |
+| §§ 8-9   | test-writer | 🟡 Draft — written 2026-10-16                                        |
 
 ## Decisions
 
