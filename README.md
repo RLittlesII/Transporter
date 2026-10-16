@@ -193,7 +193,7 @@ Replace the polled source with a push source and show that everything downstream
 - [ ] If using ships: get an AISStream API key
     - [x] Intend to show ships
 - [ ] Add OpenSky citation slide
-- [ ] Decide the vessel WebSocket client: `ClientWebSocket` or `AISStream.NET` (§ "Closing act" names both)
+- [x] Decide the vessel WebSocket client — `ClientWebSocket`, decided 2026-10-16 ([ADR-0017](.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md))
 - [ ] Decide, per command, whether a view model reaches its actor with `Tell` or `Ask` (`mvvm` § "Two kinds of input, two routes")
 - [x] Decide whether the build gets a `Test` target — yes; `Default` depends on it, so a green build is a green test run ([item 0017](.issue/0017-test-target.yml))
 

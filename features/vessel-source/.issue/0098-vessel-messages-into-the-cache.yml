@@ -1,0 +1,50 @@
+id: "0098"
+type: task
+title: Write each position report and static-data message into the vessel cache
+
+status: ready-for-architecture
+
+priority: high
+risk: 3
+rank: 78
+
+parent: "0096"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: features/vessel-source/.spec/README.md
+
+claims:
+  - B-008
+  - B-009
+  - B-010
+  - B-012
+  - B-013
+
+created: "2026-10-16"
+updated: "2026-10-16"
+closed: null
+
+summary: |
+  A push client already knows its deltas, so it writes them: a position
+  report adds or updates its vessel, a static-data message names and types it,
+  one message at a time, with no set assembled and no differ run (the
+  contrast with the aircraft path the talk turns on). The MMSI is the key, an
+  unreadable message is skipped, and AIS "not available" sentinels become
+  absent values before anything sorts or plots them.
+
+  Built against scripted frames, so it needs no connection and no key.
+
+acceptance_criteria:
+  - "B-008, B-009 — keyed by MMSI; added or updated per message, with no set assembled and no diff."
+  - "B-010 — static data sets name and type, and adds a vessel with no position."
+  - "B-012, B-013 — an unreadable message skipped, the stream intact; every sentinel absent, never 0,0."
+  - "§ 9 carries a row naming a test or a performed review for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
