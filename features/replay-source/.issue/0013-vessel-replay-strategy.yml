@@ -26,7 +26,7 @@ claims:
   - B-023
 
 created: "2026-10-04"
-updated: "2026-10-04"
+updated: "2026-10-15"
 closed: null
 
 summary: |
@@ -41,17 +41,17 @@ summary: |
   selection path as an aircraft recording. Messages are never batched into
   poll-shaped snapshots to make a push feed resemble a polled one.
 
-  **`status: blocked`, and the blocker has no item to name.** Its prerequisite is
-  an unwritten specification, not an unfiled task: replay spec § 5 row 2 defers
-  the vessel feed, and aircraft-source § 5 row 3 leaves `Vessel`, the AISStream
-  client, its cache and its tracker source unspecified. B-021 says replay
-  introduces no type of its own and reproduces whatever the recorded provider's
-  Feature defines — so there is nothing yet for it to reproduce. The claims can
-  be designed; they cannot be built. `depends_on` names only 0010, because an
-  unwritten Feature has no id.
+  **`status: blocked`, and the blocker still has no item to name.** The vessel
+  Feature now has a specification, `features/vessel-source/.spec/README.md`
+  (draft, 2026-10-15), which defines what B-021 says replay reproduces. Nothing
+  has been cut from it yet, so `Vessel`, the vessel client, its cache and its
+  strategy exist only as claims. Its § 11 row 6 (which reported instant is a
+  message's time) also bears on B-019 here. `depends_on` names only 0010, because
+  the items this waits on have no ids yet.
 
-  Unblocks when the vessel Feature has a specification. Re-score then: risk 4 is
-  mostly the unspecified subject, not the work.
+  Unblocks when the vessel-source items that build the client and the strategy
+  are done. Add them to `depends_on` when they are cut, and re-score then: risk 4
+  is mostly the unbuilt subject, not the work.
 
 acceptance_criteria:
   - "B-023 — vessel replay substitutes at the strategy, not at a contract."
@@ -68,10 +68,15 @@ decisions:
     B-020 claims that. The claim is conditional on the act happening, so the
     honest reading is a named user need met (3) rather than a stated goal
     degraded (4)."
+  - "2026-10-15 — spec-author — the blocker moved from an unwritten
+    specification to unbuilt items: the person chose ships for the closing act,
+    and features/vessel-source/.spec/README.md was written as a draft. Status
+    stays blocked; nothing was re-scored, because the vessel items do not exist
+    yet."
 
 out_of_scope:
-  - "The vessel feed itself (§ 5 row 2; aircraft-source § 5 row 3). Defining it
-    is the vessel Feature's § 3, and this is also what blocks the item."
+  - "The vessel feed itself (§ 5 row 2; aircraft-source § 5 row 3). It is
+    vessel-source's § 3, and building it is what blocks the item."
   - "Making the two halves substitute at the same depth — they cannot, and
     ADR-0002 accepts it."
   - "Performing the vessel recording (§ 5 row 3) — a rehearsal task in README
