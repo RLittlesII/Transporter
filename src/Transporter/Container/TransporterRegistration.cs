@@ -60,6 +60,7 @@ public static class TransporterRegistration
             TaskPoolScheduler.Default,
             Observer.Create<Exception>(static error => ExceptionDispatchInfo.Capture(error).Throw()));
 
+        // Live before replay: the selector starts on the first strategy registered (replay-source B-028).
         services.AddOpenSky(configuration);
         services.AddAircraftReplay(configuration);
         services.AddFleetTracking();
