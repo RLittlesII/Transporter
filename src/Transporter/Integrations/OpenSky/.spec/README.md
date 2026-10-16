@@ -44,7 +44,11 @@ B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries;
 (§ 12, finding 4): the options validated the box on start with no claim behind
 it, so a host stopping on an absent box was a rule nothing claimed. The person
 chose to claim it rather than leave it an unclaimed guard in § 7 or remove it
-as the credentials' check was. It claims a host only. The head starts none, so
+as the credentials' check was. It claims a host that registers the live
+transport only. A host that registers only replay stops on an absent box too,
+because the box's validator is in the shared registration, but nothing in its
+chain reads the box, so that is an unclaimed consequence § 7 names, not a
+claim. The head starts none, so
 there an absent box is first read when the live chain is first resolved; § 7
 says so, and nothing here claims it, because the packaged settings always carry
 the box.
@@ -82,6 +86,15 @@ narrowing it to the two credential keys is a filter nobody asked for either.
 It is the store's ordinary behaviour, written down. **Decided 2026-10-15 by
 the person: any setting, as written** — narrowing it is a filter for a machine
 nobody else runs.
+
+**B-053 and B-054 were amended on 2026-10-15**, from the independent re-read
+of PR 111 (§ 12, finding 1). B-053 refused a demand only inside the interval,
+so a demand during a longer `429` deferral spent a credit B-028 had put off.
+The person chose that it is refused until the deferred instant, as it is
+until the interval ends; decisions/0003 bounded demand by the cadence and was
+silent on a `429`. B-054 no longer singles out a demanded poll, which can now
+be performed only when the cadence would poll anyway: every performed poll
+reports.
 
 **B-029's first half was reworded on 2026-10-15**, from § 11 row 7: the head
 starts no generic host, so an absent credential is named at the first poll and
@@ -151,8 +164,8 @@ than being slotted into the sequence.
 | B-050 | The polling interval SHALL be configurable and SHALL default to 15 seconds; the bounding box SHALL be configurable with no default compiled in.                                                                                                                                                                                                                                                                                                                                                                                                                       | Decided call; decisions/0001                                                        |
 | B-051 | A vehicle past the staleness threshold SHALL remain in the collection and SHALL be observably stale; it SHALL NOT be removed for staleness. The threshold SHALL be configurable and SHALL default to five minutes.                                                                                                                                                                                                                                                                                                                                                    | Decided call; dynamic-data-pipeline § "Staleness and expiry"                        |
 | B-052 | The container the application constructs SHALL resolve `IFleetTracker` with every dependency satisfied and every decorator applied, so a chain that compiles and a chain that runs are the same thing.                                                                                                                                                                                                                                                                                                                                                                | Decided call; ADR-0011 § Consequences                                               |
-| B-053 | A poll SHALL be performable on demand, told to an actor rather than published as a value, and it SHALL be refused when one has been performed within the configured polling interval — so demand SHALL NOT make the source spend credits faster than B-050's cadence already does. A refusal SHALL be silent to the caller, and SHALL NOT fault the stream or interrupt the cadence.                                                                                                                                                                                  | ADR-0012; decisions/0003; `fleet-dashboard` B-028                                   |
-| B-054 | The poller SHALL report the instant its next poll is due each time it schedules one — from the polling interval (B-050) and the time, on the scheduler it already runs on, that the last poll was made — and a demanded poll that is performed (B-053) SHALL move it; the report SHALL leave by a read-side seam beside `ITrackerSource`, never through `Connect()`.                                                                                                                                                                                                  | `fleet-dashboard` decisions/0002 and B-036; `fleet-pipeline` B-040; ADR-0013; B-033 |
+| B-053 | A poll SHALL be performable on demand, told to an actor rather than published as a value, and it SHALL be refused until the next poll is due — the configured polling interval after the last poll, or the instant a `429` deferred it to (B-028), whichever is in force — so demand SHALL NOT make the source spend credits faster than B-050's cadence already does, nor spend one OpenSky asked it not to. A refusal SHALL be silent to the caller, and SHALL NOT fault the stream or interrupt the cadence.                                                       | ADR-0012; decisions/0003; `fleet-dashboard` B-028                                   |
+| B-054 | The poller SHALL report the instant its next poll is due each time it schedules one — from the polling interval (B-050), or the deferral a `429` asked for (B-028), and the time, on the scheduler it already runs on, that the last poll was made — after every poll it performs, cadence or demanded (B-053); the report SHALL leave by a read-side seam beside `ITrackerSource`, never through `Connect()`.                                                                                                                                                        | `fleet-dashboard` decisions/0002 and B-036; `fleet-pipeline` B-040; ADR-0013; B-033 |
 | B-055 | A poll refused with `429` SHALL be reported on the same seam as a refusal carrying the interval `X-Rate-Limit-Retry-After-Seconds` gave, with the next due instant exactly that interval after the refused poll, as B-028 defers it; the next poll that is applied SHALL clear the refusal. No exception SHALL carry it, so B-028's subscriber still sees none.                                                                                                                                                                                                       | `fleet-dashboard` decisions/0002 and B-036; B-028; § 4 row 9                        |
 | B-011 | The snapshot SHALL have value equality over every member it carries, so two snapshots reporting identical values compare equal and the differ emits no change for them.                                                                                                                                                                                                                                                                                                                                                                                               | Decided call — the client diffs records                                             |
 | B-012 | The snapshot SHALL carry `icao24` as a non-optional member and SHALL be keyed on it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | README.md index 0 ("the cache key")                                                 |
@@ -174,7 +187,7 @@ than being slotted into the sequence.
 | B-028 | A `429` response SHALL be inspected for `X-Rate-Limit-Retry-After-Seconds` in the HTTP transport, and SHALL defer the snapshot client's next poll by exactly that many seconds; no exception SHALL reach a subscriber of the client's stream and no backoff SHALL be invented; every other non-2xx status SHALL remain an exception.                                                                                                                                                                                                                                  | README.md § "Limits"; flurl-http-client; ADR-0008; § 11 row 2                       |
 | B-029 | A missing OpenSky credential SHALL NOT stop the application: the first poll that needs it SHALL fail with a logged warning naming which credential is absent and containing no credential's value; and a failed poll — timeout, `429`, `5xx`, an unreadable body, or an absent credential — SHALL NOT complete or error-terminate the client's stream.                                                                                                                                                                                                                | api-contract § "Credentials"; hot-swap-source; § 11 row 7                           |
 | B-058 | The configuration the application composes SHALL be its packaged settings with the developer's user-secrets store layered over them: a setting the store names takes the store's value, so an OpenSky credential held in the store reaches the live transport, and no packaged setting the store does not name changes. With no store, the configuration SHALL be the packaged settings unchanged, carrying no credential.                                                                                                                                            | § 4 row 12; `0086`; api-contract § "Credentials"                                    |
-| B-059 | A composition that starts a host SHALL NOT start while the bounding box is absent, and the failure SHALL name `OpenSky:Box` and carry no configured value; the box SHALL NOT be defaulted to let it start (B-050).                                                                                                                                                                                                                                                                                                                                                    | B-050; decisions/0001; § 12 2026-10-15 finding 4                                    |
+| B-059 | A composition that registers the live transport (`AddOpenSky`) and starts a host SHALL NOT start while the bounding box is absent, and the failure SHALL name `OpenSky:Box` and carry no configured value; the box SHALL NOT be defaulted to let it start (B-050).                                                                                                                                                                                                                                                                                                    | B-050; decisions/0001; § 12 2026-10-15 finding 4                                    |
 | B-030 | The cache SHALL be a plain keyed store of snapshots: no diff policy of its own, no projection, and no clock.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Decided call — the cache is dumb                                                    |
 | B-031 | There SHALL be one cache per client, typed to that client's snapshot, and its lifetime SHALL be the application's rather than the client's.                                                                                                                                                                                                                                                                                                                                                                                                                           | Decided call; hot-swap-source § "What must not be rebuilt"; ADR-0009                |
 | B-032 | The cache SHALL NOT hold, construct, reference or return a `TransportVehicle` or any other domain type.                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Decided call                                                                        |
@@ -484,6 +497,7 @@ sequenceDiagram
     H->>P: GET /states/all
     P-->>H: 401
     H->>H: refresh the token, retry this request once (B-026)
+    Note over H,C: the retried request ends in one of the other branches, which writes the status
   else 429
     H->>P: GET /states/all
     P-->>H: 429 and X-Rate-Limit-Retry-After-Seconds
@@ -643,10 +657,15 @@ on start would stop any composition that starts a host — the behaviour B-029
 withdrew — and would leave B-029 true only while the head starts none, which
 nothing claims (§ 11 row 7). The options keep `ValidateOnStart` for the box,
 because B-059 claims it: a host that starts stops on an absent box. The head
-starts none, so there the box is first read at the first resolve of the live
-chain — the actor system starts in an initialize service, and its actors
-resolve the chain during `Build()` — a path the packaged settings, which always
-carry the box, leave unreached. Nothing claims the head's half. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
+starts none, so there the box is first read when `IFlurlClientCache`'s
+factory reads `OpenSkyOptions.Value`, at the first resolve of the live chain.
+An actor starts that resolve while the head is built, but `ActorOf` returns
+before the actor's constructor runs, so a failure there reaches the actor's
+supervisor rather than leaving `Build()`. The packaged settings always carry
+the box, so the path is unreached. Nothing claims the head's half. A host that
+registers only replay also stops on an absent box, since the validator is in
+`AddOpenSkyShared`, though its chain never reads the box; B-059 does not claim
+that host. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
 box: the URL is the provider's and nobody here chooses it, while B-050 leaves the
 box with no default on purpose.
 
@@ -911,6 +930,15 @@ implementation of B-053 goes quietly wrong:
   subscription owns. A window measured from the last _demanded_ poll lets a
   press land a tick after a scheduled one and spend a credit for a snapshot the
   cadence was about to fetch anyway.
+- **The window ends at the due instant the client holds**, not at the last
+  poll plus the interval. After a `429` the client holds the deferred instant
+  (B-028), and the actor refuses a demand until it, as it refuses one inside
+  the interval; `IDemandedPoll` exposes the held instant beside the last poll.
+  Measuring from the last poll alone performed a demand twenty seconds into a
+  forty-two-second deferral and spent the credit OpenSky had asked the source
+  not to (§ 12, 2026-10-15 re-read finding 1). With the cadence running, a
+  demand is therefore performed only when the loop is about to poll anyway;
+  the gesture's use is a source whose cadence has stopped.
 - **The client stamps that instant immediately before it calls the provider**,
   not after the response. An attempt is what spends the credit, whatever comes
   back, so a throttled or failed poll closes the window exactly as a successful
@@ -1071,7 +1099,7 @@ clause names.
 **Scenarios**
 
 Full Gherkin lives in [`aircraft-source.feature`](aircraft-source.feature)
-beside this file — fifty-seven scenarios, each tagged with the `@B-00n` it
+beside this file — sixty scenarios, each tagged with the `@B-00n` it
 proves. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
@@ -1079,7 +1107,7 @@ diagnostics are what execute.
   B-019, B-020, B-023 – B-025, B-027, B-030 – B-035, B-038, B-039, B-041,
   B-042, B-050, B-052, B-054, B-056 – B-058
 - Failure mode → B-022, B-026 – B-029, B-040, B-043, B-051, B-053, B-055,
-  B-058
+  B-058, B-059
 - Validation failure → B-004, B-006, B-007, B-009, B-013, B-014, B-017,
   B-021, B-036, B-037, B-044 – B-049
 - Data-driven → B-018 – B-020, B-022, B-035
@@ -1087,8 +1115,10 @@ diagnostics are what execute.
 Ten claims carry two scenarios each, because each states two things a single
 scenario would have had to prove at once — B-026's expiry and its `401`,
 B-028's deferral and its every-other-status clause, B-051's marking and its
-threshold. B-058 carries three: its store, its absence, and a setting both
-documents name, which is the only case in which "over" can be read. § 9 still
+threshold, B-053's interval and a `429`'s deferral. B-058 carries three: its
+store, its absence, and a setting both documents name, which is the only case
+in which "over" can be read. B-029 carries three: a host starting, the first
+poll naming the credential, and a failed poll leaving the stream open. § 9 still
 gives each claim exactly one row; the row's tag anchors every scenario under it.
 
 **What `0068` and `0080` will prove, planned 2026-10-09.**
@@ -1100,7 +1130,7 @@ gives each claim exactly one row; the row's tag anchors every scenario under it.
   arrangement. The client runs `Poll()` on a `TestScheduler`, and the status is
   read from `AircraftPollStatus`. Cases: a poll at a scheduler instant reports
   `NextDue` one interval later; a demanded poll performed through `IDemandedPoll`
-  moves it; a throttled poll reports a 42-second refusal and `NextDue` exactly
+  reports the same way; a throttled poll reports a 42-second refusal and `NextDue` exactly
   42 seconds after it, and no exception reaches the stream; the next applied
   poll clears the refusal; disposing the subscription writes none.
 - **B-056 through the decorator, with two doubles.** Two strategies, each
@@ -1187,13 +1217,14 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and six of the fifty-eight rows read `Missing`** —
+**This is the gate, and seven of the fifty-eight rows read `Missing`** —
 B-029, whose first half was reworded on § 11 row 7 and is owed a test, and
 B-059, claimed on 2026-10-15 and owed one clause of a test, both cut into
-`0093`; B-054 – B-056, cut into `0068`; and B-058, whose launch of the head
-beside the store remains owed. Fifty-two are `Verified`, and they arrived four
+`0093`; B-053's deferral clause, amended on 2026-10-15, and B-054 – B-056, cut
+into `0068`; and B-058, whose launch of the head
+beside the store remains owed. Fifty-one are `Verified`, and they arrived four
 different ways.
-Thirty-four came from
+Thirty-three came from
 items: `0002` built the contract, its envelope, the positional row's converter
 and the HTTP transport, `0003` the snapshot and its
 cache, `0004` the snapshot client, the token source, the observed clock and
@@ -1204,7 +1235,7 @@ resolves, `0057` the poll a user demands and the window that refuses one, and
 `0080` the targets the swap actor answers from registration —
 the tests
 this section names against B-001, B-003, B-011 – B-013,
-B-015 – B-028, B-033 – B-040, B-042, B-043, B-050 – B-053, B-057 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
+B-015 – B-028, B-033 – B-040, B-042, B-043, B-050 – B-052, B-057 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
 second contract interface would have to be and B-049 what a push provider's
 strategy may not be given, so for each there is no value to compute and
 no declaration to analyze, and the row records what was looked at and when it is
@@ -1238,7 +1269,7 @@ rows it owns — B-042, B-043 and B-051 read `Verified` against
 on the five claims it proved, and B-041's remaining half left with it to
 `fleet-dashboard` `0039`, which built the first container-constructed view
 model and proved it — a row whose subject the repository does not contain
-belongs to the item that builds the subject (lesson 0011). The six that remain
+belongs to the item that builds the subject (lesson 0011). The seven that remain
 are `0093`'s, `0068`'s and `0086`'s.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
@@ -1314,8 +1345,8 @@ is B-049 and the clause waiting on `0005`.
 | B-050    | `@B-050` | `OpenSkyOptionsTests.GivenNoConfiguration_WhenOptionsAreRead_ThenTheIntervalIsFifteenSecondsAndTheBoxHasNoDefault`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-052    | `@B-052` | `TransporterCompositionTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
-| B-053    | `@B-053` | `AircraftPollActorTests.GivenAPollPerformedInsideTheInterval_WhenAPollIsDemanded_ThenItIsRefusedSilentlyAndNothingFaults`, `AircraftPollActorTests.GivenTheIntervalHasElapsedSinceTheLastPoll_WhenAPollIsDemanded_ThenOneCallIsMadeAndItsSnapshotsReachTheCache` and `AircraftSnapshotClientTests.GivenAPollDemandedBetweenTwoScheduledOnes_WhenTheCadenceRuns_ThenItWaitsOutTheIntervalFromTheDemandedPoll`                                                                                                                                                                                                                                                                | Verified |
-| B-054    | `@B-054` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `AircraftPollStatusTests.GivenAPollAtAnInstant_WhenTheLoopSchedulesTheNext_ThenItIsReportedDueOneIntervalLater`, with the demanded-poll case beside it                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
+| B-053    | `@B-053` | The interval clause: `AircraftPollActorTests.GivenAPollPerformedInsideTheInterval_WhenAPollIsDemanded_ThenItIsRefusedSilentlyAndNothingFaults`, `AircraftPollActorTests.GivenTheIntervalHasElapsedSinceTheLastPoll_WhenAPollIsDemanded_ThenOneCallIsMadeAndItsSnapshotsReachTheCache` and `AircraftSnapshotClientTests.GivenAPollDemandedBetweenTwoScheduledOnes_WhenTheCadenceRuns_ThenItWaitsOutTheIntervalFromTheDemandedPoll`. The deferral clause, amended 2026-10-15: [`0068`](../.issue/0068-poll-status-report.yml) — planned: `AircraftPollActorTests.GivenAPollDeferredByA429PastTheInterval_WhenAPollIsDemandedInsideTheDeferral_ThenItIsRefusedSilently`        | Missing  |
+| B-054    | `@B-054` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `AircraftPollStatusTests.GivenAPollAtAnInstant_WhenItIsPerformed_ThenTheNextIsReportedDueOneIntervalLater`, with the demanded-poll case beside it                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Missing  |
 | B-055    | `@B-055` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `AircraftPollStatusTests.GivenAThrottledPoll_WhenItIsHandled_ThenARefusalOfItsSecondsIsReportedAndNextDueIsExactlyThatLater`, with the clearing case beside it                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Missing  |
 | B-056    | `@B-056` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `SwappingTrackerSourceTests.GivenTwoStrategiesWithStatuses_WhenTheSourceSwaps_ThenTheIncomingStatusIsReadAtOnceAndNothingOutgoingFollows`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Missing  |
 | B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's row                                                                                                                                                                                                                                                                | Verified |
@@ -1324,9 +1355,9 @@ is B-049 and the clause waiting on `0005`.
 
 Fifty-eight rows, fifty-eight live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
-only place a claim's build state is written, and six of its rows still say
+only place a claim's build state is written, and seven of its rows still say
 their claim is not proven: B-029's reworded first half and B-059 wait on the
-tests § 8 plans for `0093`, B-054 – B-056 wait on `0068`, and B-058 waits on one launch
+tests § 8 plans for `0093`, B-053's deferral clause and B-054 – B-056 wait on `0068`, and B-058 waits on one launch
 of the head beside the store. The Feature cannot reach `done` until they are.
 
 ## 10. Lessons / Spec Deltas
@@ -2125,6 +2156,38 @@ B-028 adds a test and reopens it. §§ 1-5 and §§ 6-7 stay 🟡 until the pers
 decides finding 1, the owning roles write the answer with findings 4 – 6, and a
 reader who wrote none of it reads it. `0068` waits on that.
 
+**Decided 2026-10-15 by the person — finding 1 of the re-read above.** A
+demand inside a `429` deferral is refused until the deferred instant, as one
+inside the interval is; a demand never ends a deferral early.
+
+**Answered 2026-10-15, by the owning roles — the re-read's six findings.**
+
+1. `spec-author`: B-053 refuses a demand until the due instant in force, the
+   interval or a `429`'s deferral, and § 3 notes why. B-054 reports after every
+   performed poll rather than singling out a demand. The `@B-054` scenario's
+   demand is replaced by an applied poll after the deferral, and a second
+   `@B-053` scenario refuses a demand inside one. `implementer`: § 7's B-053
+   design gains the bullet that the window ends at the due instant the client
+   holds, read through `IDemandedPoll`. `test-writer`: B-053's § 9 row reads
+   `Missing` for its deferral clause and names a planned test on `0068`, which
+   now carries B-053.
+2. `test-writer`: § 8 says sixty scenarios, ten claims with two, and B-029 and
+   B-058 with three; B-059 is under failure mode.
+3. `test-writer`: the planned B-054 test is
+   `GivenAPollAtAnInstant_WhenItIsPerformed_ThenTheNextIsReportedDueOneIntervalLater`.
+4. `spec-author`: B-059 names a composition that registers the live transport.
+   § 3 and § 7 say a replay-only host also stops on an absent box, unclaimed.
+5. `implementer`: § 7 says the box is read by `IFlurlClientCache`'s factory,
+   and a failure there reaches the actor's supervisor rather than leaving
+   `Build()`.
+6. `implementer`: the poll diagram's `401` branch says the retried request
+   ends in one of the other branches, which writes the status.
+
+**All three rows stay 🟡.** Finding 1 changes § 3, § 7 and § 9 together, so
+the re-read's recommendation of §§ 8-9 no longer covers the text. **Owed:** a
+read of these answers by a reader who wrote none of them, then the person's
+agreement. `0068` and `0093` wait on that.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
@@ -2190,7 +2253,7 @@ branch, 300 of 300. `spec_status` is `approved` again.
 | [`0006`](../.issue/0006-source-swap-decorator.yml)          | B-038 – B-040, B-052                                    |
 | [`0007`](../.issue/0007-fleet-tracker-wrapper.yml)          | B-042 – B-044, B-047, B-051                             |
 | [`0057`](../.issue/0057-poll-on-demand.yml)                 | B-053                                                   |
-| [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056                                           |
+| [`0068`](../.issue/0068-poll-status-report.yml)             | B-054 – B-056, and B-053's deferral clause              |
 | [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                                   |
 | [`0085`](../.issue/0085-swap-messages-in-messages.yml)      | none — a bug that moves four types and changes no claim |
 | [`0086`](../.issue/0086-credentials-from-user-secrets.yml)  | B-058                                                   |

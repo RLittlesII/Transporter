@@ -20,12 +20,13 @@ spikes: []
 spec: src/Transporter/Integrations/OpenSky/.spec/README.md
 
 claims:
+  - B-053
   - B-054
   - B-055
   - B-056
 
 created: "2026-10-08"
-updated: "2026-10-08"
+updated: "2026-10-15"
 closed: null
 
 summary: |
@@ -48,12 +49,14 @@ summary: |
   cadence does not stop, and the next successful poll clears the refusal.
 
 acceptance_criteria:
+  - "B-053, its deferral clause — a demand inside a `429` deferral is refused until the deferred instant, read from the due instant the client holds."
   - "B-054 — the next-due instant reported each time a poll is scheduled; a performed demand moves it."
   - "B-055 — a 429 reported with its retry-after, and cleared by the next poll that lands."
   - "B-056 — the status selected with the live strategy: replaced on a swap, none for a strategy with no poller, nothing from the outgoing one after the swap."
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-15 — the person: a demand inside a `429` deferral is refused (B-053 amended), rather than ending the deferral early. B-053's deferral clause joins this item, which builds the held due instant it reads."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
