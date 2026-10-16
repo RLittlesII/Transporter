@@ -453,12 +453,15 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
 
   @B-036
   Scenario: The page shows when the next poll is due, and a refusal
-    Given the tracker's poll status says the next poll is due at 14:32:25
+    Given the tracker's poll status says a poll made at 14:32:10 set the next one due at 14:32:25
+      And the provider reported that poll's data at 14:32:08
      When the page is projected
-     Then it counts down to 14:32:25 by a view animation toward that instant
+     Then it counts down fifteen seconds to 14:32:25 by a view animation toward that instant
+      And the instant the provider reported plays no part in how long the countdown runs
       And the view model holds no timer to do it
-     When the status carries a refusal asking for 42 seconds
+     When the status carries a refusal asking for 42 seconds, made at 14:32:25 and due at 14:33:07
      Then it shows "Throttled" with its icon, and "retry in 42s"
+      And it counts down forty-two seconds to 14:33:07
       And nothing on the page started a timer to say so
 
   @B-036

@@ -7,14 +7,15 @@ status: ready-for-architecture
 priority: medium
 value: 3
 risk: 3
-rank: 51
+rank: 56
 
 parent: "0001"
 children: []
 
 depends_on:
   - "0067"
-blocks: []
+blocks:
+  - "0094"
 spikes: []
 
 spec: src/Transporter/Integrations/OpenSky/.spec/README.md

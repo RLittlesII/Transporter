@@ -1,0 +1,54 @@
+id: "0095"
+type: task
+title: Count the next poll down from the instant the poll was made
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 2
+rank: 54
+
+parent: "0035"
+children: []
+
+depends_on:
+  - "0072"
+  - "0094"
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-036
+
+created: "2026-10-15"
+updated: "2026-10-15"
+closed: null
+
+summary: |
+  Cut on 2026-10-15 from decisions/0004. `0072`'s rendered review saw the
+  countdown start one to two seconds above a fifteen-second interval and still
+  read about a second when the next poll landed, because it was measured from
+  the observed instant — the provider's clock — to a due instant on the
+  poller's. B-036 now measures it from the instant the poll was made, which the
+  poll status carries (`fleet-pipeline` B-040, `aircraft-source` B-054).
+
+  Waits on `0072`, which built the countdown, and on `aircraft-source` `0094`,
+  which puts the poll's instant on the status. Does not move to `in-progress`
+  until this specification's §§ 1-5 row is 🟢 again.
+
+  Two traps. Reading a clock in the view to correct for the request's latency
+  is § 5 row 10's exclusion. And the observed instant must leave the
+  countdown entirely — keeping it as a fallback re-introduces the skew.
+
+acceptance_criteria:
+  - "B-036 — the countdown's length measured from the poll's own instant, never the observed one."
+  - "§ 9 Traceability Matrix carries a row naming a test and a re-done rendered review for B-036."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The poll's instant on the status — `aircraft-source` `0094`."

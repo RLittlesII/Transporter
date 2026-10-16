@@ -344,17 +344,18 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
     Given an aircraft source polling on a fifteen-second interval
      When a poll is made at 14:32:10 on the poller's scheduler
      Then the next poll is reported due at 14:32:25, on the read-side seam beside the tracker source
+      And the report says the poll was made at 14:32:10, whatever instant OpenSky's response carried
       And nothing about it arrives through the changeset stream
      When the poll made at 14:32:25 is refused with a retry-after of 42 seconds
-     Then the next poll is reported due at 14:33:07
+     Then the next poll is reported due at 14:33:07, from a poll made at 14:32:25
      When the poll made at 14:33:07 is applied
-     Then the next poll is reported due at 14:33:22
+     Then the next poll is reported due at 14:33:22, from a poll made at 14:33:07
 
   @B-054
   Scenario: A demanded poll with no cadence running says when the next is due
     Given an aircraft source on a fifteen-second interval whose cadence is not running
      When a poll is demanded and performed at 14:40:00 on the poller's scheduler
-     Then the next poll is reported due at 14:40:15, on the read-side seam beside the tracker source
+     Then the next poll is reported due at 14:40:15, from a poll made at 14:40:00, on the read-side seam beside the tracker source
 
   @B-055
   Scenario: A refusal is reported with the interval OpenSky asked for
