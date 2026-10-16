@@ -1177,6 +1177,29 @@ dated line. R3: § 6's row says the two claims agree on not stopping and differ
 on when. Owed: a read of the three edits by a reader who wrote none of them,
 then the person's agreement; the row stays 🟡 until both.
 
+**Answers re-read 2026-10-15 by a `spec-reviewer` who wrote none of them —
+§§ 6-7 recommended 🟢.** Read: commit `5e53f2e` (§ 6's B-026 row, § 7's
+"Credential validation follows the live source", § 11 row 4's dated line)
+against `aircraft-source` B-029's § 3 row, its § 7 and its 2026-10-15 delta,
+and against `OpenSkyRegistration.AddOpenSky`, which still registers the
+credentials with `ValidateOnStart`, and `MauiProgram.CreateMauiApp`, which
+builds the app and starts no generic host. R1 is closed: the refusal is past
+and confined to a host that starts, and the reworded B-029 is stated as
+claimed. R3 is closed: the row says the two agree on not stopping and differ
+on when. R2 is closed for the paragraph the dated line follows; R4 below is
+the one it does not reach. §§ 6-7 were swept for any other present-tense statement of the
+withdrawn behaviour, and none remains. § 7's "validated on read rather than on
+start" is `aircraft-source` § 7's design, not yet the code; that gap is
+`aircraft-source`'s B-029 `Missing` row, not a finding here. One finding,
+outside §§ 6-7, so it does not hold the row:
+
+- R4 — § 11 row 4's "What the answer costs" paragraph still says B-029
+  "says a missing credential fails at application startup", in the present
+  tense, and the dated line R2 added covers only "the paragraph above" it.
+  The dated line moved below that paragraph, or naming it, closes it.
+
+Owed: the person's agreement, then the row goes 🟢.
+
 `0081` waits on this row.
 
 **Independent agreement review, 2026-10-14.** A second reader, who authored
