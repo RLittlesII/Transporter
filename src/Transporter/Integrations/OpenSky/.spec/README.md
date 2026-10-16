@@ -30,7 +30,7 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
-Fifty-eight claims, in ten groups — one per component, plus the boundary rules
+Fifty-nine claims, in ten groups — one per component, plus the boundary rules
 and the configuration:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
 types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029,
@@ -38,7 +38,16 @@ B-050 and B-053 – B-055** the snapshot client — except **B-026 – B-028**, 
 transport when § 11 row 2 was answered, and still delivered by `0004`; **B-030 – B-032** the cache; **B-033 – B-037** the
 tracker source strategy; **B-038 – B-040, B-056 and B-057** the swap decorator; **B-041 – B-044,
 B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries;
-**B-058** the configuration the application is composed from.
+**B-058 and B-059** the configuration the application is composed from.
+
+**B-059 was added on 2026-10-15**, from the independent read of that day
+(§ 12, finding 4): the options validated the box on start with no claim behind
+it, so a host stopping on an absent box was a rule nothing claimed. The person
+chose to claim it rather than leave it an unclaimed guard in § 7 or remove it
+as the credentials' check was. It claims a host only. The head starts none, so
+there an absent box is first read when the live chain is first resolved; § 7
+says so, and nothing here claims it, because the packaged settings always carry
+the box.
 
 B-058 was added on 2026-10-09, from bug
 [`0086`](../.issue/0086-credentials-from-user-secrets.yml): the person registered
@@ -165,6 +174,7 @@ than being slotted into the sequence.
 | B-028 | A `429` response SHALL be inspected for `X-Rate-Limit-Retry-After-Seconds` in the HTTP transport, and SHALL defer the snapshot client's next poll by exactly that many seconds; no exception SHALL reach a subscriber of the client's stream and no backoff SHALL be invented; every other non-2xx status SHALL remain an exception.                                                                                                                                                                                                                                  | README.md § "Limits"; flurl-http-client; ADR-0008; § 11 row 2                       |
 | B-029 | A missing OpenSky credential SHALL NOT stop the application: the first poll that needs it SHALL fail with a logged warning naming which credential is absent and containing no credential's value; and a failed poll — timeout, `429`, `5xx`, an unreadable body, or an absent credential — SHALL NOT complete or error-terminate the client's stream.                                                                                                                                                                                                                | api-contract § "Credentials"; hot-swap-source; § 11 row 7                           |
 | B-058 | The configuration the application composes SHALL be its packaged settings with the developer's user-secrets store layered over them: a setting the store names takes the store's value, so an OpenSky credential held in the store reaches the live transport, and no packaged setting the store does not name changes. With no store, the configuration SHALL be the packaged settings unchanged, carrying no credential.                                                                                                                                            | § 4 row 12; `0086`; api-contract § "Credentials"                                    |
+| B-059 | A composition that starts a host SHALL NOT start while the bounding box is absent, and the failure SHALL name `OpenSky:Box` and carry no configured value; the box SHALL NOT be defaulted to let it start (B-050).                                                                                                                                                                                                                                                                                                                                                    | B-050; decisions/0001; § 12 2026-10-15 finding 4                                    |
 | B-030 | The cache SHALL be a plain keyed store of snapshots: no diff policy of its own, no projection, and no clock.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Decided call — the cache is dumb                                                    |
 | B-031 | There SHALL be one cache per client, typed to that client's snapshot, and its lifetime SHALL be the application's rather than the client's.                                                                                                                                                                                                                                                                                                                                                                                                                           | Decided call; hot-swap-source § "What must not be rebuilt"; ADR-0009                |
 | B-032 | The cache SHALL NOT hold, construct, reference or return a `TransportVehicle` or any other domain type.                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Decided call                                                                        |
@@ -245,11 +255,11 @@ than being slotted into the sequence.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 6 -->
 
-One row per concern, not per claim. Fifty-two rows would be § 3 with a column
+One row per concern, not per claim. Fifty-eight rows would be § 3 with a column
 bolted on, and a second copy of a claim drifts from the first; instead each row
 names in its Notes the claim ids it answers for, so coverage is checked by
 reading the ids down the column rather than by counting rows. The rows follow
-§ 3's nine groups.
+§ 3's ten groups.
 
 How the three classifications are applied here: **Business** where the shape
 could have gone either way technically and a product judgment picked it;
@@ -280,6 +290,7 @@ why it was allowed.
 | `sensors` is excluded on the record, not by disuse                  | Technical      | `mapping` § "Unmapped members are errors", and § 5 row 12 records it so a later reader does not restore it believing it was overlooked. B-021.                                                                                                                                                                                                                                                                                                                                     |
 | One unreadable row costs one row                                    | Both           | Technically a per-row result and a count. The business reason: the grid keeps its other aircraft on stage, which is the difference between a blemish and a dead demo. B-022.                                                                                                                                                                                                                                                                                                       |
 | The box, the interval, and the credit budget                        | Both           | § 2 need 5 — one day's credits, and a rehearsal must not spend the talk's. § 4 row 8 is the technical half: credits bound the _box_, not the interval, which is the opposite of the intuition. A user who can demand a poll is a second way to spend them, which is why demand is bounded by the cadence rather than by a budget of its own (decisions/0003). B-024, B-050, B-053.                                                                                                 |
+| A host does not start on a box nobody chose                         | Both           | `decisions/0001`: a box nobody chose is a demo pointed at open ocean, so B-050 compiles in no default, and a host that starts refuses to rather than guess. Technically one validator registered with `ValidateOnStart`; the head starts no host, which is why the claim names a host. B-059.                                                                                                                                                                                      |
 | Houston specifically                                                | Business       | `decisions/0001`: chosen for the variety the grouped view needs, and so the vessel closing act shares one geography. Any box works technically.                                                                                                                                                                                                                                                                                                                                    |
 | Token lifecycle, the credit header, and the throttle                | Technical      | § 4 rows 7 and 9 are the provider's terms, not ours to simplify. B-026, B-028, which name the transport: it is the only thing holding the response, and B-006 keeps the credential off the contract.                                                                                                                                                                                                                                                                               |
 | A credential never reaches a log, a fixture or a screenshot         | Both           | Technically § 4 row 12. The business reason is that this runs in front of a room and is recorded, so "it is only a debug log" does not apply. B-027.                                                                                                                                                                                                                                                                                                                               |
@@ -450,29 +461,41 @@ sequenceDiagram
   participant H as OpenSkyHttpApi
   participant P as OpenSky
   participant K as SourceCache
+  participant W as AircraftPollStatus
 
   S->>C: tick, default 15s (B-050)
   C->>H: GetStates(lamin, lomin, lamax, lomax, extended, ct)
-  H->>P: GET /states/all
 
-  alt 200
+  alt absent credential
+    H->>H: the token source reads the credentials, and the validator throws
+    H-->>C: throws, naming the absent key and no value
+    C->>C: log a warning whose exception names it; the stream stays open (B-029)
+    C->>W: next due one interval after this poll, any refusal kept (B-054, B-055)
+  else 200
+    H->>P: GET /states/all
     P-->>H: time and positional states rows
     H->>H: log X-Rate-Limit-Remaining at debug, never the token (B-027)
     H-->>C: OpenSkyStatesResponse
     C->>C: read rows by index, skipping 12 (B-016, B-021)
     C->>C: exclude and count unreadable rows (B-022)
     C->>K: EditDiff over the whole set (B-023)
+    C->>W: next due one interval after this poll, no refusal (B-054, B-055)
   else 401
+    H->>P: GET /states/all
     P-->>H: 401
     H->>H: refresh the token, retry this request once (B-026)
   else 429
+    H->>P: GET /states/all
     P-->>H: 429 and X-Rate-Limit-Retry-After-Seconds
     H-->>C: throws OpenSkyThrottledException
-    C->>S: defer the next poll by exactly that many seconds (B-028)
+    C->>W: a refusal of that many seconds, due exactly that long after this poll (B-055)
+    C->>S: defer the next poll to that instant (B-028)
   else 5xx, timeout, unreadable body
+    H->>P: GET /states/all
     P-->>H: failure
     H-->>C: throws
     C->>C: observed; the stream stays open (B-029)
+    C->>W: next due one interval after this poll, any refusal kept (B-054, B-055)
   end
 ```
 
@@ -618,10 +641,12 @@ head builds. **The credentials are validated on read, not on start**: the token
 source's first read of them, inside a poll, runs the validator. Validating them
 on start would stop any composition that starts a host — the behaviour B-029
 withdrew — and would leave B-029 true only while the head starts none, which
-nothing claims (§ 11 row 7). The options keep `ValidateOnStart` for B-050's
-box: a host that starts stops on an absent box, and in the head, which starts
-none, the box is first read while the window is built — a path the packaged
-settings, which always carry the box, leave unreached. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
+nothing claims (§ 11 row 7). The options keep `ValidateOnStart` for the box,
+because B-059 claims it: a host that starts stops on an absent box. The head
+starts none, so there the box is first read at the first resolve of the live
+chain — the actor system starts in an initialize service, and its actors
+resolve the chain during `Build()` — a path the packaged settings, which always
+carry the box, leave unreached. Nothing claims the head's half. `OpenSkyOptions.BaseUrl` is part of it and is **defaulted**, unlike the
 box: the URL is the provider's and nobody here chooses it, while B-050 leaves the
 box with no default on purpose.
 
@@ -645,7 +670,12 @@ Options and credentials are **two types, not one**, because B-027 bans a
 credential reaching a log line and a single options object invites being logged
 whole. The polling interval defaults to fifteen seconds and the bounding box has
 no default compiled in (B-050); the credentials' validator is what makes
-B-029's failed first poll name the absent one.
+B-029's failed first poll name the absent one. **The name travels as the
+logged exception, not in the warning's template**: the token source's read
+throws the validator's `OptionsValidationException`, whose message names the
+key and never a value, and the client logs its warning with that exception
+attached, so the template stays one fixed sentence and the name is the
+exception's. A test of B-029 therefore reads the exception the logger received.
 
 **The credentials reach configuration from the user-secrets store, packaged at
 build.** The store is a JSON file in the developer's home directory, keyed by
@@ -917,18 +947,27 @@ and `0080`.** `fleet-pipeline` § 7 fixed the names the status travels under —
 read-side seam `IPollStatus`, whose contract is to start with the status in
 force — and left this § 7 the writer and the selection.
 
-- **The poller is the snapshot client's `Poll()` loop, not the actor.** The
-  loop is what computes the wait to the next poll — what is left of the
-  interval since the last poll, cadence or demanded (B-053's design above) —
-  and what defers it by exactly the retry-after seconds when the transport
-  throws `OpenSkyThrottledException` (B-028). So the loop writes the status
-  where it decides those: `NextDue` is the last poll's instant on the
-  scheduler it already runs on plus that wait (B-054); a throttled poll writes
-  `RefusedFor` with the header's seconds and `NextDue` exactly that far after
-  the refused poll (B-055); the next applied poll writes a status with no
-  refusal. A demanded poll moves `NextDue` because it moves the last-poll
-  instant the loop already reads. `AircraftPollActor` writes nothing: it
-  demands, and the loop's next computation reports the result.
+- **The poller is the snapshot client, not the actor.** Each poll, cadence or
+  demanded, runs through the client's one `Fetch` (B-053's design above), and
+  `Fetch` is where the poll's instant on the scheduler it already runs on and
+  its outcome are both known. So `Fetch` decides the next due instant and
+  writes the status there: the poll's instant plus the interval (B-054); for a
+  throttled poll, `RefusedFor` with the header's seconds and `NextDue` exactly
+  that far after the refused poll (B-055); for an applied poll, a status with no
+  refusal; for any other failure, the interval, with a refusal in force kept,
+  since only an applied poll clears it. Writing in `Fetch` rather than in the
+  loop is what lets a demand move `NextDue` at once: when a demand is
+  performed the loop is asleep on the wait it computed before, and would
+  report nothing until it woke. `AircraftPollActor` writes nothing: it
+  demands, and the client reports the result.
+- **The loop sleeps until the due instant `Fetch` decided**, held by the
+  client beside the last-poll instant, rather than recomputing the wait from
+  the last poll and the interval. Recomputing loses the deferral: after a
+  refusal shorter than the interval, it would sleep the rest of the interval
+  and poll later than the `NextDue` it reported, so B-055's "exactly" would be
+  false of the cadence while true of the report. When the loop wakes it polls
+  if the held instant has passed, and otherwise sleeps again to it, which is
+  how a demand performed while it slept moves the cadence too.
 - **The writer is `AircraftPollStatus`, an internal `IPollStatus` under
   `Integrations/OpenSky/Polling/`**, holding a `BehaviorSubject<PollStatus>`
   seeded `PollStatus.None`. A singleton beside the client, so the client and
@@ -998,13 +1037,13 @@ will next run or what OpenSky answered.
 
 **Testability assessment**
 
-| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DI seams           | Pass          | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and a substituted `IOpenSkyApi` is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. The double was a hand-written fake until B-010 was withdrawn (§ 4 row 18); it is NSubstitute's now, like every other double here.                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Behavior isolation | Pass          | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043).                                                                                                                                                                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Coverage potential | **Qualified** | Thirty-three claims are about a computed value and are ordinary tests. Eighteen are about structure — what may _name_ what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it _can_ reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the eighteen as build-time diagnostics ([ADR-0006](../../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)). It does not exist yet, so those rows stand `Missing` and the work is its own Feature. Seven of them briefly had tests over a declaration, a container or a registration's lifetime and no longer do ([lesson 0006](../../../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
-| Fixtures           | Pass          | Every value is synthetic and lives beside the tests (`transporter-conventions`). The provider's shape is positional, so a fixture is a JSON array held as a `static readonly` field — not a committed `.json` file, because a unit test that reads from disk depends on the file system and on a build step that puts the file there — and the 17-versus-18 element cases are two payloads rather than two code paths. Parsing one is `IJson`'s, once, rather than a helper per test class.                                                                                            | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Determinism        | Pass          | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it.                                                                                                                                                                                                                                                                                                                                                                                                 | —                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Dimension          | Verdict       | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DI seams           | Pass          | Every layer takes its collaborators by constructor and constructs none of them (B-015), so each can be stood up with a double in one statement. The contract is the seam that matters: § 4 row 15 rules `HttpTest` out above the transport, and a substituted `IOpenSkyApi` is what makes the client, the cache, the projection, the decorator and the tracker testable with no HTTP at all. The double was a hand-written fake until B-010 was withdrawn (§ 4 row 18); it is NSubstitute's now, like every other double here.                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Behavior isolation | Pass          | The layers divide along the lines the assertions need: an index is read in one place, a domain object is built in one place (B-034), and a differential write happens in one place (B-023). The clock is the one shared dependency and it is injected (B-043).                                                                                                                                                                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Coverage potential | **Qualified** | Thirty-three claims are about a computed value and are ordinary tests. Eighteen are about structure — what may _name_ what, how many methods a contract may declare, what a container may resolve, what may produce a double — and no test proves any of them. Reflection reaches signatures but not method bodies, so it cannot prove B-045 – B-047; and where it _can_ reach, a test over `typeof(...)` asserts the shape of a declaration rather than any behaviour, which is brittle and tells a reader nothing about what broke. Two more constrain code that does not exist yet. | A Roslyn analyzer carries the eighteen as build-time diagnostics ([ADR-0006](../../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)), built by its own Feature, [`boundary-analyzer`](../../../../Transporter.Analyzers/.spec/README.md); § 9 names each diagnostic's test. Seven of them briefly had tests over a declaration, a container or a registration's lifetime and no longer do ([lesson 0006](../../../../../.spec/lessons/0006-a-row-is-not-a-reason-to-write-a-test.md)). |
+| Fixtures           | Pass          | Every value is synthetic and lives beside the tests (`transporter-conventions`). The provider's shape is positional, so a fixture is a JSON array held as a `static readonly` field — not a committed `.json` file, because a unit test that reads from disk depends on the file system and on a build step that puts the file there — and the 17-versus-18 element cases are two payloads rather than two code paths. Parsing one is `IJson`'s, once, rather than a helper per test class.                                                                                            | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Determinism        | Pass          | No test reaches a network (§ 4 row 14) and none reads the wall clock. Both the poll schedule and the staleness clock are injected, so a test advances time rather than waiting for it.                                                                                                                                                                                                                                                                                                                                                                                                 | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 **Two mechanisms, and which proves what**
 
@@ -1096,27 +1135,39 @@ session does not do, and no credential was in the store. So B-058's § 9 row
 reads `Missing` and names the launch, which the person can perform now that
 the credentials exist (root lesson 0011).
 
-**What B-029's reworded first half will prove, planned 2026-10-15.** Both
-cases build the graph `AddOpenSky` builds, in a generic host, with `HttpTest`
-standing in for the network and configuration carrying a synthetic client id
-and no client secret. The graph is what B-029 is about: a substituted
-`IOpenSkyApi` throwing a message the test wrote would prove nothing about the
-validator.
+**How B-029's reworded first half is proven, planned 2026-10-15 and corrected
+the same day.** On the graph `AddOpenSky` builds, in a generic host, with
+`HttpTest` standing in for the network — the graph is what B-029 is about, and
+a substituted `IOpenSkyApi` throwing a message the test wrote would prove
+nothing about the validator. Its two `@B-029` scenarios are the cases. Three
+things the arrangement needs that the test project does not yet have, each the
+delivering item's:
 
-- **Nothing stops.** The host starts — `StartAsync` completes — and `HttpTest`
-  records no call. It fails while the credentials validate on start (§ 7).
-- **The first poll names it.** One poll runs through the resolved client. A
-  `RecordingLogger` holds one warning whose exception is the validator's: its
-  message names `OpenSky:ClientSecret`, and neither the message nor the
-  exception's string contains the configured client id. No request reaches
-  `HttpTest`, and the client's stream neither completes nor errors. The name
-  travels as the exception logged with the warning, not in the warning's own
-  text, so the assertion reads the exception.
+- **The configuration carries a box.** Without one the host stops on B-059 and
+  the case fails a correct implementation for the wrong setting.
+- **The host installs a recording logger for the client.** `OpenSkyStartupTests`'s
+  `Host` takes configuration only, so it gains a way to register the logger the
+  client resolves, and the composition stays `AddOpenSky`'s.
+- **`RecordingLogger` keeps each entry's exception.** Today it keeps the
+  formatted template and drops the exception, and the name travels as the
+  exception (§ 7), so an assertion on the template could not fail for the
+  reason the claim gives.
 
-The head is not a third case. It starts no host, and with validation on read
-nothing at start is left for it to run; a test cannot reference the head in
-any case (root lesson 0014). `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne`
+The stream staying open after the failed poll is not asserted here, because
+nothing in one poll can show it fail on its own; B-029's second half proves it
+for every failure the client catches, an absent credential among them, since
+it is caught by the same handler. The head is not a case. It starts no host,
+and with validation on read nothing at start is left for it to run; a test
+cannot reference the head in any case (root lesson 0014).
+`OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne`
 proves the withdrawn wording and retires with the item that delivers these.
+
+**How B-059 is proven.** On the same host, configured with both credentials and
+no box: `StartAsync` throws the validator's failure, which names
+`OpenSky:Box` and contains neither configured credential.
+`OpenSkyStartupTests.GivenNoBoundingBox_WhenTheApplicationStarts_ThenItFailsNamingTheBox`
+already does the first half and cites B-050; the delivering item adds the
+second and cites B-059.
 
 **What the tests need before any of them can be written**
 
@@ -1136,10 +1187,11 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and five of the fifty-seven rows read `Missing`** —
-B-029, whose first half was reworded on § 11 row 7 and is owed a test,
-B-054 – B-056, cut into `0068`, and B-058, whose launch of the head beside
-the store remains owed. Fifty-two are `Verified`, and they arrived four
+**This is the gate, and six of the fifty-eight rows read `Missing`** —
+B-029, whose first half was reworded on § 11 row 7 and is owed a test, and
+B-059, claimed on 2026-10-15 and owed one clause of a test, both cut into
+`0093`; B-054 – B-056, cut into `0068`; and B-058, whose launch of the head
+beside the store remains owed. Fifty-two are `Verified`, and they arrived four
 different ways.
 Thirty-four came from
 items: `0002` built the contract, its envelope, the positional row's converter
@@ -1166,7 +1218,7 @@ section named for it. **One came from both an analyzer rule and another
 Feature's item**: B-041's negative half is analyzer and its consumer half is
 `fleet-dashboard` `0039`'s composition test.
 
-**Fifty-seven rows for fifty-eight identifiers, and seventeen rules, not
+**Fifty-eight rows for fifty-nine identifiers, and seventeen rules, not
 eighteen.** B-010 is Withdrawn (§ 4 row 18), so it has no row here, and the analyzer's eighteenth
 rule retired with it — ADR-0006 § "What the analyzer carries" records the
 amendment.
@@ -1182,15 +1234,16 @@ rows it owns — B-042, B-043 and B-051 read `Verified` against
 `FleetTrackerTests` — and `0006` landed B-038 – B-040 against
 `SwappingTrackerSourceTests`.
 
-**That one row keeps the Feature open rather than any item.** `0007` closed on
-2026-10-06 on the five claims it proved, and B-041's remaining half left with it
-to `fleet-dashboard` `0039`, which builds the first container-constructed view
-model — a row whose subject the repository does not contain belongs to the item
-that builds the subject (lesson 0011).
+**Every row still `Missing` belongs to an item.** `0007` closed on 2026-10-06
+on the five claims it proved, and B-041's remaining half left with it to
+`fleet-dashboard` `0039`, which built the first container-constructed view
+model and proved it — a row whose subject the repository does not contain
+belongs to the item that builds the subject (lesson 0011). The six that remain
+are `0093`'s, `0068`'s and `0086`'s.
 
 The Scenario column carries the `@B-00n` tag rather than a scenario title, so a
-retitled scenario does not silently orphan a row. Ten claims carry two
-scenarios and B-058 three; the tag anchors all of them.
+retitled scenario does not silently orphan a row. Nine claims carry two
+scenarios, and B-029 and B-058 three each; the tag anchors all of them.
 
 Three kinds of entry appear in Test. An **xUnit test** proves a computed value.
 An **analyzer diagnostic** proves a claim about what may name what — the
@@ -1237,7 +1290,7 @@ is B-049 and the clause waiting on `0005`.
 | B-026    | `@B-026` | `OpenSkyHttpApiTests.GivenAnExpiredTokenAndGivenAnUnauthorizedResponse_WhenAPollIsSent_ThenTheTokenRefreshesAndTheRequestRetriesOnce`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-027    | `@B-027` | `OpenSkyHttpApiTests.GivenAPollAndATokenRefresh_WhenBothAreLogged_ThenRemainingCreditIsRecordedAtDebugAndNoSecretAppears`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verified |
 | B-028    | `@B-028` | `OpenSkyHttpApiTests.GivenAThrottledResponseAndGivenAServerError_WhenEachIsHandled_ThenTheFirstDefersByTheHeaderAndTheSecondStaysAnException`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
-| B-029    | `@B-029` | Planned (§ 8), no item cut yet: `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheHostStarts_ThenItStartsAndNoRequestIsMade` and `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheFirstPollRuns_ThenTheLoggedFailureNamesItAndTheStreamStaysOpen`. Holding: `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors`. `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` proved the withdrawn wording against a generic host the head never starts (§ 11 row 7)                                                                                                               | Missing  |
+| B-029    | `@B-029` | [`0093`](../.issue/0093-absent-settings-named.yml) — planned: `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheHostStarts_ThenItStartsAndNoRequestIsMade` and `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheFirstPollRuns_ThenTheLoggedExceptionNamesItAndNoValue`. Holding: `AircraftSnapshotClientTests.GivenATimedOutPoll_WhenItFails_ThenTheStreamNeitherCompletesNorErrors`. `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne` proved the withdrawn wording against a generic host the head never starts (§ 11 row 7)                                                                                          | Missing  |
 | B-030    | `@B-030` | analyzer — `BoundaryAnalyzerTests.GivenACacheWrappedInATypeOfItsOwn_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Verified |
 | B-031    | `@B-031` | analyzer — `BoundaryAnalyzerTests.GivenACacheRegisteredWithAnyLifetimeButTheApplicationsOrSharedBetweenClients_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
 | B-032    | `@B-032` | analyzer — `BoundaryAnalyzerTests.GivenACacheNamingADomainType_WhenAnalyzed_ThenItIsReported`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
@@ -1267,12 +1320,13 @@ is B-049 and the clause waiting on `0005`.
 | B-056    | `@B-056` | [`0068`](../.issue/0068-poll-status-report.yml) — planned: `SwappingTrackerSourceTests.GivenTwoStrategiesWithStatuses_WhenTheSourceSwaps_ThenTheIncomingStatusIsReadAtOnceAndNothingOutgoingFollows`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Missing  |
 | B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's row                                                                                                                                                                                                                                                                | Verified |
 | B-058    | `@B-058` | `TransporterConfigurationTests.GivenAUserSecretsStoreHoldingTheCredentials_WhenTheConfigurationIsComposed_ThenTheCredentialsAreTheStoresAndNoOtherSettingChanges`, `…GivenAUserSecretsStoreNamingASettingThePackagedSettingsName_WhenTheConfigurationIsComposed_ThenTheSettingIsTheStores` and `…GivenNoUserSecretsStore_WhenTheConfigurationIsComposed_ThenItIsThePackagedSettingsAndNoCredentialIsConfigured`. **Review** on `0086`: the Mac Catalyst bundle held `secrets.json` beside a synthetic store, none without; iOS not built. **Absent: a launch** (§ 8). Re-done by a change to `Gui.csproj`, `MauiProgram.Settings()` or the Apple workload                   | Missing  |
+| B-059    | `@B-059` | [`0093`](../.issue/0093-absent-settings-named.yml) — planned: `OpenSkyStartupTests.GivenNoBoundingBox_WhenTheApplicationStarts_ThenItFailsNamingTheBox` extended to assert the failure contains neither configured credential and to cite B-059. Today it proves the first clause and cites B-050                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
 
-Fifty-seven rows, fifty-seven live claims, each appearing once — B-010 is
+Fifty-eight rows, fifty-eight live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
-only place a claim's build state is written, and five of its rows still say
-their claim is not proven: B-029's reworded first half waits on the two tests
-§ 8 plans for it, B-054 – B-056 wait on `0068`, and B-058 waits on one launch
+only place a claim's build state is written, and six of its rows still say
+their claim is not proven: B-029's reworded first half and B-059 wait on the
+tests § 8 plans for `0093`, B-054 – B-056 wait on `0068`, and B-058 waits on one launch
 of the head beside the store. The Feature cannot reach `done` until they are.
 
 ## 10. Lessons / Spec Deltas
@@ -1315,8 +1369,8 @@ three questions § 12 left to the person are decided.** Trigger: § 11 row 7,
 answered by the person. The head builds a `MauiApp` and starts no generic host,
 so `ValidateOnStart` never runs there, and an absent credential has always
 surfaced at the first poll. B-029 now claims that: the poll fails with a warning
-naming the absent credential, and nothing stops. § 6's constraint row is
-rewritten, § 5 row 20 leaves a message on the page to `fleet-dashboard`, § 7
+naming the absent credential, and nothing stops. § 6's row for a missing
+credential is rewritten, § 5 row 20 leaves a message on the page to `fleet-dashboard`, § 7
 says where the validator runs, the scenario is rewritten, and the § 9 row reads
 `Missing` until a test proves the warning — `OpenSkyStartupTests` proved the
 withdrawn wording against a host the head never starts. `0047`'s criterion that
@@ -1617,11 +1671,11 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status      |
-| -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
-| §§ 6-7   | implementer | 🟡 Draft    |
-| §§ 8-9   | test-writer | 🟡 Draft    |
+| Sections | Owner       | Status   |
+| -------- | ----------- | -------- |
+| §§ 1-5   | spec-author | 🟡 Draft |
+| §§ 6-7   | implementer | 🟡 Draft |
+| §§ 8-9   | test-writer | 🟡 Draft |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
@@ -1942,6 +1996,57 @@ unclaimed guard stated in § 7, or removed like the credentials' check
 it, which is the person's to agree; §§ 8-9 stay 🟡 until finding 1 is answered
 and re-read. `0068` waits on §§ 8-9.
 
+**Decided 2026-10-15 by the person — the read's three questions.** §§ 6-7 to
+🟢 once findings 3 and 4 are fixed. Finding 7: B-029's reworded half goes to a
+new item, `0093`, rather than to `0068` or a reopened `0004`. Finding 4: a
+started host stopping on an absent box is a claim, not an unclaimed guard and
+not removed.
+
+**Answered 2026-10-15, by the owning roles — every finding of the read.**
+
+1. `test-writer`: § 8's B-029 plan names what the arrangement needs — a box in
+   the configuration, a `Host` that installs a recording logger for the client,
+   and a `RecordingLogger` that keeps the exception — and drops the stream
+   assertion one poll cannot fail, saying where B-029's second half proves it.
+2. `spec-author` and `test-writer`: the falsifying cases are the two `@B-029`
+   scenarios, one per case; § 8 keeps the strategy and § 9 the names. The
+   second test is renamed for what it asserts.
+3. `implementer`: § 7 says the head first reads the box at the first resolve
+   of the live chain, during `Build()`.
+4. `spec-author`: B-059 is claimed, with its scenario, a § 6 row and a § 9 row
+   naming `0093`; § 7 cites it for the box's `ValidateOnStart` and says nothing
+   claims the head's half.
+5. `test-writer`: § 9's paragraph on the row keeping the Feature open now says
+   B-041 is proven and every `Missing` row belongs to an item.
+6. `test-writer`: § 8's coverage row says the analyzer exists and § 9 names its
+   tests.
+7. `implementer`: § 10's delta names § 6's row for a missing credential.
+8. `implementer`: § 6's intro counts are fifty-eight and ten groups; the poll
+   diagram has the absent-credential branch; § 7 says the name travels as the
+   logged exception.
+
+Also answered, from a read of the code for `0068` that found three gaps:
+
+- `implementer`: § 7 had a demanded poll moving `NextDue` through the loop's
+  next computation, but the loop is asleep when a demand is performed. The
+  status is now written in `Fetch`, which every poll runs.
+- `implementer`: § 7 had the loop recomputing its wait from the last poll, so
+  a refusal shorter than the interval would poll later than the reported
+  `NextDue`. The loop now sleeps until the due instant `Fetch` decided. The
+  diagram shows each branch's write, and that only an applied poll clears a
+  refusal.
+- `spec-author`: the `@B-054` scenario demanded a poll 10 seconds into a
+  15-second interval and called the interval elapsed, which B-053 refuses. Its
+  demand now follows a refusal, when the interval has elapsed and the due
+  instant is still ahead.
+
+**All three rows are 🟡, and `spec_status` stays `in-review`.** B-059 changes
+§ 3, so §§ 1-5 drop from 🟢. The person's agreement to §§ 6-7 was given to
+findings 3 and 4; § 7 then gained the two design gaps above, which no reader
+has seen (root lesson 0023), so that row waits on the same read. **Owed:** a
+read of these answers by a reader who wrote none of them, then the person's
+agreement. `0068` and `0093` wait on that.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
@@ -1999,7 +2104,7 @@ branch, 300 of 300. `spec_status` is `approved` again.
 
 | Item                                                        | Claims                                                  |
 | ----------------------------------------------------------- | ------------------------------------------------------- |
-| [`0001`](../.issue/0001-aircraft-source.yml)                | all 58 — the parent; its children hold the work         |
+| [`0001`](../.issue/0001-aircraft-source.yml)                | all 59 — the parent; its children hold the work         |
 | [`0002`](../.issue/0002-opensky-api-contract.yml)           | B-001, B-002, B-004 – B-010, B-048                      |
 | [`0003`](../.issue/0003-aircraft-snapshot-and-cache.yml)    | B-011 – B-014, B-030 – B-032                            |
 | [`0004`](../.issue/0004-aircraft-snapshot-client.yml)       | B-003, B-015 – B-029, B-045, B-050                      |
@@ -2011,9 +2116,12 @@ branch, 300 of 300. `spec_status` is `approved` again.
 | [`0080`](../.issue/0080-swap-targets-from-registration.yml) | B-057                                                   |
 | [`0085`](../.issue/0085-swap-messages-in-messages.yml)      | none — a bug that moves four types and changes no claim |
 | [`0086`](../.issue/0086-credentials-from-user-secrets.yml)  | B-058                                                   |
+| [`0093`](../.issue/0093-absent-settings-named.yml)          | B-059, and B-029's first half as reworded on 2026-10-15 |
 
 Every claim is carried by exactly one child, and `0001` carries all of them
-because the children are slices of it rather than work beside it. `0002` keeps
+because the children are slices of it rather than work beside it. B-029 is the
+one claim with two: `0004` delivered it as first written, and `0093` delivers
+its first half as reworded, since `0004` is done (§ 12, 2026-10-15). `0002` keeps
 B-010 after its withdrawal, and `0001` still reads 52: this map says which item
 delivered a claim, and a withdrawn one was delivered before it was withdrawn.
 What is live is § 3, where B-010 opens `**Withdrawn**`, and § 9, which has no

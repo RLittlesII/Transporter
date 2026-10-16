@@ -1,0 +1,66 @@
+id: "0093"
+type: task
+title: Name an absent credential at the first poll, and an absent box at start
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 2
+rank: 51
+
+parent: "0001"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+    - B-029
+    - B-059
+
+created: "2026-10-15"
+updated: "2026-10-15"
+closed: null
+
+summary: |
+    Cut on 2026-10-15 from the independent read of that day (§ 12, findings 4
+    and 7). The person chose a separate item for B-029's reworded first half,
+    because `0004`, which delivered B-029 as first written, is done; and chose
+    to claim the box's start-up check as B-059 rather than leave it unclaimed.
+
+    B-029: remove the credentials' `ValidateOnStart`, so the token source's
+    read validates them inside a poll (§ 7). Retire
+    `OpenSkyStartupTests.GivenAnAbsentCredential_WhenTheApplicationStarts_ThenItFailsNamingWhichOne`
+    and add the two tests § 9 names, on the arrangement § 8 says they need:
+    configuration carrying a box, a `Host` that installs a recording logger
+    for the client, and a `RecordingLogger` that keeps each entry's exception.
+    Correct the comments and messages that still state the withdrawn wording
+    (`OpenSkyConfigurationValidator`, `OpenSkyRegistration`,
+    `OpenSkyTokenSource`, `AircraftSnapshotClient`, `OpenSkyStartupTests`,
+    `OpenSkyOptionsTests`), including the validator's message offering the
+    environment, which the head does not read.
+
+    B-059: extend `GivenNoBoundingBox_WhenTheApplicationStarts_ThenItFailsNamingTheBox`
+    to assert the failure contains neither configured credential, and cite
+    B-059.
+
+    Independent of `0068`: neither touches the other's files beyond
+    `AircraftSnapshotClient`'s comments.
+
+acceptance_criteria:
+    - "B-029 — a host with an absent credential starts and makes no request; the first poll logs a warning whose exception names the absent key and carries no configured value."
+    - "B-059 — a host with no box does not start; the failure names `OpenSky:Box` and contains no configured value."
+    - "§ 9 Traceability Matrix rows B-029 and B-059 name the tests and read `Verified`."
+
+decisions:
+    - "2026-10-15 — the person: a new item delivers B-029's reworded half, rather than `0068` or reopening `0004`."
+    - "2026-10-15 — the person: an absent box stopping a started host is a claim, B-059, rather than an unclaimed guard in § 7 or removed."
+    - "2026-10-15 — `type: task`: the person asked for a chore, and the item schema has no chore type; it delivers claims, which a task does."
+
+out_of_scope:
+    - "Everything in § 5 of the specification."
+    - "The head's half of an absent box — § 7 states it and no claim covers it."

@@ -211,15 +211,34 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And it records neither the token nor the credentials that obtained it
 
   @B-029
-  Scenario: A missing credential is named at the first poll and stops nothing
-    Given an OpenSky client id has been configured
+  Scenario: A missing credential stops nothing when the host starts
+    Given a bounding box has been configured
+      And an OpenSky client id has been configured
       And no OpenSky client secret has been configured
-     When the application starts
-      And the first poll runs
-     Then the application is still running
-      And a warning names the client secret as the absent credential
-      And the warning does not contain the configured client id
-      And the client's stream neither completed nor errored
+     When the host starts
+     Then it has started
+      And no request has been made to OpenSky
+
+  @B-029
+  Scenario: A missing credential is named at the first poll
+    Given a bounding box has been configured
+      And an OpenSky client id has been configured
+      And no OpenSky client secret has been configured
+      And the host has started
+     When the first poll runs
+     Then one warning is logged, with an exception attached
+      And the exception names the client secret as the absent credential
+      And neither the warning nor the exception contains the configured client id
+      And no request has been made to OpenSky
+
+  @B-059
+  Scenario: A host does not start without a bounding box
+    Given both OpenSky credentials have been configured
+      And no bounding box has been configured
+     When the host starts
+     Then it does not start
+      And the failure names the bounding box as the absent setting
+      And the failure contains no configured value
 
   @B-058
   Scenario: A credential in the developer's secret store is the one the application binds
@@ -317,8 +336,10 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      When a poll is made at 14:32:10 on the poller's scheduler
      Then the next poll is reported due at 14:32:25, on the read-side seam beside the tracker source
       And nothing about it arrives through the changeset stream
-     When a poll is demanded at 14:32:20 and the interval has elapsed since the last
-     Then the next poll is reported due at 14:32:35
+     When the poll made at 14:32:25 is refused with a retry-after of 42 seconds
+     Then the next poll is reported due at 14:33:07
+     When a poll is demanded at 14:32:45, the interval having elapsed since the refused one
+     Then the next poll is reported due at 14:33:00
 
   @B-055
   Scenario: A refusal is reported with the interval OpenSky asked for
