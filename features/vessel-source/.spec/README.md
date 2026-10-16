@@ -371,8 +371,9 @@ settled both on 2026-10-16 and took recommendation A each time.
    `Description`. `SwappingTrackerSource` publishes the selected entry's
    description, switched like its `Status`. One switch decides both the
    vehicles and their description, so the two cannot disagree. The
-   description's registration moves from OpenSky to tracking, and ADR-0015
-   records the amendment. Rejected: a second subject the swap actor writes on
+   description's registration moves from OpenSky to tracking.
+   [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
+   records it and supersedes ADR-0015. Rejected: a second subject the swap actor writes on
    each swap. It leaves two things to keep in step, and a window in which they
    disagree.
 2. **Silence removal is a `Filter`, not `ExpireAfter`.** `ExpireAfter`
@@ -418,9 +419,37 @@ and build their subjects through generated fixtures (`transporter-conventions`
 
 <!-- Rules: ../../../.spec/templates/feature.md § 9 -->
 
-Not written. Owed by `test-writer`. Every claim B-001 – B-026 will need a row,
-and the scenarios in [`vessel-source.feature`](vessel-source.feature) are
-already tagged for them.
+Every row reads `Missing`: nothing is built. Each names the item that holds the
+claim and the test or review that will prove it.
+
+| Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                           | Status  |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| B-001    | `@B-001` | `0097` — planned: `VesselSubscriptionTests.GivenTheAircraftBox_WhenTheSubscriptionIsWritten_ThenItNamesThatOneBoxLatitudeFirst`                                                                                                                                                                                                | Missing |
+| B-002    | `@B-002` | `0097` — planned: `VesselClientTests.GivenAKey_WhenAConnectionOpens_ThenTheSubscriptionIsTheFirstFrameAndTheOnlyOne`, over two connections                                                                                                                                                                                     | Missing |
+| B-003    | `@B-003` | `0097` — planned: `AisStreamRegistrationTests.GivenAKeyInUserSecrets_WhenTheOptionsAreComposed_ThenTheKeyIsTheStores`; plus a **review** that no log line, recording, packaged setting or binding names the key. Re-done by any change that logs or binds the options                                                          | Missing |
+| B-004    | `@B-004` | `0097` — planned: `VesselClientTests.GivenNoKey_WhenTheVesselStrategyIsSelected_ThenNoSocketOpensTheFailureNamesTheKeyAndAnotherStrategyStillSwapsIn`                                                                                                                                                                          | Missing |
+| B-005    | `@B-005` | `0097` — planned: `VesselClientTests.GivenRepeatedSwaps_WhenEachCompletes_ThenAtMostOneSocketIsOpenAndTheOutgoingOneIsClosed`                                                                                                                                                                                                  | Missing |
+| B-006    | `@B-006` | `0097` — planned: `VesselClientTests.GivenTheServiceClosesTheSocket_WhenTheClientReconnects_ThenItResubscribesAndTheHeldVesselsStay`                                                                                                                                                                                           | Missing |
+| B-007    | `@B-007` | `0097` — planned: `VesselClientTests.GivenAnyConnection_WhenItOpens_ThenCompressionIsRequested`, and `GivenAConfirmationWithoutCompression_WhenItArrives_ThenAWarningIsLoggedAndTheStreamContinues`; a **review** against the live service that `CompressionEnabled` reads true, performed before the closing act is rehearsed | Missing |
+| B-008    | `@B-008` | `0098` — planned: `VesselClientTests.GivenAnMmsiWithALeadingZero_WhenItsMessagesArrive_ThenOneVesselIsKeyedByTheNineDigitString`                                                                                                                                                                                               | Missing |
+| B-009    | `@B-009` | `0098` — planned: `VesselClientTests.GivenSuccessivePositionReports_WhenEachArrives_ThenEachIsOneAddOrUpdateAndNoSetIsAssembled`                                                                                                                                                                                               | Missing |
+| B-010    | `@B-010` | `0098` — planned: `VesselClientTests.GivenStaticDataForAnUnheldVessel_WhenItArrives_ThenAVesselWithANameATypeAndNoPositionIsAdded`                                                                                                                                                                                             | Missing |
+| B-011    | `@B-011` | `0097` — planned: `VesselSubscriptionTests.GivenTheSubscription_WhenItIsWritten_ThenItFiltersToPositionReportsAndStaticData`; `0098` — `VesselMessageReaderTests.GivenAnotherMessageType_WhenItIsRead_ThenNothingIsRead`                                                                                                       | Missing |
+| B-012    | `@B-012` | `0098` — planned: `VesselClientTests.GivenAnUnreadableFrame_WhenItArrives_ThenItIsSkippedTheHeldVesselIsUnchangedAndTheStreamContinues`                                                                                                                                                                                        | Missing |
+| B-013    | `@B-013` | `0098` — planned: `VesselMessageReaderTests.GivenASentinel_WhenItIsRead_ThenTheValueIsAbsent`, a theory over each sentinel, with half a position read as no position                                                                                                                                                           | Missing |
+| B-014    | `@B-014` | `0099` — waiting on § 11 row 6. Planned: `VesselClientTests.GivenAReportedInstant_WhenTheVesselIsProjected_ThenItsLastContactIsThatInstant`                                                                                                                                                                                    | Missing |
+| B-015    | `@B-015` | `0099` — waiting on § 11 row 6. Planned: `VesselClientTests.GivenMessagesWithAndWithoutAnInstant_WhenTheyArrive_ThenOnlyTheFormerAdvanceTheClock`                                                                                                                                                                              | Missing |
+| B-016    | `@B-016` | `0100` — planned: `VesselTrackerSourceTests.GivenACachedVessel_WhenItIsProjected_ThenItIsAVesselDirectlyBelowTransportVehicle`; plus a **review** that only `VesselSnapshotMapper` constructs one                                                                                                                              | Missing |
+| B-017    | `@B-017` | `0100` — planned: `VesselTests.GivenAName_WhenTheLabelIsRead_ThenItIsTheTrimmedNameOrTheMmsi`, a theory over padded, blank and absent names                                                                                                                                                                                    | Missing |
+| B-018    | `@B-018` | `0100` — planned: `VesselSnapshotMapperTests.GivenReportedSpeedCourseAndHeading_WhenProjected_ThenTheyAreHeldAsReported`                                                                                                                                                                                                       | Missing |
+| B-019    | `@B-019` | `0100` — planned: `VesselFleetDescriptionTests.GivenTheDescription_WhenItIsRead_ThenItGroupsByShipTypeAndFlagStateWithSelectorsOverTheBase`                                                                                                                                                                                    | Missing |
+| B-020    | `@B-020` | `0100` — planned: `VesselTests.GivenAnMmsi_WhenTheFlagStateIsRead_ThenItIsTheMidsStateOrUnknown`, and `GivenNoStaticData_WhenTheShipTypeIsRead_ThenItIsUnknown`                                                                                                                                                                | Missing |
+| B-021    | `@B-021` | `0101` — planned: `FleetTrackerSilenceTests.GivenAVesselSilentPastTheThreshold_WhenTheClockAdvances_ThenItIsRemovedAndReturnsAsAnArrivalWhenItReports`                                                                                                                                                                         | Missing |
+| B-022    | `@B-022` | `0101` — planned: `FleetTrackerSilenceTests.GivenNoMessageForAVessel_WhenOnlyTheObservedClockAdvances_ThenItIsRemoved`, run on a scheduler whose `Now` never moves                                                                                                                                                             | Missing |
+| B-023    | `@B-023` | `0101` — planned: `FleetTrackerSilenceTests.GivenAnAircraftAndAVesselEquallySilent_WhenBothThresholdsPass_ThenOnlyTheVesselIsRemoved`                                                                                                                                                                                          | Missing |
+| B-024    | `@B-024` | `0102` — planned: `AisStreamRegistrationTests.GivenTheApplicationsGraph_WhenTheEntriesAreRead_ThenVesselsIsAStrategyBehindTheDecoratorAndNotTheSeam`                                                                                                                                                                           | Missing |
+| B-025    | `@B-025` | `0102` — planned: `AisStreamRegistrationTests.GivenTheVesselsEntry_WhenItIsLive_ThenNoPollStatusIsPublished`                                                                                                                                                                                                                   | Missing |
+| B-026    | `@B-026` | `0102` — planned: `FleetSwapCompositionTests.GivenTheApplicationsGraph_WhenThePickerSwapsToVesselsAndBack_ThenTheDescriptionAndVehiclesChangeAndTheTrackerAndCollectionRemain`                                                                                                                                                 | Missing |
 
 ## 10. Lessons / Spec Deltas
 
@@ -445,11 +474,128 @@ None yet.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status                                                  |
-| -------- | ----------- | ------------------------------------------------------- |
-| §§ 1-5   | spec-author | 🟡 Draft                                                |
-| §§ 6-7   | implementer | 🟡 Draft — written 2026-10-16; both § 7 decisions taken |
-| §§ 8-9   | test-writer | 🟡 Draft — written 2026-10-16                           |
+| Sections | Owner       | Status   |
+| -------- | ----------- | -------- |
+| §§ 1-5   | spec-author | 🟡 Draft |
+| §§ 6-7   | implementer | 🟡 Draft |
+| §§ 8-9   | test-writer | 🟡 Draft |
+
+What `approved` requires, and why a `Missing` row in § 9 does not hold it
+back, is [the template's § 12](../../../.spec/templates/feature.md).
+
+**Reviewed 2026-10-16 — all three rows stay 🟡.** The review was done by a
+`spec-reviewer` with a fresh context, which wrote none of these sections. It
+read §§ 1-9, [`vessel-source.feature`](vessel-source.feature), items
+`0096` – `0102` and `replay-source` `0013`, root ADRs 0002, 0005, 0006, 0011,
+0015 and 0017, the `fleet-pipeline` and `aircraft-source` claims this spec
+cites, and the code § 7 says exists today.
+
+Every one of § 7's statements about existing code is true. Rows 4 and 6 of
+§ 11, and the `fleet-pipeline` removal-stage claim, are known gates. They are
+not counted below except where the spec mishandles them.
+
+**§§ 1-5 — spec-author:**
+
+1. **F2 — removal on silence: two records disagree.**
+    - § 5 row 11 says a vessel gets no stale marker before removal.
+      `fleet-pipeline` B-016 says it does, because it marks every vehicle
+      silent past five minutes.
+    - The B-023 scenario checks only that the vessel is still in the fleet, so
+      it cannot tell the two apart.
+    - Fix: the `fleet-pipeline` claim owed for the removal stage also says
+      that a removing source's vehicles are not marked.
+    - Fix: B-019 or B-023 says that the vessel description names `Remove`
+      after the vessel threshold.
+2. **F3 — B-023 does not state the ten-minute default.** It also names no
+   surface where the threshold is configured. Every scenario gives ten
+   minutes, so a hard-coded constant passes. Add the default (source: § 11
+   row 3), the surface, and a non-default example.
+3. **F4 — B-020 does not require the full ITU MID table that § 11 row 5
+   chose.** A one-entry table passes it.
+    - No claim and no § 4 source (ITU-R M.1371) covers the rule that turns a
+      ship-type code into a category name.
+    - The scenario expects "United States", which is not the ITU's wording.
+4. **F5 — B-017 trims whitespace only, but § 7 also treats `@` padding as
+   absent.** The claim should state the `@` rule, and a scenario should
+   include an `@` example.
+5. **F6 — B-015 does not say whether a message carrying an earlier instant
+   moves the clock backwards.** AIS messages arrive out of order, and a clock
+   moved back would bring a removed vessel back.
+6. **F7 — B-014 and B-010 leave last contact undefined for a vessel known
+   only from static data that reports no instant.** `LastContact` is not
+   optional. This is needed whatever § 11 row 6 answers. § 7 owes the
+   matching mapper rule.
+7. **F8 — B-005 covers swaps only.** § 4 row 5 also names a reconnecting
+   client leaking its old socket. Say "at most one socket at any moment,
+   across swaps and reconnects", and add a scenario that swaps during a
+   pending reconnect.
+8. **F9 — B-007 claims only the compression request.** Yet § 7, § 8, the
+   `0097` scoring and ADR-0017 all read the `CompressionEnabled` confirmation.
+   Extend the claim to cover the confirmation, or drop the reading.
+9. **F10 — B-004's "a failure a consumer can read" names no surface.**
+10. **F11 — B-008 assumes the MMSI arrives as a nine-digit string.**
+    - AISStream's published examples carry it as a JSON number, which loses
+      leading zeros and with them B-020's MID.
+    - Record the wire type in a § 4 row. Plausible either way; confirm
+      against the captured message § 11 row 6 needs.
+11. **F12 — B-019 leaves out description members that `fleet-pipeline`
+    requires.** Those are the trail measure (B-037) and the card roles
+    (B-036). It also names no comparer set within `fleet-pipeline` B-010,
+    which allows only `TransportVehicle` members.
+12. **F13 — § 4 row 10 still calls `fleet-pipeline` § 11 row 9 open.** That
+    row was answered (A) on 2026-10-16.
+13. **F20 — B-013's examples are all sentinels.** None has a coordinate field
+    missing, which is the case a default-`double` reader gets wrong.
+14. **F22 — the items disagree with the spec.**
+    - `0096`'s summary says §§ 6-9 are unwritten.
+    - § 11 row 6 says it must be answered before the client item, `0097`,
+      starts, and `0097` is `blocked` on it. Yet § 7 puts the claims that
+      row decides in `0099`.
+    - `replay-source` `0013`'s summary still says it is blocked and that
+      nothing is cut.
+    - `0013`'s `depends_on` leaves out `0097`, the tap, and `0099`.
+
+**§§ 6-7 — implementer:**
+
+1. **F1 — an accepted ADR was amended in place.** Answered in this change.
+   [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
+   records the call and supersedes ADR-0015, and ADR-0015's body is restored.
+   The answer needs a reviewer's read.
+2. **F7 — § 7 gives no mapper rule** for last contact when no instant is
+   reported.
+3. **F14 — the registration contradicts accepted records.**
+    - ADR-0011, ADR-0015 and ADR-0002 item 6 keep a per-type seam,
+      `IVesselTrackerSource`, which § 7 does not declare.
+    - `AddAisStream` must also come before replay's registration
+      (`replay-source` B-028).
+4. **F15 — the description swap obligates `aircraft-source`.** Its B-057
+   claims only the name beside each strategy. It must also claim the
+   description, and its § 12 row reopens. That claim is `aircraft-source`'s
+   to write.
+5. **F16 — § 7 neither carries a "Decision required" block nor says "No open
+   decisions"** about the instant field that § 11 row 6 leaves pending.
+6. **F23 — another role annotated § 12.** Answered in this change: the
+   annotations are dropped.
+
+**§§ 8-9 — test-writer:**
+
+1. **F17 — § 8's category list leaves out B-007 and B-023.**
+2. **F18 — § 8 plans tests for clauses only a review or an analyzer can
+   prove.** Those are the "nothing else" clauses of B-009, B-014, B-016,
+   B-019 and B-024. Name the mechanism for each, and what re-does it.
+3. **F19 — § 8 forbids advancing the `TestScheduler`.** B-022's falsifying
+   case needs exactly that: the scheduler advances while the observed clock
+   holds. Without it, an `ExpireAfter`-on-scheduler build passes.
+4. **F21 — § 9 was not written.** Answered in this change: 26 rows, all
+   `Missing`. They need a reviewer's read.
+
+**Complete for one item, though each row stays 🟡:**
+
+- §§ 1-5 cover `0102` (B-024 – B-026) in full.
+- §§ 6-7 cover `0097`, `0100` and `0101` in full.
+- §§ 8-9 cover no item in full.
+
+`spec_status` stays `draft`.
 
 ## Decisions
 
@@ -476,7 +622,8 @@ The last three are answers to their rows and need no record beyond them.
 Two more calls that day settled § 7's open choices, each recommendation A:
 
 - The description swaps with the source through `TrackerSourceEntry`, which
-  amends ADR-0015.
+  is recorded as
+  [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md).
 - Silence removal is a dynamic `Filter` on the observed clock, not
   `ExpireAfter`, which amends README.md.
 

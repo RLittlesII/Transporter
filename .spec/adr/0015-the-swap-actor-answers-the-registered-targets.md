@@ -6,16 +6,15 @@ type: adr
 
 # ADR-0015: The swap actor answers the registered targets
 
-**Status:** accepted
+**Status:** superseded by
+[ADR-0018](0018-a-registered-entry-carries-its-fleet-description.md)
+
+**Superseded 2026-10-16 (`0102`), because an entry now carries more.** The
+entry also holds its source's fleet description, and the decorator switches
+that description. Everything else here holds as written.
 
 **Accepted 2026-10-09, built by `0080`.** The route was the person's choice the
 same day, recorded in that item's `decisions`.
-
-**Amended 2026-10-16.** The person's call for `vessel-source` § 7, built by
-[`0102`](../../features/vessel-source/.issue/0102-vessel-strategy-on-the-seam.yml):
-an entry also carries the source's fleet description, and the decorator
-publishes the selected entry's description, so the vehicles and their
-description swap together.
 
 ## Context
 
@@ -63,9 +62,8 @@ it travels.
 **The name is registration's, and the list is the swap actor's to answer.**
 
 - **Registration pairs each strategy with its name.** `TrackerSourceEntry`, an
-  internal record in `Tracking/Sources/`, holds the strategy, the name a
-  swap control shows and, since the 2026-10-16 amendment, the description
-  its fleet is read through, and is registered beside each `ITrackerSourceStrategy`
+  internal record in `Tracking/Sources/`, holds the strategy and the name a
+  swap control shows, and is registered beside each `ITrackerSourceStrategy`
   alias. The name is a constant in the registration method that registers the
   strategy, so a new source brings its own.
 - **The decorator selects among entries.** `SwappingTrackerSource` takes the
