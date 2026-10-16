@@ -67,10 +67,11 @@ summary: |
   `0001` was cut. The children hold the work; this item holds the claims
   until each child's are done.
 
-  **None of them starts yet.** § 12's rows are 🟡: §§ 6-9 are unwritten, and
-  §§ 1-5 have not been signed off. Two children are also `blocked` on § 11
-  row 6, which needs a captured AISStream message and therefore the person's
-  API key in the user-secrets store.
+  **None of them starts yet.** §§ 1-9 are written, and an independent review
+  on 2026-10-16 kept every § 12 row 🟡; its findings are answered and await a
+  re-review. `0099` is also `blocked` on § 11 row 6, which needs a captured
+  AISStream message and therefore the person's API key in the user-secrets
+  store.
 
 acceptance_criteria:
   - "Every § 3 claim B-001 – B-026 is done by the child that holds it."

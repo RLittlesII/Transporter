@@ -30,15 +30,22 @@ The demo exists to break a belief: that a reactive collection needs a push feed.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
-Fifty-nine claims, in ten groups — one per component, plus the boundary rules
+Sixty claims, in ten groups — one per component, plus the boundary rules
 and the configuration:
 **B-005 – B-010, B-048 and B-049** the API contract; **B-001 – B-004** the API
 types and the envelope; **B-011 – B-014** the snapshot; **B-015 – B-029,
 B-050 and B-053 – B-055** the snapshot client — except **B-026 – B-028**, re-subjected to the HTTP
 transport when § 11 row 2 was answered, and still delivered by `0004`; **B-030 – B-032** the cache; **B-033 – B-037** the
-tracker source strategy; **B-038 – B-040, B-056 and B-057** the swap decorator; **B-041 – B-044,
+tracker source strategy; **B-038 – B-040, B-056, B-057 and B-060** the swap decorator; **B-041 – B-044,
 B-051 and B-052** the fleet tracker; **B-045 – B-047** the layer boundaries;
 **B-058 and B-059** the configuration the application is composed from.
+
+**B-060 was added on 2026-10-16**, from `vessel-source`'s independent review
+(its § 12, finding F15). The person's call that a registered entry carries its
+fleet description
+([ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md))
+puts a description beside each strategy this Feature registers, and B-057
+claimed only a name.
 
 **B-059 was added on 2026-10-15**, from the independent read of that day
 (§ 12, finding 4): the options validated the box on start with no claim behind
@@ -201,6 +208,7 @@ than being slotted into the sequence.
 | B-040 | Swapping SHALL stop the outgoing source, so a swapped-out poller stops spending OpenSky credits and a swapped-out socket stops reading.                                                                                                                                                                                                                                                                                                                                                                                                                               | hot-swap-source § "Disposal discipline"                                                             |
 | B-056 | The decorator SHALL select the poll status (B-054, B-055) with the live strategy, and a subscriber SHALL read the status in force at once: the live strategy's latest, or none for a strategy registered with no poll status or a poller that has stopped (B-040). A swap SHALL replace the status with the incoming strategy's, and nothing the outgoing strategy reports SHALL be published after the swap completes.                                                                                                                                               | `fleet-pipeline` B-040; ADR-0013; B-038; B-040                                                      |
 | B-057 | Registration SHALL record, beside each strategy it registers, the name a swap control shows for it, and the actor that performs the swap SHALL answer a request for the targets with one entry per registered strategy, in registration order — that name and an opaque handle the swap message carries back — so a view model reaches the list through an actor (B-041; `fleet-dashboard` B-020) and names no strategy or strategy type. A strategy not registered SHALL NOT be offered, and no member SHALL be added to the seam to carry a name or a kind (B-037). | `fleet-dashboard` B-040; B-037; B-041; ADR-0011                                                     |
+| B-060 | Registration SHALL record, beside each strategy it registers, the fleet description that strategy's vehicles are read through, and the live and the recorded aircraft strategies SHALL each be registered with the aircraft description. The swap decorator SHALL publish the selected strategy's description through the same switch that selects the strategy, so the vehicles and their description change together and never disagree.                                                                                                                            | ADR-0018; `fleet-pipeline` B-021; `vessel-source` B-026                                             |
 | B-041 | `IFleetTracker` SHALL wrap `ITrackerSource` and SHALL be what view models depend on; no view model SHALL depend on a strategy, a client, a cache or the decorator.                                                                                                                                                                                                                                                                                                                                                                                                    | Decided call; mvvm                                                                                  |
 | B-042 | `IFleetTracker` SHALL own the collection pipeline — filtering, sorting, grouping, aggregates, property-change refresh and expiry — and that pipeline SHALL be constructed once and SHALL NOT be rebuilt because the live source changed. Binding is **not** among what it owns: the bind and the marshal to a user-interface thread belong to whoever consumes the stream, and `fleet-dashboard` B-005 claims them (§ 5 row 18, ADR-0009).                                                                                                                            | Decided call; hot-swap-source § "What must not be rebuilt"                                          |
 | B-043 | `IFleetTracker` SHALL own the injected clock: staleness SHALL derive from a vehicle's last contact against it, and no staleness or expiry decision anywhere SHALL read `DateTime.UtcNow` inline.                                                                                                                                                                                                                                                                                                                                                                      | dynamic-data-pipeline § "Staleness and expiry"; test-from-scenarios                                 |
@@ -1355,6 +1363,7 @@ is B-049 and the clause waiting on `0005`.
 | B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's row                                                                                                                                                                                                                                                                | Verified |
 | B-058    | `@B-058` | `TransporterConfigurationTests.GivenAUserSecretsStoreHoldingTheCredentials_WhenTheConfigurationIsComposed_ThenTheCredentialsAreTheStoresAndNoOtherSettingChanges`, `…GivenAUserSecretsStoreNamingASettingThePackagedSettingsName_WhenTheConfigurationIsComposed_ThenTheSettingIsTheStores` and `…GivenNoUserSecretsStore_WhenTheConfigurationIsComposed_ThenItIsThePackagedSettingsAndNoCredentialIsConfigured`. **Review** on `0086`: the Mac Catalyst bundle held `secrets.json` beside a synthetic store, none without; iOS not built. **Absent: a launch** (§ 8). Re-done by a change to `Gui.csproj`, `MauiProgram.Settings()` or the Apple workload                   | Missing  |
 | B-059    | `@B-059` | [`0093`](../.issue/0093-absent-settings-named.yml) — planned: `OpenSkyStartupTests.GivenNoBoundingBox_WhenTheApplicationStarts_ThenItFailsNamingTheBox` extended to assert the failure contains neither configured credential and to cite B-059. Today it proves the first clause and cites B-050                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
+| B-060    | `@B-060` | [`0102`](../../../../../features/vessel-source/.issue/0102-vessel-strategy-on-the-seam.yml) — planned: `SwappingTrackerSourceTests.GivenTwoEntriesWithDescriptions_WhenTheSecondIsSelected_ThenItsDescriptionIsPublishedWithItsVehicles`, and `OpenSkyRegistrationTests.GivenTheLiveAndRecordedEntries_WhenRead_ThenEachCarriesTheAircraftDescription`                                                                                                                                                                                                                                                                                                                      | Missing  |
 
 Fifty-eight rows, fifty-eight live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
@@ -2276,6 +2285,13 @@ to 🟡 and `spec_status` to `in-review` until a reviewer reads it, so
 [`0094`](../.issue/0094-report-the-poll-instant.yml), which builds it, waits on
 that review. §§ 6-7 and 8-9 were not edited and keep their rows; § 7's
 poll-status design and § 9's B-054 row are `0094`'s to extend.
+
+**B-060 added 2026-10-16**, while §§ 1-5 were already 🟡, so nothing is
+lowered. It claims what
+[ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
+records. §§ 6-7 were not edited: § 7's registration and decorator design is
+`vessel-source` [`0102`](../../../../../features/vessel-source/.issue/0102-vessel-strategy-on-the-seam.yml)'s to extend, as the item that
+builds it. § 9 gains B-060's row, `Missing`, which that item completes.
 
 ## Decisions
 

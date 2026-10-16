@@ -40,7 +40,11 @@ acceptance_criteria:
   - "B-026 — a swap in either direction changes the description and the vehicles and rebuilds nothing."
   - "§ 9 carries a row naming a test or a performed review for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-16 — spec-author — this item also builds what ADR-0018 records,
+    which `aircraft-source` claims as B-060: each registered entry carries its
+    fleet description, and the swap decorator switches it. It completes
+    `aircraft-source` § 9's B-060 row."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

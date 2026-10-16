@@ -14,7 +14,9 @@ children: []
 
 depends_on:
   - "0010"
+  - "0097"
   - "0098"
+  - "0099"
   - "0100"
   - "0102"
 blocks: []
@@ -44,17 +46,11 @@ summary: |
   selection path as an aircraft recording. Messages are never batched into
   poll-shaped snapshots to make a push feed resemble a polled one.
 
-  **`status: blocked`, and the blocker still has no item to name.** The vessel
-  Feature now has a specification, `features/vessel-source/.spec/README.md`
-  (draft, 2026-10-15), which defines what B-021 says replay reproduces. Nothing
-  has been cut from it yet, so `Vessel`, the vessel client, its cache and its
-  strategy exist only as claims. Its § 11 row 6 (which reported instant is a
-  message's time) also bears on B-019 here. `depends_on` names only 0010, because
-  the items this waits on have no ids yet.
-
-  Unblocks when the vessel-source items that build the client and the strategy
-  are done. Add them to `depends_on` when they are cut, and re-score then: risk 4
-  is mostly the unbuilt subject, not the work.
+  Waits on the vessel-source items that build what it reproduces: `0097`, the
+  client the recording tap sits on (§ 5 row 3); `0098`, the message shape;
+  `0099`, the reported instant, which bears on B-019 here; `0100`, the vessel;
+  and `0102`, the seam it reaches the same way. Re-score when they are done:
+  risk 4 is mostly the unbuilt subject, not the work.
 
 acceptance_criteria:
   - "B-023 — vessel replay substitutes at the strategy, not at a contract."
