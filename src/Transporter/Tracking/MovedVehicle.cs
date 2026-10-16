@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using LanguageExt;
 using Transporter.Model;
 
@@ -17,4 +18,6 @@ internal sealed record MovedVehicle
 
     /// <summary>Gets the metres flown since the vehicle entered the fleet.</summary>
     public required double Travelled { get; init; }
+
+    public ImmutableList<TrailPoint> Trail { get; init; } = [];
 }

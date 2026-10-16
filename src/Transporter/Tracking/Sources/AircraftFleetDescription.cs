@@ -85,6 +85,13 @@ internal static class AircraftFleetDescription
 
         return new FleetSourceDescription
         {
+            Trail = new FleetTrailMeasure
+            {
+                Name = "Altitude",
+                Minimum = 0,
+                Maximum = 12_500,
+                Value = Altitude,
+            },
             Columns =
             [
                 callsign,

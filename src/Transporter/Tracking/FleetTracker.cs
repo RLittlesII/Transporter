@@ -42,7 +42,13 @@ internal sealed class FleetTracker : IFleetTracker
         _clock = clock;
         _ticks = ticks;
         _schedulers = schedulers;
-        _reported = source.Connect().Move().RefCount();
+        Description = description
+            .Replay(1)
+            .RefCount()
+            .TakeUntil(_shutdown);
+        _reported = source.Connect()
+            .Move(Description.Select(static offered => offered.Trail.Value), () => _staleAfter.Value, DefaultTrailBound)
+            .RefCount();
         _arrivals = _reported.Filter(_predicate.Select(Over)).RefCount();
         Fleet = _arrivals
             .Transform(Mark, Reevaluate(ticks))
@@ -62,10 +68,6 @@ internal sealed class FleetTracker : IFleetTracker
             })
             .DistinctUntilChanged()
             .TakeUntil(_shutdown);
-        Description = description
-            .Replay(1)
-            .RefCount()
-            .TakeUntil(_shutdown);
         Observed = ticks.Instant.TakeUntil(_shutdown);
         PollStatus = status.Status.TakeUntil(_shutdown);
         Recent = Windowed()
@@ -80,6 +82,8 @@ internal sealed class FleetTracker : IFleetTracker
 
     /// <summary>How many changes the window holds (fleet-pipeline B-039); nothing configures it.</summary>
     internal const int RecentWindowSize = 20;
+
+    internal const int DefaultTrailBound = 240;
 
     /// <summary>How long a vehicle may be silent before it is marked, until a caller says otherwise (B-051).</summary>
     internal static readonly TimeSpan DefaultStaleAfter = TimeSpan.FromMinutes(5);
@@ -376,6 +380,7 @@ internal sealed class FleetTracker : IFleetTracker
             Replaced = moved.Replaced,
             Leg = moved.Leg,
             Travelled = moved.Travelled,
+            Trail = moved.Trail,
         };
 
     /// <summary>The notices before they are paced, with the state a quiet spell needs (fleet-pipeline B-025 – B-027).</summary>

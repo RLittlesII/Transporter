@@ -19,6 +19,8 @@ public sealed record FleetSourceDescription
     /// <summary>Gets what this source can be grouped by.</summary>
     public required IReadOnlyList<FleetGrouping> Groupings { get; init; }
 
+    public required FleetTrailMeasure Trail { get; init; }
+
     /// <summary>Gets the filter choices this source offers, in the order the control shows them (B-029).</summary>
     /// <remarks>
     /// Offered whether or not any vehicle currently satisfies one: a choice is what the source

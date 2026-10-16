@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LanguageExt;
 using Transporter.Model;
 
@@ -29,4 +30,6 @@ public sealed record TrackedVehicle
 
     /// <summary>Gets the metres flown since the vehicle entered the fleet: every leg, summed (fleet-pipeline B-033).</summary>
     public double Travelled { get; init; }
+
+    public IReadOnlyList<TrailPoint> Trail { get; init; } = [];
 }

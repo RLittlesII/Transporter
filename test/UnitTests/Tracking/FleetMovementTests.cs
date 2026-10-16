@@ -15,7 +15,8 @@ namespace Transporter.UnitTests.Tracking;
 // the consumer (§ 5 row 9). The consumer here is a test, which has no user-interface thread.
 #pragma warning disable RSA1010
 
-public class FleetMovementTests
+/// <summary>Movement values published through the tracker.</summary>
+public partial class FleetMovementTests
 {
     /// <summary>
     /// fleet-pipeline B-032. An update that moves a vehicle a tenth of a degree north puts the leg it

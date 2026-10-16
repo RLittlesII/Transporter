@@ -321,6 +321,7 @@ public class FleetTrackerTests
     /// <summary>A second source's description, which is all a swap changes (B-021).</summary>
     private static readonly FleetSourceDescription Vessels = new()
     {
+        Trail = new Fixtures.FleetTrailMeasureFixture(),
         Columns = [Vessel],
         Groupings = [new FleetGrouping { Name = "Flag", Key = static vehicle => vehicle.GroupKey }],
         Card = new FleetCard { Title = Vessel },

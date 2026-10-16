@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Immutable;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData;
 using LanguageExt;
@@ -6,23 +8,20 @@ using Transporter.Model;
 
 namespace Transporter.Tracking;
 
-/// <summary>The stage that derives movement, first in the chain (fleet-pipeline § 7).</summary>
+/// <summary>The stage that folds movement into each vehicle's element.</summary>
 internal static class FleetMovement
 {
-    /// <summary>Carries each vehicle's replaced vehicle, leg and running total on its element.</summary>
-    /// <param name="source">The changesets the seam reports.</param>
-    /// <returns>The same changes, each element carrying its movement.</returns>
-    /// <remarks>
-    /// A stage of its own because <c>Transform</c> hands its factory the previous source, never the
-    /// previous element, and a running total is a fold over elements. The cache is per subscription
-    /// and holds exactly what the stage last emitted, so it dies with the subscription (B-002).
-    /// </remarks>
-    internal static IObservable<IChangeSet<MovedVehicle, string>> Move(this IObservable<IChangeSet<TransportVehicle, string>> source) =>
+    internal static IObservable<IChangeSet<MovedVehicle, string>> Move(
+        this IObservable<IChangeSet<TransportVehicle, string>> source,
+        IObservable<Func<TransportVehicle, Option<double>>> measures,
+        Func<TimeSpan> staleAfter,
+        int trailBound) =>
         Observable.Create<IChangeSet<MovedVehicle, string>>(observer =>
         {
             var moved = new ChangeAwareCache<MovedVehicle, string>();
-
-            return source.Subscribe(
+            Func<TransportVehicle, Option<double>> measure = static _ => Option<double>.None;
+            var descriptions = measures.Subscribe(value => measure = value, observer.OnError);
+            var subscription = source.Subscribe(
                 changes =>
                 {
                     foreach (var change in changes)
@@ -30,10 +29,10 @@ internal static class FleetMovement
                         switch (change.Reason)
                         {
                             case ChangeReason.Add:
-                                moved.AddOrUpdate(Entered(change.Current), change.Key);
+                                moved.AddOrUpdate(Entered(change.Current, measure), change.Key);
                                 break;
                             case ChangeReason.Update:
-                                moved.AddOrUpdate(Updated(moved.Lookup(change.Key), change), change.Key);
+                                moved.AddOrUpdate(Updated(moved.Lookup(change.Key), change, measure, staleAfter(), trailBound), change.Key);
                                 break;
                             case ChangeReason.Remove:
                                 moved.Remove(change.Key);
@@ -53,24 +52,29 @@ internal static class FleetMovement
                 },
                 observer.OnError,
                 observer.OnCompleted);
+            return new CompositeDisposable(descriptions, subscription);
         });
 
-    /// <summary>A vehicle that has just entered: nothing replaced, no leg, nothing flown.</summary>
-    /// <param name="vehicle">The vehicle.</param>
-    /// <returns>Its element.</returns>
-    private static MovedVehicle Entered(TransportVehicle vehicle) =>
-        new() { Vehicle = vehicle, Replaced = Option<TransportVehicle>.None, Leg = Option<double>.None, Travelled = 0 };
+    private static MovedVehicle Entered(TransportVehicle vehicle, Func<TransportVehicle, Option<double>> measure) =>
+        new()
+        {
+            Vehicle = vehicle,
+            Replaced = Option<TransportVehicle>.None,
+            Leg = Option<double>.None,
+            Travelled = 0,
+            Trail = Appended([], vehicle, Option<TransportVehicle>.None, measure, TimeSpan.Zero, 1),
+        };
 
-    /// <summary>A vehicle an update replaced: the leg between the two positions, added to the total.</summary>
-    /// <param name="last">The element the stage last emitted for this key.</param>
-    /// <param name="change">The update.</param>
-    /// <returns>Its element.</returns>
-    /// <remarks>A missing position on either side is no leg, and the total stands rather than adding a zero.</remarks>
-    private static MovedVehicle Updated(DynamicData.Kernel.Optional<MovedVehicle> last, Change<TransportVehicle, string> change)
+    private static MovedVehicle Updated(
+        DynamicData.Kernel.Optional<MovedVehicle> last,
+        Change<TransportVehicle, string> change,
+        Func<TransportVehicle, Option<double>> measure,
+        TimeSpan staleAfter,
+        int trailBound)
     {
         if (!last.HasValue)
         {
-            return Entered(change.Current);
+            return Entered(change.Current, measure);
         }
 
         var replaced = change.Previous.HasValue ? change.Previous.Value : last.Value.Vehicle;
@@ -82,6 +86,35 @@ internal static class FleetMovement
             Replaced = Option<TransportVehicle>.Some(replaced),
             Leg = leg,
             Travelled = last.Value.Travelled + leg.IfNone(0),
+            Trail = Appended(last.Value.Trail, change.Current, replaced, measure, staleAfter, trailBound),
         };
     }
+
+    private static ImmutableList<TrailPoint> Appended(
+        ImmutableList<TrailPoint> trail,
+        TransportVehicle vehicle,
+        Option<TransportVehicle> replaced,
+        Func<TransportVehicle, Option<double>> measure,
+        TimeSpan staleAfter,
+        int bound) =>
+        vehicle.Position.Match(
+            position =>
+            {
+                if (trail.Count > 0 && trail[^1].Position == position)
+                {
+                    return trail;
+                }
+
+                var point = new TrailPoint
+                {
+                    Position = position,
+                    LastContact = vehicle.LastContact,
+                    Measure = measure(vehicle),
+                    Distance = trail.Count == 0 ? Option<double>.None : GreatCircle.Metres(trail[^1].Position, position),
+                    FollowsGap = trail.Count > 0 && replaced.Exists(previous => vehicle.LastContact - previous.LastContact > staleAfter),
+                };
+                var appended = trail.Add(point);
+                return appended.Count > bound ? appended.RemoveAt(0) : appended;
+            },
+            () => trail);
 }
