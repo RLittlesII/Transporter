@@ -1106,11 +1106,6 @@ transport validates exactly as it does today; one that registers only replay has
 no credential to be missing. § 7 § "Credential validation follows the live
 source" carries which registration holds what.
 
-_2026-10-15: `aircraft-source` B-029 was reworded — an absent credential no
-longer stops the application; the first poll that needs it fails with a warning
-naming it. The paragraph above states the behaviour as it stood when the
-question was answered._
-
 Two alternatives were named and rejected. **Leave the gate as it is** and prove
 B-011 at the chain rather than at the host: no change to a delivered claim and
 the least work, but it answers the Feature's own scenario by narrowing it to
@@ -1127,6 +1122,11 @@ stays true for every composition it was written against, and the new case is one
 it never contemplated. The claim is not amended here — it is another Feature's,
 delivered, with a § 9 row and a test behind it — so whether its wording should
 say so out loud is `aircraft-source`'s `spec-author`'s call.
+
+_2026-10-15: `aircraft-source` B-029 was reworded — an absent credential no
+longer stops the application; the first poll that needs it fails with a warning
+naming it. Row 4 above, this paragraph included, states the behaviour as it
+stood when the question was answered._
 
 **Row 5 — resolved in `0061` preparation, 2026-10-14: the MAUI head supplies
 the platform root and invokes the existing report explicitly.** The root keeps
@@ -1197,6 +1197,9 @@ outside §§ 6-7, so it does not hold the row:
   "says a missing credential fails at application startup", in the present
   tense, and the dated line R2 added covers only "the paragraph above" it.
   The dated line moved below that paragraph, or naming it, closes it.
+
+**R4 answered 2026-10-15, `implementer`:** the dated line now sits after
+"What the answer costs" and names all of row 4.
 
 Owed: the person's agreement, then the row goes 🟢.
 
