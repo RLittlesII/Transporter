@@ -20,8 +20,9 @@ over the same Houston box the aircraft use is held in a cache that the push
 client writes for itself, projected into vessels by a strategy of its own, and
 selected with the control the presenter already has. The feature also gives the
 audience the treatment the aircraft deliberately lack. A vessel that goes silent
-is gone rather than quiet, so it is removed, and `ExpireAfter` is shown where it
-belongs (README.md § "DynamicData operators"). The failure state removed is a
+is gone rather than quiet, so it is removed — by a `Filter` re-evaluated on the
+observed clock rather than `ExpireAfter`, which reads a scheduler's (§ 7,
+README.md § "DynamicData operators"). The failure state removed is a
 closing act with nothing behind it: "swap the source and nothing downstream
 changes" stated, not shown.
 
@@ -29,12 +30,12 @@ changes" stated, not shown.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 2 -->
 
-| #   | Persona                                                                                                                   | Need                                                                                              | Pain point today                                                                                                                                                           |
-| --- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Line-of-business .NET developer in the talk audience, whose data arrives by request and response (README.md § "Audience") | To watch a push feed drive the grid a poll drove a minute earlier, with nothing downstream edited | Every claim that the pipeline does not care about its source has so far been made with one source. A second source of the same shape would prove nothing                   |
-| 2   | The presenter at the closing act (README.md § "Closing act")                                                              | One tap from aircraft to ships over the same water, and one tap back                              | There is nothing to swap to. A closing act that needs a restart, a second build or a different box is a different demo, not a swap                                         |
-| 3   | The same developer, reading this repository afterwards (the repository is the takeaway)                                   | A push strategy beside a polled one, visibly different in shape and equal at the seam             | The aircraft path has a contract, a positional-row reader and a differ, and a reader can mistake all three for what makes a source swappable (ADR-0002 § "Consequences")   |
-| 4   | The same developer, whose items do not depart but stop reporting                                                          | To see removal on silence as a decision a source makes, beside the stale marker aircraft get      | Only one staleness treatment has been shown. The other, `ExpireAfter`, is listed in README.md as an operator to demonstrate, and nothing in the repository demonstrates it |
+| #   | Persona                                                                                                                   | Need                                                                                              | Pain point today                                                                                                                                                                |
+| --- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Line-of-business .NET developer in the talk audience, whose data arrives by request and response (README.md § "Audience") | To watch a push feed drive the grid a poll drove a minute earlier, with nothing downstream edited | Every claim that the pipeline does not care about its source has so far been made with one source. A second source of the same shape would prove nothing                        |
+| 2   | The presenter at the closing act (README.md § "Closing act")                                                              | One tap from aircraft to ships over the same water, and one tap back                              | There is nothing to swap to. A closing act that needs a restart, a second build or a different box is a different demo, not a swap                                              |
+| 3   | The same developer, reading this repository afterwards (the repository is the takeaway)                                   | A push strategy beside a polled one, visibly different in shape and equal at the seam             | The aircraft path has a contract, a positional-row reader and a differ, and a reader can mistake all three for what makes a source swappable (ADR-0002 § "Consequences")        |
+| 4   | The same developer, whose items do not depart but stop reporting                                                          | To see removal on silence as a decision a source makes, beside the stale marker aircraft get      | Only one staleness treatment has been shown. The other, removal on silence, is listed in README.md as an operator to demonstrate, and nothing in the repository demonstrates it |
 
 ## 3. Acceptance Criteria
 
@@ -143,8 +144,8 @@ page is the authority when the two disagree.
 
 Written 2026-10-16, against §§ 1-5 as they stood at that time, which were still
 🟡 in § 12. The person's four answers of that day are folded in. Two choices
-below change another Feature's boundary and wait on the person under
-**Decision required**.
+below change another Feature's boundary. The person took recommendation A on
+both the same day, and they stand under **Decisions taken**.
 
 The aircraft path is the template wherever a vessel can follow it, and the
 places it cannot are the point. Aircraft have a contract, a positional-row
@@ -359,35 +360,31 @@ How the parts behave:
   (§ 11 row 9 there, answered (A)). This Feature claims only that vessels are
   removed (B-021 – B-023) and supplies the description that says so.
 
-**Decision required**
+**Decisions taken**
 
-Two parts of this design change another Feature's boundary, so they are the
-person's to accept rather than this section's to settle.
+Two parts of this design change another Feature's boundary. The person
+settled both on 2026-10-16 and took recommendation A each time.
 
-> **1. The live description must swap with the source (B-026).** Today the
-> description is a `BehaviorSubject` the OpenSky registration fills once with
-> the aircraft's. Nothing swaps it, so a vessel fleet would be read through
-> aircraft columns and groupings.
->
-> | Option | Summary                                                                                                                                        | Tradeoff                                                                                                                                                                            |
-> | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | A.     | `TrackerSourceEntry` gains a `Description`, and `SwappingTrackerSource` publishes the selected entry's description, switched like its `Status` | Amends ADR-0015's record and moves the description's registration from OpenSky to tracking. One switch decides both the vehicles and their description, so the two cannot disagree. |
-> | B.     | A second subject the swap actor writes on each swap                                                                                            | Leaves the record alone, but there are now two things to keep in step and a window in which the vehicles and the description disagree.                                              |
->
-> **Recommendation:** A.
-> **Awaiting:** the person.
-
-> **2. Removal on silence, and the operator README.md names.** README.md
-> § "DynamicData operators" promises `ExpireAfter`, but `ExpireAfter` measures
-> against a scheduler's clock, and B-022 forbids any clock but the observed one.
->
-> | Option | Summary                                                                                                                                | Tradeoff                                                                                                                                                                |
-> | ------ | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | A.     | A dynamic `Filter` over `IsStale(clock.Current, silentAfter)`, re-evaluated on each observed tick, where the description says `Remove` | Honours B-022 with the operator the pipeline already uses for staleness. The talk shows removal with `Filter`, and README.md's `ExpireAfter` line is amended to say so. |
-> | B.     | `ExpireAfter` on a scheduler whose `Now` is the observed clock                                                                         | Shows the named operator, but adds a hand-written scheduler that must be correct for every operator that ever runs on it.                                               |
->
-> **Recommendation:** A.
-> **Awaiting:** the person, since it amends README.md.
+1. **The live description swaps with the source (B-026).** Today the
+   description is a `BehaviorSubject` that the OpenSky registration fills once
+   with the aircraft's, and nothing swaps it. `TrackerSourceEntry` gains a
+   `Description`. `SwappingTrackerSource` publishes the selected entry's
+   description, switched like its `Status`. One switch decides both the
+   vehicles and their description, so the two cannot disagree. The
+   description's registration moves from OpenSky to tracking, and ADR-0015
+   records the amendment. Rejected: a second subject the swap actor writes on
+   each swap. It leaves two things to keep in step, and a window in which they
+   disagree.
+2. **Silence removal is a `Filter`, not `ExpireAfter`.** `ExpireAfter`
+   measures against a scheduler's clock, and B-022 forbids any clock but the
+   observed one. The design uses a dynamic `Filter` over
+   `IsStale(clock.Current, silentAfter)`, re-evaluated on each observed tick,
+   applied where the description says `Remove`. That is the operator the
+   pipeline already uses for staleness. README.md § "DynamicData operators"
+   and § "Data sources" are amended to say the talk shows removal with
+   `Filter`. Rejected: `ExpireAfter` on a scheduler whose `Now` is the
+   observed clock. It shows the named operator, but it adds a hand-written
+   scheduler that must be correct for every operator that ever runs on it.
 
 ## 8. Testing Strategy
 
@@ -448,11 +445,11 @@ None yet.
 
 <!-- Rules: ../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status                                                               |
-| -------- | ----------- | -------------------------------------------------------------------- |
-| §§ 1-5   | spec-author | 🟡 Draft                                                             |
-| §§ 6-7   | implementer | 🟡 Draft — written 2026-10-16; two decisions in § 7 await the person |
-| §§ 8-9   | test-writer | 🟡 Draft — written 2026-10-16                                        |
+| Sections | Owner       | Status                                                  |
+| -------- | ----------- | ------------------------------------------------------- |
+| §§ 1-5   | spec-author | 🟡 Draft                                                |
+| §§ 6-7   | implementer | 🟡 Draft — written 2026-10-16; both § 7 decisions taken |
+| §§ 8-9   | test-writer | 🟡 Draft — written 2026-10-16                           |
 
 ## Decisions
 
@@ -475,6 +472,13 @@ The person made four more calls on 2026-10-16, answering § 11:
   § 11 row 9, option A).
 
 The last three are answers to their rows and need no record beyond them.
+
+Two more calls that day settled § 7's open choices, each recommendation A:
+
+- The description swaps with the source through `TrackerSourceEntry`, which
+  amends ADR-0015.
+- Silence removal is a dynamic `Filter` on the observed clock, not
+  `ExpireAfter`, which amends README.md.
 
 ## Tasks
 
