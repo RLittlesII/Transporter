@@ -35,6 +35,8 @@ internal sealed class FleetSourceDescriptionFixture : AutoFixtureBase<FleetSourc
     /// <returns>The fixture, so building chains.</returns>
     public FleetSourceDescriptionFixture WithDetail(IReadOnlyList<FleetColumn> detail) => With(ref _detail, detail);
 
+    public FleetSourceDescriptionFixture WithTrail(FleetTrailMeasure trail) => With(ref _trail, trail);
+
     /// <summary>Takes the subject, as every fixture here is taken.</summary>
     /// <param name="fixture">The fixture to build.</param>
     public static implicit operator FleetSourceDescription(FleetSourceDescriptionFixture fixture) => fixture.Build();
@@ -46,6 +48,7 @@ internal sealed class FleetSourceDescriptionFixture : AutoFixtureBase<FleetSourc
             Groupings = _groupings,
             Filters = _filters,
             Detail = _detail,
+            Trail = _trail,
         };
 
     private IReadOnlyList<FleetColumn> _columns =
@@ -62,4 +65,6 @@ internal sealed class FleetSourceDescriptionFixture : AutoFixtureBase<FleetSourc
     private IReadOnlyList<FleetFilterChoice> _filters = [];
 
     private IReadOnlyList<FleetColumn> _detail = [];
+
+    private FleetTrailMeasure _trail = new FleetTrailMeasureFixture();
 }

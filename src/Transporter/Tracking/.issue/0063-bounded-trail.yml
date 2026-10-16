@@ -2,7 +2,7 @@ id: "0063"
 type: task
 title: Carry a bounded trail on the element, broken at a gap and measured by the description
 
-status: ready-for-implementation
+status: done
 
 priority: high
 value: 4
@@ -26,8 +26,8 @@ claims:
   - B-037
 
 created: "2026-10-08"
-updated: "2026-10-14"
-closed: null
+updated: "2026-10-16"
+closed: "2026-10-16"
 
 summary: |
   The path a vehicle flew, on the element rather than in a store beside the
@@ -60,6 +60,24 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-16 — implementer and test-writer — reused FleetMovement.Move,
+    GreatCircle and the existing stale mark. The movement element holds the
+    immutable trail; Mark copies it without recomputing points. The aircraft
+    measure reuses AircraftFleetDescription.Altitude, keeping the concrete
+    type within the description. No separate trail store or new stage."
+  - "2026-10-16 — verification — all 15 new trail cases failed on missing
+    behavior before implementation; all 25 movement cases then passed.
+    ./build.sh passed with all 430 tests, and the post-build focused run passed
+    25/25. Mac Catalyst displayed 12 synthetic aircraft in four groups after
+    selecting Recorded aircraft; the smoke bundle packaged only temporary
+    replay settings, without provider credentials. The smoke process was
+    stopped and its generated recording removed. No visible trail surface is
+    added here; item 0071 draws it."
+  - "2026-10-16 — the person — requested /deliver-change 0063 after being
+    told that §§ 1-5 remain unsigned. This named-item instruction authorizes
+    proceeding under the § 12 waiver for 0063 only; the Feature-wide sign-off
+    stays unchanged. B-034, B-035 and B-037 were reviewed in full on 2026-10-14.
+    Rejected: approving unrelated vessel-treatment claims to start this item."
   - "2026-10-08 — the person — an update that changes the altitude alone adds
     no trail point; B-034 and its scenario stand, and this summary, which said
     the opposite, is corrected. A parked aircraft's barometric jitter would
