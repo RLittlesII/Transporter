@@ -30,11 +30,16 @@ updated: "2026-10-15"
 closed: null
 
 summary: |
-  The OpenSky poller writes ADR-0013's seam. Each time it schedules a poll it
-  reports the instant the poll is due (B-054), from the interval (B-050) and
-  when the last poll was made, on the scheduler it already runs on; a demanded
-  poll that is performed (B-053) moves it. When OpenSky answers `429` it reports
-  the refusal and the interval `X-Rate-Limit-Retry-After-Seconds` gave (B-055).
+  The OpenSky poller writes ADR-0013's seam. After every poll it performs,
+  cadence or demanded, it reports the instant the next is due (B-054), from
+  the interval (B-050) or a `429`'s deferral and when the poll was made, on the
+  scheduler it already runs on. When OpenSky answers `429` it reports the
+  refusal and the interval `X-Rate-Limit-Retry-After-Seconds` gave (B-055).
+
+  The client holds that due instant, and the loop sleeps until it. Through
+  `IDemandedPoll` the actor reads it and refuses a demand until it, so a
+  demand inside a `429` deferral spends no credit (B-053's deferral clause,
+  amended 2026-10-15).
 
   The swap decorator selects the status with the live strategy (B-056), so a
   swap replaces it and a strategy with no poller contributes none.

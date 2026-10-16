@@ -350,6 +350,12 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      When the poll made at 14:33:07 is applied
      Then the next poll is reported due at 14:33:22
 
+  @B-054
+  Scenario: A demanded poll with no cadence running says when the next is due
+    Given an aircraft source on a fifteen-second interval whose cadence is not running
+     When a poll is demanded and performed at 14:40:00 on the poller's scheduler
+     Then the next poll is reported due at 14:40:15, on the read-side seam beside the tracker source
+
   @B-055
   Scenario: A refusal is reported with the interval OpenSky asked for
     Given OpenSky answers the next poll with 429 and X-Rate-Limit-Retry-After-Seconds of 42

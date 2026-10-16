@@ -2,7 +2,7 @@
 title: "Specification: Aircraft source"
 description: "Poll OpenSky through a typed API contract, cache snapshots per client, project them to domain vehicles in a per-type strategy, and swap strategies behind a decorator the fleet tracker wraps."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Aircraft source
@@ -937,8 +937,9 @@ implementation of B-053 goes quietly wrong:
   Measuring from the last poll alone performed a demand twenty seconds into a
   forty-two-second deferral and spent the credit OpenSky had asked the source
   not to (§ 12, 2026-10-15 re-read finding 1). With the cadence running, a
-  demand is therefore performed only when the loop is about to poll anyway;
-  the gesture's use is a source whose cadence has stopped.
+  demand is therefore performed only at the instant the loop is due, and a
+  press's visible effect is `fleet-dashboard` B-028's indicator, which that
+  claim drives from the gesture and clears on its cap.
 - **The client stamps that instant immediately before it calls the provider**,
   not after the response. An attempt is what spends the credit, whatever comes
   back, so a throttled or failed poll closes the window exactly as a successful
@@ -1099,7 +1100,7 @@ clause names.
 **Scenarios**
 
 Full Gherkin lives in [`aircraft-source.feature`](aircraft-source.feature)
-beside this file — sixty scenarios, each tagged with the `@B-00n` it
+beside this file — sixty-one scenarios, each tagged with the `@B-00n` it
 proves. Scenarios are documentation; the xUnit tests and the analyzer's
 diagnostics are what execute.
 
@@ -1112,10 +1113,11 @@ diagnostics are what execute.
   B-021, B-036, B-037, B-044 – B-049
 - Data-driven → B-018 – B-020, B-022, B-035
 
-Ten claims carry two scenarios each, because each states two things a single
+Eleven claims carry two scenarios each, because each states two things a single
 scenario would have had to prove at once — B-026's expiry and its `401`,
 B-028's deferral and its every-other-status clause, B-051's marking and its
-threshold, B-053's interval and a `429`'s deferral. B-058 carries three: its
+threshold, B-053's interval and a `429`'s deferral, B-054's cadence and a
+demand performed with none running. B-058 carries three: its
 store, its absence, and a setting both documents name, which is the only case
 in which "over" can be read. B-029 carries three: a host starting, the first
 poll naming the credential, and a failed poll leaving the stream open. § 9 still
@@ -1702,11 +1704,11 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
@@ -2245,6 +2247,23 @@ Three findings, none blocking:
 **Recommended: §§ 1-5, §§ 6-7 and §§ 8-9 to 🟢**, with findings 1 and 2 fixed
 beside them. Agreeing is the person's decision. No row here is set 🟢 by this
 read.
+
+**Answered 2026-10-15, by the owning roles — the read's three findings.**
+
+1. `implementer`: § 7's B-053 bullet says a demand is performed only at the
+   instant the loop is due, and a press's visible effect is `fleet-dashboard`
+   B-028's indicator.
+2. `spec-author` and `test-writer`: a second `@B-054` scenario performs a
+   demand with no cadence running and reports the next poll one interval
+   later, which is the case § 9's row plans. § 8 says sixty-one scenarios and
+   eleven claims with two.
+3. `0068`'s summary names the held due instant and B-053's deferral clause.
+
+**Agreed 2026-10-15 by the person — all three rows to 🟢**, with findings 1 and
+2 fixed in the text agreed. `spec_status` is `approved`. § 9 still has seven
+`Missing` rows, which block their items reaching `done`, not this agreement
+(lesson 0007). `0068` and `0093` may now be taken. A change to a signed
+section lowers its row again.
 
 ## Decisions
 
