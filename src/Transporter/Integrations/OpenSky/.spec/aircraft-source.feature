@@ -330,6 +330,15 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And a poll is demanded
      Then one call is made and its snapshot reaches the cache
 
+  @B-053
+  Scenario: A demanded poll inside a 429's deferral is refused
+    Given an aircraft source polling on a fifteen-second interval
+      And a poll at 14:32:25 refused with a retry-after of 42 seconds
+     When a poll is demanded at 14:32:45, after the interval but before 14:33:07
+     Then no call is made to OpenSky
+      And no credit is spent
+      And the next poll is still reported due at 14:33:07
+
   @B-054
   Scenario: The poller says when its next poll is due
     Given an aircraft source polling on a fifteen-second interval
@@ -338,8 +347,14 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
       And nothing about it arrives through the changeset stream
      When the poll made at 14:32:25 is refused with a retry-after of 42 seconds
      Then the next poll is reported due at 14:33:07
-     When a poll is demanded at 14:32:45, the interval having elapsed since the refused one
-     Then the next poll is reported due at 14:33:00
+     When the poll made at 14:33:07 is applied
+     Then the next poll is reported due at 14:33:22
+
+  @B-054
+  Scenario: A demanded poll with no cadence running says when the next is due
+    Given an aircraft source on a fifteen-second interval whose cadence is not running
+     When a poll is demanded and performed at 14:40:00 on the poller's scheduler
+     Then the next poll is reported due at 14:40:15, on the read-side seam beside the tracker source
 
   @B-055
   Scenario: A refusal is reported with the interval OpenSky asked for
