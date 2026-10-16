@@ -2,7 +2,7 @@ id: "0068"
 type: task
 title: Report the next poll and a refusal on the poll-status seam
 
-status: ready-for-architecture
+status: in-progress
 
 priority: medium
 value: 3
