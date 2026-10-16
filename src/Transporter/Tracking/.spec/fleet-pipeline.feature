@@ -647,9 +647,9 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
 
   @B-040
   Scenario: The poll status is re-published, not produced
-    Given a live source reporting its next poll due at 14:32:25
+    Given a live source reporting a poll made at 14:32:10 that set its next poll due at 14:32:25
      When a consumer subscribes to the tracker's poll status
-     Then it reads 14:32:25
+     Then it reads the poll made at 14:32:10 and the next due at 14:32:25
      When the source reports a refusal asking for 42 seconds
      Then the status carries the refusal and the 42 seconds
       And the tracker started no timer and read no clock to say so

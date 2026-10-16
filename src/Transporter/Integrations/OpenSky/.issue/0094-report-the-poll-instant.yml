@@ -1,0 +1,60 @@
+id: "0094"
+type: task
+title: Report the instant each poll was made beside the next one due
+
+status: ready-for-architecture
+
+priority: medium
+value: 3
+risk: 2
+rank: 59
+
+parent: "0001"
+children: []
+
+depends_on:
+  - "0068"
+blocks:
+  - "0095"
+spikes: []
+
+spec: src/Transporter/Integrations/OpenSky/.spec/README.md
+
+claims:
+  - B-054
+
+created: "2026-10-15"
+updated: "2026-10-15"
+closed: null
+
+summary: |
+  Cut on 2026-10-15 from `fleet-dashboard` decisions/0004. The person chose to
+  measure the next-poll countdown from the instant the poll was made, so the
+  poll status carries that instant beside the due one: `fleet-pipeline` B-040
+  gains it on the status, and B-054 has the poller report it. The poller
+  already reads it on its scheduler to compute the due instant, so nothing new
+  reads a clock.
+
+  Carries `fleet-pipeline` B-040's new clause as well, the way
+  `fleet-dashboard` `0037` carried `fleet-pipeline` B-029: the status is one
+  record, and the member is no use until something writes it.
+
+  Waits on `0068`, which wrote the code this extends. Blocks `fleet-dashboard`
+  `0095`, which binds the new member. Does not move to `in-progress` until
+  this specification's §§ 1-5 row is 🟢 again, nor until `fleet-pipeline`
+  B-040's amendment has been read.
+
+  The trap is supplying the instant from the response — OpenSky's `time`,
+  which is the observed instant (B-003) and is the skew decisions/0004
+  removes.
+
+acceptance_criteria:
+  - "B-054 — the time the poll was made, reported with the due instant, cadence or demanded, refused or applied."
+  - "`fleet-pipeline` B-040 — the poll's own instant re-published on the tracker with the rest of the status."
+  - "§ 9 of both specifications carries a row naming a test for each id above."
+
+decisions: []
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "The countdown itself — `fleet-dashboard` `0095`."
