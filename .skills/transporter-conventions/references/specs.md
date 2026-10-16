@@ -30,6 +30,7 @@ specification with it.
 | `fleet-pipeline`    | `src/Transporter/Tracking`             |
 | `fleet-dashboard`   | `src/Transporter/Features/Fleet`       |
 | `replay-source`     | `features/replay-source`               |
+| `vessel-source`     | `features/vessel-source`               |
 
 **`features/<slug>/` is where a specification waits for its code**, and the
 only home a Feature with no implementation has — `replay-source` is there

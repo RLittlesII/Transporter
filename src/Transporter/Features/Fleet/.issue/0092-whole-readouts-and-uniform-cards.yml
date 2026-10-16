@@ -1,0 +1,53 @@
+id: "0092"
+type: bug
+title: Show every readout whole, keep a stale card the size of its neighbours, and lay a card's views out once
+
+status: done
+
+priority: high
+value: 4
+risk: 1
+rank: 95
+
+parent: "0035"
+children: []
+
+depends_on: []
+blocks: []
+spikes: []
+
+spec: src/Transporter/Features/Fleet/.spec/README.md
+
+claims:
+  - B-006
+  - B-008
+  - B-029
+
+created: "2026-10-15"
+updated: "2026-10-15"
+closed: "2026-10-15"
+
+summary: |
+  The demo-readiness review of 2026-10-15 ran the Mac Catalyst head on the
+  30-minute aircraft recording and found three defects on the fleet cards.
+  A vertical rate reads "+1,919 ft" or "−705 ft/m": the cell is cut to its
+  column, and a cut "ft/min" reads as an altitude. A stale card is taller
+  than its neighbours, because its "Vertical rate" caption wraps. And at
+  startup MAUI logs "is already a child of" for every card's readouts,
+  labels, badge and edge.
+
+acceptance_criteria:
+  - "No \"already a child\" warning at startup on the Mac Catalyst head."
+  - "Every readout's value shows whole, the four-digit signed vertical rate included."
+  - "A stale card and a fresh card in one row are the same height."
+  - "B-006 — a card still lays its views out only when the roles change, and fills them on a poll."
+  - "B-008 and B-029 — the stale mark and the description's roles are unchanged."
+
+decisions:
+  - "2026-10-15 — implementer — two readout columns, not three: at the card's 320-point minimum a third of the body is about 90 points and a signed four-digit rate in feet per minute is about 140 in the 18-point monospace face. Rejected: a smaller value face, which still clips at three; a wider card minimum, which drops a column of cards from the stage; truncating with an ellipsis, which still hides the unit. The card is one readout row taller."
+  - "2026-10-15 — implementer — the stale edge overlays the body's left padding instead of taking a column, so a status never changes the body's width (B-008's mark is unchanged)."
+  - "2026-10-15 — implementer — no unit test: the three causes are the head's layout, which § 4 row 13 makes a review, and no test project references src/Gui (ADR-0016). Verified on the running head; a claim for it is § 11 row 10, owed to the person."
+
+out_of_scope:
+  - "Everything in § 5 of the specification."
+  - "A new claim for a readable card — proposed in § 11, owed to the person, because a § 3 change reopens §§ 1-5."

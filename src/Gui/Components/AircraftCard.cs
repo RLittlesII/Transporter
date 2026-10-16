@@ -40,6 +40,13 @@ public sealed class AircraftCard : ContentView
         _leg = new Readout { Caption = "Leg" };
         _travelled = new Readout { Caption = "Flown" };
         _age = new Label { Style = FlightDeckStyles.DataSmall };
+        _values = new Grid
+        {
+            ColumnDefinitions = Columns(ReadoutColumns),
+            ColumnSpacing = FlightDeck.Space3,
+            RowSpacing = FlightDeck.Space3,
+        };
+        _frame.Content = Compose();
         Content = _frame;
         Padding = 0;
 
@@ -135,36 +142,10 @@ public sealed class AircraftCard : ContentView
         return columns;
     }
 
-    /// <summary>Builds the layout for the roles in force: the only place a child is created.</summary>
-    private void Lay()
+    /// <summary>Builds the card's frame once; the stale edge overlays the body's padding, so a status never narrows it.</summary>
+    /// <returns>The frame's content.</returns>
+    private Grid Compose()
     {
-        var card = Card ?? new FleetCard();
-        _readouts.Clear();
-        foreach (var readout in card.Readouts)
-        {
-            _readouts.Add((readout, new Readout { Caption = readout.Column.Name }));
-        }
-
-        var values = new Grid
-        {
-            ColumnDefinitions = Columns(3),
-            ColumnSpacing = FlightDeck.Space3,
-            RowSpacing = FlightDeck.Space3,
-        };
-        var cells = _readouts.Select(static pair => (View) pair.View).Concat([_leg, _travelled]).ToArray();
-        for (var index = 0; index < cells.Length; index++)
-        {
-            if (index % 3 == 0)
-            {
-                values.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            }
-
-            values.Add(cells[index], index % 3, index / 3);
-        }
-
-        _place.IsVisible = card.Place.IsSome;
-        _subtitle.IsVisible = card.Subtitle.IsSome;
-
         var header = new Grid
         {
             ColumnDefinitions = new ColumnDefinitionCollection(new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)),
@@ -181,7 +162,7 @@ public sealed class AircraftCard : ContentView
             {
                 header,
                 _place,
-                values,
+                _values,
                 new BoxView { Color = FlightDeck.Line, HeightRequest = 1 },
                 new HorizontalStackLayout
                 {
@@ -191,14 +172,35 @@ public sealed class AircraftCard : ContentView
             },
         };
 
-        var row = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitionCollection(new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)),
-        };
-        row.Add(_edge, 0, 0);
-        row.Add(body, 1, 0);
-        _frame.Content = row;
+        _edge.HorizontalOptions = LayoutOptions.Start;
+        return new Grid { Children = { body, _edge } };
+    }
 
+    /// <summary>Places a readout for each role in force: the only place a readout is created.</summary>
+    private void Lay()
+    {
+        var card = Card ?? new FleetCard();
+        _readouts.Clear();
+        foreach (var readout in card.Readouts)
+        {
+            _readouts.Add((readout, new Readout { Caption = readout.Column.Name }));
+        }
+
+        _values.Clear();
+        _values.RowDefinitions.Clear();
+        var cells = _readouts.Select(static pair => (View) pair.View).Concat([_leg, _travelled]).ToArray();
+        for (var index = 0; index < cells.Length; index++)
+        {
+            if (index % ReadoutColumns == 0)
+            {
+                _values.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            }
+
+            _values.Add(cells[index], index % ReadoutColumns, index / ReadoutColumns);
+        }
+
+        _place.IsVisible = card.Place.IsSome;
+        _subtitle.IsVisible = card.Subtitle.IsSome;
         Fill(before: null);
     }
 
@@ -262,6 +264,9 @@ public sealed class AircraftCard : ContentView
         _frame.Background = IsChosen ? FlightDeck.AccentSoft : FlightDeck.SurfaceRaised;
     }
 
+    /// <summary>Two, so the widest cell — a signed four-digit rate in feet per minute — reads whole at the card's minimum width.</summary>
+    private const int ReadoutColumns = 2;
+
     private readonly List<(FleetReadout Readout, Readout View)> _readouts = [];
     private readonly Border _frame;
     private readonly BoxView _edge;
@@ -272,4 +277,5 @@ public sealed class AircraftCard : ContentView
     private readonly Readout _leg;
     private readonly Readout _travelled;
     private readonly Label _age;
+    private readonly Grid _values;
 }

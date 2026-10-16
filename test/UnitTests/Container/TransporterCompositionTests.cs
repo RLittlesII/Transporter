@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Akka.Hosting;
 using AwesomeAssertions;
 using Microsoft.Extensions.Configuration;
@@ -8,8 +10,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Reactive.Testing;
 using Transporter.Container;
 using Transporter.Integrations.OpenSky;
+using Transporter.Integrations.OpenSky.Container;
+using Transporter.Recording;
 using Transporter.Tracking;
 using Transporter.Tracking.Sources;
+using Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 namespace Transporter.UnitTests.Container;
 
@@ -111,13 +116,61 @@ public class TransporterCompositionTests
         source.Should().BeOfType<SwappingTrackerSource>("a consumer resolving the seam gets the selector");
     }
 
+    /// <summary>
+    /// replay-source B-028. The decorator starts on the first strategy registered, so the
+    /// application's own order is what makes a run start live: a recording named in configuration
+    /// adds a source reachable only by a swap, never the one a run starts on.
+    /// </summary>
+    [Fact]
+    public void GivenARecordingIsNamed_WhenTheApplicationIsComposed_ThenTheLiveSourceIsSelectedAndTheRecordingFollowsIt()
+    {
+        // Given
+        using var recordings = new TemporaryRecordings(Rehearsal, ReplayRecordingCases.SpanningSixMinutes);
+        using var host = Application(recordings.Root, Rehearsal);
+
+        // When
+        var selector = (SwappingTrackerSource) host.Services.GetRequiredService<ITrackerSource>();
+
+        // Then
+        selector.Entries.Select(static entry => entry.Name)
+            .Should()
+            .Equal(
+                [OpenSkyRegistration.LiveAircraft, OpenSkyReplayRegistration.RecordedAircraft],
+                "the live source registers first and is the one the selector starts on; the recording follows it");
+    }
+
+    /// <summary>
+    /// replay-source B-028's second sentence. No configuration value chooses the starting source:
+    /// naming a recording, or naming none, leaves a run starting on the live one.
+    /// </summary>
+    /// <param name="named">Whether configuration names an aircraft recording.</param>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void GivenWhateverConfigurationNames_WhenTheApplicationIsComposed_ThenTheSourceARunStartsOnIsLive(bool named)
+    {
+        // Given
+        using var recordings = new TemporaryRecordings(Rehearsal, ReplayRecordingCases.SpanningSixMinutes);
+        using var host = Application(recordings.Root, named ? Rehearsal : null);
+
+        // When
+        var selector = (SwappingTrackerSource) host.Services.GetRequiredService<ITrackerSource>();
+
+        // Then
+        selector.Entries[0].Name.Should().Be(OpenSkyRegistration.LiveAircraft, "the selector starts on the first entry");
+    }
+
     /// <summary>The application's own composition, over settings that carry no credential.</summary>
+    /// <param name="root">The recordings root, or none.</param>
+    /// <param name="aircraft">The aircraft recording configuration names, or none.</param>
     /// <returns>The host, which the caller disposes.</returns>
-    private static IHost Application()
+    private static IHost Application(string? root = null, string? aircraft = null)
     {
         var settings = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
+                [$"{RecordingOptions.Section}:{nameof(RecordingOptions.Root)}"] = root,
+                [$"{ReplayOptions.Section}:{nameof(ReplayOptions.Aircraft)}"] = aircraft,
                 [$"{OpenSkyOptions.Section}:{nameof(OpenSkyOptions.BaseUrl)}"] = OpenSkyOptions.DefaultBaseUrl,
                 [$"{OpenSkyOptions.Section}:Box:LatitudeMinimum"] = "28.8",
                 [$"{OpenSkyOptions.Section}:Box:LongitudeMinimum"] = "-96.0",
@@ -132,4 +185,22 @@ public class TransporterCompositionTests
                 .AddAkka("transporter", static _ => { }))
             .Build();
     }
+
+    /// <summary>A recordings root holding one synthetic recording, deleted on disposal (B-006).</summary>
+    private sealed class TemporaryRecordings : IDisposable
+    {
+        public TemporaryRecordings(string name, string lines)
+        {
+            Root = Directory.CreateTempSubdirectory("transporter-recordings-").FullName;
+            File.WriteAllText(Path.Combine(Root, name), lines);
+        }
+
+        public string Root { get; }
+
+        /// <inheritdoc/>
+        public void Dispose() => Directory.Delete(Root, recursive: true);
+    }
+
+    /// <summary>The recording a rehearsal left behind, named the way ADR-0004 names one.</summary>
+    private const string Rehearsal = "aircraft-2026-10-04T14-32-11Z.ndjson";
 }
