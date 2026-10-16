@@ -2,7 +2,7 @@ id: "0072"
 type: task
 title: Show when the next poll is due, and when the provider is refusing
 
-status: in-review
+status: done
 
 priority: medium
 value: 3
@@ -24,7 +24,7 @@ claims:
 
 created: "2026-10-08"
 updated: "2026-10-15"
-closed: null
+closed: "2026-10-15"
 
 summary: |
   The top bar shows when the next poll is due and, while the provider refuses,
@@ -52,6 +52,7 @@ decisions:
   - "2026-10-15 — `FleetPollViewModel` exposes `NextDue` and `RefusedFor` as nullable values through `ToNullable()`, since a binding cannot read an `Option` (`language-ext-usage` § \"Where it stops\")."
   - "2026-10-15 — The throttled interval is a caption beside the badge, not the badge's text: `StatusBadge` reads its text from its kind. § 7 amended."
   - "2026-10-15 — The countdown sits in the summary strip after the three counts. Until `aircraft-source` `0068` lands OpenSky reports `PollStatus.None`, so the strip shows neither the countdown nor the badge, and the owed animation review waits on `0068`."
+  - "2026-10-15 — The owed review was performed on `0068`'s branch once OpenSky reported a status, in the iOS Simulator against live OpenSky with and without Reduce Motion; fleet § 9 B-036 reads `Verified`."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
 using Transporter.Integrations.OpenSky.Contracts;
 using Transporter.Integrations.OpenSky.Model;
+using Transporter.Integrations.OpenSky.Polling;
 using Transporter.Integrations.OpenSky.Replay;
 using Transporter.Recording;
 using Transporter.Tracking;
@@ -141,12 +142,15 @@ public static class OpenSkyReplayRegistration
 
         services.AddKeyedSingleton<IOptions<OpenSkyOptions>>(Chain, static (_, _) => Options.Create(Replayed));
 
+        // The client's status writer is one nothing reads: a recording's cadence is its recorded
+        // spacing, so the replay entry reports NoPollStatus rather than this client's due instants (B-056).
         services.AddKeyedSingleton<IAircraftSnapshotClient>(
             Chain,
             static (provider, key) => new AircraftSnapshotClient(
                 provider.GetRequiredKeyedService<IOpenSkyApi>(key),
                 provider.GetRequiredKeyedService<SourceCache<AircraftSnapshot, string>>(key),
                 provider.GetRequiredService<IObservedClockWriter>(),
+                new AircraftPollStatus(),
                 provider.GetRequiredKeyedService<IOptions<OpenSkyOptions>>(key),
                 provider.GetRequiredService<ISchedulerProvider>(),
                 provider.GetRequiredService<ILogger<AircraftSnapshotClient>>()));
@@ -164,7 +168,10 @@ public static class OpenSkyReplayRegistration
         services.AddSingleton<ITrackerSourceStrategy>(
             static provider => provider.GetRequiredService<IAircraftReplayTrackerSource>());
         services.AddSingleton(static provider =>
-            new TrackerSourceEntry(provider.GetRequiredService<IAircraftReplayTrackerSource>(), RecordedAircraft));
+            new TrackerSourceEntry(
+                provider.GetRequiredService<IAircraftReplayTrackerSource>(),
+                RecordedAircraft,
+                new NoPollStatus()));
 
         return services;
     }

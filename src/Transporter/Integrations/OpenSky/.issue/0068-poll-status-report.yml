@@ -2,7 +2,7 @@ id: "0068"
 type: task
 title: Report the next poll and a refusal on the poll-status seam
 
-status: ready-for-architecture
+status: done
 
 priority: medium
 value: 3
@@ -27,7 +27,7 @@ claims:
 
 created: "2026-10-08"
 updated: "2026-10-15"
-closed: null
+closed: "2026-10-15"
 
 summary: |
   The OpenSky poller writes ADR-0013's seam. After every poll it performs,

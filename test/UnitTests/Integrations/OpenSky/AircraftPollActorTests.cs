@@ -106,6 +106,45 @@ public class AircraftPollActorTests : TestKit
         AwaitAssert(() => cache.Items.Should().HaveCount(3));
     }
 
+    /// <summary>
+    /// B-053, its deferral clause. A <c>429</c> asked for 42 seconds, and a press twenty seconds
+    /// later — past the fifteen-second interval, inside the deferral — spends nothing. A window
+    /// measured from the last poll alone performs it and spends the credit OpenSky asked the source
+    /// not to.
+    /// </summary>
+    /// <returns>The running test.</returns>
+    [Fact]
+    public async Task GivenAPollDeferredByA429PastTheInterval_WhenAPollIsDemandedInsideTheDeferral_ThenItIsRefusedSilently()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var options = Options.Create(new OpenSkyOptions { Box = Houston, PollInterval = TimeSpan.FromSeconds(15) });
+        var api = Substitute.For<IOpenSkyApi>();
+        api.GetStates(
+                Arg.Any<double>(),
+                Arg.Any<double>(),
+                Arg.Any<double>(),
+                Arg.Any<double>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(static _ => Task.FromException<OpenSkyStatesResponse>(new OpenSkyThrottledException(TimeSpan.FromSeconds(42))));
+        AircraftSnapshotClient client = new AircraftSnapshotClientFixture()
+            .WithApi(api)
+            .WithProvider(schedulers)
+            .WithOptions(options);
+        await client.PollNow(CancellationToken.None);
+        scheduler.AdvanceBy(TimeSpan.FromSeconds(20).Ticks);
+        var sut = Sys.ActorOf(Starts(client, options, schedulers));
+
+        // When
+        sut.Tell(DemandPoll.Instance, TestActor);
+
+        // Then
+        ExpectNoMsg(TimeSpan.FromMilliseconds(250));
+        api.ReceivedCalls().Should().HaveCount(1, "the demand fell inside the deferral the 429 asked for");
+    }
+
     /// <summary>What the system starts the actor from.</summary>
     /// <param name="poll">The poller, which is the live client rather than a double of it.</param>
     /// <param name="options">The interval the refusal window is.</param>

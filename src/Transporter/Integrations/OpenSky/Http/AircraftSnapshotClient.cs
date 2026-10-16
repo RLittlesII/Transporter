@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
 using Transporter.Integrations.OpenSky.Contracts;
+using Transporter.Integrations.OpenSky.Polling;
 using Transporter.Tracking;
 
 namespace Transporter.Integrations.OpenSky;
@@ -32,6 +34,7 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
     /// <param name="api">The API contract to poll (B-015).</param>
     /// <param name="cache">The plain keyed store each fetched set is diffed into (B-015, B-023).</param>
     /// <param name="clock">The write side of the observed clock, reported to as the set is applied (B-003).</param>
+    /// <param name="status">Where each poll reports when the next is due, and a refusal (B-054, B-055).</param>
     /// <param name="options">The box and the interval (B-024, B-050).</param>
     /// <param name="schedulers">Where a poll is scheduled and time is read (§ 4 row 14).</param>
     /// <param name="logger">Where an excluded row and a throttle are recorded (B-022, B-028).</param>
@@ -39,6 +42,7 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
         IOpenSkyApi api,
         SourceCache<AircraftSnapshot, string> cache,
         IObservedClockWriter clock,
+        AircraftPollStatus status,
         IOptions<OpenSkyOptions> options,
         ISchedulerProvider schedulers,
         ILogger<AircraftSnapshotClient> logger)
@@ -46,6 +50,7 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
         _api = api;
         _cache = cache;
         _clock = clock;
+        _status = status;
         _options = options;
         _schedulers = schedulers;
         _logger = logger;
@@ -78,30 +83,49 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
 
     /// <inheritdoc/>
     /// <remarks>
+    /// Held rather than recomputed from <see cref="LastPoll"/>, because after a <c>429</c> it is the
+    /// deferred instant and not the interval (B-028, B-055); kept as ticks for the reason
+    /// <see cref="LastPoll"/> is.
+    /// </remarks>
+    public Option<DateTimeOffset> NextDue =>
+        Interlocked.Read(ref _nextDue) switch
+        {
+            NeverPolled => Option<DateTimeOffset>.None,
+            var ticks => new DateTimeOffset(ticks, TimeSpan.Zero),
+        };
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// <para>
     /// Where this is called from is not this client's business — the poller's hosting is § 5
     /// row 16's — and the thread is a stated choice rather than an ambient one: a poll runs on
     /// <see cref="ISchedulerProvider.BackgroundThread"/>. What is this client's is that the interval
     /// comes from its options, the wait after
     /// a throttle comes from the provider's header, and a failed poll neither completes nor
     /// error-terminates <see cref="Snapshots"/> (B-028, B-029).
+    /// </para>
+    /// <para>
+    /// Disposing it writes <see cref="PollStatus.None"/>, so a stopped poller never reports a due
+    /// instant it will not keep (B-056).
+    /// </para>
     /// </remarks>
     public IDisposable Poll() =>
-        _schedulers.BackgroundThread.ScheduleAsync(async (scheduler, cancellation) =>
-        {
-            while (!cancellation.IsCancellationRequested)
+        new CompositeDisposable(
+            _schedulers.BackgroundThread.ScheduleAsync(async (scheduler, cancellation) =>
             {
-                if (Due() is { Ticks: > 0 } remaining)
+                while (!cancellation.IsCancellationRequested)
                 {
-                    await scheduler.Sleep(remaining, cancellation).ConfigureAwait(false);
+                    if (Due() is { Ticks: > 0 } remaining)
+                    {
+                        await scheduler.Sleep(remaining, cancellation).ConfigureAwait(false);
 
-                    continue;
+                        continue;
+                    }
+
+                    await Fetch(cancellation).ConfigureAwait(false);
                 }
-
-                var wait = await Fetch(cancellation).ConfigureAwait(false);
-
-                await scheduler.Sleep(wait, cancellation).ConfigureAwait(false);
-            }
-        });
+            }),
+            Disposable.Create(() => _status.Write(PollStatus.None)));
 
     /// <inheritdoc/>
     /// <remarks>
@@ -111,7 +135,8 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
     public Task PollNow(CancellationToken cancellationToken) => Fetch(cancellationToken);
 
     /// <summary>
-    /// Fetches one set, applies it, and answers how long to wait before the next poll.
+    /// Fetches one set, applies it, and decides when the next poll is due, holding that instant and
+    /// reporting it (B-054, B-055).
     /// </summary>
     /// <param name="cancellationToken">Stops the poll.</param>
     /// <returns>The interval normally; the delay the provider asked for after a throttle.</returns>
@@ -141,6 +166,11 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
     /// the one failure the claim is named for. What must still end the loop is this client's own
     /// cancellation — the subscription being disposed — and that is the token, not the type.
     /// </para>
+    /// <para>
+    /// The status is written here rather than in the loop, so a demanded poll moves the due instant
+    /// at once instead of when a sleeping loop next wakes. A failed poll keeps a refusal in force,
+    /// since only an applied poll clears one (B-055).
+    /// </para>
     /// </remarks>
     internal async Task<TimeSpan> Fetch(CancellationToken cancellationToken)
     {
@@ -150,12 +180,13 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
                       $"No bounding box is configured. {OpenSkyOptions.Section}:{nameof(OpenSkyOptions.Box)} has no "
                       + "default, because a box nobody chose is a demo pointed at open ocean (B-050).");
 
+        // The window B-053 refuses inside is measured from the call, so it is stamped before one is
+        // made: an attempt is what spends the credit, whatever the provider answers with.
+        var polled = _schedulers.BackgroundThread.Now;
+        Interlocked.Exchange(ref _lastPoll, polled.UtcTicks);
+
         try
         {
-            // The window B-053 refuses inside is measured from the call, so it is stamped before one
-            // is made: an attempt is what spends the credit, whatever the provider answers with.
-            Interlocked.Exchange(ref _lastPoll, _schedulers.BackgroundThread.Now.UtcTicks);
-
             var response = await _api.GetStates(
                     box.LatitudeMinimum,
                     box.LongitudeMinimum,
@@ -167,7 +198,8 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
 
             Apply(response);
 
-            return options.PollInterval;
+            // B-054, and B-055's clearing.
+            return Due(polled, options.PollInterval, Option<TimeSpan>.None);
         }
         catch (OpenSkyThrottledException throttled)
         {
@@ -176,14 +208,15 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
                 "OpenSky throttled the poll and asked for {RetryAfterSeconds} seconds; the next poll waits exactly that long.",
                 throttled.RetryAfter.TotalSeconds);
 
-            return throttled.RetryAfter;
+            // B-055.
+            return Due(polled, throttled.RetryAfter, throttled.RetryAfter);
         }
         catch (Exception failure) when (failure is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
             // B-029.
             _logger.LogWarning(failure, "An OpenSky poll failed; the next one is still due.");
 
-            return options.PollInterval;
+            return Due(polled, options.PollInterval, _status.Current.RefusedFor);
         }
     }
 
@@ -330,16 +363,32 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
         _clock.Observe(DateTimeOffset.FromUnixTimeSeconds(response.Time));
     }
 
-    /// <summary>How long is left of the interval since the last poll, whoever made it; zero or less when one is due.</summary>
+    /// <summary>How long is left until the held due instant, whoever polled last; zero or less when one is due.</summary>
     /// <returns>What the cadence waits before polling again.</returns>
     /// <remarks>
     /// The cadence yields to a demanded poll rather than keeping a clock of its own, which is what
     /// makes B-053's guarantee hold in both directions: one poll per interval, whoever asked for it.
+    /// It sleeps to the held instant rather than recomputing the interval from the last poll, or a
+    /// refusal shorter than the interval would be reported and not kept (B-055).
     /// </remarks>
     private TimeSpan Due() =>
-        LastPoll.Match(
-            last => _options.Value.PollInterval - (_schedulers.BackgroundThread.Now - last),
+        NextDue.Match(
+            due => due - _schedulers.BackgroundThread.Now,
             static () => TimeSpan.Zero);
+
+    /// <summary>Holds and reports the next due instant a poll decided.</summary>
+    /// <param name="polled">When the poll was made, on the scheduler it ran on.</param>
+    /// <param name="wait">How long after it the next is due.</param>
+    /// <param name="refusedFor">The refusal in force after this poll, if any.</param>
+    /// <returns><paramref name="wait"/>.</returns>
+    private TimeSpan Due(DateTimeOffset polled, TimeSpan wait, Option<TimeSpan> refusedFor)
+    {
+        var due = polled + wait;
+        Interlocked.Exchange(ref _nextDue, due.UtcTicks);
+        _status.Write(new PollStatus { NextDue = due, RefusedFor = refusedFor });
+
+        return wait;
+    }
 
     /// <summary>The <see cref="_lastPoll"/> of a client that has not polled; not zero, which is a virtual clock's first instant.</summary>
     private const long NeverPolled = -1;
@@ -347,8 +396,10 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
     private readonly IOpenSkyApi _api;
     private readonly SourceCache<AircraftSnapshot, string> _cache;
     private readonly IObservedClockWriter _clock;
+    private readonly AircraftPollStatus _status;
     private readonly IOptions<OpenSkyOptions> _options;
     private readonly ISchedulerProvider _schedulers;
     private readonly ILogger<AircraftSnapshotClient> _logger;
     private long _lastPoll = NeverPolled;
+    private long _nextDue = NeverPolled;
 }

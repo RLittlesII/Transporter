@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using AwesomeAssertions;
 using DynamicData;
@@ -102,6 +103,66 @@ public class SwappingTrackerSourceTests
         strategies.Vessels.Stopped.Should().Be(1);
     }
 
+    /// <summary>
+    /// B-056. A late subscriber reads the live strategy's status at once; a swap reads the incoming
+    /// one's at once; what the outgoing strategy writes after the swap is not published; and a swap
+    /// back reads that strategy's latest at once. The decorator buffers nothing of its own — each
+    /// entry's seam starts with the status in force, and <c>Switch</c> drops the outgoing one.
+    /// </summary>
+    [Fact]
+    public void GivenTwoStrategiesWithStatuses_WhenTheSourceSwaps_ThenTheIncomingStatusIsReadAtOnceAndNothingOutgoingFollows()
+    {
+        // Given
+        var strategies = new SwappingTrackerSourceFixture();
+        SwappingTrackerSource sut = strategies;
+        strategies.AircraftStatus.OnNext(Due(Aircraft));
+        strategies.VesselStatus.OnNext(Due(Vessels));
+        var observed = new List<PollStatus>();
+        using var subscription = sut.Status.Subscribe(observed.Add);
+        var beforeTheSwap = observed.ToArray();
+
+        // When
+        sut.Select(sut.Entries[1]);
+        strategies.AircraftStatus.OnNext(Due(AircraftLater));
+        var afterTheSwap = observed.Skip(beforeTheSwap.Length).ToArray();
+        sut.Select(sut.Entries[0]);
+
+        // Then
+        beforeTheSwap.Should().Equal([Due(Aircraft)], "a late subscriber reads the live entry's status at once");
+        afterTheSwap.Should().Equal([Due(Vessels)], "the incoming status at once, and nothing the outgoing one wrote after");
+        observed[^1].Should().Be(Due(AircraftLater), "a swap back reads that entry's latest at once");
+    }
+
+    /// <summary>
+    /// B-056, a strategy registered with no poll status. Selecting it reads none at once, so a
+    /// countdown left over from the outgoing poller is replaced rather than kept.
+    /// </summary>
+    [Fact]
+    public void GivenAStrategyWithNoPollStatus_WhenItIsSelected_ThenNoneIsRead()
+    {
+        // Given
+        var aircraft = new FirstTrackerSource();
+        var recording = new SecondTrackerSource();
+        SwappingTrackerSource sut = new SwappingTrackerSourceFixture().WithEnumerable(
+            [
+                new TrackerSourceEntry(aircraft, "Aircraft", new PollStatusDouble(new(Due(Aircraft)))),
+                new TrackerSourceEntry(recording, "Recording", new NoPollStatus()),
+            ]);
+        var observed = new List<PollStatus>();
+        using var subscription = sut.Status.Subscribe(observed.Add);
+
+        // When
+        sut.Select(sut.Entries[1]);
+
+        // Then
+        observed.Should().Equal([Due(Aircraft), PollStatus.None]);
+    }
+
+    /// <summary>A status reporting only a due instant.</summary>
+    /// <param name="instant">When the next poll is due.</param>
+    /// <returns>The status.</returns>
+    private static PollStatus Due(DateTimeOffset instant) => new() { NextDue = instant };
+
     /// <summary>Every member in the production assembly that would answer which source is live.</summary>
     /// <returns>The offending methods, which is the empty set.</returns>
     /// <remarks>
@@ -116,6 +177,15 @@ public class SwappingTrackerSourceTests
             .SelectMany(static type => type.GetMethods())
             .Where(static method => typeof(ITrackerSource).IsAssignableFrom(method.ReturnType))
             .Select(static method => $"{method.DeclaringType!.Name}.{method.Name}");
+
+    /// <summary>The first strategy's due instant.</summary>
+    private static readonly DateTimeOffset Aircraft = new(2026, 10, 15, 14, 33, 22, TimeSpan.Zero);
+
+    /// <summary>What the first strategy reports once it is no longer live.</summary>
+    private static readonly DateTimeOffset AircraftLater = new(2026, 10, 15, 14, 33, 37, TimeSpan.Zero);
+
+    /// <summary>The second strategy's due instant.</summary>
+    private static readonly DateTimeOffset Vessels = new(2026, 10, 15, 14, 33, 30, TimeSpan.Zero);
 }
 
 /// <summary>Builds the decorator over two strategies, and keeps a handle on each.</summary>
@@ -124,13 +194,23 @@ public class SwappingTrackerSourceTests
 internal partial class SwappingTrackerSourceFixture
 {
     public SwappingTrackerSourceFixture() =>
-        WithEnumerable([new TrackerSourceEntry(Aircraft, "Aircraft"), new TrackerSourceEntry(Vessels, "Vessels")]);
+        WithEnumerable(
+            [
+                new TrackerSourceEntry(Aircraft, "Aircraft", new PollStatusDouble(AircraftStatus)),
+                new TrackerSourceEntry(Vessels, "Vessels", new PollStatusDouble(VesselStatus)),
+            ]);
 
     /// <summary>Gets the strategy that is live until something selects the other.</summary>
     public FirstTrackerSource Aircraft { get; } = new();
 
     /// <summary>Gets the strategy a swap selects.</summary>
     public SecondTrackerSource Vessels { get; } = new();
+
+    /// <summary>Gets the poll status the first strategy writes.</summary>
+    public BehaviorSubject<PollStatus> AircraftStatus { get; } = new(PollStatus.None);
+
+    /// <summary>Gets the poll status the second strategy writes.</summary>
+    public BehaviorSubject<PollStatus> VesselStatus { get; } = new(PollStatus.None);
 }
 
 /// <summary>A per-type seam, the way a real strategy is named.</summary>
