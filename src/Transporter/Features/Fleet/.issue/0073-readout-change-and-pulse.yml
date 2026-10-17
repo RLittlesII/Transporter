@@ -2,7 +2,7 @@ id: "0073"
 type: task
 title: Show the change on a readout that moved, and pulse it once
 
-status: in-review
+status: done
 
 priority: medium
 value: 3
@@ -24,8 +24,8 @@ claims:
   - B-038
 
 created: "2026-10-08"
-updated: "2026-10-08"
-closed: null
+updated: "2026-10-17"
+closed: "2026-10-08"
 
 summary: |
   A readout whose cell changed in the last update shows the change the
@@ -46,7 +46,8 @@ acceptance_criteria:
   - "B-038 — the named change shown, one pulse, still under reduced motion, none for a vehicle just added."
   - "§ 9 Traceability Matrix carries a row naming a test or a performed review for B-038."
 
-decisions: []
+decisions:
+  - "2026-10-17 — 0103 — delivery merged in PR #67 (https://github.com/RLittlesII/Transporter/pull/67), reached main through PR #66 (https://github.com/RLittlesII/Transporter/pull/66), commit b6b23d0, on 2026-10-08 (America/Chicago). Closed from merge evidence at the person's request; the reduced-motion review and specification ship gate remain outstanding."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

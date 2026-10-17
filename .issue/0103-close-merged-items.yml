@@ -1,0 +1,42 @@
+id: "0103"
+type: chore
+title: Close tracker items delivered by merged pull requests
+
+status: done
+
+priority: medium
+value: 3
+risk: 1
+rank: 57
+
+parent: null
+children: []
+depends_on: []
+blocks: []
+spikes: []
+spec: null
+claims: []
+
+created: "2026-10-17"
+updated: "2026-10-17"
+closed: "2026-10-17"
+
+summary: |
+  Eight tracker items still read in-review although their delivery changes
+  have merged into main. Reconcile their status with merged pull requests,
+  retaining the original item records and the date each change landed.
+
+acceptance_criteria:
+  - "Every in-review item with confirmed merged delivery reads done."
+  - "Each closure records the delivery pull request, merged commit and local merge date."
+  - "Unmerged items and specification coverage remain unchanged."
+  - "Every item file still parses as YAML and the normal build is checked."
+
+decisions:
+  - "2026-10-17 — the person requested closure of already merged work; merge evidence closes delivery records without re-verifying or approving specification claims."
+  - "2026-10-17 — implementer — corrected one pre-existing list indentation error in 0080 so every tracker item parses; no field value changed."
+  - "2026-10-17 — implementer — closure reflects the person's request to reconcile merged delivery. Outstanding manual reviews for 0073, 0086 and 0090 remain recorded in their specifications; merge evidence is not evidence that those reviews passed."
+
+out_of_scope:
+  - "Vessel-source delivery, started independently in the nested session for 0096."
+  - "Changing specification sign-off, coverage, source code, tests or item scoring."

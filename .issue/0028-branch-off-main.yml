@@ -2,7 +2,7 @@ id: "0028"
 type: chore
 title: Branch off main, and give the conventions skills progressive disclosure
 
-status: in-review
+status: done
 
 priority: low
 value: 2
@@ -21,8 +21,8 @@ spec: null
 claims: []
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-17"
+closed: "2026-10-04"
 
 summary: |
   A five-deep pull request stack dropped two reviewed merges into base branches
@@ -58,6 +58,7 @@ acceptance_criteria:
     to a section that moved is the drift lesson 0002 is about."
 
 decisions:
+  - "2026-10-17 — 0103 — delivery merged in PR #10 (https://github.com/RLittlesII/Transporter/pull/10), commit c4f13ca0, on 2026-10-04 (America/Chicago). Closed from merge evidence; specification coverage is unchanged."
   - "2026-10-04 — the person — if the work can be done off main, it is. Stated as
     a rule rather than a preference."
   - "2026-10-04 — the person — one skill plus references/ rather than four skills
