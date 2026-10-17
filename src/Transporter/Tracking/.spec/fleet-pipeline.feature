@@ -215,7 +215,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And a vehicle from it that last reported at 14:30:00
       And no further data arrives for it
      When the observed instant advances from 14:36:00 to 14:41:00
-     Then the vehicle was present and marked stale at 14:36:00
+     Then the vehicle was present and not marked stale at 14:36:00
       And it was removed from the fleet at 14:41:00, with no changeset arriving from the seam
       And nothing in the pipeline read the wall clock to decide it
 
@@ -224,7 +224,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
     Given a live source whose specification removes a vehicle silent for longer than ten minutes
       And the staleness threshold is changed to two minutes
      When a vehicle from it has been silent for three minutes
-     Then it is marked stale
+     Then it is not marked stale
       And it is still in the fleet
 
   # ─────────────────────────── Validation failure ───────────────────────────
@@ -674,6 +674,32 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       | treatment                          | outcome                                              |
       | no treatment                       | marked stale and still in the fleet                  |
       | removal after 10 minutes           | removed, and was never marked stale                  |
+
+  @B-044
+  Scenario: A removing source is never marked before it leaves
+    Given a live description naming removal after ten minutes
+      And a vehicle last contacted at 14:30:00
+      And the default marking threshold is five minutes
+     When the observed clock advances to 14:36:00
+     Then the vehicle remains present and not marked stale
+     When the observed clock advances to 14:40:00
+     Then the vehicle remains present and not marked stale
+     When the observed clock advances past 14:40:00
+     Then the vehicle is removed from the bound fleet, groups and summary
+      And no element published during that sequence was marked stale
+      And no source report arrived to cause the removal
+
+  @B-044
+  Scenario: Silence treatment preserves the source's movement history
+    Given a live description naming removal after ten minutes
+      And a vehicle with a travelled total and a held trail
+      And the source keeps reporting the same key without removing it
+     When the observed clock hides that vehicle for silence
+      And the source reports a fresh last contact and a new position for the same key
+     Then the vehicle returns as an add to the bound fleet
+      And its travelled total continues from its earlier total
+      And its trail retains the earlier points and appends the new one
+      And neither the source connection nor a movement stage was rebuilt
 
   @B-044
   Scenario: Swapping the source swaps the treatment, and nothing is rebuilt
