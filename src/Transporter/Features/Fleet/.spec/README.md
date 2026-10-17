@@ -1795,10 +1795,11 @@ blocked on R1, §§ 6-7 and §§ 8-9 on R2/R3, and `spec_status` stays
 `in-review`. Item `0078` remains unready and no waiver is introduced.
 
 The B-036 countdown agreement, coherent-status design and regression/review
-strategy remain independently reviewed within that claim's scope. Its
-implementation and rendered evidence are still owed by `0095` on this
-branch; the filter-choice findings neither erase that scoped review nor
-receive approval from it. This conflict reconciliation changes no claim,
+strategy remain independently reviewed within that claim's scope. At the base
+PR #122 reconciliation, `0095` still owed its implementation and rendered
+evidence; the child PR #125 supplies that evidence in the independent read
+below. The filter-choice findings neither erase the scoped countdown review
+nor receive approval from it. This conflict reconciliation changes no claim,
 scenario, design, implementation or test.
 
 **Independent implementation and evidence re-read 2026-10-17 —
@@ -1816,8 +1817,19 @@ that rendering branch; it does not claim a new test of OS-preference
 integration, whose code is unchanged. These observations satisfy the amended
 countdown evidence for the person's macOS demo scope. The corrected § 8 keeps
 its proof mechanism separate from § 9's performed evidence.
-**No actionable finding; §§ 8-9 are approved again and B-036 is verified.**
+**No actionable finding within B-036; its §§ 8-9 evidence is approved and
+its matrix row is verified.** This claim-scoped verdict does not approve the
+complete section group: the owner table remains Blocked on B-039's R2/R3.
 The other twelve missing matrix rows remain their own delivery debts.
+
+**Final child-branch reconciliation, 2026-10-17 — independent
+`spec-reviewer`.** The rebased countdown implementation, tests, scenarios and
+four Mac Catalyst screenshots are unchanged from the independently audited
+child change. B-036 retains its verified evidence for the macOS demo. B-039's
+R1/R2/R3 findings remain unresolved, all three owner rows retain their stated
+Blocked verdicts, and `spec_status` remains `in-review`. Tracking's separate
+category agreement and coverage gaps remain as recorded in that Feature.
+This scoped countdown approval introduces no waiver or approval for `0078`.
 
 ## Decisions
 

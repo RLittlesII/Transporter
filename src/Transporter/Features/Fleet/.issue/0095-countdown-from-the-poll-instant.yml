@@ -48,6 +48,7 @@ acceptance_criteria:
   - "§ 9 Traceability Matrix carries a row naming a test and a re-done rendered review for B-036."
 
 decisions:
+  - "2026-10-17 — conflict upkeep: restack PR 125 onto the rebased PR 122 after main PR 124, retaining the macOS B-036 evidence and the separate filter/category findings. Code, tests, scenarios and screenshots are unchanged; this review-record reconciliation grants no new waiver or unrelated specification approval."
   - "2026-10-17 — implementation: one dependent branch over PR 122, because this countdown consumes the PolledAt member supplied by 0094 and cannot compile against main yet. Retarget to main when that base merges; specification sign-off is complete, with no gate waiver."
 
 out_of_scope:
