@@ -981,7 +981,7 @@ the press, its indicator, and whether it is offered at all are
 
 **The poll status and the swap targets (B-054 – B-057), built by `0068` and
 `0080`.** `fleet-pipeline` § 7 fixed the names the status travels under —
-`PollStatus`, with an optional `NextDue` and an optional `RefusedFor`, and the
+`PollStatus`, with optional `PolledAt`, `NextDue` and `RefusedFor`, and the
 read-side seam `IPollStatus`, whose contract is to start with the status in
 force — and left this § 7 the writer and the selection.
 
@@ -989,7 +989,8 @@ force — and left this § 7 the writer and the selection.
   demanded, runs through the client's one `Fetch` (B-053's design above), and
   `Fetch` is where the poll's instant on the scheduler it already runs on and
   its outcome are both known. So `Fetch` decides the next due instant and
-  writes the status there: the poll's instant plus the interval (B-054); for a
+  writes the status there: `PolledAt` is the scheduler instant captured before
+  the request, and `NextDue` is that same instant plus the interval (B-054); for a
   throttled poll, `RefusedFor` with the header's seconds and `NextDue` exactly
   that far after the refused poll (B-055); for an applied poll, a status with no
   refusal; for any other failure, the interval, with a refusal in force kept,
@@ -997,7 +998,9 @@ force — and left this § 7 the writer and the selection.
   loop is what lets a demand move `NextDue` at once: when a demand is
   performed the loop is asleep on the wait it computed before, and would
   report nothing until it woke. `AircraftPollActor` writes nothing: it
-  demands, and the client reports the result.
+  demands, and the client reports the result. Every report carries the same
+  captured `PolledAt`, including a refusal and any other failed attempt; no
+  response timestamp or second clock read supplies it (`0094`).
 - **The loop sleeps until the due instant `Fetch` decided**, held by the
   client beside the last-poll instant, rather than recomputing the wait from
   the last poll and the interval. Recomputing loses the deferral: after a
@@ -1139,7 +1142,11 @@ gives each claim exactly one row; the row's tag anchors every scenario under it.
   transport already turns a `429` into `OpenSkyThrottledException` carrying
   the seconds, so a substituted `IOpenSkyApi` that throws it is the whole
   arrangement. The client runs `Poll()` on a `TestScheduler`, and the status is
-  read from `AircraftPollStatus`. Cases: a poll at a scheduler instant reports
+  read from `AircraftPollStatus`. For `0094`, the response reports an instant
+  different from the scheduler, and a controlled pending request lets the
+  scheduler advance before completion: `PolledAt` must remain the instant the
+  call began for cadence, demand, refusal and failure, never the response or
+  completion instant. Cases: a poll at a scheduler instant reports
   `NextDue` one interval later; a demanded poll performed through `IDemandedPoll`
   reports the same way; a throttled poll reports a 42-second refusal and `NextDue` exactly
   42 seconds after it, and no exception reaches the stream; the next applied
@@ -1228,42 +1235,11 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate, and seven of the fifty-eight rows read `Missing`** —
-B-029, whose first half was reworded on § 11 row 7 and is owed a test, and
-B-059, claimed on 2026-10-15 and owed one clause of a test, both cut into
-`0093`; B-053's deferral clause, amended on 2026-10-15, and B-054 – B-056, cut
-into `0068`; and B-058, whose launch of the head
-beside the store remains owed. Fifty-one are `Verified`, and they arrived four
-different ways.
-Thirty-three came from
-items: `0002` built the contract, its envelope, the positional row's converter
-and the HTTP transport, `0003` the snapshot and its
-cache, `0004` the snapshot client, the token source, the observed clock and
-the options, `0005` the seam, the domain model and the projection, `0007`
-the tracker's pipeline, its clock and its stale mark, and `0006` the swap
-decorator, the poll the subscription owns and the chain the container
-resolves, `0057` the poll a user demands and the window that refuses one, and
-`0080` the targets the swap actor answers from registration —
-the tests
-this section names against B-001, B-003, B-011 – B-013,
-B-015 – B-028, B-033 – B-040, B-042, B-043, B-050 – B-052, B-057 pass in a run. **Two came from reviews rather than from a run**: B-009 constrains what a
-second contract interface would have to be and B-049 what a push provider's
-strategy may not be given, so for each there is no value to compute and
-no declaration to analyze, and the row records what was looked at and when it is
-looked at again. **Fifteen came from the mechanism rather than from an item**: the analyzer
-[ADR-0006](../../../../../.spec/adr/0006-an-analyzer-enforces-the-layer-boundaries.md)
-decides on is now complete, and all seventeen of its rules report — the reference
-rules (B-004, B-032, B-044 – B-047), the declaration rules (B-002,
-B-005 – B-007, B-014, B-048), and the call-site rules (B-008, B-030,
-B-031). Each is reported at the line that violates it, and each by the test this
-section named for it. **One came from both an analyzer rule and another
-Feature's item**: B-041's negative half is analyzer and its consumer half is
-`fleet-dashboard` `0039`'s composition test.
-
-**Fifty-eight rows for fifty-nine identifiers, and seventeen rules, not
-eighteen.** B-010 is Withdrawn (§ 4 row 18), so it has no row here, and the analyzer's eighteenth
-rule retired with it — ADR-0006 § "What the analyzer carries" records the
-amendment.
+**This is the ship gate: fifty-four of fifty-nine rows are `Verified` and
+five are `Missing`: B-029 and B-059 (`0093`), B-054's poll-instant amendment
+(`0094`), B-058's head launch, and B-060 (`0102`).** The rows below retain
+the existing test, diagnostic and performed-review evidence; none of that
+verifies a newly amended clause. B-010 is withdrawn and has no matrix row.
 
 B-041's consumer half is now proven by `0039`'s container-built selector test:
 replay and live swaps preserve the same tracker and bound collection. Its
@@ -1357,7 +1333,7 @@ is B-049 and the clause waiting on `0005`.
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-052    | `@B-052` | `TransporterCompositionTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-053    | `@B-053` | The interval clause: `AircraftPollActorTests.GivenAPollPerformedInsideTheInterval_WhenAPollIsDemanded_ThenItIsRefusedSilentlyAndNothingFaults`, `AircraftPollActorTests.GivenTheIntervalHasElapsedSinceTheLastPoll_WhenAPollIsDemanded_ThenOneCallIsMadeAndItsSnapshotsReachTheCache` and `AircraftSnapshotClientTests.GivenAPollDemandedBetweenTwoScheduledOnes_WhenTheCadenceRuns_ThenItWaitsOutTheIntervalFromTheDemandedPoll`. The deferral clause, amended 2026-10-15, built by [`0068`](../.issue/0068-poll-status-report.yml): `AircraftPollActorTests.GivenAPollDeferredByA429PastTheInterval_WhenAPollIsDemandedInsideTheDeferral_ThenItIsRefusedSilently`         | Verified |
-| B-054    | `@B-054` | `AircraftPollStatusTests.GivenAPollAtAnInstant_WhenItIsPerformed_ThenTheNextIsReportedDueOneIntervalLater` and `…GivenNoCadenceRunning_WhenAPollIsDemandedAndPerformed_ThenTheNextIsReportedDueOneIntervalLater`                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Verified |
+| B-054    | `@B-054` | [`0094`](../.issue/0094-report-the-poll-instant.yml) — extend `AircraftPollStatusTests` to assert the request-start instant beside the due instant for cadence, demand, refusal and failure, including a response with provider lag and delayed completion. Existing due-instant assertions remain.                                                                                                                                                                                                                                                                                                                                                                         | Missing  |
 | B-055    | `@B-055` | `AircraftPollStatusTests.GivenAThrottledPoll_WhenItIsHandled_ThenARefusalOfItsSecondsIsReportedAndNextDueIsExactlyThatLater`, which also asserts the cadence polls at that instant and not at the interval, and `…GivenARefusalInForce_WhenTheNextPollIsApplied_ThenTheRefusalIsCleared`                                                                                                                                                                                                                                                                                                                                                                                    | Verified |
 | B-056    | `@B-056` | `SwappingTrackerSourceTests.GivenTwoStrategiesWithStatuses_WhenTheSourceSwaps_ThenTheIncomingStatusIsReadAtOnceAndNothingOutgoingFollows` and `…GivenAStrategyWithNoPollStatus_WhenItIsSelected_ThenNoneIsRead`; a stopped poller reporting none, `AircraftPollStatusTests.GivenARunningCadence_WhenItsSubscriptionIsDisposed_ThenNoneIsReported`; the tracker reading it through the decorator, a clause of B-052's composition test                                                                                                                                                                                                                                       | Verified |
 | B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's row                                                                                                                                                                                                                                                                | Verified |
@@ -1714,11 +1690,11 @@ B-049, the integration layout in § 4 row 5, and how the decorator is registered
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status      |
-| -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟡 Draft    |
-| §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟡 Draft    |
+| Sections | Owner       | Status   |
+| -------- | ----------- | -------- |
+| §§ 1-5   | spec-author | 🟡 Draft |
+| §§ 6-7   | implementer | 🟡 Draft |
+| §§ 8-9   | test-writer | 🟡 Draft |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
 back, is [the template's § 12](../../../../../.spec/templates/feature.md).
@@ -2299,6 +2275,11 @@ its row. `aircraft-source` lowered all three rows on 2026-10-09 when B-058's
 row was added. The note above was wrong to keep this row. §§ 6-7 keep 🟢 by
 the letter, but § 7 has no design for B-060 yet, so their next review is
 held on that.
+
+**Countdown design and coverage reopened 2026-10-17.** `0094` now has a
+`PolledAt` design and a test plan distinguishing request start from response
+and completion time. §§ 6-7 and §§ 8-9 require a fresh independent read.
+B-054's amended clause is unbuilt; the earlier tests prove only the due instant.
 
 ## Decisions
 

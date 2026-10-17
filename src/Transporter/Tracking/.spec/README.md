@@ -1269,7 +1269,11 @@ ADR-0013 left the member names to this § 7 and the writer half to
 `IPollStatus` and `NoPollStatus` in `Tracking/`, row in the type table above —
 and `IFleetTracker.PollStatus` beside `Observed`. What they owe:
 
-- **A value, not two streams.** The due instant and the refusal are reported
+- **One status, one clock.** `PollStatus.PolledAt` is an optional
+  `DateTimeOffset` supplied by the poller beside `NextDue`. The tracker
+  re-publishes the entire record unchanged; `PollStatus.None` has neither
+  instant and no refusal. The observed clock never supplies a missing instant.
+- **A value, not separate streams.** The poll instant, due instant and refusal are reported
   together by one poll (`aircraft-source` B-055 moves the due instant when it
   refuses), so one record keeps a consumer from pairing a refusal with the
   wrong instant. Absence is `Option`, and a source with no status is
@@ -1549,6 +1553,9 @@ as no call to it. The cases:
 - the status in force read at once by a consumer that subscribes after it was
   reported, and only that one — a tracker that buffered would hand the late
   subscriber the earlier status too, which is the "nothing older" clause;
+- For `0094`, every status also carries its poll instant. Both an early and
+  a late subscriber must receive that exact pair of instants and the refusal;
+  replacing the status on a swap clears all three values together.
 - a refusal of 42 seconds, then an applied poll clearing it, re-published in
   that order and nothing between, with the clock substitute never read — a
   timer or a countdown in the tracker adds values the double never wrote;
@@ -1600,9 +1607,9 @@ what execute.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate. Forty-one of the forty-four rows read `Verified`;
-B-030, B-038 and B-044 are the three `Missing`, delivered by `0056`, `0065`
-and `vessel-source` `0101`.** `0063` delivered B-034, B-035 and B-037 on
+**This is the gate. Forty of forty-four rows read `Verified`;
+B-030, B-038, B-040 and B-044 are `Missing`, delivered by `0056`, `0065`,
+`aircraft-source` `0094` and `vessel-source` `0101`.** `0063` delivered B-034, B-035 and B-037 on
 2026-10-16. `0066` delivered B-039 on 2026-10-15. `0067` delivered B-040 on 2026-10-09. `fleet-dashboard` `0038` delivered B-043 on 2026-10-09. `0064` delivered B-036 and B-042
 on 2026-10-08. `0062` delivered B-032, B-033 and B-041 on 2026-10-08. B-031 moved on 2026-10-07 with
 `0059`, which published the observed instant on the seam. As of 2026-10-06 every row then
@@ -1661,7 +1668,7 @@ asks for.
 | B-037    | `@B-037` | `FleetMovementTests` in [FleetMovementTrailTests.cs](../../../../test/UnitTests/Tracking/FleetMovementTrailTests.cs): `GivenTheAircraftDescription_WhenItsTrailMeasureIsRead_ThenItUsesBarometricMetresOrNone`, `GivenATrail_WhenTheDescriptionChanges_ThenOnlyTheNextPointUsesItsMeasure` and `GivenNoDescription_WhenAVehicleArrives_ThenItsFirstPointCarriesNoMeasure`. **Review** on item `0063`, 2026-10-16: `TransportVehicle.cs` contains no altitude member; the selector reuses `AircraftFleetDescription.Altitude`. Re-do on a change to the base or description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Verified |
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet, plus a **review** that resolving reads no file or resource: the table is source, and no `File`, `Stream` or manifest-resource call is reachable from the place column                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — `FleetNoticeWindowTests.GivenTwentyFiveChanges_WhenTheWindowIsObserved_ThenItHoldsTheLastTwentyOldestFirstWithTheirTotals`, `GivenAWindowOfTwo_WhenASearchHidesHalfAndIsCleared_ThenTheWindowStillHoldsTwo`, `GivenABoundFleetOfThree_WhenTheWindowIsOpenedAndAFourthArrives_ThenItStartsEmptyAndHoldsOneNotice`, `GivenAnEmptySource_WhenTheFirstPollAddsThree_ThenTheWindowHoldsOneNoticeAddingThree`, `GivenAConsumerAndThreeChanges_WhenASecondSubscribesAndBothLeave_ThenTheSecondReadsTheSameAndAThirdReadsEmpty`, `GivenAWindowOfTwo_WhenTheFeedFallsQuietAndResumes_ThenItHoldsThreeUpdatedNotices`; the operator alone, `SharedLatestTests.GivenALatestValue_WhenALaterSubscriberJoinsAndAllLeaveAndOneReturns_ThenItReadsTheLatestThenOnlyTheNewConnection`                                                                                                                                                                                                                                   | Verified |
-| B-040    | `@B-040` | delivered on [`0067`](../.issue/0067-poll-status-seam.yml) — `FleetTrackerPollStatusTests.GivenAStatusInForce_WhenAConsumerSubscribesLate_ThenItReadsThatStatusAndNoOlder`, `GivenARefusalThenAnAppliedPoll_WhenTheSeamReportsThem_ThenTheTrackerRepublishesExactlyThoseAndReadsNoClock`, `GivenAPolledSourceReportingADueInstant_WhenItIsSwappedForOneThatPushes_ThenThePollStatusIsReplacedByNone`, `GivenNoPollStatus_WhenItIsRead_ThenItIsNoneAtOnceAndNeverCompletes` and `GivenABoundConsumer_WhenTheTrackerIsDisposed_ThenThePollStatusCompletesAndNothingFollows`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verified |
+| B-040    | `@B-040` | [`0094`](../../Integrations/OpenSky/.issue/0094-report-the-poll-instant.yml) — extend `FleetTrackerPollStatusTests` to carry the poll instant through current/late subscriptions, refusal clearing and replacement by none, with no clock read. Existing lifecycle and due-instant evidence from `0067` remains.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Missing  |
 | B-041    | `@B-041` | `FleetMovementTests.GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced` and `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`, plus **review** on [`0062`](../.issue/0062-movement-on-the-element.yml) for "nothing older kept": `TrackedVehicle.Replaced` and `MovedVehicle.Replaced` are `Option<TransportVehicle>`, and nothing under `src/Transporter/Model/` names `TrackedVehicle` or `MovedVehicle`, so a replaced vehicle reaches no element. Re-done by any change to `TrackedVehicle`, `MovedVehicle` or a member of `TransportVehicle` Re-done on item `0063`, 2026-10-16: trail points hold positions, instants and optional numbers, with no vehicle or element reference; the model names neither element type.                                                                                                                                                                                                                                                       | Verified |
 | B-042    | `@B-042` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetReadoutTests.GivenTwoAircraft_WhenAReadoutsDeltaIsRead_ThenItIsTheChangeAtTheCellsPrecision`, `GivenAnElementJustAdded_WhenEachReadoutsChangeIsRead_ThenThereIsNone`, `GivenAReadoutNamingNoDelta_WhenItsChangeIsRead_ThenThereIsNone`, `GivenABoundFleet_WhenAnUpdateClimbs_ThenTheAltitudeReadoutReadsTheChangeOffTheElement` and `GivenAnAircraft_WhenItsReadoutCellsAreRead_ThenEachIsInItsDisplayUnit`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Verified |
 | B-043    | `@B-043` | delivered on `fleet-dashboard` [`0038`](../../Features/Fleet/.issue/0038-detail-pane-and-summary.yml) — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsDetailIsRead_ThenItNamesTheFieldsOnlyAnAircraftReports` and `GivenADescriptionNamingNoDetail_WhenItsDetailIsRead_ThenItIsEmpty`, with B-022's review re-done for the readers it added                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
@@ -1791,11 +1798,11 @@ the draft it replaced.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status      |
-| -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟡 Draft    |
-| §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟡 Draft    |
+| Sections | Owner       | Status   |
+| -------- | ----------- | -------- |
+| §§ 1-5   | spec-author | 🟡 Draft |
+| §§ 6-7   | implementer | 🟡 Draft |
+| §§ 8-9   | test-writer | 🟡 Draft |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2364,6 +2371,11 @@ its row. `aircraft-source` lowered all three rows on 2026-10-09 when B-058's
 row was added. The note above was wrong to keep this row. §§ 6-7 keep 🟢 by
 the letter, but § 7 has no design for B-044 yet, so their next review is
 held on that.
+
+**Countdown design and coverage reopened 2026-10-17.** The B-040 amendment
+now has its optional poll-instant member and re-publication test plan. §§ 6-7
+and §§ 8-9 require a fresh independent read. The earlier tests did not supply
+a poll instant, so the amended clause remains unbuilt on `0094`.
 
 ## Decisions
 
