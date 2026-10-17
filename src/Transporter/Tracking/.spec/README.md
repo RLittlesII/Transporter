@@ -2365,6 +2365,40 @@ row was added. The note above was wrong to keep this row. §§ 6-7 keep 🟢 by
 the letter, but § 7 has no design for B-044 yet, so their next review is
 held on that.
 
+**Specification review 2026-10-17 — items `0056` and `0078`, before implementation.**
+This reader changed none of the agreement under review. Read B-030, its three
+scenarios, the relevant parts of §§ 4-9, the prior B-030 review answers, both items, the dashboard's
+B-039 and design, ADR-0005 and ADR-0009, and the current tracker, grouping,
+filter-choice and aircraft-description types. Forty-four claims have forty-four
+unique matrix rows and companion tags; forty-one rows are `Verified` and three
+are `Missing`. This is an agreement review, not implementation evidence.
+
+**Clean for `0056`'s B-030.** The pre-filter `_reported` stream already exists.
+`DistinctValues` supplies membership counts, switching the grouping replaces
+values without waiting for a poll, and each choice captures its producing key.
+The strategy distinguishes removal of one member from the last, filtering from
+source removal, late subscription, and predicates captured before and after a
+regroup. No consumer must reconstruct the default or enumerate bound rows.
+B-030's `Missing` row correctly waits on implementation; it is not a reason to
+withhold agreement approval.
+
+**The overall gate remains held.** The reopening of 2026-10-16 still applies:
+§ 7 has no design for B-044's description-driven silence stage, and B-019's
+`Verified` row proves only marking and keeping, not its amended removal half.
+The owning `implementer` and `test-writer` must reconcile those artifacts with
+B-016, B-019 and B-044 on `vessel-source` item `0101`, followed by review.
+This scoped review does not approve those unrelated amendments or change the
+owner rows. No waiver was granted for `0056` or `0078`.
+
+**Category coverage is not supplied by these two items alone.** The root
+README asks for country or aircraft-category grouping, and both Features use
+category in their grouping scenarios, but `AircraftFleetDescription.Offered`
+currently offers only origin country. B-030 publishes the selected key's
+values; it does not add a source grouping. Before claiming the requested
+category choices are delivered, the source-description agreement and scenario
+must explicitly require that grouping and trace its delivery. This does not
+justify adding a category predicate or a concrete-vehicle cast in a consumer.
+
 ## Decisions
 
 <!-- Rules: ../../../../.spec/templates/feature.md § Decisions -->

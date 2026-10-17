@@ -1218,11 +1218,11 @@ holds the incident.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status      |
-| -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟡 Draft    |
-| §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟢 Approved |
+| Sections | Owner       | Status              |
+| -------- | ----------- | ------------------- |
+| §§ 1-5   | spec-author | 🔴 Blocked — R1     |
+| §§ 6-7   | implementer | 🔴 Blocked — R2, R3 |
+| §§ 8-9   | test-writer | 🔴 Blocked — R2, R3 |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../../.spec/templates/feature.md). All three rows
@@ -1716,6 +1716,51 @@ describe the old measure: § 7's next-poll design binds `Observed`, and the
 rendered review `0072` recorded for B-036 watched the old countdown.
 [`0095`](../.issue/0095-countdown-from-the-poll-instant.yml) owes both, and
 re-does that review.
+
+**Specification review 2026-10-17 — item `0078`, before implementation.**
+This reader changed none of the agreement under review. Read B-009, B-011,
+B-012, B-018 and B-039, their scenarios, relevant parts of §§ 4-9, both items `0056` and `0078`,
+`fleet-pipeline` B-030 and its design, the prior review answers, ADR-0005,
+ADR-0009 and ADR-0016, `FleetViewModel`, `FleetPage.Controls` and the aircraft
+source description. Forty claims have forty unique matrix rows and companion
+tags; twenty-eight are `Verified` and twelve are `Missing`.
+
+1. **R1 — B-039's regroup scenario cannot be arranged (`spec-author`).**
+   "Changing the grouping clears a selection only the old grouping meant"
+   selects Germany and the on-ground choice together, while § 7 and the live
+   picker expose a single `SelectedFilter`. It also regroups by staleness,
+   which is derived on `TrackedVehicle`, not available to a `FleetGrouping`
+   selector over `TransportVehicle`. Split the example into a selected data
+   value and a selected curated choice, each retaining the search, and use a
+   grouping the abstract vehicle can answer, such as callsign. The pipeline's
+   B-030 scenario already made that correction on 2026-10-14.
+2. **R2 — a current-cache lookup loses a selected value's origin
+   (`implementer`, B-039).** § 7 identifies a data selection only by looking
+   it up in the current value cache when the grouping changes. Select Brazil,
+   remove its last aircraft, then regroup: Brazil is absent from that cache,
+   so the prescribed lookup cannot clear the old key's selection. The design
+   must retain enough selection provenance to clear it on regroup even after
+   withdrawal, before replacing the key's values. A curated choice with the
+   same displayed name as a value must still stand; names alone do not prove
+   the selected choice came from the data. Add tagged examples for those two
+   cases before implementation, then cover them in the test strategy.
+3. **R3 — the page offering the values has no delivery evidence
+   (`implementer` and `test-writer`, B-039).** § 7 binds a new `Choices`
+   collection, but `FleetPage.Controls` still binds the filter picker to
+   `Filters`. §§ 8-9 assign B-039 no rendered review, and the listed tests set
+   view-model members directly. State the page's binding to the combined
+   choices and require a recorded or simulated head review that chooses an
+   arriving value, observes the fleet narrow without losing the other choices,
+   and regroups while preserving the search and a curated choice in separate
+   runs. Re-do B-001's gesture review when that binding changes.
+
+**Verdict: `0078` is not ready for implementation.** §§ 1-5 are blocked on
+R1, §§ 6-7 on R2 and R3, and §§ 8-9 on the missing regression and rendered
+proof strategy. B-039 remains `Missing`; no test was run to prove it and no
+runtime behavior changed. The unrelated B-036 countdown amendment still needs
+its own design and evidence reconciliation on `0095`; this review does not
+approve it. The pipeline review of the same date also records the source's
+missing category grouping. No waiver was granted for either item.
 
 ## Decisions
 
