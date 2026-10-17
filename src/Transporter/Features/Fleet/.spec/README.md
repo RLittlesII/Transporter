@@ -922,6 +922,15 @@ alone cannot prove that the picker invokes the command or that a platform
 draws the indicator. These reviews use synthetic replay and do not wait on
 `0044`'s separate page construction and registration claims.
 
+**The amended countdown (B-036), for `0095`.** Controlled poll statuses carry
+both endpoints together; a different observed instant must not change the
+formatted duration. Missing endpoints, refusal, replacement by a non-polling
+source and disposal are exercised without a wall clock or an animation runner.
+The rendered review is re-done against synthetic replay or a simulated poll
+status, with a provider instant deliberately behind the poll's instant. It
+checks the ordinary interval and a refusal, and records the target and date.
+The old `0072` review remains historical evidence only.
+
 **The ramp review (B-034), and the computation it records.** For each of the
 eight stops of `FlightDeck.Ramp`, the reviewer:
 
@@ -933,9 +942,12 @@ eight stops of `FlightDeck.Ramp`, the reviewer:
 
 The ramp is ordered when L\* rises strictly from the first stop to the last
 under all four. It is distinguishable when each step rises by at least 3 L\*.
-It reads on the page when every stop is at least 3:1 against `Canvas` (WCAG
-2.2 § 1.4.11). The review records the eight-by-four table of L\* values in
-§ 9, as B-033's records its ratios. Any change to the ramp re-does it. It is a
+The legend is drawn on `Canvas`; every stop must be at least 3:1 against
+that surface (WCAG 2.2 § 1.4.11). This does not establish contrast against
+arbitrary map tiles. The map review also checks the complete trail on the
+running target, including dark and light tile areas; an outline using a
+Flight Deck surface token may separate the strokes from those tiles. The
+review records the eight-by-four table of L\* values in § 9, as B-033's records its ratios. Any change to the ramp re-does it. It is a
 review rather than a test because the tokens live in `src/Gui`, which
 `test/UnitTests` does not reference (§ 4 row 4).
 
@@ -1830,6 +1842,14 @@ R1/R2/R3 findings remain unresolved, all three owner rows retain their stated
 Blocked verdicts, and `spec_status` remains `in-review`. Tracking's separate
 category agreement and coverage gaps remain as recorded in that Feature.
 This scoped countdown approval introduces no waiver or approval for `0078`.
+
+**Prepared 2026-10-17 — `implementer` and `test-writer`.** Decision 0004's
+already agreed poll-instant rule now reaches § 7 and § 8: the two countdown
+endpoints come from one status, and the observed instant is never a fallback.
+B-036's matrix row is `Missing` again until `0095` supplies current evidence.
+The map's contrast plan distinguishes its Canvas-backed legend from the map
+itself. Both changed owner rows are reopened for a second reader. No claim
+has changed, no runtime code has been written, and `0071` remains unclaimed.
 
 ## Decisions
 
