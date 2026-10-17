@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Fleet pipeline
@@ -1854,11 +1854,11 @@ the draft it replaced.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2436,6 +2436,23 @@ what the existing tests cover without treating it as proof of the amendments.
 The companion scenarios now cover the reverse swap, the exact threshold and
 a fresh report after removal. §§ 6-7 are reopened for a second reader. B-038
 is unchanged and `0065` remains unclaimed; `0101`, `0094` and `0065` keep their own implementation scope.
+
+**Independent agreement review 2026-10-17 — `spec-reviewer`.** This reader
+wrote none of the claims, design, scenarios or testing strategy reviewed.
+Read the reopened section groups against the companion scenarios, their
+items, the dashboard agreement and the applicable ADRs. Review findings are
+closed: B-016, B-019 and B-040 remain normative claims in § 3, with evidence
+only in § 9; both earlier removal scenarios now require no stale mark before
+removal. B-044's description-driven stage, separate threshold, observed-clock
+boundary, reverse swap and fresh-report return agree. B-040 forwards the
+poll instant with its status, and B-038's compiled, bounded nearest-place
+search retains its coordinate and absent-position fallbacks.
+
+**Clean review: all three owner rows are 🟢 Approved.** Forty-four claims have
+forty-four unique matrix rows and eighty-two tagged scenarios; six rows
+remain `Missing`. `0065` has no remaining specification sign-off blocker and
+needs no waiver. This approves the agreement, not implementation evidence;
+no matrix status was raised, and this reader ran no build or test.
 
 ## Decisions
 

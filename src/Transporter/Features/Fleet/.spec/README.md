@@ -2,7 +2,7 @@
 title: "Specification: Fleet dashboard"
 description: "One MAUI page in C# markup that binds the fleet tracker's collection, builds its columns from the live source's description, turns a keystroke into a predicate and a header tap into a comparer, and shows the selected vehicle in the only surface allowed to know which kind it is."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Fleet dashboard
@@ -1230,11 +1230,11 @@ holds the incident.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status   |
-| -------- | ----------- | -------- |
-| §§ 1-5   | spec-author | 🟡 Draft |
-| §§ 6-7   | implementer | 🟡 Draft |
-| §§ 8-9   | test-writer | 🟡 Draft |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../../.spec/templates/feature.md). All three rows
@@ -1736,6 +1736,21 @@ B-036's matrix row is `Missing` again until `0095` supplies current evidence.
 The map's contrast plan distinguishes its Canvas-backed legend from the map
 itself. Both changed owner rows are reopened for a second reader. No claim
 has changed, no runtime code has been written, and `0071` remains unclaimed.
+
+**Independent agreement review 2026-10-17 — `spec-reviewer`.** This reader
+wrote none of the claims, design, scenarios or testing strategy reviewed.
+Read the reopened section groups against the companion scenarios, their
+items, decision 0004, the pipeline agreement and the applicable ADRs. B-036
+now uses the poll instant and due instant from one status, with no observed
+instant fallback; its amended tests and rendered review remain owed. B-034
+and B-035 retain the bounded, gap-aware trail and newest-first list, and the
+ramp review distinguishes the legend's surface from map tiles.
+
+**Clean review: all three owner rows are 🟢 Approved.** Forty claims have
+forty unique matrix rows and fifty-seven tagged scenarios; thirteen rows
+remain `Missing`. `0071` has no remaining specification sign-off blocker and
+needs no waiver. This approves the agreement, not implementation or rendered
+evidence; no matrix status was raised, and this reader ran no build or test.
 
 ## Decisions
 
