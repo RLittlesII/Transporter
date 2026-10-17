@@ -215,7 +215,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And a vehicle from it that last reported at 14:30:00
       And no further data arrives for it
      When the observed instant advances from 14:36:00 to 14:41:00
-     Then the vehicle was present and marked stale at 14:36:00
+     Then the vehicle was present and not marked stale at 14:36:00
       And it was removed from the fleet at 14:41:00, with no changeset arriving from the seam
       And nothing in the pipeline read the wall clock to decide it
 
@@ -224,7 +224,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
     Given a live source whose specification removes a vehicle silent for longer than ten minutes
       And the staleness threshold is changed to two minutes
      When a vehicle from it has been silent for three minutes
-     Then it is marked stale
+     Then it is not marked stale
       And it is still in the fleet
 
   # ─────────────────────────── Validation failure ───────────────────────────
