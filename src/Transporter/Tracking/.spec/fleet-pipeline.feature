@@ -215,7 +215,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
       And a vehicle from it that last reported at 14:30:00
       And no further data arrives for it
      When the observed instant advances from 14:36:00 to 14:41:00
-     Then the vehicle was present and marked stale at 14:36:00
+     Then the vehicle was present and not marked stale at 14:36:00
       And it was removed from the fleet at 14:41:00, with no changeset arriving from the seam
       And nothing in the pipeline read the wall clock to decide it
 
@@ -224,7 +224,7 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
     Given a live source whose specification removes a vehicle silent for longer than ten minutes
       And the staleness threshold is changed to two minutes
      When a vehicle from it has been silent for three minutes
-     Then it is marked stale
+     Then it is not marked stale
       And it is still in the fleet
 
   # ─────────────────────────── Validation failure ───────────────────────────
@@ -681,3 +681,27 @@ Feature: Fleet pipeline — filter, sort, group, count, mark and bind
      When the source is swapped to one whose description names removal
      Then its silent vehicles are removed by the same stage
       And no pipeline stage was rebuilt
+
+
+  @B-019 @B-044
+  Scenario: A removal threshold does not follow the source back to aircraft
+    Given the live source names removal after ten minutes
+     When the source is swapped to aircraft, whose description names no treatment
+      And an aircraft has been silent for an hour on the observed clock
+     Then the aircraft is marked stale and remains in the fleet
+      And no pipeline stage was rebuilt
+
+  @B-019 @B-044
+  Scenario: Removal uses its own threshold and only removes beyond it
+    Given a source whose description names removal after ten minutes
+      And the marking threshold has been changed to one minute
+     When a vehicle has been silent for exactly ten minutes on the observed clock
+     Then it remains in the fleet and is not marked stale
+     When the observed clock advances one second with no report for it
+     Then it is removed
+
+  @B-019 @B-044
+  Scenario: A fresh report returns after a silence removal
+    Given a vehicle removed after its source's silence threshold
+     When that vehicle reports again with a current last contact
+     Then it enters the fleet as an addition under its original key
