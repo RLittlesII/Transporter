@@ -357,6 +357,21 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
      When a poll is demanded and performed at 14:40:00 on the poller's scheduler
      Then the next poll is reported due at 14:40:15, from a poll made at 14:40:00, on the read-side seam beside the tracker source
 
+  @B-054
+  Scenario: A response arriving later keeps the instant the request began
+    Given a poll begins at 14:32:10 on its scheduler with a fifteen-second interval
+      And the response reports its data at 14:32:08
+     When the response completes at 14:32:12 on that scheduler
+     Then the status reports the poll made at 14:32:10 and the next due at 14:32:25
+      And neither the provider's instant nor the completion instant supplies the poll instant
+
+  @B-054
+  Scenario: A failed attempt still reports when it was made
+    Given a poll begins at 14:32:10 on its scheduler with a fifteen-second interval
+     When the attempt fails at 14:32:12 without a provider timestamp
+     Then the status reports the poll made at 14:32:10 and the next due at 14:32:25
+      And the poll stream remains open
+
   @B-055
   Scenario: A refusal is reported with the interval OpenSky asked for
     Given OpenSky answers the next poll with 429 and X-Rate-Limit-Retry-After-Seconds of 42
@@ -579,10 +594,17 @@ Feature: Aircraft source — contract, client, cache, strategy, decorator, track
 
   @B-060
   Scenario: Each registered source brings its description, and a swap switches both
-    Given the live aircraft source is registered with the aircraft description
+    Given the live and recorded aircraft sources are each registered with the aircraft description
       And a second source is registered with a description of its own
      When the swap actor is told to swap to the second source
-     Then the published description is the second source's
+     Then the second source's description is published before its first vehicles
       And the vehicles and the description changed in the same switch
+      And outgoing vehicles left while their outgoing description was current
      When the actor is told to swap back
-     Then the published description is the aircraft description again
+     Then the aircraft description is published before the returning aircraft
+
+  @B-060
+  Scenario: The initial fleet has its registered description before it arrives
+    Given the first registered strategy emits its current vehicles immediately when subscribed
+     When a consumer subscribes to the selected source and its description
+     Then the description is that entry's before any of its vehicles arrive

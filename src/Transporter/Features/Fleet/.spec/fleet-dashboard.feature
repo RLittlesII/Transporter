@@ -470,6 +470,20 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When the page is projected
      Then it shows no next poll and no throttling
 
+  @B-036
+  Scenario Outline: A countdown without a positive scheduled gap has nothing to animate
+    Given the status carries a next due instant of 14:32:25
+      And the poll instant is <polled>
+     When the countdown duration is read
+     Then it is zero
+      And the provider's observed instant is not used as a fallback
+
+    Examples:
+      | polled   |
+      | absent   |
+      | 14:32:25 |
+      | 14:32:26 |
+
   @B-037
   Scenario: The banner labels the latest notice's counts apart from the window's totals
     Given a search that hides some of the fleet
