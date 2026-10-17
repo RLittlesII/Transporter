@@ -2,7 +2,7 @@ id: "0025"
 type: chore
 title: Let the analyzers see the documentation comments they ask for
 
-status: in-review
+status: done
 
 priority: low
 value: 2
@@ -21,8 +21,8 @@ spec: null
 claims: []
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-17"
+closed: "2026-10-04"
 
 summary: |
   RSA2014 and RSA2015 reported nine members as undocumented that already carried
@@ -54,6 +54,7 @@ acceptance_criteria:
     says why and links the upstream report."
 
 decisions:
+  - "2026-10-17 — 0103 — delivery merged in PR #3 (https://github.com/RLittlesII/Transporter/pull/3), commit 08768497, on 2026-10-04 (America/Chicago). Closed from merge evidence; specification coverage is unchanged."
   - "2026-10-04 — the person — suppress RSA2011 in Gui rather than leave the
     noise, accepting that the rule is then unenforced for that project's
     hand-written code until Airframe#403 is fixed."

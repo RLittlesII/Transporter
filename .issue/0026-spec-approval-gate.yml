@@ -2,7 +2,7 @@ id: "0026"
 type: chore
 title: Separate the approval gate from the coverage gate so a specification can be signed
 
-status: in-review
+status: done
 
 priority: medium
 value: 3
@@ -21,8 +21,8 @@ spec: null
 claims: []
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-17"
+closed: "2026-10-04"
 
 summary: |
   § 12 of the Feature template said spec_status becomes approved "when every row
@@ -51,6 +51,7 @@ acceptance_criteria:
     for carries the rule rather than the lesson index."
 
 decisions:
+  - "2026-10-17 — 0103 — delivery merged in PR #9 (https://github.com/RLittlesII/Transporter/pull/9), commit 8d910b7b, on 2026-10-04 (America/Chicago). Closed from merge evidence; specification coverage is unchanged."
   - "2026-10-04 — the person — option 2 of three: fix the gate rather than
     freeze the stack and rebase it, or keep the precedent. Rejected: freezing
     and rebasing, which would have reworked four pull requests against an

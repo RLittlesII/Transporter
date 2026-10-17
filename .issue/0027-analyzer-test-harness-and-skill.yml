@@ -2,7 +2,7 @@ id: "0027"
 type: chore
 title: Test the analyzer with the harness Airframe uses, and write the skill for it
 
-status: in-review
+status: done
 
 priority: medium
 value: 3
@@ -21,8 +21,8 @@ spec: null
 claims: []
 
 created: "2026-10-04"
-updated: "2026-10-04"
-closed: null
+updated: "2026-10-17"
+closed: "2026-10-04"
 
 summary: |
   Review of pull request #6 asked for Rocket.Surgery.Extensions.Testing.SourceGenerators
@@ -56,6 +56,7 @@ acceptance_criteria:
     error TRN0001 at its line."
 
 decisions:
+  - "2026-10-17 — 0103 — delivery merged in PR #6 (https://github.com/RLittlesII/Transporter/pull/6), commit 7fc92404, on 2026-10-04 (America/Chicago). Closed from merge evidence; specification coverage is unchanged."
   - "2026-10-04 — the person — assertions, not Verify snapshots. Verify arrives
     transitively with the package and stays unused: transporter-conventions fixes
     the stack at xUnit and AwesomeAssertions, and a snapshot nobody reviews is a

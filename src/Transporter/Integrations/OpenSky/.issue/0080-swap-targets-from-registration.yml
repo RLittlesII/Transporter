@@ -24,7 +24,7 @@ claims:
     - B-057
 
 created: "2026-10-09"
-updated: "2026-10-09"
+updated: "2026-10-17"
 closed: "2026-10-09"
 
 summary: |
@@ -55,7 +55,7 @@ decisions:
     the tracker route would reopen `fleet-pipeline` the day it was approved.
     B-057 was amended to claim the route, and § 7 designs it. The ADR this
     item writes records the choice and the declined route."
-    - "2026-10-09 — the person — a picker over the registered sources, not one
+  - "2026-10-09 — the person — a picker over the registered sources, not one
       button per source. One button per source fails `fleet-dashboard` B-021's
       swap test, because adding a source would edit markup. The list this item
       publishes is what the picker needs; the claim was written the same day."

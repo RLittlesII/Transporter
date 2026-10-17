@@ -2,7 +2,7 @@ id: "0041"
 type: task
 title: Show the arrival notice — a banner always, a toast when it earns one
 
-status: in-review
+status: done
 
 priority: high
 value: 4
@@ -29,8 +29,8 @@ claims:
   - B-037
 
 created: "2026-10-05"
-updated: "2026-10-15"
-closed: null
+updated: "2026-10-17"
+closed: "2026-10-15"
 
 summary: |
   `fleet-pipeline` B-025 – B-027 publish the notices; this item decides what a
@@ -74,6 +74,7 @@ acceptance_criteria:
     performed review for each id above."
 
 decisions:
+  - "2026-10-17 — 0103 — delivery merged in PR #102 (https://github.com/RLittlesII/Transporter/pull/102), commit 0dd5239e, on 2026-10-15 (America/Chicago). Closed from merge evidence; specification coverage is unchanged."
   - "2026-10-05 — the person — both surfaces rather than one: a banner that
     always reflects the latest notice and a toast for notices worth
     interrupting for. Rejected: a toast on every arrival, which at the
