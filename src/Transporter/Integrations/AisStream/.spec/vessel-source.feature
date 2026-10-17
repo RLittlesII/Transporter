@@ -83,6 +83,13 @@ Feature: Vessel source — a push feed on the same seam
      Then a warning saying so is logged
       And the vessel stream stays open
 
+  @B-007
+  Scenario: A binary compression confirmation is read across receive fragments
+    Given vessels are live and compression was requested
+     When a binary WebSocket message arrives in two receive fragments carrying a UTF-8 JSON subscription confirmation that denies compression
+     Then a warning saying compression was not granted is logged
+      And the vessel stream stays open
+
   # ───────────────────────────────── Messages ────────────────────────────────
 
   @B-008

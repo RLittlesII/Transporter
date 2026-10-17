@@ -2,7 +2,7 @@ id: "0097"
 type: task
 title: Open one compressed, subscribed AISStream connection while vessels are live
 
-status: in-progress
+status: done
 
 priority: high
 risk: 4
@@ -29,7 +29,7 @@ claims:
 
 created: "2026-10-16"
 updated: "2026-10-17"
-closed: null
+closed: "2026-10-17"
 
 summary: |
   The vessel client's socket: one `ClientWebSocket` (ADR-0017) to the
@@ -41,8 +41,8 @@ summary: |
 
   Not blocked on § 11 row 6: which reported instant is a message's time
   decides `0099`'s claims, not these, and every test here scripts its frames.
-  B-007's grant is still a review against the live service, so the person's
-  key is needed before the closing act is rehearsed, not before this starts.
+  The service's compression grant is rehearsal evidence; local completion
+  proves the client's request and denial handling without a provider call.
 
 acceptance_criteria:
   - "B-001, B-002, B-007, B-011 — one box, read from the aircraft's setting, subscribed in the first frame, compressed, two message types."
