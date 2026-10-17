@@ -2,7 +2,7 @@ id: "0095"
 type: task
 title: Count the next poll down from the instant the poll was made
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -25,7 +25,7 @@ claims:
 
 created: "2026-10-15"
 updated: "2026-10-17"
-closed: null
+closed: "2026-10-17"
 
 summary: |
   Cut on 2026-10-15 from decisions/0004. `0072`'s rendered review saw the
