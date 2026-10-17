@@ -23,6 +23,7 @@ public sealed class FleetPollViewModel : RxObject, IDisposable
             .AsValue(
                 _ =>
                 {
+                    RaisePropertyChanged(nameof(Status));
                     RaisePropertyChanged(nameof(NextDue));
                     RaisePropertyChanged(nameof(RefusedFor));
                     RaisePropertyChanged(nameof(IsPolling));
@@ -30,6 +31,9 @@ public sealed class FleetPollViewModel : RxObject, IDisposable
                 schedulers.UserInterfaceThread,
                 static () => PollStatus.None)
             .DisposeWith(_garbage);
+
+    /// <summary>Gets the complete poll report for one coherent countdown update.</summary>
+    public PollStatus Status => _status.Value;
 
     /// <summary>Gets the instant the next poll is due; null for a source that does not poll.</summary>
     /// <remarks>Nullable rather than an <c>Option</c>, because a binding cannot read one (`language-ext-usage` § "Where it stops").</remarks>

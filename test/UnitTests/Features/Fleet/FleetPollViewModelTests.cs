@@ -10,6 +10,7 @@ using Transporter.Features.Fleet.ViewModels;
 using Transporter.Scheduling;
 using Transporter.Tracking;
 using Transporter.UnitTests.Scheduling;
+using Transporter.UnitTests.Tracking.Fixtures;
 
 namespace Transporter.UnitTests.Features.Fleet;
 
@@ -83,6 +84,48 @@ public class FleetPollViewModelTests
 
         // Then
         changed.Should().BeEmpty("the countdown is the view's animation, not a tick here");
+    }
+
+    /// <summary>B-036: one status notification carries matching poll/due instants, refusal and absence.</summary>
+    [Fact]
+    public void GivenSuccessRefusalAndNone_WhenStatusesArrive_ThenEachNotificationReadsTheCompleteReport()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        var tracker = Substitute.For<IFleetTracker>();
+        using var statuses = new BehaviorSubject<PollStatus>(PollStatus.None);
+        tracker.PollStatus.Returns(statuses);
+        using FleetPollViewModel sut = new FleetPollViewModelFixture().WithTracker(tracker).WithProvider(Provider(scheduler));
+        scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
+        var start = new DateTimeOffset(2026, 10, 15, 14, 32, 10, TimeSpan.Zero);
+        PollStatus applied = new PollStatusFixture().WithPolledAt(start).WithNextDue(start.AddSeconds(15));
+        var refused = new PollStatus
+        {
+            PolledAt = start.AddSeconds(15),
+            NextDue = start.AddSeconds(57),
+            RefusedFor = TimeSpan.FromSeconds(42),
+        };
+        var observed = new List<PollStatus>();
+        sut.PropertyChanged += (_, change) =>
+        {
+            if (change.PropertyName == nameof(FleetPollViewModel.Status))
+            {
+                observed.Add(sut.Status);
+            }
+        };
+
+        // When
+        statuses.OnNext(applied);
+        scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
+        statuses.OnNext(refused);
+        scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
+        statuses.OnNext(PollStatus.None);
+        scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
+
+        // Then
+        observed.Should().Equal(applied, refused, PollStatus.None);
+        sut.Status.Should().Be(PollStatus.None);
+        sut.IsPolling.Should().BeFalse();
     }
 
     /// <summary>One scheduler in both positions.</summary>

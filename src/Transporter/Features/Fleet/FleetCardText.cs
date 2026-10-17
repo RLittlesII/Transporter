@@ -55,19 +55,18 @@ public static class FleetCardText
                 : string.Create(CultureInfo.InvariantCulture, $"{elapsed.Seconds}s");
     }
 
-    /// <summary>How long after the observed instant the next poll is due, which the countdown animates over (B-036).</summary>
+    /// <summary>The scheduled gap between the poll and its next due instant (B-036).</summary>
     /// <param name="nextDue">When the source said its next poll is due.</param>
-    /// <param name="observed">The instant the provider last reported, never the wall clock.</param>
-    /// <returns>The gap, or zero when the poll is already due or no poll has landed yet.</returns>
-    /// <remarks>Measured from the observed instant for the reason <see cref="Age"/> is (B-031).</remarks>
-    public static TimeSpan DueIn(DateTimeOffset nextDue, DateTimeOffset observed)
+    /// <param name="polledAt">When the source began the poll, on the same scheduler as the due instant.</param>
+    /// <returns>The gap, or zero when the start is absent or the poll is already due.</returns>
+    public static TimeSpan DueIn(DateTimeOffset nextDue, DateTimeOffset? polledAt)
     {
-        if (observed == DateTimeOffset.MinValue || nextDue <= observed)
+        if (polledAt is not { } started || nextDue <= started)
         {
             return TimeSpan.Zero;
         }
 
-        return nextDue - observed;
+        return nextDue - started;
     }
 
     private const double MetresPerKilometre = 1000;
