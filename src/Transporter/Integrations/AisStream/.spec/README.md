@@ -9,7 +9,7 @@ spec_status: approved
 
 ## 1. Business Goal
 
-<!-- Rules: ../../../.spec/templates/feature.md § 1 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 1 -->
 
 The talk ends on a promise: replace the polled source with a push source, and
 everything downstream of the seam stays the same (README.md § "Closing act").
@@ -28,7 +28,7 @@ changes" stated, not shown.
 
 ## 2. User Needs
 
-<!-- Rules: ../../../.spec/templates/feature.md § 2 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 2 -->
 
 | #   | Persona                                                                                                                   | Need                                                                                              | Pain point today                                                                                                                                                                |
 | --- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -39,7 +39,7 @@ changes" stated, not shown.
 
 ## 3. Acceptance Criteria
 
-<!-- Rules: ../../../.spec/templates/feature.md § 3 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
 Twenty-six claims in six groups. **B-001 – B-007** cover the connection,
 **B-008 – B-013** the messages and the cache they are written to, **B-014 –
@@ -82,7 +82,7 @@ assign. They are not types this section declares.
 
 ## 4. Constraints
 
-<!-- Rules: ../../../.spec/templates/feature.md § 4 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 4 -->
 
 AISStream's facts below were read from <https://aisstream.io/documentation> on
 2026-10-15. They are the provider's, not this project's to simplify, and the
@@ -107,7 +107,7 @@ page is the authority when the two disagree.
 
 ## 5. Out of Scope
 
-<!-- Rules: ../../../.spec/templates/feature.md § 5 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 5 -->
 
 | #   | Item                                                                                                                                                                      | Exclusion reason                                                                                                                                                              |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -125,7 +125,7 @@ page is the authority when the two disagree.
 
 ## 6. Concern Separation
 
-<!-- Rules: ../../../.spec/templates/feature.md § 6 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 6 -->
 
 | Item                                                 | Classification | Notes                                                                                                                                 |
 | ---------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -142,7 +142,7 @@ page is the authority when the two disagree.
 
 ## 7. Technical Design
 
-<!-- Rules: ../../../.spec/templates/feature.md § 7 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 7 -->
 
 Written 2026-10-16, against §§ 1-5 as they stood at that time, which were still
 🟡 in § 12. The person's four answers of that day are folded in. Two choices
@@ -233,67 +233,45 @@ sequenceDiagram
 
 **Interface changes**
 
-None of these files exists yet, so the declarations are written out here
+Implemented types link to their compiling declarations below. The code block
+contains only declarations whose files do not exist yet
 (spec-and-traceability § "A declaration belongs to the file that compiles").
 
-| Type                           | File                                                        | Claims it makes visible     |
-| ------------------------------ | ----------------------------------------------------------- | --------------------------- |
-| `AisStreamOptions`             | `Integrations/AisStream/Configuration/AisStreamOptions.cs`  | B-003, B-004                |
-| `IVesselSocket`                | `Integrations/AisStream/IVesselSocket.cs`                   | B-002, B-005, B-007         |
-| `VesselSubscription`           | `Integrations/AisStream/Messages/VesselSubscription.cs`     | B-001, B-002, B-011         |
-| `VesselMessageReader`          | `Integrations/AisStream/Messages/VesselMessageReader.cs`    | B-010 – B-013, B-014        |
-| `VesselClient`                 | `Integrations/AisStream/VesselClient.cs`                    | B-002 – B-007, B-009, B-015 |
-| `Vessel`                       | `Model/Vessel.cs`                                           | B-008, B-016 – B-018, B-020 |
-| `MaritimeIdentificationDigits` | `Model/MaritimeIdentificationDigits.cs`                     | B-020                       |
-| `ShipTypes`                    | `Model/ShipTypes.cs`                                        | B-020                       |
-| `IVesselTrackerSource`         | `Tracking/Sources/IVesselTrackerSource.cs`                  | B-024                       |
-| `VesselTrackerSource`          | `Tracking/Sources/VesselTrackerSource.cs`                   | B-010, B-016, B-024         |
-| `VesselFleetDescription`       | `Tracking/Sources/VesselFleetDescription.cs`                | B-019, B-021, B-023         |
-| `AisStreamRegistration`        | `Integrations/AisStream/Container/AisStreamRegistration.cs` | B-001, B-003, B-024, B-025  |
+| Type                           | File                                                                          | Claims it makes visible     |
+| ------------------------------ | ----------------------------------------------------------------------------- | --------------------------- |
+| `AisStreamOptions`             | [`Configuration/AisStreamOptions.cs`](../Configuration/AisStreamOptions.cs)   | B-003, B-004                |
+| `IVesselSocket`                | [`IVesselSocket.cs`](../IVesselSocket.cs)                                     | B-002, B-005, B-007         |
+| `VesselSubscription`           | [`Messages/VesselSubscription.cs`](../Messages/VesselSubscription.cs)         | B-001, B-002, B-011         |
+| `VesselMessageReader`          | `Integrations/AisStream/Messages/VesselMessageReader.cs`                      | B-010 – B-013, B-014        |
+| `VesselClient`                 | [`VesselClient.cs`](../VesselClient.cs)                                       | B-002 – B-007, B-009, B-015 |
+| `Vessel`                       | `Model/Vessel.cs`                                                             | B-008, B-016 – B-018, B-020 |
+| `MaritimeIdentificationDigits` | `Model/MaritimeIdentificationDigits.cs`                                       | B-020                       |
+| `ShipTypes`                    | `Model/ShipTypes.cs`                                                          | B-020                       |
+| `IVesselTrackerSource`         | `Tracking/Sources/IVesselTrackerSource.cs`                                    | B-024                       |
+| `VesselTrackerSource`          | `Tracking/Sources/VesselTrackerSource.cs`                                     | B-010, B-016, B-024         |
+| `VesselFleetDescription`       | `Tracking/Sources/VesselFleetDescription.cs`                                  | B-019, B-021, B-023         |
+| `AisStreamRegistration`        | [`Container/AisStreamRegistration.cs`](../Container/AisStreamRegistration.cs) | B-001, B-003, B-024, B-025  |
+
+`0097` also introduces the socket adapter
+[`ClientVesselSocket`](../ClientVesselSocket.cs) and the cache's keyed
+[`VesselSnapshot`](../VesselSnapshot.cs). The snapshot initially carries its
+MMSI only; `0098` adds message fields and `0099` adds reported time. Options
+remain internal to the integration, like `OpenSkyOptions`. `0101` adds
+`SilentAfter`, defaulting to ten minutes and bound from `AisStream:SilentAfter`.
+The clock constructor parameter is retained for `0099`, without reading or
+retaining it before that item's clock behavior exists.
+
+`AddAisStream` initially registers options, the socket factory, the cache and
+client. It consumes the shared aircraft box, clock writer and schedulers
+already registered by the composition. `0102` adds the strategy and registered
+entry and calls the extension from the application composition.
 
 ```csharp
-// Bound from "AisStream". The key comes from the user-secrets store layered over
-// the packaged settings, never from a packaged value (B-003).
-public sealed class AisStreamOptions
-{
-    public const string Section = "AisStream";
-    public Uri Endpoint { get; init; } = new("wss://stream.aisstream.io/v0/stream");
-    public Option<string> ApiKey { get; init; }
-    public TimeSpan SilentAfter { get; init; } = TimeSpan.FromMinutes(10); // § 11 row 3, B-023
-    public TimeSpan ReconnectAfter { get; init; } = TimeSpan.FromSeconds(5);
-}
-
-// One connection. A new instance per connection, so a reconnect never reuses a
-// closed socket (B-005, B-006). The test double scripts frames; nothing here names
-// a provider operation, so it is not a contract layer (§ 5 row 1, ADR-0017).
-internal interface IVesselSocket : IAsyncDisposable
-{
-    Task Open(Uri endpoint, CancellationToken cancellation);      // requests permessage-deflate (B-007)
-    Task Send(string frame, CancellationToken cancellation);
-    IAsyncEnumerable<string> Frames(CancellationToken cancellation); // ends when the service closes it
-}
-
 // Reads one frame. Unreadable, unasked-for and unknown types are None (B-011, B-012);
 // sentinels are absent before the message leaves (B-013).
 internal static class VesselMessageReader
 {
     public static Option<VesselMessage> Read(string frame);
-}
-
-// Owns the socket and writes the cache. Listen() is what the strategy's
-// subscription owns, as AircraftSnapshotClient.Poll() is for aircraft.
-internal sealed class VesselClient
-{
-    public VesselClient(
-        Func<IVesselSocket> sockets,
-        SourceCache<VesselSnapshot, string> vessels,
-        IObservedClockWriter clock,
-        IOptions<AisStreamOptions> options,
-        IOptions<OpenSkyOptions> box,          // the one box, from the aircraft's setting (B-001)
-        ISchedulerProvider schedulers,
-        ILogger<VesselClient> logger);
-
-    public IDisposable Listen();
 }
 
 // The per-type seam ADR-0002 item 6 names, empty like IAircraftTrackerSource.
@@ -368,7 +346,9 @@ How the parts behave:
   socket is created (B-005). The cache is left
   alone, so vessels already held stay held (B-006).
 - **Closing.** Disposing what `Listen()` returned cancels the loop and disposes
-  the socket, and it is the only thing that does. The strategy holds it in
+  the socket, and it is the only thing that does. A client-owned asynchronous
+  gate serializes whole listen loops through socket close; a new subscription
+  cannot open until the prior subscription has finished its asynchronous close. The strategy holds it in
   `Observable.Using`, and `SwappingTrackerSource`'s `Switch` unsubscribes on a
   swap, so one live strategy means at most one socket (B-005).
 - **The strategy.** `VesselTrackerSource.Connect()` is
@@ -429,7 +409,7 @@ settled both on 2026-10-16 and took recommendation A each time.
    description, switched like its `Status`. One switch decides both the
    vehicles and their description, so the two cannot disagree. The
    description's registration moves from OpenSky to tracking.
-   [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
+   [ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
    records it and supersedes ADR-0015. Rejected: a second subject the swap actor writes on
    each swap. It leaves two things to keep in step, and a window in which they
    disagree.
@@ -446,7 +426,7 @@ settled both on 2026-10-16 and took recommendation A each time.
 
 ## 8. Testing Strategy
 
-<!-- Rules: ../../../.spec/templates/feature.md § 8 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 8 -->
 
 **Testability assessment**
 
@@ -497,7 +477,7 @@ completion condition; local verification requires no live service or key.
 
 ## 9. Traceability Matrix
 
-<!-- Rules: ../../../.spec/templates/feature.md § 9 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
 Every row reads `Missing`: nothing is built. Each names the item that holds the
 claim and the test or review that will prove it.
@@ -533,18 +513,18 @@ claim and the test or review that will prove it.
 
 ## 10. Lessons / Spec Deltas
 
-<!-- Rules: ../../../.spec/templates/feature.md § 10 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 10 -->
 
 None yet.
 
 ## 11. Open Questions
 
-<!-- Rules: ../../../.spec/templates/feature.md § 11 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 11 -->
 
 | #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Owner                                                                      | Target date                         |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------- |
 | 1   | **Answered 2026-10-15 — `fleet-pipeline` B-019 amended.** Silence is treated per source there: aircraft stay marked and kept (`fleet-pipeline` B-016, B-017), and a source whose specification claims removal, as B-021 – B-023 do, has its vehicles removed after its own threshold on the observed clock; `fleet-pipeline` B-016 now yields to that removal. Where the removal runs — a pipeline stage driven by the description, or this strategy emitting the removes below the seam — is not decided there either: `fleet-pipeline` § 11 row 9, answered 2026-10-16: (A), a pipeline stage driven by the description. | the person                                                                 | Closed                              |
-| 2   | **Answered 2026-10-16 — `ClientWebSocket`**, negotiating `permessage-deflate` itself ([ADR-0017](../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)). The question was: `ClientWebSocket` or `AISStream.NET`? Either must negotiate `permessage-deflate` (§ 4 row 7) and expose the subscription as the first frame (B-002). Recorded as an ADR.                                                                                                                                                                                                                                                           | the person                                                                 | Closed                              |
+| 2   | **Answered 2026-10-16 — `ClientWebSocket`**, negotiating `permessage-deflate` itself ([ADR-0017](../../../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)). The question was: `ClientWebSocket` or `AISStream.NET`? Either must negotiate `permessage-deflate` (§ 4 row 7) and expose the subscription as the first frame (B-002). Recorded as an ADR.                                                                                                                                                                                                                                                     | the person                                                                 | Closed                              |
 | 3   | **Answered 2026-10-16 — 10 minutes**, above both the three-minute at-anchor cadence and the six-minute static-data cadence. The question was the vessel silence threshold's default. Class A ships report positions every few seconds under way and every three minutes at anchor, and static data every six minutes. A default under three minutes would remove anchored ships that are still reporting.                                                                                                                                                                                                                  | the person                                                                 | Closed                              |
 | 4   | What does the refresh control do while vessels are live? It `Tell`s `DemandPoll`, and a push source has nothing to poll. Disabled, hidden, or a no-op?                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `fleet-dashboard`                                                          | Before the closing act is rehearsed |
 | 5   | **Answered 2026-10-16 — the full ITU allocation, compiled in**, so a ship from any flag entering the box is named. The question was: where does the MID → flag-state table come from, and how much of it does the Houston box need? The ITU publishes the whole allocation, and a box over Galveston Bay sees a small part of it.                                                                                                                                                                                                                                                                                          | the person, or `implementer` with § 7                                      | Closed                              |
@@ -552,7 +532,7 @@ None yet.
 
 ## 12. Sign-off
 
-<!-- Rules: ../../../.spec/templates/feature.md § 12 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
@@ -561,7 +541,7 @@ None yet.
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
-back, is [the template's § 12](../../../.spec/templates/feature.md).
+back, is [the template's § 12](../../../../../.spec/templates/feature.md).
 
 **Reviewed 2026-10-16 — all three rows stay 🟡.** The review was done by a
 `spec-reviewer` with a fresh context, which wrote none of these sections. It
@@ -638,7 +618,7 @@ not counted below except where the spec mishandles them.
 **§§ 6-7 — implementer:**
 
 1. **F1 — an accepted ADR was amended in place.** Answered in this change.
-   [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
+   [ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
    records the call and supersedes ADR-0015, and ADR-0015's body is restored.
    The answer needs a reviewer's read.
 2. **F7 — § 7 gives no mapper rule** for last contact when no instant is
@@ -812,7 +792,7 @@ own prerequisites and the outstanding `fleet-pipeline` B-044 and
 
 ## Decisions
 
-<!-- Rules: ../../../.spec/templates/feature.md § Decisions -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
 
 None yet. Three calls the person made on 2026-10-15 shaped §§ 1-5. Ships are the
 closing act (README.md § "Open items"). A silent vessel is removed, not marked
@@ -823,7 +803,7 @@ The person made four more calls on 2026-10-16, answering § 11:
 
 - The vessel client uses `ClientWebSocket`. This is a cross-cutting technology
   choice, so it is recorded repository-wide as
-  [ADR-0017](../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)
+  [ADR-0017](../../../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)
   (row 2).
 - The vessel silence threshold defaults to 10 minutes (row 3).
 - Flag state comes from the full ITU allocation, compiled in (row 5).
@@ -836,7 +816,7 @@ Two more calls that day settled § 7's open choices, each recommendation A:
 
 - The description swaps with the source through `TrackerSourceEntry`, which
   is recorded as
-  [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md).
+  [ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md).
 - Silence removal is a dynamic `Filter` on the observed clock, not
   `ExpireAfter`, which amends README.md.
 
@@ -857,7 +837,7 @@ approval or delivery gates.
 
 ## Tasks
 
-<!-- Rules: ../../../.spec/templates/feature.md § Tasks -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § Tasks -->
 
 Cut 2026-10-16, before §§ 6-9 were written, so that the person's decisions
 above had items to land on. None of them moves to `in-progress` while § 12's
@@ -875,7 +855,7 @@ rows are 🟡.
 
 ## Scoring
 
-<!-- Rules: ../../../.spec/templates/feature.md § Scoring -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § Scoring -->
 
 | Date       | Item   | Field | Rationale                                                                                                                                                                                                 |
 | ---------- | ------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

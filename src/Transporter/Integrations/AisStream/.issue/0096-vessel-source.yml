@@ -23,7 +23,7 @@ blocks:
   - "0013"
 spikes: []
 
-spec: features/vessel-source/.spec/README.md
+spec: src/Transporter/Integrations/AisStream/.spec/README.md
 
 claims:
   - B-001

@@ -23,14 +23,14 @@ the code it governs, so a reader who opens the implementation finds the
 agreement without knowing the slug, and a rename of the code moves the
 specification with it.
 
-| Feature             | `<home>`                               |
-| ------------------- | -------------------------------------- |
-| `aircraft-source`   | `src/Transporter/Integrations/OpenSky` |
-| `boundary-analyzer` | `src/Transporter.Analyzers`            |
-| `fleet-pipeline`    | `src/Transporter/Tracking`             |
-| `fleet-dashboard`   | `src/Transporter/Features/Fleet`       |
-| `replay-source`     | `features/replay-source`               |
-| `vessel-source`     | `features/vessel-source`               |
+| Feature             | `<home>`                                 |
+| ------------------- | ---------------------------------------- |
+| `aircraft-source`   | `src/Transporter/Integrations/OpenSky`   |
+| `boundary-analyzer` | `src/Transporter.Analyzers`              |
+| `fleet-pipeline`    | `src/Transporter/Tracking`               |
+| `fleet-dashboard`   | `src/Transporter/Features/Fleet`         |
+| `replay-source`     | `features/replay-source`                 |
+| `vessel-source`     | `src/Transporter/Integrations/AisStream` |
 
 **`features/<slug>/` is where a specification waits for its code**, and the
 only home a Feature with no implementation has — `replay-source` is there
