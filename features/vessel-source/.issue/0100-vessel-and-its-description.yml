@@ -27,7 +27,7 @@ claims:
   - B-020
 
 created: "2026-10-16"
-updated: "2026-10-16"
+updated: "2026-10-17"
 closed: null
 
 summary: |
@@ -42,6 +42,7 @@ summary: |
   not hold groups as `Unknown`, as does ship type before static data.
 
 acceptance_criteria:
+  - "B-010 — the projection gate for a cached vessel with no reported instant; the cache half remains with 0098."
   - "B-016, B-017, B-018 — one level below the base, built in one place, labelled, canonical units."
   - "B-019, B-020 — the description's selectors and two groupings; Unknown until reported or allocated."
   - "§ 9 carries a row naming a test or a performed review for each id above."

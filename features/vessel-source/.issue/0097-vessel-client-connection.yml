@@ -2,7 +2,7 @@ id: "0097"
 type: task
 title: Open one compressed, subscribed AISStream connection while vessels are live
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 risk: 4
@@ -28,7 +28,7 @@ claims:
   - B-011
 
 created: "2026-10-16"
-updated: "2026-10-16"
+updated: "2026-10-17"
 closed: null
 
 summary: |
@@ -51,6 +51,7 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test or a performed review for each id above."
 
 decisions:
+  - "2026-10-17 — the person approved all four R3 product choices; the independent spec-reviewer approved vessel-source § 12. Start the connection child under the approved agreement; no delivery gate is waived."
   - "2026-10-16 — spec-author — `ready-for-architecture` rather than
     `blocked`. The independent review (§ 12, F22) found § 11 row 6 timed
     against this item while § 7 put the claims it decides in `0099`; row 6 is
