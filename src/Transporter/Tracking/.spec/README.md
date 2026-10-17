@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Fleet pipeline
@@ -218,11 +218,10 @@ source: marking and keeping is the default, and aircraft keep it unchanged
 vehicle removed once it has been silent past that source's own threshold —
 configurable, distinct from B-017's, and measured on the observed clock as
 B-018 measures staleness. B-016's "remain in the fleet" now yields to that
-removal and to nothing else, so a vessel past five minutes is marked stale like
-any vehicle until its own threshold removes it. Where the removal runs — a
-stage of this pipeline driven by what the description names, or the source
-emitting the removes below the seam — builds two different systems and is not
-decided here: § 11 row 9. Rejected: a flag on the tracker choosing the
+removal and to nothing else. B-044, added on 2026-10-16, also forbids a
+removing source's vehicle being marked stale before it leaves. The person's
+answer to § 11 row 9 places removal in this pipeline, driven by the live
+description, while the source remains a plain changeset producer. Rejected: a flag on the tracker choosing the
 treatment, which § 4 row 6 already ruled out, and withdrawing B-019 for a new
 id, which would leave B-016's qualifier pointing at a withdrawn claim.
 
@@ -326,17 +325,17 @@ Feature is cited it is written with its Feature's name.
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 6 -->
 
-| Item                                                                    | Classification | Notes                                                                                                                                                                                                                 |
-| ----------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A silent vehicle is marked, not removed, at a configurable five minutes | Business       | § 2 need 4 and README.md § "UI features". The threshold is a product number; what reads it is technical. B-016, B-017.                                                                                                |
-| One collection, materialised by whoever binds, never rebuilt on a swap  | Both           | Business, because § 2 need 5 is the closing act's claim; technical, because the mechanism is subscription lifetime and disposal. B-001 – B-004.                                                                       |
-| A column, comparer and grouping key come from the source                | Both           | Business: a second source must not mean editing the grid (§ 2 need 3). Technical: the description is what replaces the downcast ADR-0005 item 6 forbids. B-020 – B-022.                                               |
-| Filtering and sorting take values through the tracker's methods         | Technical      | The user-visible behavior is the dashboard's; what the pipeline owes it is re-evaluation without a rebuild. B-006, B-009.                                                                                             |
-| Counts per group and for the fleet                                      | Business       | § 2 need 1 — the summary row is part of what the audience is shown. Derivation from the same stream is the technical half. B-014, B-015.                                                                              |
-| Staleness is measured against the observed clock                        | Technical      | The business statement is row 1 above. That the instant comes from the provider rather than the wall clock is ADR-0007's, and under replay it is the difference between a loaded fleet and a fleet that is all stale. |
-| The boundaries                                                          | Technical      | B-022 – B-024 constrain what may name what. No business statement is served by them directly; the swap they protect is § 2 need 5's.                                                                                  |
-| Who calls `Bind`, and where the marshal happens                         | Technical      | ADR-0009. No business statement is served either way: the audience sees the same grid. What it buys is a pipeline provable with no view model, and a `mvvm` rule that stops contradicting a claim. B-002, B-005.      |
-| One connection to the seam however many consumers                       | Both           | Business, because a second diff pass over the same snapshots spends OpenSky credits the day's budget is counted in. Technical, because the mechanism is DynamicData's cache-aware `RefCount()`. B-028.                |
+| Item                                                                         | Classification | Notes                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The default silence treatment marks and keeps at a configurable five minutes | Business       | § 2 need 4 and README.md § "UI features". The threshold is a product number; what reads it is technical. B-016, B-017.                                                                                                |
+| One collection, materialised by whoever binds, never rebuilt on a swap       | Both           | Business, because § 2 need 5 is the closing act's claim; technical, because the mechanism is subscription lifetime and disposal. B-001 – B-004.                                                                       |
+| A column, comparer and grouping key come from the source                     | Both           | Business: a second source must not mean editing the grid (§ 2 need 3). Technical: the description is what replaces the downcast ADR-0005 item 6 forbids. B-020 – B-022.                                               |
+| Filtering and sorting take values through the tracker's methods              | Technical      | The user-visible behavior is the dashboard's; what the pipeline owes it is re-evaluation without a rebuild. B-006, B-009.                                                                                             |
+| Counts per group and for the fleet                                           | Business       | § 2 need 1 — the summary row is part of what the audience is shown. Derivation from the same stream is the technical half. B-014, B-015.                                                                              |
+| Staleness is measured against the observed clock                             | Technical      | The business statement is row 1 above. That the instant comes from the provider rather than the wall clock is ADR-0007's, and under replay it is the difference between a loaded fleet and a fleet that is all stale. |
+| The boundaries                                                               | Technical      | B-022 – B-024 constrain what may name what. No business statement is served by them directly; the swap they protect is § 2 need 5's.                                                                                  |
+| Who calls `Bind`, and where the marshal happens                              | Technical      | ADR-0009. No business statement is served either way: the audience sees the same grid. What it buys is a pipeline provable with no view model, and a `mvvm` rule that stops contradicting a claim. B-002, B-005.      |
+| One connection to the seam however many consumers                            | Both           | Business, because a second diff pass over the same snapshots spends OpenSky credits the day's budget is counted in. Technical, because the mechanism is DynamicData's cache-aware `RefCount()`. B-028.                |
 
 ## 7. Technical Design
 
@@ -541,11 +540,13 @@ flowchart LR
     src["ITrackerSource.Connect()<br/>IChangeSet&lt;TransportVehicle, string&gt;"] --> move
     move["Move()<br/>replaced, leg, travelled"] --> filter
     predicate(["Filter(predicate)<br/>a subject the tracker owns"]) --> filter
-    filter["Filter"] --> stale
+    filter["Filter"] --> treatment
+    treatment["Silence filter<br/>live description: mark or remove"] --> stale
+    description(["Live description + observed instant"]) --> treatment
     comparer(["SortBy(comparer)<br/>chosen from the description"]) --> order
     order[["Order<br/>IComparer&lt;TrackedVehicle&gt;"]] -.->|"SortAndBind"| vm
     clock(["IObservedClockTicks.Instant<br/>+ threshold"]) --> stale
-    stale["mark stale"] --> share["RefCount()"]
+    stale["derive stale mark for marking sources"] --> share["RefCount()"]
     share --> fleet[["Fleet<br/>IObservable&lt;IChangeSet&lt;TrackedVehicle, string&gt;&gt;"]]
     share --> group["Group"]
     grouping(["GroupBy(grouping)"]) --> group
@@ -572,9 +573,14 @@ sequenceDiagram
     Tracker->>Consumer: one change, on the stream
     Consumer->>View: one update, in place
     Ticks-->>Tracker: instant advances, no data arrived
-    Tracker->>Tracker: re-evaluate staleness only
-    Tracker->>Consumer: the silent rows' marks change
-    Consumer->>View: the rows change their mark, and stay
+    Tracker->>Tracker: re-evaluate silence treatment and stale marks
+    alt description selects marking
+        Tracker->>Consumer: silent rows change their marks
+        Consumer->>View: rows change their marks and stay
+    else description selects removal
+        Tracker->>Consumer: overdue rows leave without a stale mark
+        Consumer->>View: removed rows leave the collection
+    end
 ```
 
 Class diagram: not applicable — the shape is one class and six records, and the
@@ -744,7 +750,9 @@ rather than only here.
 Three values ride on `TrackedVehicle` (the rows above): the vehicle the last
 update replaced, the leg between the two, and the distance travelled since the
 vehicle entered. They are derived in **one new stage, `Move()`, first in the
-chain** — between the seam and the filter — and nowhere else.
+chain** — between the seam and the filter — and nowhere else. Source-driven
+silence treatment is downstream on the fleet branch and does not reset the
+source's movement history (B-033, B-034).
 
 **It is a stage of its own because `Transform` cannot fold.** DynamicData's
 `Transform` overload with a previous value hands the factory the previous
@@ -1269,7 +1277,11 @@ ADR-0013 left the member names to this § 7 and the writer half to
 `IPollStatus` and `NoPollStatus` in `Tracking/`, row in the type table above —
 and `IFleetTracker.PollStatus` beside `Observed`. What they owe:
 
-- **A value, not two streams.** The due instant and the refusal are reported
+- **One status, one clock.** `PollStatus.PolledAt` is an optional
+  `DateTimeOffset` supplied by the poller beside `NextDue`. The tracker
+  re-publishes the entire record unchanged; `PollStatus.None` has neither
+  instant and no refusal. The observed clock never supplies a missing instant.
+- **A value, not separate streams.** The poll instant, due instant and refusal are reported
   together by one poll (`aircraft-source` B-055 moves the due instant when it
   refuses), so one record keeps a consumer from pairing a refusal with the
   wrong instant. Absence is `Option`, and a source with no status is
@@ -1312,6 +1324,38 @@ value that changes with no report and so needs a timer somewhere — the clause
 B-040 and `fleet-dashboard` B-017 forbid; a `Refused` flag beside an interval,
 which lets the two disagree; and `PollStatus` as `Option<PollStatus>`, which
 puts a binding-hostile type on the one stream a view model binds straight from.
+
+**Source-driven silence (B-016, B-019, B-044), for `0101`.**
+`FleetSourceDescription` gains an optional removal threshold, `SilentAfter`:
+none selects the existing marking treatment, and a value selects removal
+without a stale mark. Vessel registration obtains that value from its
+`AisStream:SilentAfter` option; the tracker supplies no vessel default and
+never names a vessel. Aircraft descriptions leave it absent, so `StaleAfter`
+still controls their marking alone.
+
+The existing shared movement stage remains first. Its `_reported` feed still
+carries source reports for raw `Recent` counts and `GroupingValues`;
+`_arrivals` applies the user's predicate to those reports for B-025's notice
+counts. The fleet branch adds one dynamic silence filter after that user
+filter and before stale projection, grouping and summary. Its synthetic
+removals feed no source-report notice or raw counter. The existing quiet and
+resumed detection remains driven by its source-arrival and observed-tick
+inputs, not by silence-filter output.
+
+Under marking the silence filter admits every vehicle and the projection
+derives the existing stale mark. Under removal it admits vehicles through
+the source's threshold, removes them only beyond it and always derives a
+false stale mark for those still admitted. A fresh `LastContact` admits the
+same key again as an add to the bound fleet. Movement and trails still last
+until the source removes that key, as B-033 and B-034 specify; a downstream
+visibility change cannot reset them.
+
+The predicate is re-evaluated on a description change and on the observed
+clock, without a scheduler expiry or a wall clock. It reads the live treatment
+rather than capturing the initial description, so swapping sources selects
+their treatment without rebuilding or reconnecting pipeline stages. The
+result is shared by Fleet, groups and summary, so no bound fleet retains a
+silent removed vehicle. No `ITrackerSource` member changes.
 
 **No open decisions.**
 
@@ -1539,6 +1583,20 @@ column reads a file or resource — is the review § 9's row already names.
 **What none of them proves:** how a card shows the place, which is
 `fleet-dashboard` `0070`.
 
+**B-016, B-019 and B-044 through the shared tracker pipeline.** `0101` uses
+synthetic descriptions and the injected observed clock, retaining the
+existing aircraft marking/retention tests. Its scenarios drive the clock on
+both sides of the removal threshold, retain every published element to prove
+none was ever marked stale, and bind Fleet, groups and summary together. The silence exclusion/re-entry
+scenario also asserts that downstream visibility never resets the shared
+source movement history (B-033, B-034).
+Source connection counts prove sharing and no rebuild; raw report counts
+and quiet notices distinguish source data from synthetic removal. Changing
+the aircraft threshold cannot change removal, and replacing the description
+must change treatment on the same stage. No scheduler-based expiry, provider
+or real time is involved. B-019's former global `grep ExpireAfter` review
+proved the aircraft-only design and is not evidence for this amendment.
+
 **What `0067` will prove, planned 2026-10-09.** B-040, through the tracker,
 with a double for `IPollStatus` that is a `BehaviorSubject<PollStatus>` the test
 writes — the double the item names, standing in for the poller and the
@@ -1549,6 +1607,9 @@ as no call to it. The cases:
 - the status in force read at once by a consumer that subscribes after it was
   reported, and only that one — a tracker that buffered would hand the late
   subscriber the earlier status too, which is the "nothing older" clause;
+- For `0094`, every status also carries its poll instant. Both an early and
+  a late subscriber must receive that exact pair of instants and the refusal;
+  replacing the status on a swap clears all three values together.
 - a refusal of 42 seconds, then an applied poll clearing it, re-published in
   that order and nothing between, with the clock substitute never read — a
   timer or a countdown in the tracker adds values the double never wrote;
@@ -1570,7 +1631,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — seventy-five scenarios, each tagged with the `@B-00n` it proves.
+this file — eighty-one scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
@@ -1585,24 +1646,25 @@ Scenarios are documentation; the xUnit tests and the analyzer's diagnostics are
 what execute.
 
 - Happy path → B-001, B-002, B-006, B-007, B-009, B-011 – B-015, B-020, B-025,
-  B-028 – B-034, B-036 – B-043
+  B-028 – B-034, B-036 – B-044
 - Failure mode → B-004, B-005, B-016 – B-019, B-027, B-032 (a tick zeroing a
   leg), B-033 (a filter or a swap restarting a total), B-034 (a bound reached, a filter restarting a trail),
   B-035 (a silence, a parked aircraft that was not one, and a threshold changed
   after the point), B-030 (a filter withdrawing a choice), B-037 (a
   description not yet arrived), B-038 (a vehicle with no position), B-039 (a
   silence, or a search, kept out of the window), B-042 (a change below the
-  cell's precision)
+  cell's precision), B-044 (a removing source never marked stale)
 - Validation failure → B-003, B-008, B-010, B-021 – B-024
-- Data-driven → B-011, B-014, B-017, B-026, B-032, B-035, B-042
+- Data-driven → B-011, B-014, B-017, B-026, B-032, B-035, B-042, B-044
 
 ## 9. Traceability Matrix
 
 <!-- Rules: ../../../../.spec/templates/feature.md § 9 -->
 
-**This is the gate. Forty-one of the forty-four rows read `Verified`;
-B-030, B-038 and B-044 are the three `Missing`, delivered by `0056`, `0065`
-and `vessel-source` `0101`.** `0063` delivered B-034, B-035 and B-037 on
+**This is the gate. Thirty-eight of forty-four rows read `Verified`;
+B-016, B-019, B-030, B-038, B-040 and B-044 are `Missing`. The amended
+silence clauses belong to `vessel-source` `0101`, B-030 to `0056`, B-038
+to `0065`, and the poll instant to `aircraft-source` `0094`.** `0063` delivered B-034, B-035 and B-037 on
 2026-10-16. `0066` delivered B-039 on 2026-10-15. `0067` delivered B-040 on 2026-10-09. `fleet-dashboard` `0038` delivered B-043 on 2026-10-09. `0064` delivered B-036 and B-042
 on 2026-10-08. `0062` delivered B-032, B-033 and B-041 on 2026-10-08. B-031 moved on 2026-10-07 with
 `0059`, which published the observed instant on the seam. As of 2026-10-06 every row then
@@ -1637,10 +1699,10 @@ asks for.
 | B-013    | `@B-013` | `AircraftTests.GivenAnAircraft_WhenItsGroupKeyIsRead_ThenItIsTheOriginCountry`, and the compile error a source answering none is — `Barge` in `FleetSortTests` exists only because it answers both abstract members                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Verified |
 | B-014    | `@B-014` | `FleetGroupTests.GivenAGroupWithOneSilentVehicle_WhenItsCountsAreRead_ThenTheyReportTwoTrackedAndOneStale`, with `GivenAGroupOfTwoCountries_WhenOneGroupsVehiclesAreBound_ThenOnlyThatGroupsRowsArrive` for the rows as a stream — a group holding a list would pass the counts and break B-002 — `0033`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Verified |
 | B-015    | `@B-015` | `FleetSummaryTests.GivenAFleetThatChanges_WhenTheSummaryIsObserved_ThenEachChangeProducesTheNewCounts`, with `GivenThreeChangesToTheFleet_...ThenItChangedOncePerChangeAndNotOnATimer` for the cadence half — `0033`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Verified |
-| B-016    | `@B-016` | `StalenessTests.GivenAVehicleSilentPastTheThreshold_WhenTheFleetIsRead_ThenItIsMarkedStaleAndStillPresent`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Verified |
+| B-016    | `@B-016` | Aircraft evidence retained: `StalenessTests.GivenAVehicleSilentPastTheThreshold_WhenTheFleetIsRead_ThenItIsMarkedStaleAndStillPresent`. The removal/no-stale qualifier is owed by [`0101`](../../Integrations/AisStream/.issue/0101-remove-a-silent-vessel.yml), through the B-044 tracker tests in § 8.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Missing  |
 | B-017    | `@B-017` | `StalenessTests.GivenNoConfiguredThreshold_WhenStalenessIsEvaluated_ThenItIsFiveMinutes` — four minutes tolerated, six not, with nothing configured                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Verified |
 | B-018    | `@B-018` | `StalenessTests.GivenNoNewDataForAVehicle_WhenTheObservedInstantAdvancesPastTheThreshold_ThenItBecomesStale` — the clock moves, no changeset arrives, the mark changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Verified |
-| B-019    | `@B-019` | `StalenessTests.GivenAVehicleSilentForAnHour_WhenTheFleetIsRead_ThenNothingWasRemoved`, and **review** on `0034` — `grep ExpireAfter` over `src/` returns only the remark in `FleetTracker` saying why there is none. Re-done by any new stage. The analyzer rule § 9 first named is `boundary-analyzer`'s to claim, like B-022's and B-023's                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
+| B-019    | `@B-019` | Aircraft evidence retained: `StalenessTests.GivenAVehicleSilentForAnHour_WhenTheFleetIsRead_ThenNothingWasRemoved`. The per-source removal clauses are owed by [`0101`](../../Integrations/AisStream/.issue/0101-remove-a-silent-vessel.yml), through the B-044 tracker tests in § 8; the old aircraft-only absence review does not prove them.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Missing  |
 | B-020    | `@B-020` | `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsColumnsAreRead_ThenEachCarriesANameAndASelector`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Verified |
 | B-021    | `@B-021` | `FleetTrackerTests.GivenASecondDescription_WhenItArrives_ThenTheColumnsAndGroupingsChangeAndNoPipelineStageIsRebuilt`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-022    | `@B-022` | **Review**, done on `0032` — `grep` for `is Aircraft`, `as Aircraft` and `(Aircraft)` over `src/Transporter` and `src/Gui` returns nothing; the only production code naming the type constructs one, which is the projection, not a downcast. Re-done on `0064` on 2026-10-08, with the description's own exception in force: the same `grep` returns six lines, every one in `Tracking/Sources/AircraftFleetDescription.cs` — the two filter choices and the four readers the readout cells and the two deltas share — and none anywhere else. Re-done on `0038` on 2026-10-09: every line the `grep` returns is in `Tracking/Sources/AircraftFleetDescription.cs`, the detail lines' readers among them, and `Features/` and `src/Gui` return none. Re-done by any new consumer of the fleet. No analyzer rule yet: like B-023 it needs the analyzer's layer map widened, which is `boundary-analyzer`'s claim to make. Re-done on item `0063`, 2026-10-16: the trail selector reuses the altitude reader; all aircraft casts remain in that description. | Verified |
@@ -1661,7 +1723,7 @@ asks for.
 | B-037    | `@B-037` | `FleetMovementTests` in [FleetMovementTrailTests.cs](../../../../test/UnitTests/Tracking/FleetMovementTrailTests.cs): `GivenTheAircraftDescription_WhenItsTrailMeasureIsRead_ThenItUsesBarometricMetresOrNone`, `GivenATrail_WhenTheDescriptionChanges_ThenOnlyTheNextPointUsesItsMeasure` and `GivenNoDescription_WhenAVehicleArrives_ThenItsFirstPointCarriesNoMeasure`. **Review** on item `0063`, 2026-10-16: `TransportVehicle.cs` contains no altitude member; the selector reuses `AircraftFleetDescription.Altitude`. Re-do on a change to the base or description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Verified |
 | B-038    | `@B-038` | [`0065`](../.issue/0065-place-from-a-compiled-table.yml) — no test yet, plus a **review** that resolving reads no file or resource: the table is source, and no `File`, `Stream` or manifest-resource call is reachable from the place column                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Missing  |
 | B-039    | `@B-039` | [`0066`](../.issue/0066-recent-notice-window.yml) — `FleetNoticeWindowTests.GivenTwentyFiveChanges_WhenTheWindowIsObserved_ThenItHoldsTheLastTwentyOldestFirstWithTheirTotals`, `GivenAWindowOfTwo_WhenASearchHidesHalfAndIsCleared_ThenTheWindowStillHoldsTwo`, `GivenABoundFleetOfThree_WhenTheWindowIsOpenedAndAFourthArrives_ThenItStartsEmptyAndHoldsOneNotice`, `GivenAnEmptySource_WhenTheFirstPollAddsThree_ThenTheWindowHoldsOneNoticeAddingThree`, `GivenAConsumerAndThreeChanges_WhenASecondSubscribesAndBothLeave_ThenTheSecondReadsTheSameAndAThirdReadsEmpty`, `GivenAWindowOfTwo_WhenTheFeedFallsQuietAndResumes_ThenItHoldsThreeUpdatedNotices`; the operator alone, `SharedLatestTests.GivenALatestValue_WhenALaterSubscriberJoinsAndAllLeaveAndOneReturns_ThenItReadsTheLatestThenOnlyTheNewConnection`                                                                                                                                                                                                                                   | Verified |
-| B-040    | `@B-040` | delivered on [`0067`](../.issue/0067-poll-status-seam.yml) — `FleetTrackerPollStatusTests.GivenAStatusInForce_WhenAConsumerSubscribesLate_ThenItReadsThatStatusAndNoOlder`, `GivenARefusalThenAnAppliedPoll_WhenTheSeamReportsThem_ThenTheTrackerRepublishesExactlyThoseAndReadsNoClock`, `GivenAPolledSourceReportingADueInstant_WhenItIsSwappedForOneThatPushes_ThenThePollStatusIsReplacedByNone`, `GivenNoPollStatus_WhenItIsRead_ThenItIsNoneAtOnceAndNeverCompletes` and `GivenABoundConsumer_WhenTheTrackerIsDisposed_ThenThePollStatusCompletesAndNothingFollows`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verified |
+| B-040    | `@B-040` | [`0094`](../../Integrations/OpenSky/.issue/0094-report-the-poll-instant.yml) — extend `FleetTrackerPollStatusTests` to carry the poll instant through current/late subscriptions, refusal clearing and replacement by none, with no clock read. Existing lifecycle and due-instant evidence from `0067` remains.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Missing  |
 | B-041    | `@B-041` | `FleetMovementTests.GivenAVehicleUpdatedTwice_WhenItsElementIsRead_ThenItCarriesOnlyTheVehicleTheLastUpdateReplaced` and `GivenAVehicleJustAdded_WhenItsElementIsRead_ThenItCarriesNoReplacedVehicle`, plus **review** on [`0062`](../.issue/0062-movement-on-the-element.yml) for "nothing older kept": `TrackedVehicle.Replaced` and `MovedVehicle.Replaced` are `Option<TransportVehicle>`, and nothing under `src/Transporter/Model/` names `TrackedVehicle` or `MovedVehicle`, so a replaced vehicle reaches no element. Re-done by any change to `TrackedVehicle`, `MovedVehicle` or a member of `TransportVehicle` Re-done on item `0063`, 2026-10-16: trail points hold positions, instants and optional numbers, with no vehicle or element reference; the model names neither element type.                                                                                                                                                                                                                                                       | Verified |
 | B-042    | `@B-042` | delivered on [`0064`](../.issue/0064-card-roles-and-readout-deltas.yml) — `FleetReadoutTests.GivenTwoAircraft_WhenAReadoutsDeltaIsRead_ThenItIsTheChangeAtTheCellsPrecision`, `GivenAnElementJustAdded_WhenEachReadoutsChangeIsRead_ThenThereIsNone`, `GivenAReadoutNamingNoDelta_WhenItsChangeIsRead_ThenThereIsNone`, `GivenABoundFleet_WhenAnUpdateClimbs_ThenTheAltitudeReadoutReadsTheChangeOffTheElement` and `GivenAnAircraft_WhenItsReadoutCellsAreRead_ThenEachIsInItsDisplayUnit`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Verified |
 | B-043    | `@B-043` | delivered on `fleet-dashboard` [`0038`](../../Features/Fleet/.issue/0038-detail-pane-and-summary.yml) — `FleetSourceDescriptionTests.GivenTheAircraftDescription_WhenItsDetailIsRead_ThenItNamesTheFieldsOnlyAnAircraftReports` and `GivenADescriptionNamingNoDetail_WhenItsDetailIsRead_ThenItIsEmpty`, with B-022's review re-done for the readers it added                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Verified |
@@ -1793,9 +1855,9 @@ the draft it replaced.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 1-5   | spec-author | 🟢 Approved |
 | §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟡 Draft    |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2364,6 +2426,30 @@ its row. `aircraft-source` lowered all three rows on 2026-10-09 when B-058's
 row was added. The note above was wrong to keep this row. §§ 6-7 keep 🟢 by
 the letter, but § 7 has no design for B-044 yet, so their next review is
 held on that.
+
+**Countdown design and coverage reopened 2026-10-17.** The B-040 amendment
+now has its optional poll-instant member and re-publication test plan. §§ 6-7
+and §§ 8-9 require a fresh independent read. The earlier tests did not supply
+a poll instant, so the amended clause remains unbuilt on `0094`.
+
+**Independent specification re-read 2026-10-17 — `spec-reviewer`.** This
+reader authored none of the agreement, design, scenarios or test strategy.
+B-040 carries both poll instants unchanged, with current and late readers,
+refusal clearing and replacement by none covered by the amended plan. B-044's
+source-driven silence treatment is now designed and tested against the
+observed clock, with aircraft marking preserved and removal never preceded
+by a stale mark. The fleet branch's silence filter follows shared movement
+and user filtering; source-report notices retain their filtered counts,
+Recent and GroupingValues retain their raw reports, and synthetic removal
+changes neither source-arrival timing nor those report counts. Silence
+exclusion and re-entry preserve source movement history under B-033/B-034
+while re-entry is an add to bound Fleet. These boundaries now agree across
+the claims, design and scenarios; the earlier findings are answered.
+Eighty-one scenarios cover forty-four claims and forty-four unique matrix
+rows. **Clean agreement review: all three section groups are approved.**
+B-016/B-019's amended removal clauses and B-044 remain `Missing` on `0101`,
+and B-040's poll-instant clause remains `Missing` on `0094`. This review
+approves the agreement, not implementation or its delivery evidence.
 
 ## Decisions
 

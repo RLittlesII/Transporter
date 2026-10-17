@@ -2,7 +2,7 @@ id: "0094"
 type: task
 title: Report the instant each poll was made beside the next one due
 
-status: ready-for-architecture
+status: in-progress
 
 priority: medium
 value: 3
@@ -24,7 +24,7 @@ claims:
   - B-054
 
 created: "2026-10-15"
-updated: "2026-10-15"
+updated: "2026-10-17"
 closed: null
 
 summary: |
@@ -53,7 +53,8 @@ acceptance_criteria:
   - "`fleet-pipeline` B-040 — the poll's own instant re-published on the tracker with the rest of the status."
   - "§ 9 of both specifications carries a row naming a test for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-17 — implementation: reuse the isolated specification branch and PR 122 for the approved specification and 0094 together, avoiding a separate unmerged specification dependency. Item 0095 will be the single dependent level because it binds the new poll-instant member."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
