@@ -1784,6 +1784,21 @@ claims and forty unique matrix rows. **Clean agreement review: all three
 section groups are approved.** B-036 remains `Missing` until `0095` supplies
 its amended tests and fresh rendered review; approval is not delivery.
 
+**Combined verdict after reconciliation with main's filter-choice review,
+2026-10-17 — independent `spec-reviewer`.** The current owner table is the
+combined verdict. The historical countdown review's blanket approval wording
+records its earlier read; it does not supersede the separately recorded
+B-039 findings R1, R2 and R3. Those findings remain unresolved: §§ 1-5 stay
+blocked on R1, §§ 6-7 and §§ 8-9 on R2/R3, and `spec_status` stays
+`in-review`. Item `0078` remains unready and no waiver is introduced.
+
+The B-036 countdown agreement, coherent-status design and regression/review
+strategy remain independently reviewed within that claim's scope. Its
+implementation and rendered evidence are still owed by `0095` on this
+branch; the filter-choice findings neither erase that scoped review nor
+receive approval from it. This conflict reconciliation changes no claim,
+scenario, design, implementation or test.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->

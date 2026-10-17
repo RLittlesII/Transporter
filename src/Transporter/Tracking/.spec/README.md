@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Fleet pipeline
@@ -1855,9 +1855,9 @@ the draft it replaced.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 1-5   | spec-author | 🟡 Draft    |
 | §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2500,6 +2500,26 @@ through current/late readers, refusal clearing and none, with no clock read.
 **No actionable finding; §§ 8-9 are approved again.** The full build remains
 the delivery check, and dashboard `0095` still owes the bound countdown and
 its rendered evidence.
+
+**Combined verdict after reconciliation with main's scoped grouping review,
+2026-10-17 — independent `spec-reviewer`.** The current owner table is the
+combined verdict. Main's B-030 agreement review and category-coverage finding
+remain intact. The category grouping the root specification requests still
+needs an explicit source-description agreement, scenario and delivery trace;
+this countdown branch does not supply them. §§ 1-5 and §§ 8-9 therefore remain
+Draft, and `spec_status` stays `in-review`. §§ 6-7 retain approval for the
+written design. This does not authorize delivery or imply a waiver for
+`0056` or `0078`.
+
+The earlier B-044/B-019 design and matrix reconciliation findings are
+answered: the reviewed description-driven silence design is written, and
+B-016/B-019's amended removal clauses and B-044 correctly remain `Missing`
+until `0101` supplies implementation evidence. B-040's poll-instant clause
+retains the independently reviewed passing evidence from `0094`. Historical
+blanket approvals and the later B-040 evidence approval are scoped to the
+artifacts they read; they do not supersede the category-coverage finding or
+approve its missing agreement and proof. This conflict reconciliation changes
+no claim, scenario, design, implementation or test.
 
 ## Decisions
 
