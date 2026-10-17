@@ -40,7 +40,7 @@ public class AircraftPollStatusTests
         scheduler.AdvanceBy(TimeSpan.FromSeconds(1).Ticks);
 
         // Then
-        reported().Should().Be(new PollStatus { NextDue = At(14, 33, 22) });
+        reported().Should().Be(new PollStatus { PolledAt = At(14, 33, 7), NextDue = At(14, 33, 22) });
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public class AircraftPollStatusTests
         await sut.PollNow(CancellationToken.None);
 
         // Then
-        reported().Should().Be(new PollStatus { NextDue = At(14, 40, 15) });
+        reported().Should().Be(new PollStatus { PolledAt = At(14, 40, 0), NextDue = At(14, 40, 15) });
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ public class AircraftPollStatusTests
         scheduler.AdvanceTo(At(14, 33, 49).UtcTicks);
 
         // Then
-        refusal.Should().Be(new PollStatus { NextDue = At(14, 33, 49), RefusedFor = TimeSpan.FromSeconds(42) });
+        refusal.Should().Be(new PollStatus { PolledAt = At(14, 33, 7), NextDue = At(14, 33, 49), RefusedFor = TimeSpan.FromSeconds(42) });
         errored.Should().BeNull("a refusal is data, not a fault (B-028)");
         beforeTheDeferralEnds.Should().Be(1, "the interval has passed but the deferral has not");
         api.ReceivedCalls().Should().HaveCount(2, "the cadence polls exactly when the refusal said it would");
@@ -120,7 +120,7 @@ public class AircraftPollStatusTests
         scheduler.AdvanceTo(At(14, 33, 50).UtcTicks);
 
         // Then
-        reported().Should().Be(new PollStatus { NextDue = At(14, 34, 4) });
+        reported().Should().Be(new PollStatus { PolledAt = At(14, 33, 49), NextDue = At(14, 34, 4) });
     }
 
     /// <summary>

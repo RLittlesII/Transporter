@@ -2,7 +2,7 @@ id: "0094"
 type: task
 title: Report the instant each poll was made beside the next one due
 
-status: in-progress
+status: done
 
 priority: medium
 value: 3
@@ -25,7 +25,7 @@ claims:
 
 created: "2026-10-15"
 updated: "2026-10-17"
-closed: null
+closed: "2026-10-17"
 
 summary: |
   Cut on 2026-10-15 from `fleet-dashboard` decisions/0004. The person chose to

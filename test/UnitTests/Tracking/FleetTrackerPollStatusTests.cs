@@ -49,7 +49,7 @@ public class FleetTrackerPollStatusTests
         FleetTracker sut = new FleetTrackerFixture().WithClock(clock).WithStatus(new PollStatusDouble(seam));
         var observed = new List<PollStatus>();
         using var subscription = sut.PollStatus.Subscribe(observed.Add);
-        var refused = new PollStatus { NextDue = Earlier + Refusal, RefusedFor = Refusal };
+        var refused = new PollStatus { PolledAt = Earlier, NextDue = Earlier + Refusal, RefusedFor = Refusal };
         var applied = Due(Next);
 
         // When
@@ -82,6 +82,7 @@ public class FleetTrackerPollStatusTests
 
         // Then
         observed.Should().Equal(Due(Next), PollStatus.None);
+        observed[^1].PolledAt.IsNone.Should().BeTrue();
         observed[^1].NextDue.IsNone.Should().BeTrue("a source that does not poll has no next poll");
     }
 
@@ -132,7 +133,7 @@ public class FleetTrackerPollStatusTests
     /// <summary>A status whose next poll is due at an instant, with no refusal.</summary>
     /// <param name="instant">When the next poll is due.</param>
     /// <returns>The status a poller reports after an applied poll.</returns>
-    private static PollStatus Due(DateTimeOffset instant) => new() { NextDue = instant };
+    private static PollStatus Due(DateTimeOffset instant) => new() { PolledAt = instant - TimeSpan.FromSeconds(15), NextDue = instant };
 
     /// <summary>The interval the provider asked for in the B-040 scenario.</summary>
     private static readonly TimeSpan Refusal = TimeSpan.FromSeconds(42);

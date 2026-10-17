@@ -18,6 +18,9 @@ public sealed record PollStatus
     /// <summary>Gets the status of a source that does not poll, or has not yet said when it will.</summary>
     public static PollStatus None { get; } = new();
 
+    /// <summary>Gets when the poll began, on the same scheduler as its due instant.</summary>
+    public Option<DateTimeOffset> PolledAt { get; init; }
+
     /// <summary>Gets when the next poll is due, if the source polls and has said.</summary>
     public Option<DateTimeOffset> NextDue { get; init; }
 

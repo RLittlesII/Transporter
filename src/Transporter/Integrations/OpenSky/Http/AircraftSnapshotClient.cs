@@ -385,7 +385,7 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
     {
         var due = polled + wait;
         Interlocked.Exchange(ref _nextDue, due.UtcTicks);
-        _status.Write(new PollStatus { NextDue = due, RefusedFor = refusedFor });
+        _status.Write(new PollStatus { PolledAt = polled, NextDue = due, RefusedFor = refusedFor });
 
         return wait;
     }

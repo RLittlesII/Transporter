@@ -1259,9 +1259,9 @@ row 17.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-**This is the ship gate: fifty-four of fifty-nine rows are `Verified` and
-five are `Missing`: B-029 and B-059 (`0093`), B-054's poll-instant amendment
-(`0094`), B-058's head launch, and B-060 (`0102`).** The rows below retain
+**This is the ship gate: fifty-five of fifty-nine rows are `Verified` and
+four are `Missing`: B-029 and B-059 (`0093`), B-058's head launch, and
+B-060 (`0102`).** The rows below retain
 the existing test, diagnostic and performed-review evidence; none of that
 verifies a newly amended clause. B-010 is withdrawn and has no matrix row.
 
@@ -1357,7 +1357,7 @@ is B-049 and the clause waiting on `0005`.
 | B-051    | `@B-051` | `FleetTrackerTests.GivenAVehiclePastTheConfiguredThreshold_WhenTheCollectionIsRead_ThenItIsPresentAndObservablyStale`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-052    | `@B-052` | `TransporterCompositionTests.GivenEveryRegistrationTheApplicationMakes_WhenTheContainerIsBuilt_ThenTheFleetTrackerResolvesAndItsSourceIsTheDecorator`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Verified |
 | B-053    | `@B-053` | The interval clause: `AircraftPollActorTests.GivenAPollPerformedInsideTheInterval_WhenAPollIsDemanded_ThenItIsRefusedSilentlyAndNothingFaults`, `AircraftPollActorTests.GivenTheIntervalHasElapsedSinceTheLastPoll_WhenAPollIsDemanded_ThenOneCallIsMadeAndItsSnapshotsReachTheCache` and `AircraftSnapshotClientTests.GivenAPollDemandedBetweenTwoScheduledOnes_WhenTheCadenceRuns_ThenItWaitsOutTheIntervalFromTheDemandedPoll`. The deferral clause, amended 2026-10-15, built by [`0068`](../.issue/0068-poll-status-report.yml): `AircraftPollActorTests.GivenAPollDeferredByA429PastTheInterval_WhenAPollIsDemandedInsideTheDeferral_ThenItIsRefusedSilently`         | Verified |
-| B-054    | `@B-054` | [`0094`](../.issue/0094-report-the-poll-instant.yml) — extend `AircraftPollStatusTests` to assert the request-start instant beside the due instant for cadence, demand, refusal and failure, including a response with provider lag and delayed completion. Existing due-instant assertions remain.                                                                                                                                                                                                                                                                                                                                                                         | Missing  |
+| B-054    | `@B-054` | `AircraftPollInstantTests.GivenADelayedOutcome_WhenAPollCompletes_ThenItsStartAndDueInstantsUseThePollersClock` — all six cadence/demand × success/refusal/failure cases failed on an absent poll instant before the writer changed, then passed. Existing `AircraftPollStatusTests` retain the cadence, demand, refusal and clearing due-instant assertions and now assert `PolledAt` too.                                                                                                                                                                                                                                                                                 | Verified |
 | B-055    | `@B-055` | `AircraftPollStatusTests.GivenAThrottledPoll_WhenItIsHandled_ThenARefusalOfItsSecondsIsReportedAndNextDueIsExactlyThatLater`, which also asserts the cadence polls at that instant and not at the interval, and `…GivenARefusalInForce_WhenTheNextPollIsApplied_ThenTheRefusalIsCleared`                                                                                                                                                                                                                                                                                                                                                                                    | Verified |
 | B-056    | `@B-056` | `SwappingTrackerSourceTests.GivenTwoStrategiesWithStatuses_WhenTheSourceSwaps_ThenTheIncomingStatusIsReadAtOnceAndNothingOutgoingFollows` and `…GivenAStrategyWithNoPollStatus_WhenItIsSelected_ThenNoneIsRead`; a stopped poller reporting none, `AircraftPollStatusTests.GivenARunningCadence_WhenItsSubscriptionIsDisposed_ThenNoneIsReported`; the tracker reading it through the decorator, a clause of B-052's composition test                                                                                                                                                                                                                                       | Verified |
 | B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's row                                                                                                                                                                                                                                                                | Verified |
@@ -2317,6 +2317,22 @@ unique matrix rows; B-010 remains withdrawn. **Clean agreement review: all
 three section groups are approved.** Existing missing executable and head
 launch evidence remains a delivery gate, including B-054 on `0094` and
 B-060 on `0102`; this review does not assert that either is implemented.
+
+**Coverage updated 2026-10-17 on `0094`.** The amended poll-instant clause
+now has passing regression evidence. §§ 8-9 reopen for independent review of
+that evidence; the agreement and design remain approved.
+
+**Independent implementation/evidence read 2026-10-17 — `spec-reviewer`,
+`0094`, B-054.** This reader changed no implementation or tests. The client
+writes the request-start instant already captured on its scheduler beside the
+due instant through the shared success, refusal and failure path. Six delayed
+cadence/demand outcome cases fail before that assignment and pass with it;
+the reviewed targeted run passes all sixteen poll-instant, poll-status and
+tracker-status cases. Tracker exact-record assertions carry the new instant
+through current/late readers, refusal clearing and none, with no clock read.
+**No actionable finding; §§ 8-9 are approved again.** The full build remains
+the delivery check, and dashboard `0095` still owes the bound countdown and
+its rendered evidence.
 
 ## Decisions
 
