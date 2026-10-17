@@ -1203,6 +1203,8 @@ stay signed; row 10 of § 11 asks the person for one.
 [Lesson 0007](lessons/0007-a-card-reviewed-for-what-it-shows-and-not-how-it-reads.md)
 holds the incident.
 
+- [Lesson 0008 — A countdown needs one clock](lessons/0008-a-countdown-needs-one-clock.md) — 2026-10-17
+
 ## 11. Open Questions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 11 -->

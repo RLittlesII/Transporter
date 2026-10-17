@@ -1,8 +1,10 @@
 using System;
 using System.Globalization;
 using Gui.Theme;
+using LanguageExt;
 using Microsoft.Maui.Controls;
 using Transporter.Features.Fleet;
+using Transporter.Tracking;
 
 namespace Gui.Components;
 
@@ -23,40 +25,27 @@ public sealed class PollCountdown : ContentView
         Content = new VerticalStackLayout { Spacing = 2, Children = { _caption, _seconds, _bar } };
     }
 
-    /// <summary>The instant the next poll is due; null for a source that does not poll.</summary>
-    public static readonly BindableProperty NextDueProperty = BindableProperty.Create(
-        nameof(NextDue),
-        typeof(DateTimeOffset?),
+    /// <summary>The complete report whose two instants determine one countdown.</summary>
+    public static readonly BindableProperty StatusProperty = BindableProperty.Create(
+        nameof(Status),
+        typeof(PollStatus),
         typeof(PollCountdown),
-        null,
+        PollStatus.None,
         propertyChanged: static (countdown, _, _) => ((PollCountdown) countdown).Restart());
 
-    /// <summary>The instant the provider last reported, which the time left is measured from (B-031).</summary>
-    public static readonly BindableProperty ObservedProperty = BindableProperty.Create(
-        nameof(Observed),
-        typeof(DateTimeOffset),
-        typeof(PollCountdown),
-        DateTimeOffset.MinValue);
-
-    /// <summary>Gets or sets the instant the next poll is due.</summary>
-    public DateTimeOffset? NextDue
+    /// <summary>Gets or sets the complete report for the next countdown.</summary>
+    public PollStatus Status
     {
-        get => (DateTimeOffset?) GetValue(NextDueProperty);
-        set => SetValue(NextDueProperty, value);
-    }
-
-    /// <summary>Gets or sets the instant the provider last reported.</summary>
-    public DateTimeOffset Observed
-    {
-        get => (DateTimeOffset) GetValue(ObservedProperty);
-        set => SetValue(ObservedProperty, value);
+        get => (PollStatus) GetValue(StatusProperty);
+        set => SetValue(StatusProperty, value);
     }
 
     /// <summary>Starts one animation over the time left to the new due instant, replacing the running one.</summary>
     private void Restart()
     {
         this.AbortAnimation(CountdownName);
-        if (NextDue is not { } due)
+        var status = Status;
+        if (status.NextDue.ToNullable() is not { } due)
         {
             _seconds.Text = FleetCardText.Missing;
             _bar.Progress = 0;
@@ -70,8 +59,8 @@ public sealed class PollCountdown : ContentView
             return;
         }
 
-        var left = FleetCardText.DueIn(due, Observed);
-        Show(1, left);
+        var left = FleetCardText.DueIn(due, status.PolledAt.ToNullable());
+        Show(left > TimeSpan.Zero ? 1 : 0, left);
         if (left <= TimeSpan.Zero)
         {
             return;

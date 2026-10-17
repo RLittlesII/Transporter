@@ -87,7 +87,7 @@ public class FleetPage : ContentPage
             Children =
             {
                 Controls().Row(0),
-                Summary(summary, poll, viewModel).Row(1),
+                Summary(summary, poll).Row(1),
                 Banner(banner).Row(2),
                 fleet.Row(3),
                 Detail(viewModel.Detail).Row(4),
@@ -186,9 +186,8 @@ public class FleetPage : ContentPage
     /// </summary>
     /// <param name="summary">The strip's view model.</param>
     /// <param name="poll">The poll status's view model; the countdown and the badge hide together for a source that does not poll.</param>
-    /// <param name="fleet">Where the observed instant the countdown measures from is read.</param>
     /// <returns>The summary panel.</returns>
-    private static Border Summary(FleetSummaryViewModel summary, FleetPollViewModel poll, FleetViewModel fleet) =>
+    private static Border Summary(FleetSummaryViewModel summary, FleetPollViewModel poll) =>
         Panel(new HorizontalStackLayout
         {
             Spacing = FlightDeck.Space6,
@@ -203,8 +202,7 @@ public class FleetPage : ContentPage
                     Children =
                     {
                         new PollCountdown()
-                            .Bind(PollCountdown.ObservedProperty, nameof(FleetViewModel.Observed), source: fleet)
-                            .Bind(PollCountdown.NextDueProperty, nameof(FleetPollViewModel.NextDue), source: poll),
+                            .Bind(PollCountdown.StatusProperty, nameof(FleetPollViewModel.Status), source: poll),
                         new StatusBadge { Kind = StatusKind.Throttled }
                             .Bind(IsVisibleProperty, nameof(FleetPollViewModel.RefusedFor), source: poll, converter: new IsNotNullConverter()),
                         new Label { Style = FlightDeckStyles.Caption, VerticalTextAlignment = TextAlignment.Center }
