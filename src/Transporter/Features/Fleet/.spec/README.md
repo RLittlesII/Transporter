@@ -1851,6 +1851,21 @@ The map's contrast plan distinguishes its Canvas-backed legend from the map
 itself. Both changed owner rows are reopened for a second reader. No claim
 has changed, no runtime code has been written, and `0071` remains unclaimed.
 
+**Independent agreement review 2026-10-17 — `spec-reviewer`.** This reader
+wrote none of the claims, design, scenarios or testing strategy reviewed.
+Read the reopened section groups against the companion scenarios, their
+items, decision 0004, the pipeline agreement and the applicable ADRs. B-036
+now uses the poll instant and due instant from one status, with no observed
+instant fallback; its amended tests and rendered review remain owed. B-034
+and B-035 retain the bounded, gap-aware trail and newest-first list, and the
+ramp review distinguishes the legend's surface from map tiles.
+
+**Clean review: all three owner rows are 🟢 Approved.** Forty claims have
+forty unique matrix rows and fifty-seven tagged scenarios; thirteen rows
+remain `Missing`. `0071` has no remaining specification sign-off blocker and
+needs no waiver. This approves the agreement, not implementation or rendered
+evidence; no matrix status was raised, and this reader ran no build or test.
+
 ## Decisions
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
