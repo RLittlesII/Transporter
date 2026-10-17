@@ -17,7 +17,7 @@ depends_on:
 blocks: []
 spikes: []
 
-spec: features/vessel-source/.spec/README.md
+spec: src/Transporter/Integrations/AisStream/.spec/README.md
 
 claims:
   - B-021
@@ -25,7 +25,7 @@ claims:
   - B-023
 
 created: "2026-10-16"
-updated: "2026-10-16"
+updated: "2026-10-17"
 closed: null
 
 summary: |

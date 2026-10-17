@@ -10,7 +10,7 @@ type: adr
 
 **Accepted 2026-10-16.** The person's call, answering `vessel-source` § 11
 row 2 before the vessel client's item
-([`0097`](../../features/vessel-source/.issue/0097-vessel-client-connection.yml))
+([`0097`](../../src/Transporter/Integrations/AisStream/.issue/0097-vessel-client-connection.yml))
 starts.
 
 ## Context

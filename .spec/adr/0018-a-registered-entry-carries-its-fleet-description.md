@@ -10,7 +10,7 @@ type: adr
 
 **Accepted 2026-10-16.** The person's call for `vessel-source` § 7, taking
 recommendation A. It is built by
-[`0102`](../../features/vessel-source/.issue/0102-vessel-strategy-on-the-seam.yml).
+[`0102`](../../src/Transporter/Integrations/AisStream/.issue/0102-vessel-strategy-on-the-seam.yml).
 It supersedes
 [ADR-0015](0015-the-swap-actor-answers-the-registered-targets.md), which still
 holds in every part except what an entry carries.

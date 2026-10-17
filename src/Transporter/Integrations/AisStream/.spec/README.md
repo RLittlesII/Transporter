@@ -2,14 +2,14 @@
 title: "Specification: Vessel source"
 description: "Subscribe to AISStream's push feed of vessel positions over the Houston box, hold what each message reports in a cache the client writes, project it into vessels on the same seam the aircraft use, and let a silent vessel go."
 type: spec
-spec_status: draft
+spec_status: approved
 ---
 
 # Specification: Vessel source
 
 ## 1. Business Goal
 
-<!-- Rules: ../../../.spec/templates/feature.md § 1 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 1 -->
 
 The talk ends on a promise: replace the polled source with a push source, and
 everything downstream of the seam stays the same (README.md § "Closing act").
@@ -28,7 +28,7 @@ changes" stated, not shown.
 
 ## 2. User Needs
 
-<!-- Rules: ../../../.spec/templates/feature.md § 2 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 2 -->
 
 | #   | Persona                                                                                                                   | Need                                                                                              | Pain point today                                                                                                                                                                |
 | --- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -39,7 +39,7 @@ changes" stated, not shown.
 
 ## 3. Acceptance Criteria
 
-<!-- Rules: ../../../.spec/templates/feature.md § 3 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 3 -->
 
 Twenty-six claims in six groups. **B-001 – B-007** cover the connection,
 **B-008 – B-013** the messages and the cache they are written to, **B-014 –
@@ -82,32 +82,33 @@ assign. They are not types this section declares.
 
 ## 4. Constraints
 
-<!-- Rules: ../../../.spec/templates/feature.md § 4 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 4 -->
 
 AISStream's facts below were read from <https://aisstream.io/documentation> on
 2026-10-15. They are the provider's, not this project's to simplify, and the
 page is the authority when the two disagree.
 
-| #   | Constraint                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Source                                                                          | Impact                                                                                                                                                                                                                                                                                                                        |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | AISStream is push: one WebSocket at `wss://stream.aisstream.io/v0/stream`, a subscription frame sent by the client, then a stream of messages it never asked for one at a time.                                                                                                                                                                                                                                                                                                                                                                                                | aisstream.io documentation; README.md § "Closing act"                           | There is no request with a response, so there is no contract layer, no `Task<T>` per endpoint, and no fake one (`aircraft-source` B-049, § 4 row 4). Aircraft replay's way of substituting is closed to vessels, which is replay-source B-023.                                                                                |
-| 2   | The subscription is one JSON frame: `APIKey`, `BoundingBoxes` as `[[lat, lon], [lat, lon]]` corners with latitude first, and optionally `FiltersShipMMSI` and `FilterMessageTypes`. Every message arrives as `MessageType`, `MetaData` and a `Message` keyed by its type.                                                                                                                                                                                                                                                                                                      | aisstream.io documentation                                                      | The configured box is converted to that corner order in one place. Latitude first is the reverse of a GeoJSON habit, and a swapped pair subscribes to empty ocean. B-001, B-010, B-011.                                                                                                                                       |
-| 3   | The API key is a credential. The service forbids direct browser use and keeps it server-side. The repository never holds a key.                                                                                                                                                                                                                                                                                                                                                                                                                                                | aisstream.io documentation; docs/runbook.md § "Never"; README.md § "Open items" | Rules out a key in `appsettings`, a test fixture, a log or a recording. It reaches the client the way the OpenSky secret does, and its absence is a reported failure rather than a crash. B-003, B-004.                                                                                                                       |
-| 4   | The subscription must arrive within three seconds of connecting or the service closes the socket. Resending replaces the subscription and is limited to one per second per connection. A rejected subscription gets no `SubscriptionConfirmation`.                                                                                                                                                                                                                                                                                                                             | aisstream.io documentation                                                      | Rules out connecting ahead of time and subscribing later, and changing the subscription on a live socket. One subscription per connection, sent first. B-002.                                                                                                                                                                 |
-| 5   | At most three subscribed connections per account and three open connections per originating IP. A fourth is rejected.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | aisstream.io documentation                                                      | Rehearsing on one laptop while another runs the demo already spends two. A swapped-out or reconnecting client that leaks its old socket spends the rest. B-005.                                                                                                                                                               |
-| 6   | The service makes no uptime guarantee and replays nothing. It drops messages for a client that falls behind, and may close a slow connection.                                                                                                                                                                                                                                                                                                                                                                                                                                  | aisstream.io documentation                                                      | A gap in the feed is lost, not recovered. A reconnect starts from now (B-006), and a vessel that goes unheard through a long gap is removed like any other silent vessel (B-021).                                                                                                                                             |
-| 7   | From September 2026, uncompressed connections are subject to per-user bandwidth limits, and messages over the limit are dropped. Compression is `permessage-deflate`, confirmed by `SubscriptionConfirmation.Message.CompressionEnabled`.                                                                                                                                                                                                                                                                                                                                      | aisstream.io documentation                                                      | Rules out a client that cannot negotiate `permessage-deflate`. This bears on § 11 row 2, the library choice. B-007.                                                                                                                                                                                                           |
-| 8   | AIS reports speed in knots and course and heading in degrees. It encodes "not available" as in-range-looking numbers (latitude 91, longitude 181, heading 511, speed 102.3, course 360).                                                                                                                                                                                                                                                                                                                                                                                       | ITU-R M.1371                                                                    | The values are canonical as reported (ADR-0005 item 7), and the sentinels must become absent before anything compares, sorts or plots them. A sentinel position plotted on the detail map draws a ship off the Arctic. B-013, B-018.                                                                                          |
-| 9   | An MMSI's first three digits are its Maritime Identification Digits, allocated to a flag state by the ITU.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | ITU Maritime Identification Digits table                                        | Flag state is known from the first message, with no static data needed. It needs the full ITU allocation table, compiled in (§ 11 row 5). B-020.                                                                                                                                                                              |
-| 10  | `fleet-pipeline` B-019, amended 2026-10-15, treats silence per source: marking and keeping by default, and removal after a source's own threshold where that source's specification claims it.                                                                                                                                                                                                                                                                                                                                                                                 | `fleet-pipeline` B-016, B-019, § 4 row 6, § 5 row 2, § 11 row 9                 | B-021 – B-023 are that claim's removal for vessels, and B-023's vessel threshold is the source's own threshold it names. The removal runs as a stage of that pipeline, driven by the description (`fleet-pipeline` § 11 row 9, answered (A) 2026-10-16; `fleet-pipeline` B-044). Nothing here edits another Feature's claims. |
-| 11  | The clock belongs to the tracker. No client, cache or strategy reads one.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | dynamic-data-pipeline § "Staleness and expiry"; ADR-0007; ADR-0010              | Rules out stamping a message with the arrival time read in the client. A vessel's time is what the feed reports (B-014), and silence is measured where staleness already is (B-022).                                                                                                                                          |
-| 12  | Package versions are central, and the WebSocket client is `ClientWebSocket` (ADR-0017, 2026-10-16).                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `Directory.Packages.props`; README.md § "Open items"                            | No claim here names a library. A package, if one is chosen, joins `Directory.Packages.props`, and the choice is an ADR (§ 11 row 2).                                                                                                                                                                                          |
-| 13  | AISStream's documented examples carry the MMSI (`MetaData.MMSI`, and `UserID` in each message) as a JSON number, not a string.                                                                                                                                                                                                                                                                                                                                                                                                                                                 | aisstream.io documentation                                                      | A number loses an MMSI's leading zeros, and with them the MID. The key is zero-padded to nine digits where it is read (B-008, B-020). A captured message (§ 11 row 6) confirms the type.                                                                                                                                      |
-| 14  | AIS reports ship type as a code from 0 to 99, which ITU-R M.1371 groups into categories: 20 – 29 `Wing in ground`, 30 `Fishing`, 31 – 32 `Towing`, 33 `Dredging`, 34 `Diving`, 35 `Military`, 36 `Sailing`, 37 `Pleasure craft`, 40 – 49 `High-speed craft`, 50 `Pilot`, 51 `Search and rescue`, 52 `Tug`, 53 `Port tender`, 54 `Anti-pollution`, 55 `Law enforcement`, 58 `Medical transport`, 59 `Noncombatant`, 60 – 69 `Passenger`, 70 – 79 `Cargo`, 80 – 89 `Tanker`, 90 – 99 `Other`. 0 is not available, and 1 – 19, 38 – 39 and 56 – 57 are reserved or for local use. | ITU-R M.1371, ship type table                                                   | The category, not the code, is what a grouping shows, spelled as above. A code the standard leaves unallocated, reserved or local groups as `Unknown`, like an absent one (B-020).                                                                                                                                            |
+| #   | Constraint                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Source                                                                                                       | Impact                                                                                                                                                                                                                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | AISStream is push: one WebSocket at `wss://stream.aisstream.io/v0/stream`, a subscription frame sent by the client, then a stream of messages it never asked for one at a time.                                                                                                                                                                                                                                                                                                                                                                                                | aisstream.io documentation; README.md § "Closing act"                                                        | There is no request with a response, so there is no contract layer, no `Task<T>` per endpoint, and no fake one (`aircraft-source` B-049, § 4 row 4). Aircraft replay's way of substituting is closed to vessels, which is replay-source B-023.                                                                                |
+| 2   | The subscription is one JSON frame: `APIKey`, `BoundingBoxes` as `[[lat, lon], [lat, lon]]` corners with latitude first, and optionally `FiltersShipMMSI` and `FilterMessageTypes`. Every message arrives as `MessageType`, `MetaData` and a `Message` keyed by its type.                                                                                                                                                                                                                                                                                                      | aisstream.io documentation                                                                                   | The configured box is converted to that corner order in one place. Latitude first is the reverse of a GeoJSON habit, and a swapped pair subscribes to empty ocean. B-001, B-010, B-011.                                                                                                                                       |
+| 3   | The API key is a credential. The service forbids direct browser use and keeps it server-side. The repository never holds a key.                                                                                                                                                                                                                                                                                                                                                                                                                                                | aisstream.io documentation; docs/runbook.md § "Never"; README.md § "Open items"                              | Rules out a key in `appsettings`, a test fixture, a log or a recording. It reaches the client the way the OpenSky secret does, and its absence is a reported failure rather than a crash. B-003, B-004.                                                                                                                       |
+| 4   | The subscription must arrive within three seconds of connecting or the service closes the socket. Resending replaces the subscription and is limited to one per second per connection. A rejected subscription gets no `SubscriptionConfirmation`.                                                                                                                                                                                                                                                                                                                             | aisstream.io documentation                                                                                   | Rules out connecting ahead of time and subscribing later, and changing the subscription on a live socket. One subscription per connection, sent first. B-002.                                                                                                                                                                 |
+| 5   | At most three subscribed connections per account and three open connections per originating IP. A fourth is rejected.                                                                                                                                                                                                                                                                                                                                                                                                                                                          | aisstream.io documentation                                                                                   | Rehearsing on one laptop while another runs the demo already spends two. A swapped-out or reconnecting client that leaks its old socket spends the rest. B-005.                                                                                                                                                               |
+| 6   | The service makes no uptime guarantee and replays nothing. It drops messages for a client that falls behind, and may close a slow connection.                                                                                                                                                                                                                                                                                                                                                                                                                                  | aisstream.io documentation                                                                                   | A gap in the feed is lost, not recovered. A reconnect starts from now (B-006), and a vessel that goes unheard through a long gap is removed like any other silent vessel (B-021).                                                                                                                                             |
+| 7   | From September 2026, uncompressed connections are subject to per-user bandwidth limits, and messages over the limit are dropped. Compression is `permessage-deflate`, confirmed by `SubscriptionConfirmation.Message.CompressionEnabled`.                                                                                                                                                                                                                                                                                                                                      | aisstream.io documentation                                                                                   | Rules out a client that cannot negotiate `permessage-deflate`. This bears on § 11 row 2, the library choice. B-007.                                                                                                                                                                                                           |
+| 8   | AIS reports speed in knots and course and heading in degrees. It encodes "not available" as in-range-looking numbers (latitude 91, longitude 181, heading 511, speed 102.3, course 360).                                                                                                                                                                                                                                                                                                                                                                                       | ITU-R M.1371                                                                                                 | The values are canonical as reported (ADR-0005 item 7), and the sentinels must become absent before anything compares, sorts or plots them. A sentinel position plotted on the detail map draws a ship off the Arctic. B-013, B-018.                                                                                          |
+| 9   | An MMSI's first three digits are its Maritime Identification Digits, allocated to a flag state by the ITU.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | ITU Maritime Identification Digits table                                                                     | Flag state is known from the first message, with no static data needed. It needs the full ITU allocation table, compiled in (§ 11 row 5). B-020.                                                                                                                                                                              |
+| 10  | `fleet-pipeline` B-019, amended 2026-10-15, treats silence per source: marking and keeping by default, and removal after a source's own threshold where that source's specification claims it.                                                                                                                                                                                                                                                                                                                                                                                 | `fleet-pipeline` B-016, B-019, § 4 row 6, § 5 row 2, § 11 row 9                                              | B-021 – B-023 are that claim's removal for vessels, and B-023's vessel threshold is the source's own threshold it names. The removal runs as a stage of that pipeline, driven by the description (`fleet-pipeline` § 11 row 9, answered (A) 2026-10-16; `fleet-pipeline` B-044). Nothing here edits another Feature's claims. |
+| 11  | The clock belongs to the tracker. No client, cache or strategy reads one.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | dynamic-data-pipeline § "Staleness and expiry"; ADR-0007; ADR-0010                                           | Rules out stamping a message with the arrival time read in the client. A vessel's time is what the feed reports (B-014), and silence is measured where staleness already is (B-022).                                                                                                                                          |
+| 12  | Package versions are central, and the WebSocket client is `ClientWebSocket` (ADR-0017, 2026-10-16).                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `Directory.Packages.props`; README.md § "Open items"                                                         | No claim here names a library. A package, if one is chosen, joins `Directory.Packages.props`, and the choice is an ADR (§ 11 row 2).                                                                                                                                                                                          |
+| 13  | AISStream's documented examples carry the MMSI (`MetaData.MMSI`, and `UserID` in each message) as a JSON number, not a string.                                                                                                                                                                                                                                                                                                                                                                                                                                                 | aisstream.io documentation                                                                                   | A number loses an MMSI's leading zeros, and with them the MID. The key is zero-padded to nine digits where it is read (B-008, B-020). A captured message (§ 11 row 6) confirms the type.                                                                                                                                      |
+| 14  | AIS reports ship type as a code from 0 to 99, which ITU-R M.1371 groups into categories: 20 – 29 `Wing in ground`, 30 `Fishing`, 31 – 32 `Towing`, 33 `Dredging`, 34 `Diving`, 35 `Military`, 36 `Sailing`, 37 `Pleasure craft`, 40 – 49 `High-speed craft`, 50 `Pilot`, 51 `Search and rescue`, 52 `Tug`, 53 `Port tender`, 54 `Anti-pollution`, 55 `Law enforcement`, 58 `Medical transport`, 59 `Noncombatant`, 60 – 69 `Passenger`, 70 – 79 `Cargo`, 80 – 89 `Tanker`, 90 – 99 `Other`. 0 is not available, and 1 – 19, 38 – 39 and 56 – 57 are reserved or for local use. | ITU-R M.1371, ship type table                                                                                | The category, not the code, is what a grouping shows, spelled as above. A code the standard leaves unallocated, reserved or local groups as `Unknown`, like an absent one (B-020).                                                                                                                                            |
+| 15  | The service sends binary WebSocket frames containing UTF-8 JSON.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | [AISStream documentation, FAQ "What WebSocket framing should I expect?"](https://aisstream.io/documentation) | Rules out a receive adapter that accepts only text frames: binary payloads must reach the JSON reader after decoding. A compression-denial confirmation cannot warn if the adapter drops it. B-007.                                                                                                                           |
 
 ## 5. Out of Scope
 
-<!-- Rules: ../../../.spec/templates/feature.md § 5 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 5 -->
 
 | #   | Item                                                                                                                                                                      | Exclusion reason                                                                                                                                                              |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -125,7 +126,7 @@ page is the authority when the two disagree.
 
 ## 6. Concern Separation
 
-<!-- Rules: ../../../.spec/templates/feature.md § 6 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 6 -->
 
 | Item                                                 | Classification | Notes                                                                                                                                 |
 | ---------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -142,7 +143,7 @@ page is the authority when the two disagree.
 
 ## 7. Technical Design
 
-<!-- Rules: ../../../.spec/templates/feature.md § 7 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 7 -->
 
 Written 2026-10-16, against §§ 1-5 as they stood at that time, which were still
 🟡 in § 12. The person's four answers of that day are folded in. Two choices
@@ -233,67 +234,54 @@ sequenceDiagram
 
 **Interface changes**
 
-None of these files exists yet, so the declarations are written out here
+Implemented types link to their compiling declarations below. The code block
+contains only declarations whose files do not exist yet
 (spec-and-traceability § "A declaration belongs to the file that compiles").
 
-| Type                           | File                                                        | Claims it makes visible     |
-| ------------------------------ | ----------------------------------------------------------- | --------------------------- |
-| `AisStreamOptions`             | `Integrations/AisStream/Configuration/AisStreamOptions.cs`  | B-003, B-004                |
-| `IVesselSocket`                | `Integrations/AisStream/IVesselSocket.cs`                   | B-002, B-005, B-007         |
-| `VesselSubscription`           | `Integrations/AisStream/Messages/VesselSubscription.cs`     | B-001, B-002, B-011         |
-| `VesselMessageReader`          | `Integrations/AisStream/Messages/VesselMessageReader.cs`    | B-010 – B-013, B-014        |
-| `VesselClient`                 | `Integrations/AisStream/VesselClient.cs`                    | B-002 – B-007, B-009, B-015 |
-| `Vessel`                       | `Model/Vessel.cs`                                           | B-008, B-016 – B-018, B-020 |
-| `MaritimeIdentificationDigits` | `Model/MaritimeIdentificationDigits.cs`                     | B-020                       |
-| `ShipTypes`                    | `Model/ShipTypes.cs`                                        | B-020                       |
-| `IVesselTrackerSource`         | `Tracking/Sources/IVesselTrackerSource.cs`                  | B-024                       |
-| `VesselTrackerSource`          | `Tracking/Sources/VesselTrackerSource.cs`                   | B-010, B-016, B-024         |
-| `VesselFleetDescription`       | `Tracking/Sources/VesselFleetDescription.cs`                | B-019, B-021, B-023         |
-| `AisStreamRegistration`        | `Integrations/AisStream/Container/AisStreamRegistration.cs` | B-001, B-003, B-024, B-025  |
+| Type                           | File                                                                          | Claims it makes visible     |
+| ------------------------------ | ----------------------------------------------------------------------------- | --------------------------- |
+| `AisStreamOptions`             | [`Configuration/AisStreamOptions.cs`](../Configuration/AisStreamOptions.cs)   | B-003, B-004                |
+| `IVesselSocket`                | [`IVesselSocket.cs`](../IVesselSocket.cs)                                     | B-002, B-005, B-007         |
+| `VesselSubscription`           | [`Messages/VesselSubscription.cs`](../Messages/VesselSubscription.cs)         | B-001, B-002, B-011         |
+| `VesselMessageReader`          | `Integrations/AisStream/Messages/VesselMessageReader.cs`                      | B-010 – B-013, B-014        |
+| `VesselClient`                 | [`VesselClient.cs`](../VesselClient.cs)                                       | B-002 – B-007, B-009, B-015 |
+| `Vessel`                       | `Model/Vessel.cs`                                                             | B-008, B-016 – B-018, B-020 |
+| `MaritimeIdentificationDigits` | `Model/MaritimeIdentificationDigits.cs`                                       | B-020                       |
+| `ShipTypes`                    | `Model/ShipTypes.cs`                                                          | B-020                       |
+| `IVesselTrackerSource`         | `Tracking/Sources/IVesselTrackerSource.cs`                                    | B-024                       |
+| `VesselTrackerSource`          | `Tracking/Sources/VesselTrackerSource.cs`                                     | B-010, B-016, B-024         |
+| `VesselFleetDescription`       | `Tracking/Sources/VesselFleetDescription.cs`                                  | B-019, B-021, B-023         |
+| `AisStreamRegistration`        | [`Container/AisStreamRegistration.cs`](../Container/AisStreamRegistration.cs) | B-001, B-003, B-024, B-025  |
+
+`0097` also introduces the socket adapter
+[`ClientVesselSocket`](../ClientVesselSocket.cs) and the cache's keyed
+[`VesselSnapshot`](../VesselSnapshot.cs). The snapshot initially carries its
+MMSI only; `0098` adds message fields and `0099` adds reported time. Options
+remain internal to the integration, like `OpenSkyOptions`. `0101` adds
+`SilentAfter`, defaulting to ten minutes and bound from `AisStream:SilentAfter`.
+The clock constructor parameter is retained for `0099`, without reading or
+retaining it before that item's clock behavior exists.
+
+The socket adapter's default constructor creates `ClientWebSocket`. Its
+second constructor accepts the framework's `WebSocket` at the receive boundary
+so local tests run the real frame decoder over a preopened socket. Opening a
+production connection still requires `ClientWebSocket`, sets deflate options
+and then connects; the injected socket adds no second connection path. The
+adapter assembles complete UTF-8 JSON payloads from either binary or text
+messages, joining bytes before decoding so a character split between frames
+survives (§ 4 row 15).
+
+`AddAisStream` initially registers options, the socket factory, the cache and
+client. It consumes the shared aircraft box, clock writer and schedulers
+already registered by the composition. `0102` adds the strategy and registered
+entry and calls the extension from the application composition.
 
 ```csharp
-// Bound from "AisStream". The key comes from the user-secrets store layered over
-// the packaged settings, never from a packaged value (B-003).
-public sealed class AisStreamOptions
-{
-    public const string Section = "AisStream";
-    public Uri Endpoint { get; init; } = new("wss://stream.aisstream.io/v0/stream");
-    public Option<string> ApiKey { get; init; }
-    public TimeSpan SilentAfter { get; init; } = TimeSpan.FromMinutes(10); // § 11 row 3, B-023
-    public TimeSpan ReconnectAfter { get; init; } = TimeSpan.FromSeconds(5);
-}
-
-// One connection. A new instance per connection, so a reconnect never reuses a
-// closed socket (B-005, B-006). The test double scripts frames; nothing here names
-// a provider operation, so it is not a contract layer (§ 5 row 1, ADR-0017).
-internal interface IVesselSocket : IAsyncDisposable
-{
-    Task Open(Uri endpoint, CancellationToken cancellation);      // requests permessage-deflate (B-007)
-    Task Send(string frame, CancellationToken cancellation);
-    IAsyncEnumerable<string> Frames(CancellationToken cancellation); // ends when the service closes it
-}
-
 // Reads one frame. Unreadable, unasked-for and unknown types are None (B-011, B-012);
 // sentinels are absent before the message leaves (B-013).
 internal static class VesselMessageReader
 {
     public static Option<VesselMessage> Read(string frame);
-}
-
-// Owns the socket and writes the cache. Listen() is what the strategy's
-// subscription owns, as AircraftSnapshotClient.Poll() is for aircraft.
-internal sealed class VesselClient
-{
-    public VesselClient(
-        Func<IVesselSocket> sockets,
-        SourceCache<VesselSnapshot, string> vessels,
-        IObservedClockWriter clock,
-        IOptions<AisStreamOptions> options,
-        IOptions<OpenSkyOptions> box,          // the one box, from the aircraft's setting (B-001)
-        ISchedulerProvider schedulers,
-        ILogger<VesselClient> logger);
-
-    public IDisposable Listen();
 }
 
 // The per-type seam ADR-0002 item 6 names, empty like IAircraftTrackerSource.
@@ -368,7 +356,9 @@ How the parts behave:
   socket is created (B-005). The cache is left
   alone, so vessels already held stay held (B-006).
 - **Closing.** Disposing what `Listen()` returned cancels the loop and disposes
-  the socket, and it is the only thing that does. The strategy holds it in
+  the socket, and it is the only thing that does. A client-owned asynchronous
+  gate serializes whole listen loops through socket close; a new subscription
+  cannot open until the prior subscription has finished its asynchronous close. The strategy holds it in
   `Observable.Using`, and `SwappingTrackerSource`'s `Switch` unsubscribes on a
   swap, so one live strategy means at most one socket (B-005).
 - **The strategy.** `VesselTrackerSource.Connect()` is
@@ -429,7 +419,7 @@ settled both on 2026-10-16 and took recommendation A each time.
    description, switched like its `Status`. One switch decides both the
    vehicles and their description, so the two cannot disagree. The
    description's registration moves from OpenSky to tracking.
-   [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
+   [ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
    records it and supersedes ADR-0015. Rejected: a second subject the swap actor writes on
    each swap. It leaves two things to keep in step, and a window in which they
    disagree.
@@ -446,15 +436,15 @@ settled both on 2026-10-16 and took recommendation A each time.
 
 ## 8. Testing Strategy
 
-<!-- Rules: ../../../.spec/templates/feature.md § 8 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 8 -->
 
 **Testability assessment**
 
-| Dimension          | Verdict | Finding                                                                                                                                                                                                                                                                                            | Recommendation                                                                                                                   |
-| ------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| DI seams           | Pass    | The socket is a factory of `IVesselSocket`, so a test scripts frames, sees every sent frame in order, and counts open sockets. The clock writer, the schedulers and the options are injected.                                                                                                      | A scripted socket that throws on an unscripted call, as `aircraft-source` B-010's fake does, so a test cannot pass on a default. |
-| Behavior isolation | Pass    | The reader is a static function of a string, and the mapper of a snapshot. The client is tested over a real `SourceCache`, and the strategy through `SwappingTrackerSource` with a `TestScheduler`.                                                                                                | —                                                                                                                                |
-| Coverage potential | Partial | B-003's "never in a log, a recording or a view" is a review over the code, not a test. B-007's grant is the service's, so a test proves the request and the confirmation's reading, and the grant is a review. The "nothing else" clauses of B-009, B-014, B-016, B-019 and B-024 are reviews too. | The table below names each review and what re-does it, and § 9 carries it.                                                       |
+| Dimension          | Verdict | Finding                                                                                                                                                                                                                                                                                                                                                                | Recommendation                                                                                                                   |
+| ------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| DI seams           | Pass    | The socket is a factory of `IVesselSocket`, so a test scripts frames, sees every sent frame in order, and counts open sockets. The clock writer, the schedulers and the options are injected.                                                                                                                                                                          | A scripted socket that throws on an unscripted call, as `aircraft-source` B-010's fake does, so a test cannot pass on a default. |
+| Behavior isolation | Pass    | The reader is a static function of a string, and the mapper of a snapshot. The client is tested over a real `SourceCache`, and the strategy through `SwappingTrackerSource` with a `TestScheduler`.                                                                                                                                                                    | —                                                                                                                                |
+| Coverage potential | Partial | B-003's "never in a log, a recording or a view" is a review over the code, not a test. B-007 needs a local review of the production adapter's compression request alongside tests of the client's connection and denial behavior; the service's grant is outside claim completion. The "nothing else" clauses of B-009, B-014, B-016, B-019 and B-024 are reviews too. | The table below names each review and what re-does it, and § 9 carries it.                                                       |
 
 **Scenarios**
 
@@ -481,66 +471,102 @@ proves nothing about lines it does not run. Each one below is a review, and
 the change that re-does it is named. No analyzer rule covers these yet.
 `boundary-analyzer`'s layer map would have to grow to know the vessel types.
 
-| Claim | The clause                                                           | The review                                                                                                                                                | Re-done by                                                |
-| ----- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| B-003 | The key is never in a log, a recording, a packaged setting or a view | `grep` the options' key over log calls, recordings, `appsettings*.json` and bindings                                                                      | Any change that logs, records or binds `AisStreamOptions` |
-| B-007 | Compression was granted                                              | The live service's confirmation reads `CompressionEnabled: true`                                                                                          | Each rehearsal of the closing act                         |
-| B-009 | No full set is assembled or diffed                                   | `grep EditDiff` and set-building calls over `Integrations/AisStream/` returns nothing                                                                     | Any change to `VesselClient`                              |
-| B-014 | No clock is read for last contact                                    | `grep` for `IObservedClock`, `Now` and `UtcNow` over `Integrations/AisStream/` and the vessel strategy and mapper returns nothing                         | Any change to those files                                 |
-| B-016 | Only the strategy builds a vessel                                    | `grep "new Vessel("` over `src/` returns only `VesselSnapshotMapper`                                                                                      | Any new consumer of the cache                             |
-| B-019 | Only the description names the vessel type                           | `grep` for `is Vessel`, `as Vessel` and `(Vessel)` returns only `VesselFleetDescription`, as `fleet-pipeline` B-022's review does for aircraft            | Any new consumer of the fleet                             |
-| B-024 | No contract layer, and no member added to the seam                   | No interface under `Integrations/AisStream/` names a provider operation, and `ITrackerSource` is unchanged in the diff (`aircraft-source` B-049's review) | Any change to `Integrations/AisStream/` or the seam       |
+| Claim | The clause                                                           | The review                                                                                                                                                                   | Re-done by                                                |
+| ----- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| B-003 | The key is never in a log, a recording, a packaged setting or a view | `grep` the options' key over log calls, recordings, `appsettings*.json` and bindings                                                                                         | Any change that logs, records or binds `AisStreamOptions` |
+| B-007 | Every connection requests `permessage-deflate`                       | Review the production `IVesselSocket` adapter: every open sets `ClientWebSocketOptions.DangerousDeflateOptions` before connecting; a scripted socket alone cannot prove this | Any change to the production socket adapter               |
+| B-009 | No full set is assembled or diffed                                   | `grep EditDiff` and set-building calls over `Integrations/AisStream/` returns nothing                                                                                        | Any change to `VesselClient`                              |
+| B-014 | No clock is read for last contact                                    | `grep` for `IObservedClock`, `Now` and `UtcNow` over `Integrations/AisStream/` and the vessel strategy and mapper returns nothing                                            | Any change to those files                                 |
+| B-016 | Only the strategy builds a vessel                                    | `grep "new Vessel("` over `src/` returns only `VesselSnapshotMapper`                                                                                                         | Any new consumer of the cache                             |
+| B-019 | Only the description names the vessel type                           | `grep` for `is Vessel`, `as Vessel` and `(Vessel)` returns only `VesselFleetDescription`, as `fleet-pipeline` B-022's review does for aircraft                               | Any new consumer of the fleet                             |
+| B-024 | No contract layer, and no member added to the seam                   | No interface under `Integrations/AisStream/` names a provider operation, and `ITrackerSource` is unchanged in the diff (`aircraft-source` B-049's review)                    | Any change to `Integrations/AisStream/` or the seam       |
+
+A rehearsal may observe the live service's `CompressionEnabled` confirmation
+to assess feed bandwidth. A grant is the service's decision, not a B-007
+completion condition; local verification requires no live service or key.
+
+**Executed connection coverage (work item `0097`, 2026-10-17)**
+
+The 20 local xUnit cases in `Integrations/AisStream` pass. They cover the
+actual sent aircraft box, first-frame order across reconnects, user-secrets
+composition, absent-key selection, repeated swaps, delayed asynchronous close
+on reconnect and reselection, cancellation of a pending reconnect, retained
+cache entries after normal close and receive failure, compression denial,
+secret-safe failure logging, and ignoring an unrequested base-station report.
+The subscription writer has separate box-shape and message-filter tests.
+Production composition resolves the retained client and cache and creates a
+fresh socket per connection. The real receive adapter is exercised through a
+BCL `WebSocket` double with binary JSON, fragmented binary JSON split inside a
+multibyte UTF-8 character, a message larger than the 8192-byte receive buffer,
+and compatible text JSON. The initial two binary cases failed against the text-only
+adapter before the fix.
+
+The strict scripted socket rejects reads before subscription and repeated
+sends. Tests await socket completion and scheduler pumping on a neutral
+execution context, because xUnit's synchronization context can defer the
+client's continuation after a completion. Every timed wait still runs on the
+injected `TestScheduler`; there are no sleeps, retry loops or live connections.
+The semaphore handoff test additionally awaits the incoming socket's open and
+uses an xUnit watchdog to identify a stuck handoff.
+
+Local reviews confirm that the production socket requests deflate before
+connecting, and that key values and exception objects reach no log call,
+recording, packaged setting or binding. The service's compression grant is
+not required for this local coverage.
 
 ## 9. Traceability Matrix
 
-<!-- Rules: ../../../.spec/templates/feature.md § 9 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 9 -->
 
-Every row reads `Missing`: nothing is built. Each names the item that holds the
-claim and the test or review that will prove it.
+Connection claims delivered by `0097` are verified by the executed tests and
+local reviews below. Remaining claims name the item and planned evidence;
+`Missing` continues to block delivery of those claims.
 
-| Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                               | Status  |
-| -------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| B-001    | `@B-001` | `0097` — planned: `VesselSubscriptionTests.GivenTheAircraftBox_WhenTheSubscriptionIsWritten_ThenItNamesThatOneBoxLatitudeFirst`                                                                                                                                                                                                    | Missing |
-| B-002    | `@B-002` | `0097` — planned: `VesselClientTests.GivenAKey_WhenAConnectionOpens_ThenTheSubscriptionIsTheFirstFrameAndTheOnlyOne`, over two connections                                                                                                                                                                                         | Missing |
-| B-003    | `@B-003` | `0097` — planned: `AisStreamRegistrationTests.GivenAKeyInUserSecrets_WhenTheOptionsAreComposed_ThenTheKeyIsTheStores`; plus a **review** that no log line, recording, packaged setting or binding names the key. Re-done by any change that logs or binds the options                                                              | Missing |
-| B-004    | `@B-004` | `0097` — planned: `VesselClientTests.GivenNoKey_WhenTheVesselStrategyIsSelected_ThenNoSocketOpensAnErrorNamesTheSettingAndAnotherStrategyStillSwapsIn`                                                                                                                                                                             | Missing |
-| B-005    | `@B-005` | `0097` — planned: `VesselClientTests.GivenRepeatedSwaps_WhenEachCompletes_ThenAtMostOneSocketIsOpenAndTheOutgoingOneIsClosed`, `GivenADroppedConnection_WhenTheClientReconnects_ThenTheOldSocketClosedBeforeTheNewOneOpened`, and `GivenAPendingReconnect_WhenTheStrategyIsSwappedOut_ThenNoSocketOpensWhenTheDelayPasses`         | Missing |
-| B-006    | `@B-006` | `0097` — planned: `VesselClientTests.GivenTheServiceClosesTheSocket_WhenTheClientReconnects_ThenItResubscribesAndTheHeldVesselsStay`                                                                                                                                                                                               | Missing |
-| B-007    | `@B-007` | `0097` — planned: `VesselClientTests.GivenAnyConnection_WhenItOpens_ThenCompressionIsRequested`, and `GivenAConfirmationWithoutCompression_WhenItArrives_ThenAWarningIsLoggedAndTheStreamStaysOpen`; plus a **review** against the live service that `CompressionEnabled` reads true, re-done at each rehearsal of the closing act | Missing |
-| B-008    | `@B-008` | `0098` — planned: `VesselMessageReaderTests.GivenAnMmsi_WhenItIsRead_ThenTheKeyIsNineDigits`, a theory over a nine-digit MMSI and a numeric one with a leading zero                                                                                                                                                                | Missing |
-| B-009    | `@B-009` | `0098` — planned: `VesselClientTests.GivenSuccessivePositionReports_WhenEachArrives_ThenEachIsOneAddOrUpdate`; plus a **review** that no set is assembled or diffed (§ 8), re-done by any change to `VesselClient`                                                                                                                 | Missing |
-| B-010    | `@B-010` | `0098` — planned: `VesselClientTests.GivenStaticDataForAnUnheldVessel_WhenItArrives_ThenItIsCachedWithANameATypeAndNoPosition`; `0100` — `VesselTrackerSourceTests.GivenAVesselNoMessageHasTimed_WhenTheFleetIsRead_ThenItIsAbsentUntilAMessageTimesIt`                                                                            | Missing |
-| B-011    | `@B-011` | `0097` — planned: `VesselSubscriptionTests.GivenTheSubscription_WhenItIsWritten_ThenItFiltersToPositionReportsAndStaticData`; `0098` — `VesselMessageReaderTests.GivenAnotherMessageType_WhenItIsRead_ThenNothingIsRead`                                                                                                           | Missing |
-| B-012    | `@B-012` | `0098` — planned: `VesselClientTests.GivenAnUnreadableFrame_WhenItArrives_ThenItIsSkippedTheHeldVesselIsUnchangedAndTheStreamContinues`                                                                                                                                                                                            | Missing |
-| B-013    | `@B-013` | `0098` — planned: `VesselMessageReaderTests.GivenASentinelOrAMissingCoordinate_WhenItIsRead_ThenTheValueIsAbsent`, a theory over each sentinel and each missing coordinate                                                                                                                                                         | Missing |
-| B-014    | `@B-014` | `0099` — waiting on § 11 row 6. Planned: `VesselClientTests.GivenReportedInstants_WhenTheyArriveInAnyOrder_ThenLastContactIsTheLatest`, and `GivenStaticDataWithNoInstant_WhenItArrives_ThenLastContactIsUnchanged`; plus a **review** that no clock is read for it (§ 8)                                                          | Missing |
-| B-015    | `@B-015` | `0099` — waiting on § 11 row 6. Planned: `VesselClientTests.GivenMessagesWithAndWithoutAnInstant_WhenTheyArrive_ThenOnlyTheFormerAdvanceTheClock`, and `GivenAnInstantEarlierThanTheLatest_WhenItArrives_ThenTheClockStays`                                                                                                        | Missing |
-| B-016    | `@B-016` | `0100` — planned: `VesselTrackerSourceTests.GivenACachedVessel_WhenItIsProjected_ThenItIsAVesselDirectlyBelowTransportVehicle`; plus a **review** that only `VesselSnapshotMapper` constructs one (§ 8)                                                                                                                            | Missing |
-| B-017    | `@B-017` | `0100` — planned: `VesselTests.GivenAName_WhenTheLabelIsRead_ThenItIsTheTrimmedNameOrTheMmsi`, a theory over padded, `@`-filled, blank and absent names                                                                                                                                                                            | Missing |
-| B-018    | `@B-018` | `0100` — planned: `VesselSnapshotMapperTests.GivenReportedSpeedCourseAndHeading_WhenProjected_ThenTheyAreHeldAsReported`                                                                                                                                                                                                           | Missing |
-| B-019    | `@B-019` | `0100` — planned: `VesselFleetDescriptionTests.GivenTheDescription_WhenItIsRead_ThenItNamesItsGroupingsComparersCardTrailAndSilence`; plus a **review** that only the description names `Vessel` (§ 8)                                                                                                                             | Missing |
-| B-020    | `@B-020` | `0100` — planned: `VesselTests.GivenAnMmsi_WhenTheFlagStateIsRead_ThenItIsTheItuStateOrUnknown`, and `GivenATypeCode_WhenTheShipTypeIsRead_ThenItIsTheM1371CategoryOrUnknown`; plus a **review** that resolving reads no file, resource or network                                                                                 | Missing |
-| B-021    | `@B-021` | `0101` — planned: `FleetTrackerSilenceTests.GivenAVesselSilentPastTheThreshold_WhenTheClockAdvances_ThenItIsRemovedAndReturnsAsAnArrivalWhenItReports`                                                                                                                                                                             | Missing |
-| B-022    | `@B-022` | `0101` — planned: `FleetTrackerSilenceTests.GivenAnHourOnTheSchedulerAndTheObservedClockHeld_WhenTheFleetIsRead_ThenNothingWasRemoved`, and `GivenTheObservedClockAdvancedByAnotherVessel_WhenItPassesTheThreshold_ThenTheSilentVesselIsRemoved`                                                                                   | Missing |
-| B-023    | `@B-023` | `0101` — planned: `FleetTrackerSilenceTests.GivenNoConfiguredThreshold_WhenAVesselIsSilentSixMinutes_ThenItIsPresentAndNotMarkedStale`, `GivenAConfiguredThreshold_WhenAVesselIsSilentPastIt_ThenItIsRemoved`, and `GivenAnAircraftSilentAnHour_WhenTheFleetIsRead_ThenItIsMarkedAndPresent`                                       | Missing |
-| B-024    | `@B-024` | `0102` — planned: `AisStreamRegistrationTests.GivenTheApplicationsGraph_WhenTheEntriesAreRead_ThenVesselsIsAStrategyBehindTheDecoratorAndNotTheSeam`; plus a **review** that no contract layer exists and the seam is unchanged (§ 8)                                                                                              | Missing |
-| B-025    | `@B-025` | `0102` — planned: `AisStreamRegistrationTests.GivenTheVesselsEntry_WhenItIsLive_ThenNoPollStatusIsPublished`                                                                                                                                                                                                                       | Missing |
-| B-026    | `@B-026` | `0102` — planned: `FleetSwapCompositionTests.GivenTheApplicationsGraph_WhenThePickerSwapsToVesselsAndBack_ThenTheDescriptionAndVehiclesChangeAndTheTrackerAndCollectionRemain`                                                                                                                                                     | Missing |
+| Claim ID | Scenario | Test                                                                                                                                                                                                                                                                                                                                                                                                                        | Status   |
+| -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| B-001    | `@B-001` | `VesselSubscriptionTests.GivenTheAircraftBox_WhenTheSubscriptionIsWritten_ThenItNamesThatOneBoxLatitudeFirst`; `VesselClientTests.GivenAChangedAircraftBox_WhenTheClientSubscribes_ThenTheSentFrameUsesThatBox`                                                                                                                                                                                                             | Verified |
+| B-002    | `@B-002` | `VesselClientTests.GivenAKey_WhenAConnectionOpens_ThenTheSubscriptionIsTheFirstFrameAndTheOnlyOne`, over two connections                                                                                                                                                                                                                                                                                                    | Verified |
+| B-003    | `@B-003` | `AisStreamRegistrationTests.GivenAKeyInUserSecrets_WhenTheOptionsAreComposed_ThenTheKeyIsTheStores`; `VesselClientTests.GivenAFailureContainingTheKey_WhenTheConnectionFails_ThenLogsDoNotDiscloseTheKey`; local review: no key or exception object reaches logs, recordings, packaged settings or bindings (§ 8), repeated when those surfaces change                                                                      | Verified |
+| B-004    | `@B-004` | `VesselClientTests.GivenNoKey_WhenTheVesselStrategyIsSelected_ThenNoSocketOpensAnErrorNamesTheSettingAndAnotherStrategyStillSwapsIn`                                                                                                                                                                                                                                                                                        | Verified |
+| B-005    | `@B-005` | `VesselClientTests.GivenRepeatedSwaps_WhenEachCompletes_ThenAtMostOneSocketIsOpenAndTheOutgoingOneIsClosed`; `GivenADroppedConnection_WhenTheClientReconnects_ThenTheOldSocketClosedBeforeTheNewOneOpened`; `GivenAnOutgoingSocketStillClosing_WhenVesselsAreReselected_ThenTheNewSocketWaitsForItsClose`; `GivenAPendingReconnect_WhenTheStrategyIsSwappedOut_ThenNoSocketOpensWhenTheDelayPasses`                         | Verified |
+| B-006    | `@B-006` | `VesselClientTests.GivenTheServiceClosesTheSocket_WhenTheClientReconnects_ThenItResubscribesAndTheHeldVesselsStay`, with normal closure and a failed receive, retaining both held cache entries; `AisStreamRegistrationTests.GivenTheProductionRegistrations_WhenTheClientAndSocketsAreResolved_ThenTheClientAndCacheAreRetainedAndSocketsAreFresh`                                                                         | Verified |
+| B-007    | `@B-007` | `VesselClientTests.GivenAConfirmationWithoutCompression_WhenItArrives_ThenAWarningIsLoggedAndTheStreamStaysOpen`; `ClientVesselSocketTests.GivenUtf8JsonReceiveFragments_WhenFramesAreRead_ThenTheWholeMessageReachesTheClient` (binary, split UTF-8, large and text payloads); local review: `ClientVesselSocket.Open` sets `DangerousDeflateOptions` before every connect (§ 8), repeated when the socket adapter changes | Verified |
+| B-008    | `@B-008` | `0098` — planned: `VesselMessageReaderTests.GivenAnMmsi_WhenItIsRead_ThenTheKeyIsNineDigits`, a theory over a nine-digit MMSI and a numeric one with a leading zero                                                                                                                                                                                                                                                         | Missing  |
+| B-009    | `@B-009` | `0098` — planned: `VesselClientTests.GivenSuccessivePositionReports_WhenEachArrives_ThenEachIsOneAddOrUpdate`; plus a **review** that no set is assembled or diffed (§ 8), re-done by any change to `VesselClient`                                                                                                                                                                                                          | Missing  |
+| B-010    | `@B-010` | `0098` — planned: `VesselClientTests.GivenStaticDataForAnUnheldVessel_WhenItArrives_ThenItIsCachedWithANameATypeAndNoPosition`; `0100` — `VesselTrackerSourceTests.GivenAVesselNoMessageHasTimed_WhenTheFleetIsRead_ThenItIsAbsentUntilAMessageTimesIt`                                                                                                                                                                     | Missing  |
+| B-011    | `@B-011` | `VesselSubscriptionTests.GivenTheSubscription_WhenItIsWritten_ThenItFiltersToPositionReportsAndStaticData`; the sent-frame assertion in `VesselClientTests.GivenAKey_WhenAConnectionOpens_ThenTheSubscriptionIsTheFirstFrameAndTheOnlyOne`; `GivenABaseStationReport_WhenItArrives_ThenHeldVesselsStayUnchangedAndTheStreamContinues`. `0098` adds reader-level regression coverage when its message reader is built        | Verified |
+| B-012    | `@B-012` | `0098` — planned: `VesselClientTests.GivenAnUnreadableFrame_WhenItArrives_ThenItIsSkippedTheHeldVesselIsUnchangedAndTheStreamContinues`                                                                                                                                                                                                                                                                                     | Missing  |
+| B-013    | `@B-013` | `0098` — planned: `VesselMessageReaderTests.GivenASentinelOrAMissingCoordinate_WhenItIsRead_ThenTheValueIsAbsent`, a theory over each sentinel and each missing coordinate                                                                                                                                                                                                                                                  | Missing  |
+| B-014    | `@B-014` | `0099` — waiting on § 11 row 6. Planned: `VesselClientTests.GivenReportedInstants_WhenTheyArriveInAnyOrder_ThenLastContactIsTheLatest`, and `GivenStaticDataWithNoInstant_WhenItArrives_ThenLastContactIsUnchanged`; plus a **review** that no clock is read for it (§ 8)                                                                                                                                                   | Missing  |
+| B-015    | `@B-015` | `0099` — waiting on § 11 row 6. Planned: `VesselClientTests.GivenMessagesWithAndWithoutAnInstant_WhenTheyArrive_ThenOnlyTheFormerAdvanceTheClock`, and `GivenAnInstantEarlierThanTheLatest_WhenItArrives_ThenTheClockStays`                                                                                                                                                                                                 | Missing  |
+| B-016    | `@B-016` | `0100` — planned: `VesselTrackerSourceTests.GivenACachedVessel_WhenItIsProjected_ThenItIsAVesselDirectlyBelowTransportVehicle`; plus a **review** that only `VesselSnapshotMapper` constructs one (§ 8)                                                                                                                                                                                                                     | Missing  |
+| B-017    | `@B-017` | `0100` — planned: `VesselTests.GivenAName_WhenTheLabelIsRead_ThenItIsTheTrimmedNameOrTheMmsi`, a theory over padded, `@`-filled, blank and absent names                                                                                                                                                                                                                                                                     | Missing  |
+| B-018    | `@B-018` | `0100` — planned: `VesselSnapshotMapperTests.GivenReportedSpeedCourseAndHeading_WhenProjected_ThenTheyAreHeldAsReported`                                                                                                                                                                                                                                                                                                    | Missing  |
+| B-019    | `@B-019` | `0100` — planned: `VesselFleetDescriptionTests.GivenTheDescription_WhenItIsRead_ThenItNamesItsGroupingsComparersCardTrailAndSilence`; plus a **review** that only the description names `Vessel` (§ 8)                                                                                                                                                                                                                      | Missing  |
+| B-020    | `@B-020` | `0100` — planned: `VesselTests.GivenAnMmsi_WhenTheFlagStateIsRead_ThenItIsTheItuStateOrUnknown`, and `GivenATypeCode_WhenTheShipTypeIsRead_ThenItIsTheM1371CategoryOrUnknown`; plus a **review** that resolving reads no file, resource or network                                                                                                                                                                          | Missing  |
+| B-021    | `@B-021` | `0101` — planned: `FleetTrackerSilenceTests.GivenAVesselSilentPastTheThreshold_WhenTheClockAdvances_ThenItIsRemovedAndReturnsAsAnArrivalWhenItReports`                                                                                                                                                                                                                                                                      | Missing  |
+| B-022    | `@B-022` | `0101` — planned: `FleetTrackerSilenceTests.GivenAnHourOnTheSchedulerAndTheObservedClockHeld_WhenTheFleetIsRead_ThenNothingWasRemoved`, and `GivenTheObservedClockAdvancedByAnotherVessel_WhenItPassesTheThreshold_ThenTheSilentVesselIsRemoved`                                                                                                                                                                            | Missing  |
+| B-023    | `@B-023` | `0101` — planned: `FleetTrackerSilenceTests.GivenNoConfiguredThreshold_WhenAVesselIsSilentSixMinutes_ThenItIsPresentAndNotMarkedStale`, `GivenAConfiguredThreshold_WhenAVesselIsSilentPastIt_ThenItIsRemoved`, and `GivenAnAircraftSilentAnHour_WhenTheFleetIsRead_ThenItIsMarkedAndPresent`                                                                                                                                | Missing  |
+| B-024    | `@B-024` | `0102` — planned: `AisStreamRegistrationTests.GivenTheApplicationsGraph_WhenTheEntriesAreRead_ThenVesselsIsAStrategyBehindTheDecoratorAndNotTheSeam`; plus a **review** that no contract layer exists and the seam is unchanged (§ 8)                                                                                                                                                                                       | Missing  |
+| B-025    | `@B-025` | `0102` — planned: `AisStreamRegistrationTests.GivenTheVesselsEntry_WhenItIsLive_ThenNoPollStatusIsPublished`                                                                                                                                                                                                                                                                                                                | Missing  |
+| B-026    | `@B-026` | `0102` — planned: `FleetSwapCompositionTests.GivenTheApplicationsGraph_WhenThePickerSwapsToVesselsAndBack_ThenTheDescriptionAndVehiclesChangeAndTheTrackerAndCollectionRemain`                                                                                                                                                                                                                                              | Missing  |
 
 ## 10. Lessons / Spec Deltas
 
-<!-- Rules: ../../../.spec/templates/feature.md § 10 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 10 -->
 
-None yet.
+| Date       | Lesson                                                                            | Spec delta                                                                                                                  | Claim |
+| ---------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----- |
+| 2026-10-17 | [Lesson 0001: Binary frames carry JSON](lessons/0001-binary-frames-carry-json.md) | `spec-author` records the provider's binary UTF-8 framing in § 4 row 15 and adds a fragmented binary confirmation scenario. | B-007 |
 
 ## 11. Open Questions
 
-<!-- Rules: ../../../.spec/templates/feature.md § 11 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 11 -->
 
 | #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Owner                                                                      | Target date                         |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------- |
 | 1   | **Answered 2026-10-15 — `fleet-pipeline` B-019 amended.** Silence is treated per source there: aircraft stay marked and kept (`fleet-pipeline` B-016, B-017), and a source whose specification claims removal, as B-021 – B-023 do, has its vehicles removed after its own threshold on the observed clock; `fleet-pipeline` B-016 now yields to that removal. Where the removal runs — a pipeline stage driven by the description, or this strategy emitting the removes below the seam — is not decided there either: `fleet-pipeline` § 11 row 9, answered 2026-10-16: (A), a pipeline stage driven by the description. | the person                                                                 | Closed                              |
-| 2   | **Answered 2026-10-16 — `ClientWebSocket`**, negotiating `permessage-deflate` itself ([ADR-0017](../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)). The question was: `ClientWebSocket` or `AISStream.NET`? Either must negotiate `permessage-deflate` (§ 4 row 7) and expose the subscription as the first frame (B-002). Recorded as an ADR.                                                                                                                                                                                                                                                           | the person                                                                 | Closed                              |
+| 2   | **Answered 2026-10-16 — `ClientWebSocket`**, negotiating `permessage-deflate` itself ([ADR-0017](../../../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)). The question was: `ClientWebSocket` or `AISStream.NET`? Either must negotiate `permessage-deflate` (§ 4 row 7) and expose the subscription as the first frame (B-002). Recorded as an ADR.                                                                                                                                                                                                                                                     | the person                                                                 | Closed                              |
 | 3   | **Answered 2026-10-16 — 10 minutes**, above both the three-minute at-anchor cadence and the six-minute static-data cadence. The question was the vessel silence threshold's default. Class A ships report positions every few seconds under way and every three minutes at anchor, and static data every six minutes. A default under three minutes would remove anchored ships that are still reporting.                                                                                                                                                                                                                  | the person                                                                 | Closed                              |
 | 4   | What does the refresh control do while vessels are live? It `Tell`s `DemandPoll`, and a push source has nothing to poll. Disabled, hidden, or a no-op?                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `fleet-dashboard`                                                          | Before the closing act is rehearsed |
 | 5   | **Answered 2026-10-16 — the full ITU allocation, compiled in**, so a ship from any flag entering the box is named. The question was: where does the MID → flag-state table come from, and how much of it does the Houston box need? The ITU publishes the whole allocation, and a box over Galveston Bay sees a small part of it.                                                                                                                                                                                                                                                                                          | the person, or `implementer` with § 7                                      | Closed                              |
@@ -548,16 +574,16 @@ None yet.
 
 ## 12. Sign-off
 
-<!-- Rules: ../../../.spec/templates/feature.md § 12 -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟡 Draft    |
+| §§ 1-5   | spec-author | 🟢 Approved |
 | §§ 6-7   | implementer | 🟢 Approved |
 | §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it
-back, is [the template's § 12](../../../.spec/templates/feature.md).
+back, is [the template's § 12](../../../../../.spec/templates/feature.md).
 
 **Reviewed 2026-10-16 — all three rows stay 🟡.** The review was done by a
 `spec-reviewer` with a fresh context, which wrote none of these sections. It
@@ -634,7 +660,7 @@ not counted below except where the spec mishandles them.
 **§§ 6-7 — implementer:**
 
 1. **F1 — an accepted ADR was amended in place.** Answered in this change.
-   [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
+   [ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md)
    records the call and supersedes ADR-0015, and ADR-0015's body is restored.
    The answer needs a reviewer's read.
 2. **F7 — § 7 gives no mapper rule** for last contact when no instant is
@@ -770,9 +796,68 @@ the other two specs:
     - R7: §§ 8-9 must reopen. Answered: both lowered to 🟡.
     - R10: stale counts, Tasks rows and item `0013`'s decision line.
 
+**Re-reviewed 2026-10-17 by an independent `spec-reviewer`.** This reviewer
+authored none of §§ 1-9 or the product decisions. It read the current claims,
+scenarios, design, traceability rows and all six child items, with ADR-0007,
+ADR-0010, ADR-0017 and ADR-0018 and the cross-feature claims cited below.
+
+- **R1 resolved.** B-015 guards only the vessel client's own latest reported
+  instant. It does not promise monotonicity across the shared clock's writers,
+  preserving ADR-0007's replay reset.
+- **R2 and R13 resolved.** Item `0100`'s claims, acceptance criteria and the
+  Tasks index now include B-010's projection gate; `0098` retains its cache
+  half. The existing scenario and § 9 name both halves.
+- **R3 resolved by the person on 2026-10-17.** The four product choices in
+  B-010, B-015 and B-019 were explicitly approved, as recorded under Decisions.
+  This is agreement to those choices, not a delivery-gate waiver.
+- **R4 resolved.** B-020 and § 4 row 14 name the complete code categories and
+  the reserved/unallocated fallback, without an open-ended example list.
+- **R12 resolved after the owning test-writer's correction.** B-007 requires
+  the production adapter to request compression and the client to read the
+  confirmation, warn on denial and continue. §§ 8-9 now prove those obligations
+  locally. A live provider's grant is rehearsal evidence, not an extra claim
+  completion condition; no provider was contacted for this review.
+- **R14 resolved after the owning spec-author's correction.** Item `0098` and
+  the Tasks index now cite B-011's ignored-message reader half; `0097` retains
+  its subscription half, matching § 9.
+
+**Clean for this specification: all three owner rows are approved.** Every one
+of the 26 claims has exactly one matrix row and at least one matching scenario
+tag. All 26 rows remain `Missing`: this review proves no implementation and
+closes no delivery item.
+
+The connection item `0097` is complete in §§ 1-9 and does not depend on a live
+key or the unresolved timestamp field. Item `0099` remains blocked on § 11
+row 6's captured-message evidence. Items `0101` and `0102` still require their
+own prerequisites and the outstanding `fleet-pipeline` B-044 and
+`aircraft-source` B-060 reviews already listed above.
+
+**Connection implementation reviewed 2026-10-17 by an independent
+`spec-reviewer`.** The reviewer authored none of the claims, design, tests
+or implementation it reviewed. B-001 – B-007 and B-011 satisfy their
+scenarios; subscription order, reconnect cancellation and asynchronous socket
+ownership are exercised by the actual passing tests named in § 9.
+
+The first code review found that the receive adapter discarded the binary
+frames AISStream actually sends. Before the fix, `spec-author` recorded the
+provider fact in § 4 row 15, added the B-007 scenario and wrote
+[lesson 0001](lessons/0001-binary-frames-carry-json.md). Two binary adapter
+cases then failed while the text control passed. After the fix, all 20
+connection cases pass, including fragmented binary JSON, a split UTF-8
+character and a message larger than the receive buffer.
+
+Re-review found no remaining actionable finding. The production adapter
+requests compression before connecting; the frame tests reach its actual
+receive boundary. The key review covers the new configuration, subscription,
+log calls and packaged settings; no credential or transport exception is
+logged. The scoped registration introduces no strategy or seam change, which
+remains `0102`'s work. The reviewed deltas in §§ 1-5, §§ 6-7 and §§ 8-9 are
+approved. This review closes no remaining vessel claim and supplies no live
+provider or timestamp evidence for `0099`.
+
 ## Decisions
 
-<!-- Rules: ../../../.spec/templates/feature.md § Decisions -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § Decisions -->
 
 None yet. Three calls the person made on 2026-10-15 shaped §§ 1-5. Ships are the
 closing act (README.md § "Open items"). A silent vessel is removed, not marked
@@ -783,7 +868,7 @@ The person made four more calls on 2026-10-16, answering § 11:
 
 - The vessel client uses `ClientWebSocket`. This is a cross-cutting technology
   choice, so it is recorded repository-wide as
-  [ADR-0017](../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)
+  [ADR-0017](../../../../../.spec/adr/0017-the-vessel-client-uses-clientwebsocket.md)
   (row 2).
 - The vessel silence threshold defaults to 10 minutes (row 3).
 - Flag state comes from the full ITU allocation, compiled in (row 5).
@@ -796,13 +881,28 @@ Two more calls that day settled § 7's open choices, each recommendation A:
 
 - The description swaps with the source through `TrackerSourceEntry`, which
   is recorded as
-  [ADR-0018](../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md).
+  [ADR-0018](../../../../../.spec/adr/0018-a-registered-entry-carries-its-fleet-description.md).
 - Silence removal is a dynamic `Filter` on the observed clock, not
   `ExpireAfter`, which amends README.md.
 
+On 2026-10-17 the person approved all four product calls raised in R3,
+confirming the existing claims without changing their wording:
+
+- B-019: the vessel trail measure is speed over ground, ramped from 0 to 30
+  knots.
+- B-019: the card title is the label, the subtitle is the ship type, and the
+  readouts are speed over ground and course over ground.
+- B-010: an untimed vessel remains cached but stays out of the fleet until a
+  message for it reports an instant.
+- B-015: a reported instant no later than the client's latest instant leaves
+  the observed clock unchanged.
+
+This approves the R3 product calls only; it does not waive the specification
+approval or delivery gates.
+
 ## Tasks
 
-<!-- Rules: ../../../.spec/templates/feature.md § Tasks -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § Tasks -->
 
 Cut 2026-10-16, before §§ 6-9 were written, so that the person's decisions
 above had items to land on. None of them moves to `in-progress` while § 12's
@@ -812,15 +912,15 @@ rows are 🟡.
 | ----------------------------------------------------------- | ----------------------------------------------- |
 | [`0096`](../.issue/0096-vessel-source.yml)                  | all 26 — the parent; its children hold the work |
 | [`0097`](../.issue/0097-vessel-client-connection.yml)       | B-001 – B-007, B-011                            |
-| [`0098`](../.issue/0098-vessel-messages-into-the-cache.yml) | B-008 – B-010, B-012, B-013                     |
+| [`0098`](../.issue/0098-vessel-messages-into-the-cache.yml) | B-008 – B-013                                   |
 | [`0099`](../.issue/0099-vessel-reported-time.yml)           | B-014, B-015                                    |
-| [`0100`](../.issue/0100-vessel-and-its-description.yml)     | B-016 – B-020                                   |
+| [`0100`](../.issue/0100-vessel-and-its-description.yml)     | B-010, B-016 – B-020                            |
 | [`0101`](../.issue/0101-remove-a-silent-vessel.yml)         | B-021 – B-023                                   |
 | [`0102`](../.issue/0102-vessel-strategy-on-the-seam.yml)    | B-024 – B-026                                   |
 
 ## Scoring
 
-<!-- Rules: ../../../.spec/templates/feature.md § Scoring -->
+<!-- Rules: ../../../../../.spec/templates/feature.md § Scoring -->
 
 | Date       | Item   | Field | Rationale                                                                                                                                                                                                 |
 | ---------- | ------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

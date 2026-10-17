@@ -2,7 +2,7 @@ id: "0096"
 type: feature
 title: Subscribe to AISStream for vessels and project them into the fleet
 
-status: ready-for-architecture
+status: ready-for-implementation
 
 priority: high
 value: 5
@@ -23,7 +23,7 @@ blocks:
   - "0013"
 spikes: []
 
-spec: features/vessel-source/.spec/README.md
+spec: src/Transporter/Integrations/AisStream/.spec/README.md
 
 claims:
   - B-001
@@ -54,7 +54,7 @@ claims:
   - B-026
 
 created: "2026-10-16"
-updated: "2026-10-16"
+updated: "2026-10-17"
 closed: null
 
 summary: |
@@ -67,11 +67,12 @@ summary: |
   `0001` was cut. The children hold the work; this item holds the claims
   until each child's are done.
 
-  **None of them starts yet.** §§ 1-9 are written, and an independent review
-  on 2026-10-16 kept every § 12 row 🟡; its findings are answered and await a
-  re-review. `0099` is also `blocked` on § 11 row 6, which needs a captured
-  AISStream message and therefore the person's API key in the user-secrets
-  store.
+  The person approved the four remaining R3 product choices on 2026-10-17,
+  and an independent review approved every § 12 owner row. The children hold
+  delivery; no implementation claim is complete merely because the agreement
+  is approved. `0099` remains `blocked` on § 11 row 6's captured-message
+  evidence. `0101` and `0102` also require the cross-feature specification
+  reviews listed in vessel-source § 12.
 
 acceptance_criteria:
   - "Every § 3 claim B-001 – B-026 is done by the child that holds it."
