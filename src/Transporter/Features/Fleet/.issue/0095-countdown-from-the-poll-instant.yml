@@ -2,7 +2,7 @@ id: "0095"
 type: task
 title: Count the next poll down from the instant the poll was made
 
-status: ready-for-architecture
+status: in-progress
 
 priority: medium
 value: 3
@@ -24,7 +24,7 @@ claims:
   - B-036
 
 created: "2026-10-15"
-updated: "2026-10-15"
+updated: "2026-10-17"
 closed: null
 
 summary: |
@@ -47,7 +47,8 @@ acceptance_criteria:
   - "B-036 — the countdown's length measured from the poll's own instant, never the observed one."
   - "§ 9 Traceability Matrix carries a row naming a test and a re-done rendered review for B-036."
 
-decisions: []
+decisions:
+  - "2026-10-17 — implementation: one dependent branch over PR 122, because this countdown consumes the PolledAt member supplied by 0094 and cannot compile against main yet. Retarget to main when that base merges; specification sign-off is complete, with no gate waiver."
 
 out_of_scope:
   - "Everything in § 5 of the specification."
