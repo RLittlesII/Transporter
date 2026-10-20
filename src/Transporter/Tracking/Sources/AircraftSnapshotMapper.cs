@@ -1,4 +1,3 @@
-using System;
 using LanguageExt;
 using Riok.Mapperly.Abstractions;
 using Transporter.Integrations.OpenSky;

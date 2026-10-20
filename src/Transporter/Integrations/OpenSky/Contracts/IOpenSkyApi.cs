@@ -1,6 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Transporter.Integrations.OpenSky.Contracts;
 
 /// <summary>

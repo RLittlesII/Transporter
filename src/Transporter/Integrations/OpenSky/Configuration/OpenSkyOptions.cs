@@ -1,4 +1,3 @@
-using System;
 using Transporter.Integrations.OpenSky.Configuration;
 using Transporter.Integrations.OpenSky.Model;
 

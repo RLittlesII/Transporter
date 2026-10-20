@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Reactive.Subjects;
 using AwesomeAssertions;
 using LanguageExt;

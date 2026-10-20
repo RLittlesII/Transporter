@@ -1,10 +1,8 @@
 using AwesomeAssertions;
 using DynamicData;
-using LanguageExt;
 using NSubstitute;
 using Transporter.Model;
 using Transporter.Tracking;
-using Transporter.Tracking.Fleet;
 using Transporter.Tracking.Sources;
 using Transporter.UnitTests.Model.Fixtures;
 using Transporter.UnitTests.Tracking.Fixtures;

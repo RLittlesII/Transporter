@@ -1,5 +1,3 @@
-using Microsoft.Maui.Graphics;
-
 namespace Gui.Theme;
 
 /// <summary>The Flight Deck design system's tokens: one dark theme, and the status hues told apart under every colour-vision type.</summary>

@@ -1,4 +1,3 @@
-using System.Linq;
 using Transporter.Tracking;
 using Transporter.Tracking.Fleet;
 

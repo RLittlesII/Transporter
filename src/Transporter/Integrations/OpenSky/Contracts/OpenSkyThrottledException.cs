@@ -1,5 +1,3 @@
-using System;
-
 namespace Transporter.Integrations.OpenSky.Contracts;
 
 // The three conventional constructors would each build this exception with no delay, and the delay

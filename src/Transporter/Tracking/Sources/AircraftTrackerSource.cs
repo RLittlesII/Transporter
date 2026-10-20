@@ -1,4 +1,3 @@
-using System;
 using System.Reactive.Linq;
 using DynamicData;
 using Transporter.Integrations.OpenSky;

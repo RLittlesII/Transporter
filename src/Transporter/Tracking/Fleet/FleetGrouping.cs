@@ -1,4 +1,3 @@
-using System;
 using Transporter.Model;
 
 namespace Transporter.Tracking.Fleet;

@@ -1,16 +1,10 @@
-using System.IO;
 using System.Reactive.Concurrency;
-using System.Threading;
 using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Markup;
 using Gui.Container;
 using Gui.Views;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Maui.Controls.Hosting;
-using Microsoft.Maui.Hosting;
-using Microsoft.Maui.Storage;
 using Transporter.Container;
 using Transporter.Integrations.OpenSky.Container;
 using Transporter.Tracking.Container;

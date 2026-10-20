@@ -1,5 +1,3 @@
-using System;
-
 namespace Transporter.Integrations.OpenSky;
 
 /// <summary>The poller a strategy's subscription starts and stops.</summary>

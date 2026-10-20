@@ -1,6 +1,5 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Airframe;
 using Transporter.Integrations.OpenSky.Container;

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using LanguageExt;
 
 namespace Transporter.Tracking.Fleet;

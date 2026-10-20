@@ -1,5 +1,4 @@
 using Gui.Views;
-using Microsoft.Maui.Controls;
 
 namespace Gui;
 

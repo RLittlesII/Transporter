@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using DynamicData;
 using Transporter.Model;
 using Transporter.Tracking.Fleet;

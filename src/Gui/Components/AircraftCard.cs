@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Gui.Theme;
 using LanguageExt;
-using Microsoft.Maui;
-using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Transporter.Features.Fleet;
 using Transporter.Tracking;

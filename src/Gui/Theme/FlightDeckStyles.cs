@@ -1,7 +1,3 @@
-using Microsoft.Maui;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
-
 namespace Gui.Theme;
 
 /// <summary>The type scale and the implicit control styles, built in C# (B-002 allows no new XAML).</summary>

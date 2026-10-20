@@ -1,4 +1,3 @@
-using System;
 using LanguageExt;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transporter.Model;

@@ -1,4 +1,3 @@
-using System;
 using Transporter.Integrations.OpenSky.Model;
 
 namespace Transporter.UnitTests.Container;
