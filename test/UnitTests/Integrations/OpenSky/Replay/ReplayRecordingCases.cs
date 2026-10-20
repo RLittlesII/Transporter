@@ -1,5 +1,3 @@
-using Transporter.UnitTests.Integrations.OpenSky;
-
 namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 /// <summary>

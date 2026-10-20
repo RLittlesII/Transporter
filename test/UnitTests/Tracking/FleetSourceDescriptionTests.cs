@@ -1,4 +1,3 @@
-using System.Linq;
 using AwesomeAssertions;
 using Transporter.Model;
 using Transporter.Tracking.Fleet;

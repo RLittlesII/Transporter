@@ -1,11 +1,8 @@
-using System.Reactive.Subjects;
 using AwesomeAssertions;
 using DynamicData;
 using NSubstitute;
 using Transporter.Model;
 using Transporter.Tracking;
-using Transporter.Tracking.Fleet;
-using Transporter.Tracking.Sources;
 
 namespace Transporter.UnitTests.Tracking;
 

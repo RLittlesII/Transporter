@@ -2,7 +2,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AwesomeAssertions;
 using DynamicData;
-using LanguageExt;
 using NSubstitute;
 using Transporter.Model;
 using Transporter.Tracking;

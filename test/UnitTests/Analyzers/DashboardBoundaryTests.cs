@@ -1,4 +1,3 @@
-using System.Net.Http;
 using AwesomeAssertions;
 using Microsoft.CodeAnalysis;
 using Rocket.Surgery.Extensions.Testing.SourceGenerators;

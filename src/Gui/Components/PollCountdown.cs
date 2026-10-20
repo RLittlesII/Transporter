@@ -1,8 +1,5 @@
-using System;
 using System.Globalization;
 using Gui.Theme;
-using LanguageExt;
-using Microsoft.Maui.Controls;
 using Transporter.Features.Fleet;
 using Transporter.Tracking;
 

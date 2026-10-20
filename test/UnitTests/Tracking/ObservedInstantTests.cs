@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using AwesomeAssertions;
 using DynamicData;
 using NSubstitute;

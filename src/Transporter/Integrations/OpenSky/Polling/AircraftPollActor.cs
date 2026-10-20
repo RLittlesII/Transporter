@@ -1,5 +1,3 @@
-using System;
-using System.Threading;
 using Akka.Actor;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

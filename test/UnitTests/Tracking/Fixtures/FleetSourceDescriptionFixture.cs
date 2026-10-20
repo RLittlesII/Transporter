@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transporter.Tracking.Fleet;
 

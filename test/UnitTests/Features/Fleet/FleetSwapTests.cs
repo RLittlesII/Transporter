@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Windows.Input;
 using Akka.Actor;
 using Akka.Hosting;
@@ -13,7 +10,6 @@ using NSubstitute;
 using ReactiveMarbles.PropertyChanged;
 using Transporter.Features.Fleet.ViewModels;
 using Transporter.Messages;
-using Transporter.Model;
 using Transporter.Scheduling;
 using Transporter.Tracking;
 using Transporter.Tracking.Fleet;

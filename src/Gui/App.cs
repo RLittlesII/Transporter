@@ -1,7 +1,4 @@
 using Gui.Theme;
-using Microsoft.Maui;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Controls;
 
 namespace Gui;
 

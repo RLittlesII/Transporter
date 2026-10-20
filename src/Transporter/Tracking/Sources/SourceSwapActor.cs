@@ -1,4 +1,3 @@
-using System.Linq;
 using Akka.Actor;
 using Transporter.Messages;
 

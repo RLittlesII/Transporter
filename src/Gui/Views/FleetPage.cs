@@ -1,15 +1,11 @@
-using System;
 using System.Globalization;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Converters;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Markup;
 using Gui.Components;
 using Gui.Theme;
-using Microsoft.Maui;
-using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
 using ReactiveMarbles.ObservableEvents;

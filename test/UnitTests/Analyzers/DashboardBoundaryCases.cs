@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Transporter.UnitTests.Analyzers;
 
 /// <summary>Violations and allowed counterparts for fleet-dashboard B-017, B-018 and B-022.</summary>

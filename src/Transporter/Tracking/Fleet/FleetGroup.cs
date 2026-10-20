@@ -1,4 +1,3 @@
-using System;
 using DynamicData;
 
 namespace Transporter.Tracking.Fleet;
