@@ -2,7 +2,7 @@
 title: "Specification: Fleet pipeline"
 description: "Filter, sort, group, aggregate and bind one collection of domain vehicles downstream of the tracker seam, mark a silent vehicle stale against the observed clock, and describe a source's columns so a swap edits nothing."
 type: spec
-spec_status: approved
+spec_status: in-review
 ---
 
 # Specification: Fleet pipeline
@@ -1270,44 +1270,6 @@ GazetteerPlaces.Table, 10_000)`, so the ten kilometres is the aircraft's, as
   foresee. Every place type is kept, census-designated places included, because
   Channelview and Mission Bend are where people live.
 
-**The description-driven silence stage (B-016, B-019, B-044), for `0101`**
-
-`FleetSourceDescription.RemoveAfter` is an optional `TimeSpan`: none names
-marking, some names removal after that source's threshold. Aircraft leave it
-absent. The vessel description supplies `AisStreamOptions.SilentAfter`; its
-ten-minute default and configuration belong to `vessel-source` B-023, never
-to the tracker. This is a member of the existing description, not a new seam.
-
-The one silence stage follows movement and the user's filter, before the
-published fleet is shared. It uses a dynamic `Filter` to keep every marking
-source's vehicle, or to admit a removing source's vehicle only while its
-silence is at most the description's threshold. Its predicate is re-evaluated
-on the observed clock and on description changes. The marking projection
-uses the same treatment: removal always emits `IsStale = false`, whereas
-marking uses the tracker-held five-minute threshold. Equality remains admitted;
-only silence longer than the threshold removes, as B-019 requires.
-
-Description changes replace values in this stage, never its subscription or
-its operators. ADR-0018 supplies the live description with the selected source;
-a swap cannot leave a tracker-wide vessel threshold applied to aircraft.
-Changing `StaleAfter` still affects aircraft marking and the trail's gap rule;
-it does not change a removal threshold the description owns. Movement remains
-above silence, so clock ticks and filter re-entry add no trail points and reset
-no source history. A later report that is inside the removal threshold becomes
-an add downstream of the filter, under its original key.
-
-The source cache remains the source's, and the stage writes nothing to it.
-Expiry-driven removes reach the bound fleet, its groups and summary, but do
-not become source-arrival notices or enter the recent-source-change window
-(B-025, B-039). Their inputs stay above the silence stage. A second subscriber
-shares this stage and its clock subscription (B-028), and the last subscriber
-tears them down. No wall-clock read, scheduler expiry, per-vehicle side store
-or source-specific type check is introduced.
-
-Rejected: `ExpireAfter`, whose scheduler clock disagrees with replay; removal
-inside the vessel strategy, contrary to § 11 row 9 (A); and a tracker-held
-second threshold, which cannot follow a description swap.
-
 **The poll status (B-040), delivered by `0067`**
 
 ADR-0013 left the member names to this § 7 and the writer half to
@@ -1669,7 +1631,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — eighty-one scenarios, each tagged with the `@B-00n` it proves.
+this file — eighty-four scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
@@ -1708,13 +1670,6 @@ both leave. Counts and bound groups must lose the removed vehicle; a clock-only
 removal must not enter the source-arrival window. The source's own description
 and configured threshold are also exercised through application composition by
 `vessel-source` `0101`. These are synthetic tests, never a live socket.
-
-**The amended poll status (B-040), for `0094`.** Existing status forwarding
-and disposal cases continue to apply. Feed statuses with a poll instant distinct
-from the observed instant and due instant, then replace and clear them; late
-subscribers receive only the latest complete value. No clock read supplies a
-missing poll instant. The producer's timestamp is `aircraft-source` B-054's
-proof; the tracker's proof is faithful re-publication.
 
 ## 9. Traceability Matrix
 
@@ -1914,9 +1869,9 @@ the draft it replaced.
 
 | Sections | Owner       | Status      |
 | -------- | ----------- | ----------- |
-| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 1-5   | spec-author | 🟡 Draft    |
 | §§ 6-7   | implementer | 🟢 Approved |
-| §§ 8-9   | test-writer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟡 Draft    |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../.spec/templates/feature.md) and
@@ -2605,6 +2560,30 @@ forty-four unique matrix rows and eighty-two tagged scenarios; six rows
 remain `Missing`. `0065` has no remaining specification sign-off blocker and
 needs no waiver. This approves the agreement, not implementation evidence;
 no matrix status was raised, and this reader ran no build or test.
+
+**Final reconciliation of PR #123, 2026-10-21 — independent
+`spec-reviewer`.** Read the surviving B-019/B-044 scenarios and amended
+silence-treatment strategy against the current claims and description-driven
+silence design. Reverse swapping back to aircraft preserves marking and
+retention; exactly-threshold silence remains admitted before a further clock
+advance removes it; a fresh report re-enters under its original key. The
+strategy tests the independent observed clock, separate marking/removal
+thresholds, shared subscriptions and teardown, bound counts/groups and the
+source-arrival-window boundary. These additions agree with the existing
+claims and are accepted within that coverage-plan scope. Eighty-four
+scenarios now accompany forty-four claims and unique matrix rows; no
+executable evidence for these added scenarios is claimed here.
+
+Main's category agreement and coverage gaps remain unresolved. §§ 1-5 and
+§§ 8-9 remain Draft, §§ 6-7 retain approval for the written design, and
+`spec_status` remains `in-review`. PR #123's historical blanket approvals,
+its item-readiness statements and its older counts do not supersede that
+combined verdict or authorize `0065` to start. Its earlier B-040 `Missing`
+statement is superseded by main's independently reviewed `0094` evidence;
+B-040 remains `Verified`. B-016/B-019's removal amendments and B-044 retain
+their `Missing` implementation evidence on `0101`, and B-038 remains
+`Missing` on `0065`. No item is unblocked and no waiver or implementation
+approval is introduced.
 
 ## Decisions
 

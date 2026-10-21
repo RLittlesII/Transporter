@@ -922,15 +922,6 @@ alone cannot prove that the picker invokes the command or that a platform
 draws the indicator. These reviews use synthetic replay and do not wait on
 `0044`'s separate page construction and registration claims.
 
-**The amended countdown (B-036), for `0095`.** Controlled poll statuses carry
-both endpoints together; a different observed instant must not change the
-formatted duration. Missing endpoints, refusal, replacement by a non-polling
-source and disposal are exercised without a wall clock or an animation runner.
-The rendered review is re-done against synthetic replay or a simulated poll
-status, with a provider instant deliberately behind the poll's instant. It
-checks the ordinary interval and a refusal, and records the target and date.
-The old `0072` review remains historical evidence only.
-
 **The ramp review (B-034), and the computation it records.** For each of the
 eight stops of `FlightDeck.Ramp`, the reviewer:
 
@@ -1865,6 +1856,25 @@ forty unique matrix rows and fifty-seven tagged scenarios; thirteen rows
 remain `Missing`. `0071` has no remaining specification sign-off blocker and
 needs no waiver. This approves the agreement, not implementation or rendered
 evidence; no matrix status was raised, and this reader ran no build or test.
+
+**Final reconciliation of PR #123, 2026-10-21 — independent
+`spec-reviewer`.** Read the surviving B-034 ramp-review clarification against
+the current agreement and main's review findings. The Canvas-backed legend's
+computed contrast does not prove contrast over arbitrary map tiles. Checking
+the complete trail over dark and light tile areas on the running target
+closes that proof gap in the review strategy; the permitted token-based
+outline introduces no implementation or performed-review evidence here.
+This B-034 strategy clarification is accepted within its claim's scope.
+
+The current owner table remains authoritative: §§ 1-5 are Blocked on B-039
+R1, and §§ 6-7 and §§ 8-9 are Blocked on R2/R3; `spec_status` remains
+`in-review`. PR #123's historical blanket approvals and its statement that
+`0071` had no sign-off blocker do not supersede those findings or authorize
+an item to start. Its earlier B-036 `Missing` statements and matrix/scenario
+counts describe the pre-rebase state. Main's coherent `Status` design and
+verified Mac Catalyst B-036 evidence supersede them and remain unchanged.
+B-034's implementation and rendered-review debts remain in its matrix row.
+No item is unblocked and no waiver or implementation approval is introduced.
 
 ## Decisions
 
