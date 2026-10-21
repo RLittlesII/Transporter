@@ -2,7 +2,7 @@ id: "0098"
 type: task
 title: Write each position report and static-data message into the vessel cache
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 risk: 3
@@ -26,7 +26,7 @@ claims:
   - B-013
 
 created: "2026-10-16"
-updated: "2026-10-17"
+updated: "2026-10-21"
 closed: null
 
 summary: |
