@@ -23,6 +23,7 @@ internal sealed class VesselClient
         ILogger<VesselClient> logger)
     {
         _sockets = sockets;
+        _vessels = vessels;
         _options = options;
         _box = box;
         _schedulers = schedulers;
@@ -58,6 +59,7 @@ internal sealed class VesselClient
                         await foreach (var frame in socket.Frames(cancellation).ConfigureAwait(false))
                         {
                             ReadConfirmation(frame);
+                            VesselMessageReader.Read(frame).IfSome(Write);
                         }
                     }
                     catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -105,7 +107,33 @@ internal sealed class VesselClient
         }
     }
 
+    private void Write(VesselMessage message)
+    {
+        _vessels.Edit(updater =>
+        {
+            var held = updater.Lookup(message.Mmsi);
+            var snapshot = held.HasValue ? held.Value : new VesselSnapshot { Mmsi = message.Mmsi };
+            updater.AddOrUpdate(message switch
+            {
+                VesselPositionMessage position => snapshot with
+                {
+                    Position = position.Position,
+                    SpeedOverGround = position.SpeedOverGround,
+                    CourseOverGround = position.CourseOverGround,
+                    TrueHeading = position.TrueHeading,
+                },
+                VesselStaticMessage staticData => snapshot with
+                {
+                    Name = staticData.Name,
+                    ShipType = staticData.ShipType,
+                },
+                _ => snapshot,
+            });
+        });
+    }
+
     private readonly Func<IVesselSocket> _sockets;
+    private readonly SourceCache<VesselSnapshot, string> _vessels;
     private readonly IOptions<AisStreamOptions> _options;
     private readonly IOptions<OpenSkyOptions> _box;
     private readonly ISchedulerProvider _schedulers;

@@ -2,7 +2,7 @@ id: "0098"
 type: task
 title: Write each position report and static-data message into the vessel cache
 
-status: ready-for-architecture
+status: done
 
 priority: high
 risk: 3
@@ -26,8 +26,8 @@ claims:
   - B-013
 
 created: "2026-10-16"
-updated: "2026-10-17"
-closed: null
+updated: "2026-10-21"
+closed: "2026-10-21"
 
 summary: |
   A push client already knows its deltas, so it writes them: a position
@@ -46,7 +46,8 @@ acceptance_criteria:
   - "B-012, B-013 — an unreadable message skipped, the stream intact; every sentinel absent, never 0,0."
   - "§ 9 carries a row naming a test or a performed review for each id above."
 
-decisions: []
+decisions:
+  - "B-010's cache-write half is complete here. Its fleet projection gate remains Missing in the specification until item 0100 verifies it."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

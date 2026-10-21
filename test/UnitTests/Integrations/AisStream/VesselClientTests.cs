@@ -369,6 +369,118 @@ public class VesselClientTests
         logger.Entries.Should().NotBeEmpty();
         logger.Messages.Should().OnlyContain(static message => !message.Contains("synthetic-credential", StringComparison.Ordinal));
     }
+
+    /// <summary>B-009: each position frame writes one keyed cache change.</summary>
+    /// <returns>The completion of the scripted socket operation.</returns>
+    [Fact]
+    public async Task GivenSuccessivePositionReports_WhenEachArrives_ThenEachIsOneAddOrUpdate()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var socket = new ScriptedVesselSocket("only", []);
+        using var cache = new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi);
+        var changes = new List<(ChangeReason Reason, string Key)>();
+        using var subscription = cache.Connect().Subscribe(set =>
+            changes.AddRange(set.Select(change => (change.Reason, change.Key))));
+        VesselClient sut = new VesselClientFixture().WithSockets(() => socket).WithProvider(schedulers).WithVessels(cache);
+        using var listening = sut.Listen();
+        await Task.Run(() => scheduler.AdvanceBy(1));
+
+        // When
+        await Task.Run(() => socket.Receive(VesselPayloads.PositionReport));
+        await Task.Run(() => socket.Receive(VesselPayloads.MovedPositionReport));
+        await Task.Run(() => socket.Receive(VesselPayloads.SecondPositionReport));
+
+        // Then
+        changes.Should().Equal(
+            (ChangeReason.Add, "366999001"),
+            (ChangeReason.Update, "366999001"),
+            (ChangeReason.Add, "366999002"));
+        cache.Count.Should().Be(2);
+        cache.Lookup("366999001").Value.Position.IfNone(default(Transporter.Model.GeoPosition)).Should().Be(new Transporter.Model.GeoPosition(29.71, -95.01));
+        cache.Lookup("366999001").Value.SpeedOverGround.IfNone(0).Should().Be(13.4);
+        socket.IsOpen.Should().BeTrue();
+    }
+
+    /// <summary>B-010: static data adds a vessel before a position is known.</summary>
+    /// <returns>The completion of the scripted socket operation.</returns>
+    [Fact]
+    public async Task GivenStaticDataForAnUnheldVessel_WhenItArrives_ThenItIsCached()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var socket = new ScriptedVesselSocket("only", []);
+        using var cache = new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi);
+        VesselClient sut = new VesselClientFixture().WithSockets(() => socket).WithProvider(schedulers).WithVessels(cache);
+        using var listening = sut.Listen();
+        await Task.Run(() => scheduler.AdvanceBy(1));
+
+        // When
+        await Task.Run(() => socket.Receive(VesselPayloads.StaticData));
+
+        // Then
+        var held = cache.Lookup("366999003");
+        held.HasValue.Should().BeTrue();
+        held.Value.Name.IfNone(string.Empty).Should().Be("GULF TRADER");
+        held.Value.ShipType.IfNone(-1).Should().Be(70);
+        held.Value.Position.IsNone.Should().BeTrue();
+        cache.Count.Should().Be(1);
+        socket.IsOpen.Should().BeTrue();
+    }
+
+    /// <summary>B-010: static data updates identity without erasing a position already held for that MMSI.</summary>
+    /// <returns>The completion of the scripted socket operation.</returns>
+    [Fact]
+    public async Task GivenPositionBeforeStaticData_WhenStaticDataArrives_ThenTheHeldPositionRemains()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var socket = new ScriptedVesselSocket("only", []);
+        using var cache = new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi);
+        VesselClient sut = new VesselClientFixture().WithSockets(() => socket).WithProvider(schedulers).WithVessels(cache);
+        using var listening = sut.Listen();
+        await Task.Run(() => scheduler.AdvanceBy(1));
+        await Task.Run(() => socket.Receive(VesselPayloads.PositionBeforeStaticData));
+
+        // When
+        await Task.Run(() => socket.Receive(VesselPayloads.StaticData));
+
+        // Then
+        var held = cache.Lookup("366999003").Value;
+        held.Position.IfNone(default(Transporter.Model.GeoPosition)).Should().Be(new Transporter.Model.GeoPosition(29.40, -94.90));
+        held.Name.IfNone(string.Empty).Should().Be("GULF TRADER");
+        cache.Count.Should().Be(1);
+    }
+
+    /// <summary>B-012: an unreadable frame leaves held state untouched and reading continues.</summary>
+    /// <returns>The completion of the scripted socket operation.</returns>
+    [Fact]
+    public async Task GivenAnUnreadableFrame_WhenItArrives_ThenItIsSkippedAndTheStreamContinues()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var socket = new ScriptedVesselSocket("only", []);
+        using var cache = new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi);
+        VesselSnapshot held = new VesselSnapshotFixture();
+        cache.AddOrUpdate(held);
+        VesselClient sut = new VesselClientFixture().WithSockets(() => socket).WithProvider(schedulers).WithVessels(cache);
+        using var listening = sut.Listen();
+        await Task.Run(() => scheduler.AdvanceBy(1));
+
+        // When
+        await Task.Run(() => socket.Receive("{not JSON"));
+
+        // Then
+        cache.Lookup(held.Mmsi).Value.Should().BeSameAs(held);
+        cache.Count.Should().Be(1);
+        socket.IsOpen.Should().BeTrue();
+        await Task.Run(() => socket.Receive(VesselPayloads.SecondPositionReport));
+        cache.Lookup("366999002").HasValue.Should().BeTrue();
+    }
 }
 
 /// <summary>Builds a synthetic cached vessel snapshot.</summary>
