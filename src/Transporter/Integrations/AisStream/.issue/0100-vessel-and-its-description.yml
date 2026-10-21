@@ -2,7 +2,7 @@ id: "0100"
 type: task
 title: Project the cache into vessels, and describe them by ship type and flag state
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 risk: 3
@@ -27,7 +27,7 @@ claims:
   - B-020
 
 created: "2026-10-16"
-updated: "2026-10-17"
+updated: "2026-10-21"
 closed: null
 
 summary: |
