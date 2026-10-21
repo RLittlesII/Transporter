@@ -64,6 +64,30 @@ public class VesselFleetDescriptionTests
         unknownGroups.Should().Equal(["Unknown", "Unknown"]);
     }
 
+    /// <summary>B-019. Sorts use the base vehicle's label, contact instant and group key.</summary>
+    [Fact]
+    public void GivenTwoVessels_WhenSorted_ThenTheThreeComparersReadTheirBaseMembers()
+    {
+        // Given
+        var sut = VesselFleetDescription.Offered;
+        TransportVehicle first = new VesselFixture()
+            .WithName("ALFA")
+            .WithShipType(70)
+            .WithLastContact(new DateTimeOffset(2026, 10, 21, 14, 0, 0, TimeSpan.Zero));
+        TransportVehicle second = new VesselFixture()
+            .WithName("ZULU")
+            .WithShipType(80)
+            .WithLastContact(new DateTimeOffset(2026, 10, 21, 15, 0, 0, TimeSpan.Zero));
+
+        // When
+        var ordered = sut.Columns.Where(static column => column.Comparer.IsSome)
+            .Select(column => column.Comparer.IfNoneUnsafe((IComparer<TransportVehicle>?) null)!.Compare(first, second))
+            .ToArray();
+
+        // Then
+        ordered.Should().HaveCount(3).And.OnlyContain(static result => result < 0);
+    }
+
     /// <summary>B-019. A filter choice admits and rejects vessels on data the source actually reports.</summary>
     [Fact]
     public void GivenTheDescription_WhenItsFiltersAreRead_ThenEachChoiceConstrainsTheFleet()
