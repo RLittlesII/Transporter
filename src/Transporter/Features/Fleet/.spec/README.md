@@ -933,9 +933,12 @@ eight stops of `FlightDeck.Ramp`, the reviewer:
 
 The ramp is ordered when L\* rises strictly from the first stop to the last
 under all four. It is distinguishable when each step rises by at least 3 L\*.
-It reads on the page when every stop is at least 3:1 against `Canvas` (WCAG
-2.2 § 1.4.11). The review records the eight-by-four table of L\* values in
-§ 9, as B-033's records its ratios. Any change to the ramp re-does it. It is a
+The legend is drawn on `Canvas`; every stop must be at least 3:1 against
+that surface (WCAG 2.2 § 1.4.11). This does not establish contrast against
+arbitrary map tiles. The map review also checks the complete trail on the
+running target, including dark and light tile areas; an outline using a
+Flight Deck surface token may separate the strokes from those tiles. The
+review records the eight-by-four table of L\* values in § 9, as B-033's records its ratios. Any change to the ramp re-does it. It is a
 review rather than a test because the tokens live in `src/Gui`, which
 `test/UnitTests` does not reference (§ 4 row 4).
 
@@ -1830,6 +1833,48 @@ R1/R2/R3 findings remain unresolved, all three owner rows retain their stated
 Blocked verdicts, and `spec_status` remains `in-review`. Tracking's separate
 category agreement and coverage gaps remain as recorded in that Feature.
 This scoped countdown approval introduces no waiver or approval for `0078`.
+
+**Prepared 2026-10-17 — `implementer` and `test-writer`.** Decision 0004's
+already agreed poll-instant rule now reaches § 7 and § 8: the two countdown
+endpoints come from one status, and the observed instant is never a fallback.
+B-036's matrix row is `Missing` again until `0095` supplies current evidence.
+The map's contrast plan distinguishes its Canvas-backed legend from the map
+itself. Both changed owner rows are reopened for a second reader. No claim
+has changed, no runtime code has been written, and `0071` remains unclaimed.
+
+**Independent agreement review 2026-10-17 — `spec-reviewer`.** This reader
+wrote none of the claims, design, scenarios or testing strategy reviewed.
+Read the reopened section groups against the companion scenarios, their
+items, decision 0004, the pipeline agreement and the applicable ADRs. B-036
+now uses the poll instant and due instant from one status, with no observed
+instant fallback; its amended tests and rendered review remain owed. B-034
+and B-035 retain the bounded, gap-aware trail and newest-first list, and the
+ramp review distinguishes the legend's surface from map tiles.
+
+**Clean review: all three owner rows are 🟢 Approved.** Forty claims have
+forty unique matrix rows and fifty-seven tagged scenarios; thirteen rows
+remain `Missing`. `0071` has no remaining specification sign-off blocker and
+needs no waiver. This approves the agreement, not implementation or rendered
+evidence; no matrix status was raised, and this reader ran no build or test.
+
+**Final reconciliation of PR #123, 2026-10-21 — independent
+`spec-reviewer`.** Read the surviving B-034 ramp-review clarification against
+the current agreement and main's review findings. The Canvas-backed legend's
+computed contrast does not prove contrast over arbitrary map tiles. Checking
+the complete trail over dark and light tile areas on the running target
+closes that proof gap in the review strategy; the permitted token-based
+outline introduces no implementation or performed-review evidence here.
+This B-034 strategy clarification is accepted within its claim's scope.
+
+The current owner table remains authoritative: §§ 1-5 are Blocked on B-039
+R1, and §§ 6-7 and §§ 8-9 are Blocked on R2/R3; `spec_status` remains
+`in-review`. PR #123's historical blanket approvals and its statement that
+`0071` had no sign-off blocker do not supersede those findings or authorize
+an item to start. Its earlier B-036 `Missing` statements and matrix/scenario
+counts describe the pre-rebase state. Main's coherent `Status` design and
+verified Mac Catalyst B-036 evidence supersede them and remain unchanged.
+B-034's implementation and rendered-review debts remain in its matrix row.
+No item is unblocked and no waiver or implementation approval is introduced.
 
 ## Decisions
 

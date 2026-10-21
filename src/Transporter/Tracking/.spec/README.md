@@ -1631,7 +1631,7 @@ asserted twice. A test over `typeof(...)` is neither.
 **Scenarios**
 
 Full Gherkin lives in [`fleet-pipeline.feature`](fleet-pipeline.feature) beside
-this file — eighty-one scenarios, each tagged with the `@B-00n` it proves.
+this file — eighty-four scenarios, each tagged with the `@B-00n` it proves.
 B-025 carries two, because it states two things a single scenario would have
 had to prove at once: a changeset that changed something raises a notice, and
 one that changed nothing raises none. B-004 carries two for the same reason
@@ -1656,6 +1656,20 @@ what execute.
   cell's precision), B-044 (a removing source never marked stale)
 - Validation failure → B-003, B-008, B-010, B-021 – B-024
 - Data-driven → B-011, B-014, B-017, B-026, B-032, B-035, B-042, B-044
+
+**The amended silence treatment (B-016, B-019, B-044), for `0101`.**
+Use the real observed clock and injected test scheduler with a description
+stream that can change treatment. Exercise exact-threshold admission, removal
+on a clock advance without a report for that vehicle, no stale mark before
+removal, and a fresh report returning as an add. Hold the observed clock while
+advancing the scheduler to reject scheduler-driven expiry. Change the marking
+threshold independently of the removal threshold, and swap both directions:
+aircraft must remain marked and present after a removing source was selected.
+Assert connection and subscription counts with two fleet subscribers and after
+both leave. Counts and bound groups must lose the removed vehicle; a clock-only
+removal must not enter the source-arrival window. The source's own description
+and configured threshold are also exercised through application composition by
+`vessel-source` `0101`. These are synthetic tests, never a live socket.
 
 ## 9. Traceability Matrix
 
@@ -2520,6 +2534,56 @@ blanket approvals and the later B-040 evidence approval are scoped to the
 artifacts they read; they do not supersede the category-coverage finding or
 approve its missing agreement and proof. This conflict reconciliation changes
 no claim, scenario, design, implementation or test.
+
+**Prepared 2026-10-17 — `implementer` and `test-writer`.** The agreed
+per-source silence rule now has a § 7 design and § 8 strategy; B-040's poll
+instant is described as part of the same status, supplied by `0094`. The
+broadened B-016, B-019 and B-040 rows are reopened to `Missing`, preserving
+what the existing tests cover without treating it as proof of the amendments.
+The companion scenarios now cover the reverse swap, the exact threshold and
+a fresh report after removal. §§ 6-7 are reopened for a second reader. B-038
+is unchanged and `0065` remains unclaimed; `0101`, `0094` and `0065` keep their own implementation scope.
+
+**Independent agreement review 2026-10-17 — `spec-reviewer`.** This reader
+wrote none of the claims, design, scenarios or testing strategy reviewed.
+Read the reopened section groups against the companion scenarios, their
+items, the dashboard agreement and the applicable ADRs. Review findings are
+closed: B-016, B-019 and B-040 remain normative claims in § 3, with evidence
+only in § 9; both earlier removal scenarios now require no stale mark before
+removal. B-044's description-driven stage, separate threshold, observed-clock
+boundary, reverse swap and fresh-report return agree. B-040 forwards the
+poll instant with its status, and B-038's compiled, bounded nearest-place
+search retains its coordinate and absent-position fallbacks.
+
+**Clean review: all three owner rows are 🟢 Approved.** Forty-four claims have
+forty-four unique matrix rows and eighty-two tagged scenarios; six rows
+remain `Missing`. `0065` has no remaining specification sign-off blocker and
+needs no waiver. This approves the agreement, not implementation evidence;
+no matrix status was raised, and this reader ran no build or test.
+
+**Final reconciliation of PR #123, 2026-10-21 — independent
+`spec-reviewer`.** Read the surviving B-019/B-044 scenarios and amended
+silence-treatment strategy against the current claims and description-driven
+silence design. Reverse swapping back to aircraft preserves marking and
+retention; exactly-threshold silence remains admitted before a further clock
+advance removes it; a fresh report re-enters under its original key. The
+strategy tests the independent observed clock, separate marking/removal
+thresholds, shared subscriptions and teardown, bound counts/groups and the
+source-arrival-window boundary. These additions agree with the existing
+claims and are accepted within that coverage-plan scope. Eighty-four
+scenarios now accompany forty-four claims and unique matrix rows; no
+executable evidence for these added scenarios is claimed here.
+
+Main's category agreement and coverage gaps remain unresolved. §§ 1-5 and
+§§ 8-9 remain Draft, §§ 6-7 retain approval for the written design, and
+`spec_status` remains `in-review`. PR #123's historical blanket approvals,
+its item-readiness statements and its older counts do not supersede that
+combined verdict or authorize `0065` to start. Its earlier B-040 `Missing`
+statement is superseded by main's independently reviewed `0094` evidence;
+B-040 remains `Verified`. B-016/B-019's removal amendments and B-044 retain
+their `Missing` implementation evidence on `0101`, and B-038 remains
+`Missing` on `0065`. No item is unblocked and no waiver or implementation
+approval is introduced.
 
 ## Decisions
 
