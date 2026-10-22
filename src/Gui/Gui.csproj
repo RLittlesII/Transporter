@@ -105,6 +105,7 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
         <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Maui.Controls"/>
+        <PackageReference Include="Microsoft.Maui.Controls.Maps"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug"/>
     </ItemGroup>
 

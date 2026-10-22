@@ -30,13 +30,19 @@ internal sealed class TrackedVehicleFixture : AutoFixtureBase<TrackedVehicleFixt
     /// <returns>The fixture, so building chains.</returns>
     public TrackedVehicleFixture WithReplaced(Option<TransportVehicle> replaced) => With(ref _replaced, replaced);
 
+    /// <summary>Sets the pipeline's published trail.</summary>
+    /// <param name="trail">The points to publish.</param>
+    /// <returns>The fixture.</returns>
+    public TrackedVehicleFixture WithTrail(IReadOnlyList<TrailPoint> trail) => With(ref _trail, trail);
+
     /// <summary>Takes the subject, as every fixture here is taken.</summary>
     /// <param name="fixture">The fixture to build.</param>
     public static implicit operator TrackedVehicle(TrackedVehicleFixture fixture) => fixture.Build();
 
-    private TrackedVehicle Build() => new() { Vehicle = _vehicle, IsStale = _isStale, Replaced = _replaced };
+    private TrackedVehicle Build() => new() { Vehicle = _vehicle, IsStale = _isStale, Replaced = _replaced, Trail = _trail };
 
     private TransportVehicle _vehicle = new AircraftFixture();
     private bool _isStale;
     private Option<TransportVehicle> _replaced = Option<TransportVehicle>.None;
+    private IReadOnlyList<TrailPoint> _trail = [];
 }

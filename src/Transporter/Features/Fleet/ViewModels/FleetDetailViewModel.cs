@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using LanguageExt;
@@ -28,6 +29,21 @@ public sealed class FleetDetailViewModel : RxObject, IDisposable
         ISchedulerProvider schedulers)
     {
         var shown = selected.Select(static element => element.Map(static tracked => tracked.Vehicle));
+        _element = selected
+            .Select(static element => element.IfNoneUnsafe((TrackedVehicle?) null))
+            .AsValue(_ => RaisePropertyChanged(nameof(Element)), schedulers.UserInterfaceThread, static () => null)
+            .DisposeWith(_garbage);
+        _measure = description
+            .Select(static described => described.Trail)
+            .AsValue(_ => RaisePropertyChanged(nameof(Measure)), schedulers.UserInterfaceThread, static () => EmptyMeasure)
+            .DisposeWith(_garbage);
+        _trail = selected
+            .Select(static element => element.Match<IReadOnlyList<FleetTrailRow>>(
+                static tracked => [.. tracked.Trail.Reverse().Select(static point =>
+                    new FleetTrailRow(point.LastContact.ToString("HH:mm:ss", CultureInfo.InvariantCulture), FleetCardText.Distance(point.Distance)))],
+                static () => []))
+            .AsValue(_ => RaisePropertyChanged(nameof(Trail)), schedulers.UserInterfaceThread, static () => [])
+            .DisposeWith(_garbage);
 
         _isEmpty = shown
             .Select(static vehicle => vehicle.IsNone)
@@ -44,6 +60,15 @@ public sealed class FleetDetailViewModel : RxObject, IDisposable
             .AsValue(_ => RaisePropertyChanged(nameof(Rows)), schedulers.UserInterfaceThread, static () => [])
             .DisposeWith(_garbage);
     }
+
+    /// <summary>Gets the selected element whose trail the map follows (B-034).</summary>
+    public TrackedVehicle? Element => _element.Value;
+
+    /// <summary>Gets the source's range and name for the trail legend (B-034).</summary>
+    public FleetTrailMeasure Measure => _measure.Value;
+
+    /// <summary>Gets the selected trail newest first, formatted from each point's own values (B-035).</summary>
+    public IReadOnlyList<FleetTrailRow> Trail => _trail.Value;
 
     /// <summary>Gets a value indicating whether the pane has nothing to show (B-014).</summary>
     public bool IsEmpty => _isEmpty.Value;
@@ -64,7 +89,18 @@ public sealed class FleetDetailViewModel : RxObject, IDisposable
     private static IReadOnlyList<FleetDetailRow> Lines(TransportVehicle vehicle, IReadOnlyList<FleetColumn> lines) =>
         [.. lines.Select(line => new FleetDetailRow(line.Name, line.Value(vehicle)))];
 
+    private static readonly FleetTrailMeasure EmptyMeasure = new()
+    {
+        Name = "Trail",
+        Minimum = 0,
+        Maximum = 1,
+        Value = static _ => Option<double>.None,
+    };
+
     private readonly CompositeDisposable _garbage = [];
+    private readonly IValueBinder<TrackedVehicle?> _element;
+    private readonly IValueBinder<FleetTrailMeasure> _measure;
+    private readonly IValueBinder<IReadOnlyList<FleetTrailRow>> _trail;
     private readonly IValueBinder<bool> _isEmpty;
     private readonly IValueBinder<string> _title;
     private readonly IValueBinder<IReadOnlyList<FleetDetailRow>> _rows;
