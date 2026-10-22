@@ -19,6 +19,40 @@ namespace Transporter.UnitTests.Features.Fleet;
 
 public class FleetRefreshTests : TestKit
 {
+    /// <summary>B-028. A push source disables the visible command; the initial aircraft None status does not.</summary>
+    [Fact]
+    public void GivenDemandPollCapabilityChanges_WhenRefreshIsRead_ThenOnlyPolledSourcesCanInvokeIt()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        using var canDemandPoll = new BehaviorSubject<bool>(true);
+        var tracker = Tracker(Fleet(), Observed());
+        tracker.CanDemandPoll.Returns(canDemandPoll);
+        var actor = CreateTestProbe();
+        using var sut = ViewModel(tracker, scheduler, Registry(actor));
+        Flush(scheduler);
+        ((ICommand) sut.RefreshCommand).CanExecute(null).Should().BeTrue("aircraft can refresh before its first status");
+
+        // When
+        canDemandPoll.OnNext(false);
+        Flush(scheduler);
+        var disabled = ((ICommand) sut.RefreshCommand).CanExecute(null);
+        ((ICommand) sut.RefreshCommand).Execute(null);
+        Flush(scheduler);
+        var busyWhileDisabled = sut.IsRefreshing;
+        canDemandPoll.OnNext(true);
+        Flush(scheduler);
+        ((ICommand) sut.RefreshCommand).Execute(null);
+        Flush(scheduler);
+
+        // Then
+        disabled.Should().BeFalse("live and recorded vessels cannot accept a demanded poll");
+        busyWhileDisabled.Should().BeFalse();
+        actor.ExpectMsg<DemandPoll>().Should().BeSameAs(DemandPoll.Instance);
+        actor.ExpectNoMsg(TimeSpan.FromMilliseconds(50), "the disabled attempt told no actor");
+        sut.IsRefreshing.Should().BeTrue("aircraft refresh works again after a swap back");
+    }
+
     /// <summary>
     /// B-028. The gesture's whole job is the translation: one message told to the actor the registry
     /// holds, and an indicator that went up because the button was pressed rather than because a row
@@ -194,6 +228,7 @@ public class FleetRefreshTests : TestKit
         tracker.Order.Returns(Observable.Return(ByKey));
         tracker.Description.Returns(Observable.Never<FleetSourceDescription>());
         tracker.Observed.Returns(observed);
+        tracker.CanDemandPoll.Returns(Observable.Return(true));
 
         return tracker;
     }

@@ -142,8 +142,8 @@ public class SwappingTrackerSourceTests
         var recording = new SecondTrackerSource();
         SwappingTrackerSource sut = new SwappingTrackerSourceFixture().WithEnumerable(
             [
-                new TrackerSourceEntry(aircraft, "Aircraft", new PollStatusDouble(new(Due(Aircraft)))),
-                new TrackerSourceEntry(recording, "Recording", new NoPollStatus()),
+                new TrackerSourceEntry(aircraft, "Aircraft", new PollStatusDouble(new(Due(Aircraft))), AircraftFleetDescription.Offered),
+                new TrackerSourceEntry(recording, "Recording", new NoPollStatus(), AircraftFleetDescription.Offered),
             ]);
         var observed = new List<PollStatus>();
         using var subscription = sut.Status.Subscribe(observed.Add);
@@ -153,6 +153,58 @@ public class SwappingTrackerSourceTests
 
         // Then
         observed.Should().Equal([Due(Aircraft), PollStatus.None]);
+    }
+
+    /// <summary>B-060. A swap removes outgoing rows under their old description, publishes the incoming description, then adds cached incoming rows.</summary>
+    [Fact]
+    public void GivenTwoEntriesWithDescriptions_WhenTheSecondIsSelected_ThenItsDescriptionIsPublishedWithItsVehicles()
+    {
+        // Given
+        var strategies = new SwappingTrackerSourceFixture();
+        strategies.Aircraft.Report("a1b2c3");
+        strategies.Vessels.Report("366999001");
+        SwappingTrackerSource sut = strategies;
+        var order = new List<string>();
+        using var descriptions = sut.Description.Subscribe(description =>
+            order.Add(ReferenceEquals(description, VesselFleetDescription.Offered) ? "vessel description" : "aircraft description"));
+        using var vehicles = sut.Connect().Subscribe(changes =>
+        {
+            foreach (var change in changes)
+            {
+                order.Add($"{change.Reason}:{change.Key}");
+            }
+        });
+        order.Clear();
+
+        // When
+        sut.Select(sut.Entries[1]);
+        var late = new List<object>();
+        using var lateSubscription = sut.Description.Subscribe(late.Add);
+
+        // Then
+        order.Should().Equal("Remove:a1b2c3", "vessel description", "Add:366999001");
+        late.Should().ContainSingle().Which.Should().BeSameAs(VesselFleetDescription.Offered);
+    }
+
+    /// <summary>B-025, B-028. Capability follows the source even when live aircraft status has not yet left None.</summary>
+    [Fact]
+    public void GivenALivePollerAndANonPollingSource_WhenTheySwap_ThenDemandPollCapabilityChangesImmediately()
+    {
+        // Given
+        SwappingTrackerSource sut = new SwappingTrackerSourceFixture().WithEnumerable(
+            [
+                new TrackerSourceEntry(new FirstTrackerSource(), "Aircraft", new PollStatusDouble(new(PollStatus.None)), AircraftFleetDescription.Offered),
+                new TrackerSourceEntry(new SecondTrackerSource(), "Vessels", new NoPollStatus(), VesselFleetDescription.Offered),
+            ]);
+        var observed = new List<bool>();
+        using var subscription = sut.CanDemandPoll.Subscribe(observed.Add);
+
+        // When
+        sut.Select(sut.Entries[1]);
+        sut.Select(sut.Entries[0]);
+
+        // Then
+        observed.Should().Equal(true, false, true);
     }
 
     /// <summary>A status reporting only a due instant.</summary>
@@ -193,8 +245,8 @@ internal partial class SwappingTrackerSourceFixture
     public SwappingTrackerSourceFixture() =>
         WithEnumerable(
             [
-                new TrackerSourceEntry(Aircraft, "Aircraft", new PollStatusDouble(AircraftStatus)),
-                new TrackerSourceEntry(Vessels, "Vessels", new PollStatusDouble(VesselStatus)),
+                new TrackerSourceEntry(Aircraft, "Aircraft", new PollStatusDouble(AircraftStatus), AircraftFleetDescription.Offered),
+                new TrackerSourceEntry(Vessels, "Vessels", new PollStatusDouble(VesselStatus), VesselFleetDescription.Offered),
             ]);
 
     /// <summary>Gets the strategy that is live until something selects the other.</summary>
