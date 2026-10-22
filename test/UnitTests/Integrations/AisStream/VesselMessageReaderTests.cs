@@ -67,4 +67,40 @@ public class VesselMessageReaderTests
                 throw new InvalidOperationException($"Unexpected test field: {field}.");
         }
     }
+
+    /// <summary>B-017: a static name is normalized at the AIS read boundary, including values that become absent.</summary>
+    /// <param name="frame">A static report with a padded, blank or absent name.</param>
+    /// <param name="expected">The normalized name, or null when it is absent.</param>
+    [Theory]
+    [ClassData(typeof(VesselStaticNameCases))]
+    public void GivenAStaticName_WhenItIsRead_ThenItsPaddingIsRemovedOrItIsAbsent(string frame, string? expected)
+    {
+        // Given
+
+        // When
+        VesselMessage message = VesselMessageReader.Read(frame).IfNone(static () => throw new InvalidOperationException());
+
+        // Then
+        var staticMessage = message.Should().BeOfType<VesselStaticMessage>().Which;
+        staticMessage.Name.IfNoneUnsafe((string?) null).Should().Be(expected);
+    }
+
+    /// <summary>B-018: ordinary reported speed, course and heading keep the feed's knots and degrees.</summary>
+    [Fact]
+    public void GivenReportedSpeedCourseAndHeading_WhenRead_ThenTheyKeepTheFeedsValues()
+    {
+        // Given
+        var frame = VesselPayloads.PositionReport
+            .Replace("\"Cog\": 86.7", "\"Cog\": 87.5", StringComparison.Ordinal)
+            .Replace("\"TrueHeading\": 87", "\"TrueHeading\": 90", StringComparison.Ordinal);
+
+        // When
+        VesselMessage message = VesselMessageReader.Read(frame).IfNone(static () => throw new InvalidOperationException());
+
+        // Then
+        var position = message.Should().BeOfType<VesselPositionMessage>().Which;
+        position.SpeedOverGround.IfNone(-1).Should().Be(12.4);
+        position.CourseOverGround.IfNone(-1).Should().Be(87.5);
+        position.TrueHeading.IfNone(-1).Should().Be(90);
+    }
 }

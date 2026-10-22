@@ -24,3 +24,16 @@ public sealed class VesselUnavailableValueCases : TheoryData<string, string>
         Add(VesselPayloads.PositionReport.Replace("\"TrueHeading\": 87", "\"TrueHeading\": 511", StringComparison.Ordinal), "heading");
     }
 }
+
+/// <summary>Static names include whitespace, AIS padding and values that normalize to absence.</summary>
+public sealed class VesselStaticNameCases : TheoryData<string, string?>
+{
+    public VesselStaticNameCases()
+    {
+        Add(VesselPayloads.StaticData.Replace("GULF TRADER", "  BAY RUNNER  ", StringComparison.Ordinal), "BAY RUNNER");
+        Add(VesselPayloads.StaticData.Replace("GULF TRADER", "BAY RUNNER@@@@", StringComparison.Ordinal), "BAY RUNNER");
+        Add(VesselPayloads.StaticData.Replace("GULF TRADER", "   ", StringComparison.Ordinal), null);
+        Add(VesselPayloads.StaticData.Replace("GULF TRADER", "@@@@@@@@", StringComparison.Ordinal), null);
+        Add(VesselPayloads.StaticData.Replace("\"Name\": \"GULF TRADER\", ", string.Empty, StringComparison.Ordinal), null);
+    }
+}

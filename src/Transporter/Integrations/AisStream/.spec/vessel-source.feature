@@ -232,18 +232,21 @@ Feature: Vessel source — a push feed on the same seam
       And it was built by the vessel strategy and by nothing else
 
   @B-017
-  Scenario Outline: A vessel's label is its name, or its MMSI until it has one
+  Scenario Outline: A vessel keeps a normalized name and labels itself from it
     Given vessels are live
+      And "366999005" was last reported at 14:00:00 UTC
      When "366999005" is reported with ship name <name>
-     Then its label is <label>
+     Then its cached ship name is <normalized>
+      And its vessel name is <normalized>
+      And its label is <label>
 
     Examples:
-      | name             | label         |
-      | "  BAY RUNNER  " | "BAY RUNNER"  |
-      | absent           | "366999005"   |
-      | "   "            | "366999005"   |
-      | "BAY RUNNER@@@@" | "BAY RUNNER"  |
-      | "@@@@@@@@"       | "366999005"   |
+      | name             | normalized   | label         |
+      | "  BAY RUNNER  " | "BAY RUNNER" | "BAY RUNNER"  |
+      | absent           | absent       | "366999005"   |
+      | "   "            | absent       | "366999005"   |
+      | "BAY RUNNER@@@@" | "BAY RUNNER" | "BAY RUNNER"  |
+      | "@@@@@@@@"       | absent       | "366999005"   |
 
   @B-018
   Scenario: Speed and course are held as the feed reports them
@@ -254,14 +257,28 @@ Feature: Vessel source — a push feed on the same seam
   @B-019
   Scenario: The vessel description offers ship type and flag as groupings
     Given vessels are live
-     When the live description is read
-     Then it names columns, filter choices and detail lines
+     When the vessel description is read
+     Then it names columns and detail lines including MMSI and true heading
+      And it offers Moving, Named vessel and Reporting a position as filter choices
       And its grouping keys are ship type and flag state
       And its comparers order by label, last contact and group key
       And its card's title is the label, its subtitle the ship type, and its readouts speed and course over ground
       And its trail measure is speed over ground in knots, from 0 to 30
-      And its silence treatment is removal after the vessel silence threshold
       And every one of them reads a tracked item rather than naming the vessel type
+
+  @B-019
+  Scenario Outline: Each vessel filter admits only reports with its required value
+    Given vessels are live
+     When a vessel has ship name <name>, speed over ground <speed> and position <position>
+     Then the matching vessel filters are <filters>
+
+    Examples:
+      | name         | speed      | position | filters                         |
+      | absent       | absent     | absent   | none                            |
+      | "BAY RUNNER" | 0 knots    | absent   | Named vessel                    |
+      | absent       | 12.4 knots | absent   | Moving                          |
+      | absent       | 0 knots    | present  | Reporting a position            |
+      | "@@@@"       | 12.4 knots | present  | Moving and Reporting a position |
 
   @B-020
   Scenario Outline: Grouping falls back to Unknown
@@ -274,6 +291,7 @@ Feature: Vessel source — a push feed on the same seam
       | 366999001 | with no static data received           | Unknown | United States of America |
       | 366999003 | with static data reporting type 70     | Cargo   | United States of America |
       | 366999007 | with static data reporting type 15     | Unknown | United States of America |
+      | 306999001 | with no static data received           | Unknown | Netherlands (Kingdom of the) - Bonaire, Sint Eustatius and Saba; Netherlands (Kingdom of the) - Curaçao; Netherlands (Kingdom of the) - Sint Maarten (Dutch part) |
       | 999999001 | with no static data received           | Unknown | Unknown                  |
 
   # ───────────────────────────────── Silence ─────────────────────────────────
@@ -339,3 +357,10 @@ Feature: Vessel source — a push feed on the same seam
      Then the live description changed on each swap
       And the fleet held vessels while vessels were live and aircraft afterwards
       And the tracker's pipeline was neither rebuilt nor edited
+
+  @B-027
+  Scenario: The vessel description requests removal on silence
+    Given the vessel silence threshold is 10 minutes
+      And vessels are live
+     When the vessel description is read
+     Then its silence treatment is removal after the vessel silence threshold

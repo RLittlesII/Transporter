@@ -430,6 +430,32 @@ public class VesselClientTests
         socket.IsOpen.Should().BeTrue();
     }
 
+    /// <summary>B-017: static data reaches the cache with AIS padding removed or as an absent name.</summary>
+    /// <param name="frame">A static report with a padded, blank or absent name.</param>
+    /// <param name="expected">The normalized cached name, or absence.</param>
+    /// <returns>The completion of the scripted socket operation.</returns>
+    [Theory]
+    [ClassData(typeof(VesselStaticNameCases))]
+    public async Task GivenAStaticName_WhenItArrives_ThenTheCachedNameIsNormalized(string frame, string? expected)
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        SchedulerProvider schedulers = new SchedulerProviderFixture().WithTestScheduler(scheduler);
+        var socket = new ScriptedVesselSocket("only", []);
+        using var cache = new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi);
+        VesselClient sut = new VesselClientFixture().WithSockets(() => socket).WithProvider(schedulers).WithVessels(cache);
+        using var listening = sut.Listen();
+        await Task.Run(() => scheduler.AdvanceBy(1));
+
+        // When
+        await Task.Run(() => socket.Receive(frame));
+
+        // Then
+        var held = cache.Lookup("366999003");
+        held.HasValue.Should().BeTrue();
+        held.Value.Name.IfNoneUnsafe((string?) null).Should().Be(expected);
+    }
+
     /// <summary>B-010: static data updates identity without erasing a position already held for that MMSI.</summary>
     /// <returns>The completion of the scripted socket operation.</returns>
     [Fact]

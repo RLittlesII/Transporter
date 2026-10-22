@@ -71,17 +71,26 @@ internal static class VesselMessageReader
 
     private static Option<VesselMessage> ReadStatic(string mmsi, JsonElement payload)
     {
-        Option<string> name = payload.TryGetProperty("Name", out var nameValue)
-            && nameValue.ValueKind == JsonValueKind.String
-            && nameValue.GetString() is { } value
-                ? value
-                : Option<string>.None;
+        var name = ReadName(payload);
         Option<int> shipType = payload.TryGetProperty("Type", out var typeValue)
             && typeValue.ValueKind == JsonValueKind.Number
             && typeValue.TryGetInt32(out var code)
                 ? code
                 : Option<int>.None;
         return new VesselStaticMessage(mmsi, name, shipType);
+    }
+
+    private static Option<string> ReadName(JsonElement payload)
+    {
+        if (!payload.TryGetProperty("Name", out var nameValue)
+            || nameValue.ValueKind != JsonValueKind.String
+            || nameValue.GetString() is not { } value)
+        {
+            return Option<string>.None;
+        }
+
+        var name = value.Trim().TrimEnd('@').Trim();
+        return name.Length == 0 ? Option<string>.None : name;
     }
 
     private static Option<DateTimeOffset> ReadReported(JsonElement metadata)
