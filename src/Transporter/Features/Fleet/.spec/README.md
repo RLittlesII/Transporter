@@ -2,7 +2,7 @@
 title: "Specification: Fleet dashboard"
 description: "One MAUI page in C# markup that binds the fleet tracker's collection, builds its columns from the live source's description, turns a keystroke into a predicate and a header tap into a comparer, and shows the selected vehicle in the only surface allowed to know which kind it is."
 type: spec
-spec_status: in-review
+spec_status: approved
 ---
 
 # Specification: Fleet dashboard
@@ -1254,11 +1254,11 @@ holds the incident.
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 12 -->
 
-| Sections | Owner       | Status              |
-| -------- | ----------- | ------------------- |
-| §§ 1-5   | spec-author | 🔴 Blocked — R1     |
-| §§ 6-7   | implementer | 🔴 Blocked — R2, R3 |
-| §§ 8-9   | test-writer | 🔴 Blocked — R2, R3 |
+| Sections | Owner       | Status      |
+| -------- | ----------- | ----------- |
+| §§ 1-5   | spec-author | 🟢 Approved |
+| §§ 6-7   | implementer | 🟢 Approved |
+| §§ 8-9   | test-writer | 🟢 Approved |
 
 What `approved` requires, and why a `Missing` row in § 9 does not hold it back,
 is [the template's § 12](../../../../../.spec/templates/feature.md). All three rows
@@ -1926,6 +1926,16 @@ Refresh for recorded aircraft beside 12 synthetic cards. No screenshot was
 saved because Desktop capture access was refused. R1, R2 and R3 remain
 unresolved; all three owner rows retain their Blocked verdicts and
 `spec_status` remains `in-review`.
+
+**Independent review 2026-10-22 — the person, PR #135.** The reviewer approved
+the R1 – R3 corrections without authoring them. B-039's scenarios now separate
+the value and curated-choice selections, including withdrawal and a matching
+display name. The design retains the selected option's origin after withdrawal,
+and the page binding, regression cases and running-head review are named. All
+three owner rows are 🟢 Approved, so `spec_status` is `approved`. B-039 remains
+`Missing` until `0056` and `0078` implement and verify it; B-034 and B-035
+remain `Missing` for `0071`. This sign-off approves the agreement, not runtime
+behavior.
 
 ## Decisions
 

@@ -2,7 +2,7 @@ id: "0071"
 type: task
 title: Draw the selected aircraft's trail on a map, and list it
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 value: 4
@@ -25,7 +25,7 @@ claims:
   - B-035
 
 created: "2026-10-08"
-updated: "2026-10-08"
+updated: "2026-10-22"
 closed: null
 
 summary: |
