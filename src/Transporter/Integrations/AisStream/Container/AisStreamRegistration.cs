@@ -1,9 +1,14 @@
+using System.Globalization;
 using DynamicData;
 using LanguageExt;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Rocket.Surgery.Airframe;
 using Transporter.Integrations.AisStream.Configuration;
+using Transporter.Integrations.OpenSky;
+using Transporter.Recording;
 using Transporter.Tracking;
 using Transporter.Tracking.Sources;
 
@@ -28,7 +33,30 @@ public static class AisStreamRegistration
         }));
         services.AddSingleton(static _ => new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi));
         services.AddSingleton<Func<IVesselSocket>>(static _ => static () => new ClientVesselSocket());
-        services.AddSingleton<VesselClient>();
+        services.AddOptions<RecordingOptions>().Bind(configuration.GetSection(RecordingOptions.Section));
+        services.AddKeyedSingleton<IRecordingWriter>("vessels", static (provider, _) =>
+        {
+            var options = provider.GetRequiredService<IOptions<RecordingOptions>>().Value;
+            if (!options.Enabled)
+            {
+                return new UnrecordedPayloads();
+            }
+
+            Directory.CreateDirectory(options.Root);
+            var name = $"vessels-{DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ", CultureInfo.InvariantCulture)}.ndjson";
+            return new RecordingWriter(
+                new StreamWriter(Path.Combine(options.Root, name), append: true),
+                provider.GetRequiredService<ILogger<RecordingWriter>>());
+        });
+        services.AddSingleton(static provider => new VesselClient(
+            provider.GetRequiredService<Func<IVesselSocket>>(),
+            provider.GetRequiredService<SourceCache<VesselSnapshot, string>>(),
+            provider.GetRequiredService<IObservedClockWriter>(),
+            provider.GetRequiredService<IOptions<AisStreamOptions>>(),
+            provider.GetRequiredService<IOptions<OpenSkyOptions>>(),
+            provider.GetRequiredService<ISchedulerProvider>(),
+            provider.GetRequiredKeyedService<IRecordingWriter>("vessels"),
+            provider.GetRequiredService<ILogger<VesselClient>>()));
         services.AddSingleton<VesselSnapshotMapper>();
         services.AddSingleton<IVesselTrackerSource, VesselTrackerSource>();
         services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IVesselTrackerSource>());

@@ -10,6 +10,7 @@ using Transporter.Integrations.OpenSky.Model;
 using Transporter.Integrations.OpenSky.Polling;
 using Transporter.Integrations.OpenSky.Replay;
 using Transporter.Recording;
+using Transporter.Recording.Container;
 using Transporter.Tracking;
 using Transporter.Tracking.Sources;
 
@@ -86,10 +87,7 @@ public static class OpenSkyReplayRegistration
     /// </para>
     /// </remarks>
     public static IServiceCollection AddAircraftReplay(this IServiceCollection services, IConfiguration configuration) =>
-        services.AddAircraftReplay(
-            configuration,
-            new RecordingLibrary(
-                configuration[$"{RecordingOptions.Section}:{nameof(RecordingOptions.Root)}"] ?? RecordingOptions.DefaultRoot));
+        services.AddReplaySources(configuration);
 
     /// <summary>
     /// Adds the aircraft replay chain over an opened recording.
@@ -190,38 +188,6 @@ public static class OpenSkyReplayRegistration
     internal static IServiceCollection AddAircraftReplay(
         this IServiceCollection services,
         IConfiguration configuration,
-        IRecordingLibrary recordings)
-    {
-        services.AddOpenSkyShared(configuration);
-        services.AddOptions<ReplayOptions>().Bind(configuration.GetSection(ReplayOptions.Section));
-
-        var aircraft = CheckedRecording.Check(
-            nameof(ReplayOptions.Aircraft),
-            configuration[$"{ReplayOptions.Section}:{nameof(ReplayOptions.Aircraft)}"],
-            recordings,
-            FleetTracker.DefaultStaleAfter);
-
-        // Reported and then closed: the vessel feed is unspecified, so nothing consumes a vessel
-        // recording until `0013`, and a handle held open for a run nobody reads is a leak with a
-        // claim attached to it. The row is still produced, because B-020 expects the closing act's
-        // recording to be cleared by this report rather than at the swap.
-        var vessels = CheckedRecording.Check(
-            nameof(ReplayOptions.Vessels),
-            configuration[$"{ReplayOptions.Section}:{nameof(ReplayOptions.Vessels)}"],
-            recordings,
-            FleetTracker.DefaultStaleAfter);
-
-        vessels.Payloads?.Dispose();
-
-        services.AddSingleton<IReadOnlyList<CheckedRecording>>([aircraft, vessels]);
-        services.AddSingleton<ReplayStartupReport>();
-        services.AddSingleton<IHostedService>(static provider => provider.GetRequiredService<ReplayStartupReport>());
-
-        if (aircraft.Payloads is { } payloads)
-        {
-            services.AddAircraftReplay(payloads);
-        }
-
-        return services;
-    }
+        IRecordingLibrary recordings) =>
+        services.AddReplaySources(configuration, recordings);
 }

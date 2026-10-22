@@ -129,7 +129,11 @@ public sealed class BoundaryAnalyzer : DiagnosticAnalyzer
     private static void ReportSnapshotMention(SyntaxNodeAnalysisContext context, INamedTypeSymbol named, ISymbol enclosing)
     {
         // Client, cache, projection, composition root. Everything else is past the projection.
-        if (Layers.IsClientHome(enclosing) || Layers.IsTrackingLayer(enclosing) || Layers.IsCompositionRoot(enclosing))
+        if (Layers.IsClientHome(enclosing)
+            || (Layers.IsSnapshot(enclosing.ContainingType ?? enclosing)
+                && SymbolEqualityComparer.Default.Equals(named, enclosing.ContainingType ?? enclosing))
+            || Layers.IsTrackingLayer(enclosing)
+            || Layers.IsCompositionRoot(enclosing))
         {
             return;
         }

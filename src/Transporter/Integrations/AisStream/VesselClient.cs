@@ -8,6 +8,7 @@ using Rocket.Surgery.Airframe;
 using Transporter.Integrations.AisStream.Configuration;
 using Transporter.Integrations.AisStream.Messages;
 using Transporter.Integrations.OpenSky;
+using Transporter.Recording;
 using Transporter.Tracking;
 
 namespace Transporter.Integrations.AisStream;
@@ -21,6 +22,7 @@ internal sealed class VesselClient
         IOptions<AisStreamOptions> options,
         IOptions<OpenSkyOptions> box,
         ISchedulerProvider schedulers,
+        IRecordingWriter recorder,
         ILogger<VesselClient> logger)
     {
         _sockets = sockets;
@@ -29,6 +31,7 @@ internal sealed class VesselClient
         _options = options;
         _box = box;
         _schedulers = schedulers;
+        _recorder = recorder;
         _logger = logger;
     }
 
@@ -60,6 +63,8 @@ internal sealed class VesselClient
                         await socket.Send(VesselSubscription.Write(key, box), cancellation).ConfigureAwait(false);
                         await foreach (var frame in socket.Frames(cancellation).ConfigureAwait(false))
                         {
+                            await _recorder.Write(scheduler.Now, frame).ConfigureAwait(false);
+                            cancellation.ThrowIfCancellationRequested();
                             ReadConfirmation(frame);
                             VesselMessageReader.Read(frame).IfSome(Write);
                         }
@@ -115,29 +120,7 @@ internal sealed class VesselClient
         {
             var held = updater.Lookup(message.Mmsi);
             var snapshot = held.HasValue ? held.Value : new VesselSnapshot { Mmsi = message.Mmsi };
-            message.Reported.IfSome(instant =>
-            {
-                if (snapshot.Reported.Match(latest => instant > latest, static () => true))
-                {
-                    snapshot = snapshot with { Reported = instant };
-                }
-            });
-            updater.AddOrUpdate(message switch
-            {
-                VesselPositionMessage position => snapshot with
-                {
-                    Position = position.Position,
-                    SpeedOverGround = position.SpeedOverGround,
-                    CourseOverGround = position.CourseOverGround,
-                    TrueHeading = position.TrueHeading,
-                },
-                VesselStaticMessage staticData => snapshot with
-                {
-                    Name = staticData.Name,
-                    ShipType = staticData.ShipType,
-                },
-                _ => snapshot,
-            });
+            updater.AddOrUpdate(snapshot.Apply(message));
         });
         message.Reported.IfSome(instant =>
         {
@@ -157,6 +140,7 @@ internal sealed class VesselClient
     private readonly IOptions<AisStreamOptions> _options;
     private readonly IOptions<OpenSkyOptions> _box;
     private readonly ISchedulerProvider _schedulers;
+    private readonly IRecordingWriter _recorder;
     private readonly ILogger<VesselClient> _logger;
     private readonly SemaphoreSlim _connectionOwnership = new(1, 1);
     private Option<DateTimeOffset> _latestReported;

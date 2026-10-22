@@ -2,7 +2,7 @@ id: "0013"
 type: task
 title: Substitute vessel replay at the strategy
 
-status: ready-for-architecture
+status: in-review
 
 priority: medium
 value: 3
@@ -31,7 +31,7 @@ claims:
   - B-023
 
 created: "2026-10-04"
-updated: "2026-10-17"
+updated: "2026-10-21"
 closed: null
 
 summary: |
@@ -46,11 +46,9 @@ summary: |
   selection path as an aircraft recording. Messages are never batched into
   poll-shaped snapshots to make a push feed resemble a polled one.
 
-  Waits on the vessel-source items that build what it reproduces: `0097`, the
-  client the recording tap sits on (§ 5 row 3); `0098`, the message shape;
-  `0099`, the reported instant, which bears on B-019 here; `0100`, the vessel;
-  and `0102`, the seam it reaches the same way. Re-score when they are done:
-  risk 4 is mostly the unbuilt subject, not the work.
+  The vessel-source items `0097` – `0102` now supply the message reader, reported
+  time, client, vessel projection and tracker seam. This item records their live
+  messages and replays them through a separate strategy and cache.
 
 acceptance_criteria:
   - "B-023 — vessel replay substitutes at the strategy, not at a contract."
@@ -61,6 +59,9 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-21 — implementer — preserve the push feed's one-message-per-frame recording. Reuse the live vessel message reader, snapshot merge, projection and tracker source. A replay-specific cache and pacer belong behind the strategy, not in a second vehicle or snapshot model."
+  - "2026-10-21 — implementer — reset replay's provider-time maximum and each contact's first timed value only when the pacer genuinely rewinds. Keep the cache at that boundary so the fleet does not disappear; untimed messages retain the prior reported instant."
+  - "2026-10-21 — implementer — inspect named vessel recordings against AisStream:SilentAfter, default ten minutes, while aircraft retain their five-minute minimum. Real stage configuration is checked after integration with the captured recording."
   - "2026-10-16 — spec-author — `ready-for-architecture` rather than `blocked`. Its blocker, the vessel feed's unwritten specification, is `src/Transporter/Integrations/AisStream/.spec/README.md`, and items `0096` – `0102` are cut from it. `depends_on` now names the three it needs: `0098` for the message shape, `0100` for the vessel, and `0102` for the seam it reaches the same way. B-021 has something to reproduce."
   - "2026-10-04 — spec-author — value 3 against the parent's 4, the only child
     scored below it. README presents the closing act as optional, while
@@ -75,8 +76,8 @@ decisions:
     yet."
 
 out_of_scope:
-  - "The vessel feed itself (§ 5 row 2; aircraft-source § 5 row 3). It is
-    vessel-source's § 3, and building it is what blocks the item."
+  - "The vessel feed itself (§ 5 row 2; aircraft-source § 5 row 3). Its shape
+    and live behavior are specified by vessel-source's § 3."
   - "Making the two halves substitute at the same depth — they cannot, and
     ADR-0002 accepts it."
   - "Performing the vessel recording (§ 5 row 3) — a rehearsal task in README

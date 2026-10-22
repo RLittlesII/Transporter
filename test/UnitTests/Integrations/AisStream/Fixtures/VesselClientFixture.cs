@@ -5,6 +5,7 @@ using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transporter.Integrations.AisStream;
 using Transporter.Integrations.AisStream.Configuration;
 using Transporter.Integrations.OpenSky;
+using Transporter.Recording;
 using Transporter.Scheduling;
 using Transporter.UnitTests.Scheduling;
 
@@ -22,5 +23,6 @@ internal partial class VesselClientFixture
         WithOptions(Options.Create(new AisStreamOptions { ApiKey = "synthetic-credential" }));
         WithOptions(Options.Create(new OpenSkyOptions { Box = new BoundingBoxFixture() }));
         WithProvider((SchedulerProvider) new SchedulerProviderFixture().WithTestScheduler(new TestScheduler()));
+        WithWriter((IRecordingWriter) new UnrecordedPayloads());
     }
 }

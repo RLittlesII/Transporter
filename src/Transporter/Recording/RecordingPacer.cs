@@ -55,6 +55,9 @@ internal sealed class RecordingPacer : IRecordingPacer
     }
 
     /// <inheritdoc/>
+    public long RewindCount { get; private set; }
+
+    /// <inheritdoc/>
     /// <exception cref="InvalidOperationException">
     /// The recording holds no readable line, so there is nothing to pace and rewinding would spin.
     /// B-026's startup report is what catches this before replay is selectable; reaching it means a
@@ -150,6 +153,7 @@ internal sealed class RecordingPacer : IRecordingPacer
         _recording.Seek(0, SeekOrigin.Begin);
         _reader.DiscardBufferedData();
         _rewound = true;
+        RewindCount++;
     }
 
     private readonly Stream _recording;

@@ -100,6 +100,14 @@ Feature: Boundary analyzer — the layer claims reported as compiler diagnostics
     Then the reference is reported
       And the rule does not report the cache as satisfied on the strength of its signatures
 
+  @B-008 @B-009
+  Scenario: A snapshot may return itself without admitting another snapshot
+    Given a provider snapshot with a method returning its own type
+      And a second provider snapshot whose method names the first snapshot
+     When the compilation is analyzed
+     Then the self-reference is allowed
+      And the reference from the second snapshot is reported by TRN0003
+
   @B-010
   Scenario: A claim about a declaration is reported on that declaration
     Given a snapshot that declares a member derived rather than reported
