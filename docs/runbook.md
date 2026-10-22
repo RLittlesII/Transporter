@@ -78,10 +78,19 @@ Rehearsal recording and replay both use the effective `Recording:Root`.
     dotnet user-secrets set "Replay:Aircraft" "aircraft-sample.ndjson" --id transporter-gui
     ```
 
-    For rehearsal traffic, put the intended recording in the same directory
-    and name that file instead (`Replay:Vessels` when that source exists).
-    To undo sample setup, delete only `aircraft-sample.ndjson` from the directory
-    above and remove or replace its `Replay:Aircraft` setting, then rebuild.
+    For rehearsal traffic, put the intended recording in the effective
+    `Recording:Root` and name that file instead. The captured vessel recording
+    must span at least `AisStream:SilentAfter` (ten minutes by default). Name it
+    separately under `Replay:Vessels` and rebuild:
+
+    ```sh
+    dotnet user-secrets set "Replay:Vessels" "<vessel-file>.ndjson" --id transporter-gui
+    ```
+
+    The existing `Replay:Aircraft` setting remains independent. To undo the
+    aircraft sample setup, delete only `aircraft-sample.ndjson` from the
+    directory above and remove or replace its `Replay:Aircraft` setting, then
+    rebuild.
 
 3. Build the head after changing its user-secrets store. The platform root is
    the lowest-priority default; a `Recording:Root` in packaged settings wins

@@ -53,6 +53,13 @@ Feature: Replay source — recording, playback, and selection
      Then it spans at least five minutes
       And replaying it shows an aircraft appearing, updating, and becoming stale
 
+  @B-005
+  Scenario: A vessel stage recording covers its own removal threshold
+    Given vessels are removed after ten minutes of silence
+     When a vessel recording is prepared for the closing act
+     Then its span exceeds ten minutes
+      And replaying it shows a vessel appearing, updating, and being removed on silence
+
   @B-006
   Scenario: A rehearsal recording is operational data, not a fixture
     Given a recording captured during rehearsal from the live provider
@@ -171,6 +178,13 @@ Feature: Replay source — recording, playback, and selection
       And no further credit is spent on the outgoing source
       And an outgoing socket, if there was one, stops reading
 
+  @B-017
+  Scenario: Swapping away from vessel replay cancels its pending frame
+    Given recorded vessels are selected and playback is waiting for the next frame
+     When the presenter selects another source
+     Then the vessel replay subscription is disposed
+      And no later recorded frame enters its cache through that subscription
+
   @B-018
   Scenario: The pipeline survives the swap to replay untouched
     Given a fleet with a search filter, a chosen sort column and a grouped view
@@ -206,6 +220,14 @@ Feature: Replay source — recording, playback, and selection
      Then both are reported — one as too short to show staleness, one as absent
       And neither was first discovered at the moment replay was selected
 
+  @B-026
+  Scenario: A vessel recording is checked against the configured vessel threshold
+    Given vessels are removed after ten minutes by default
+      And a named vessel recording spans six minutes
+     When the application starts
+     Then the recording is reported too short and vessel replay is not selectable
+      And changing AisStream:SilentAfter to twenty minutes makes a twelve-minute recording too short as well
+
   @B-027
   Scenario: The pacer is handed a stream and resolves nothing
     Given a recording that has already been opened
@@ -223,6 +245,18 @@ Feature: Replay source — recording, playback, and selection
      Then the recording holds three lines, one per message
       And their recorded arrival instants reproduce the eight seconds between first and last
       And the messages were not batched into poll-shaped snapshots
+
+  @B-008 @B-009 @B-010
+  Scenario: Vessel replay restarts its provider time without emptying the fleet
+    Given a recording with timed vessel messages and an untimed message
+      And an older provider message within the first pass
+     When replay reaches the end and starts a second pass
+     Then the first timed message of that pass resets the observed clock to its provider time
+      And each vessel's first timed message rebases its held last contact
+      And untimed messages do not erase a held last contact or advance the clock
+      And later older messages in that pass do not move the clock or a last contact backwards
+      And the retained cache emits no change that removes every vessel at the boundary
+      And a vessel silent beyond its threshold is removed again in the second pass
 
   @B-020
   Scenario: The closing act has a recorded fallback before it is presented

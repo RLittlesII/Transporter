@@ -141,28 +141,28 @@ the claim's text lives in
 [`aircraft-source`](../../Transporter/Integrations/OpenSky/.spec/README.md) § 3 and the test
 that proves it in that specification's § 9, so neither is copied here.
 
-| Diagnostic | Enforces                | What it examines                                                                                                                        |
-| ---------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `TRN0001`  | `aircraft-source` B-004 | Every reference to the positional row from outside the integration                                                                      |
-| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the implementations of the contract and the snapshot client                         |
-| `TRN0003`  | `aircraft-source` B-046 | Every reference to a snapshot, against the client, its cache and the projection                                                         |
-| `TRN0004`  | `aircraft-source` B-047 | References from below `IFleetTracker` to a contract, client, cache, snapshot or concrete source, excluding what the seam publishes      |
-| `TRN0005`  | `aircraft-source` B-032 | References to a domain type from the cache                                                                                              |
-| `TRN0006`  | `aircraft-source` B-041 | References from a semantic view or view model to a strategy, client, cache or decorator, excluding what the seam publishes              |
-| `TRN0007`  | `aircraft-source` B-044 | Imperative mutation of a bound collection                                                                                               |
-| `TRN0008`  | `aircraft-source` B-002 | The envelope's members                                                                                                                  |
-| `TRN0009`  | `aircraft-source` B-005 | The contract's method signatures                                                                                                        |
-| `TRN0010`  | `aircraft-source` B-006 | The types the contract's declarations name                                                                                              |
-| `TRN0011`  | `aircraft-source` B-007 | Implementations of the contract: count per transport, accessibility, sealedness, explicit implementation                                |
-| `TRN0012`  | `aircraft-source` B-014 | The snapshot's members                                                                                                                  |
-| `TRN0013`  | `aircraft-source` B-037 | The per-type tracker source interface's members                                                                                         |
-| `TRN0014`  | `aircraft-source` B-048 | The contract's name and any interface above it                                                                                          |
-| `TRN0015`  | `aircraft-source` B-008 | Registration and resolution call sites naming an implementation type                                                                    |
-| `TRN0016`  | `aircraft-source` B-030 | The cache's declaration and the type it is registered as                                                                                |
-| `TRN0017`  | `aircraft-source` B-031 | The cache's registration: lifetime, and one per client                                                                                  |
-| `TRN0019`  | `fleet-dashboard` B-017 | Semantic view/view-model transport, blocking calls, untimed Ask and timer operations; permits injected one-shot presentation deadlines. |
-| `TRN0020`  | `fleet-dashboard` B-018 | Competing collection filters, sorts, groups, expiry and domain staleness arithmetic in semantic views/view models.                      |
-| `TRN0021`  | `fleet-dashboard` B-022 | Concrete-vehicle casts and type tests throughout Fleet, including statics and semantic head views.                                      |
+| Diagnostic | Enforces                | What it examines                                                                                                                                                        |
+| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TRN0001`  | `aircraft-source` B-004 | Every reference to the positional row from outside the integration                                                                                                      |
+| `TRN0002`  | `aircraft-source` B-045 | Every reference to the envelope or the row, against the implementations of the contract and the snapshot client                                                         |
+| `TRN0003`  | `aircraft-source` B-046 | Every reference to a snapshot, against the client, its cache and the projection; a snapshot's reference to its own type is its declaration, not a downstream dependency |
+| `TRN0004`  | `aircraft-source` B-047 | References from below `IFleetTracker` to a contract, client, cache, snapshot or concrete source, excluding what the seam publishes                                      |
+| `TRN0005`  | `aircraft-source` B-032 | References to a domain type from the cache                                                                                                                              |
+| `TRN0006`  | `aircraft-source` B-041 | References from a semantic view or view model to a strategy, client, cache or decorator, excluding what the seam publishes                                              |
+| `TRN0007`  | `aircraft-source` B-044 | Imperative mutation of a bound collection                                                                                                                               |
+| `TRN0008`  | `aircraft-source` B-002 | The envelope's members                                                                                                                                                  |
+| `TRN0009`  | `aircraft-source` B-005 | The contract's method signatures                                                                                                                                        |
+| `TRN0010`  | `aircraft-source` B-006 | The types the contract's declarations name                                                                                                                              |
+| `TRN0011`  | `aircraft-source` B-007 | Implementations of the contract: count per transport, accessibility, sealedness, explicit implementation                                                                |
+| `TRN0012`  | `aircraft-source` B-014 | The snapshot's members                                                                                                                                                  |
+| `TRN0013`  | `aircraft-source` B-037 | The per-type tracker source interface's members                                                                                                                         |
+| `TRN0014`  | `aircraft-source` B-048 | The contract's name and any interface above it                                                                                                                          |
+| `TRN0015`  | `aircraft-source` B-008 | Registration and resolution call sites naming an implementation type                                                                                                    |
+| `TRN0016`  | `aircraft-source` B-030 | The cache's declaration and the type it is registered as                                                                                                                |
+| `TRN0017`  | `aircraft-source` B-031 | The cache's registration: lifetime, and one per client                                                                                                                  |
+| `TRN0019`  | `fleet-dashboard` B-017 | Semantic view/view-model transport, blocking calls, untimed Ask and timer operations; permits injected one-shot presentation deadlines.                                 |
+| `TRN0020`  | `fleet-dashboard` B-018 | Competing collection filters, sorts, groups, expiry and domain staleness arithmetic in semantic views/view models.                                                      |
+| `TRN0021`  | `fleet-dashboard` B-022 | Concrete-vehicle casts and type tests throughout Fleet, including statics and semantic head views.                                                                      |
 
 **What a fix can do, and where it cannot**
 
@@ -545,6 +545,23 @@ claims sharing the same number. The final `./build.sh` log records 379 passing
 tests with none failed or skipped. **Clean review: §§ 6-7 are 🟢 Approved;
 the §§ 8-9 evidence delta is independently re-approved.** All owner rows are
 approved; the frontmatter returns to `approved`.
+**Scoped item `0013` review, 2026-10-21 — independent `spec-reviewer`.** This
+reviewer authored none of the reviewed design, tests or implementation.
+TRN0003's self-reference correction is approved under aircraft-source B-046
+and analyzer B-008/B-009. The exemption compares semantic type identity, so a
+snapshot may return its own type while references to a different snapshot still
+produce a diagnostic. `BoundaryAnalyzerTests.GivenASnapshotReturningItself_WhenAnalyzed_ThenOnlyThatSelfReferenceIsAllowed`
+checks the allowed self-reference and rejected cross-snapshot reference, with
+successful compilation guards. The matching scenario and mapping clarification
+agree with that boundary; no new diagnostic or general snapshot exemption is
+introduced. No actionable findings remain in this scoped delta, and the
+modified design and evidence are approved.
+
+The inspected final build log records successful Clean, Format, Compile and
+Test, with 577 tests passed and none failed or skipped. NugetRestore was skipped
+after an earlier completed restore; Format reported a workspace-loading warning.
+This approval changes no unrelated delivery gate or replay B-020 operational
+review status.
 
 ## Decisions
 

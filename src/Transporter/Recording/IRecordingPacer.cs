@@ -10,6 +10,9 @@ namespace Transporter.Recording;
 /// </remarks>
 internal interface IRecordingPacer
 {
+    /// <summary>How many genuine end-of-recording rewinds have occurred.</summary>
+    long RewindCount { get; }
+
     /// <summary>
     /// Waits until the next payload is due, then answers it verbatim.
     /// </summary>

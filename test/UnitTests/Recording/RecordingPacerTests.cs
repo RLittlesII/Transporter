@@ -79,6 +79,7 @@ public class RecordingPacerTests
         boundaryAtFourteenSeconds.Should().BeFalse("the boundary is spaced by the recording's own last gap");
         released.Should().Equal(First, Second, Third);
         (await acrossTheBoundary).Should().Be(First);
+        sut.RewindCount.Should().Be(1, "the vessel replay needs the genuine boundary, not a guess from provider time");
     }
 
     /// <summary>

@@ -8,6 +8,8 @@ internal sealed class ScriptedVesselSocket(string name, List<string> events) : I
 {
     public Task Opened => _openedSignal.Task;
 
+    public Task Closed => _closed.Task;
+
     public List<string> Sent { get; } = [];
 
     public bool IsOpen { get; private set; }
@@ -80,7 +82,6 @@ internal sealed class ScriptedVesselSocket(string name, List<string> events) : I
     public void ReleaseClose()
     {
         FinishClose();
-        _closed.SetResult();
     }
 
     public void Receive(string frame)
@@ -126,6 +127,7 @@ internal sealed class ScriptedVesselSocket(string name, List<string> events) : I
     {
         IsOpen = false;
         events.Add(name + ":closed");
+        _closed.TrySetResult();
     }
 
     private sealed class FramesSequence(ScriptedVesselSocket socket, CancellationToken cancellation) : IAsyncEnumerable<string>, IAsyncEnumerator<string>

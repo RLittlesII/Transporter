@@ -220,6 +220,44 @@ public class BoundaryAnalyzerTests
     }
 
     [Fact]
+    public async Task GivenASnapshotReturningItself_WhenAnalyzed_ThenOnlyThatSelfReferenceIsAllowed()
+    {
+        const string selfSource = """
+            namespace Transporter.Integrations.OpenSky;
+            internal sealed record AircraftSnapshot
+            {
+                internal AircraftSnapshot Apply() => this;
+            }
+            """;
+        const string crossSource = """
+            namespace Transporter.Integrations.OpenSky;
+            internal sealed record AircraftSnapshot;
+            internal sealed record OtherSnapshot
+            {
+                internal AircraftSnapshot Apply(AircraftSnapshot value) => value;
+            }
+            """;
+        var self = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", selfSource)
+            .GenerateAsync();
+        var cross = await GeneratorTestContextBuilder
+            .Create()
+            .WithAnalyzer<BoundaryAnalyzer>()
+            .WithDiagnosticSeverity(DiagnosticSeverity.Error)
+            .AddSource("Snapshot.cs", crossSource)
+            .GenerateAsync();
+
+        NothingFailedToCompile(self);
+        NothingFailedToCompile(cross);
+        self.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Should().BeEmpty();
+        cross.AnalyzerResults[typeof(BoundaryAnalyzer)].Diagnostics.Should()
+            .Contain(static diagnostic => diagnostic.Id == "TRN0003", "a different snapshot is still past the projection boundary");
+    }
+
+    [Fact]
     public async Task GivenAConsumerOfTheFleetTrackerNamingAnythingUpstream_WhenAnalyzed_ThenItIsReported()
     {
         // Given, When
