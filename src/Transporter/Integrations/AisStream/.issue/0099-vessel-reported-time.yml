@@ -2,7 +2,7 @@ id: "0099"
 type: task
 title: Take a vessel's last contact and the observed clock from the instant the feed reports
 
-status: blocked
+status: done
 
 priority: high
 risk: 4
@@ -12,36 +12,41 @@ parent: "0096"
 children: []
 
 depends_on:
-  - "0098"
+    - "0098"
 blocks: []
 spikes: []
 
 spec: src/Transporter/Integrations/AisStream/.spec/README.md
 
 claims:
-  - B-014
-  - B-015
+    - B-014
+    - B-015
 
 created: "2026-10-16"
-updated: "2026-10-17"
-closed: null
+updated: "2026-10-21"
+closed: "2026-10-21"
 
 summary: |
-  A vessel's time is what the feed reports, never a clock the client reads
-  (ADR-0007). Which field carries that instant is § 11 row 6: the
-  documentation shows none, and `PositionReport.Timestamp` is a UTC second.
-
-  **`blocked` on § 11 row 6**, answered by reading a captured message. If
-  the feed carries no full instant, B-015 leaves the clock alone, B-022 never
-  fires, and ADR-0007 needs the person's amendment before this item can be
-  built as claimed.
+    Use the feed's MetaData.time_utc for the latest contact on each cached
+    vessel and advance the observed clock only for a later reported instant.
+    The 2026-10-21 capture resolves § 11 row 6 without amending ADR-0007.
 
 acceptance_criteria:
-  - "B-014 — last contact is the reported instant, read from no clock."
-  - "B-015 — each reported instant advances the observed clock; a message with none leaves it."
-  - "§ 9 carries a row naming a test or a performed review for each id above."
+    - "B-014 — last contact is the reported instant, read from no clock."
+    - "B-015 — each reported instant advances the observed clock; a message with none leaves it."
+    - "§ 9 carries a row naming a test or a performed review for each id above."
 
-decisions: []
+decisions:
+    - date: "2026-10-21"
+      who: "implementer, captured-message evidence"
+      decision: >-
+          § 11 row 6 option A is established by 455 captured Houston frames,
+          comprising 419 PositionReport and 36 ShipStaticData messages over
+          11.007 minutes. Every frame carries MetaData.time_utc in Go UTC
+          format with 7–9 fractional digits. Read this provider instant for
+          B-014 and B-015, truncate sub-tick precision to DateTimeOffset ticks,
+          and leave missing or unreadable instants absent. No arrival clock
+          or ADR-0007 amendment is required.
 
 out_of_scope:
-  - "Everything in § 5 of the specification."
+    - "Everything in § 5 of the specification."

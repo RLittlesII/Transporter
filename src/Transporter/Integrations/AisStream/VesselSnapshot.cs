@@ -7,6 +7,8 @@ internal sealed record VesselSnapshot
 {
     public required string Mmsi { get; init; }
 
+    public Option<DateTimeOffset> Reported { get; init; }
+
     public Option<GeoPosition> Position { get; init; }
 
     public Option<double> SpeedOverGround { get; init; }

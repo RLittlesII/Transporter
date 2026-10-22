@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
 namespace Transporter.UnitTests.Integrations.AisStream;
 
 /// <summary>Synthetic frames and settings for the vessel connection boundary.</summary>
@@ -57,4 +60,11 @@ internal static class VesselPayloads
     public static readonly string PackagedSettings = """{"AisStream":{"ReconnectAfter":"00:00:09"}}""";
 
     public static readonly string UserSecrets = """{"AisStream":{"ApiKey":"synthetic-credential"}}""";
+
+    public static string WithReportedTime(string frame, object? reported)
+    {
+        var message = JsonNode.Parse(frame)!;
+        message["MetaData"]!["time_utc"] = JsonSerializer.SerializeToNode(reported);
+        return message.ToJsonString();
+    }
 }
