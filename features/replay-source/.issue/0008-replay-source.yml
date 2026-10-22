@@ -2,7 +2,7 @@ id: "0008"
 type: feature
 title: Replay recorded provider payloads through the live seam
 
-status: blocked
+status: done
 
 priority: high
 value: 5
@@ -56,8 +56,8 @@ claims:
   - B-028
 
 created: "2026-10-04"
-updated: "2026-10-09"
-closed: null
+updated: "2026-10-22"
+closed: "2026-10-22"
 
 summary: |
   As the presenter I want to finish the talk when the venue network dies
@@ -69,7 +69,7 @@ summary: |
   provider's payloads verbatim, a pacer that feeds them back at their recorded
   spacing, and two substitution points — the contract for aircraft, the strategy
   for vessels, with the recording named in configuration rather than discovered.
-  Five children; it holds no work of its own.
+  Seven children; it holds no work of its own.
 
   Claim ids here resolve against features/replay-source/.spec/README.md, not
   against aircraft-source. Both specs number from B-001 and the ids are
@@ -82,6 +82,7 @@ acceptance_criteria:
   - "§ 9 has no Missing row once every child is done."
 
 decisions:
+  - "2026-10-22 — closure — child 0013 completed vessel recording, replay, source-return repair and the actual stage rehearsal. Replay-source § 9 now has all 28 claims Verified and no Missing row; the built head accepts both staged recordings and the native closing act completed a full pass, silence expiry, EOF rewind and continued updates."
   - "2026-10-07 — `0055` — `blocked` rather than `ready-for-implementation`, because nothing under it can be picked up. Four of five children are `done` through `0012`; the fifth, `0013`, is blocked on the vessel feed's specification (§ 5 row 2), and the last claim this parent still owes outside it, B-005, waits on a captured recording (`0052`). Neither is work anyone can start, and `ready-for-implementation` was putting this in the pickable list."
   - "2026-10-06 — test-writer — §§ 8 and 9 are written, so the specification is
     complete and the statuses move: `0009` and `0010` to `ready` with every
