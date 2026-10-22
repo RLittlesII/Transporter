@@ -331,3 +331,23 @@ Feature: Replay source — recording, playback, and selection
      Then the payload is preserved verbatim
       And a warning says the one-line recording format is broken
       And replay of that payload is outside the supported recording format
+
+  @B-009 @B-010
+  Scenario: Returning to a retained source restores its provider time before its vehicles
+    Given an aircraft recording has published fresh aircraft and its reported instant
+      And vessel replay then advances the observed instant to a later day
+      And the next aircraft payload is still waiting for its recorded spacing
+     When the aircraft source is selected again
+     Then its retained aircraft are measured against its own last reported instant immediately
+      And no aircraft is marked stale because of the outgoing vessel instant
+      And the next payload remains paced by the recording
+
+  @B-009 @B-010
+  Scenario: Returning to vessel replay restores its provider time before its vehicles
+    Given vessel replay has published vessels and its reported instant
+      And another source then reports an instant on a different day
+      And the next vessel frame is still waiting for its recorded spacing
+     When vessel replay is selected again
+     Then its retained vessels are measured against its own last reported instant immediately
+      And no vessel is removed because of the outgoing source instant
+      And a source that has never reported an instant invents no time

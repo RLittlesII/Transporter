@@ -105,8 +105,15 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
     /// instant it will not keep (B-056).
     /// </para>
     /// </remarks>
-    public IDisposable Poll() =>
-        new CompositeDisposable(
+    public IDisposable Poll()
+    {
+        var reportedTicks = Interlocked.Read(ref _reportedTicks);
+        if (reportedTicks >= 0)
+        {
+            _clock.Observe(new DateTimeOffset(reportedTicks, TimeSpan.Zero));
+        }
+
+        return new CompositeDisposable(
             _schedulers.BackgroundThread.ScheduleAsync(async (scheduler, cancellation) =>
             {
                 while (!cancellation.IsCancellationRequested)
@@ -122,6 +129,7 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
                 }
             }),
             Disposable.Create(() => _status.Write(PollStatus.None)));
+    }
 
     /// <inheritdoc/>
     /// <remarks>
@@ -192,6 +200,7 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
                     cancellationToken)
                 .ConfigureAwait(false);
 
+            cancellationToken.ThrowIfCancellationRequested();
             Apply(response);
 
             // B-054, and B-055's clearing.
@@ -356,7 +365,9 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
         }
 
         _cache.EditDiff(snapshots, EqualityComparer<AircraftSnapshot>.Default);
-        _clock.Observe(DateTimeOffset.FromUnixTimeSeconds(response.Time));
+        var reported = DateTimeOffset.FromUnixTimeSeconds(response.Time);
+        Interlocked.Exchange(ref _reportedTicks, reported.UtcTicks);
+        _clock.Observe(reported);
     }
 
     /// <summary>How long is left until the held due instant, whoever polled last; zero or less when one is due.</summary>
@@ -396,6 +407,7 @@ internal sealed class AircraftSnapshotClient : IAircraftSnapshotClient, IDemande
     private readonly IOptions<OpenSkyOptions> _options;
     private readonly ISchedulerProvider _schedulers;
     private readonly ILogger<AircraftSnapshotClient> _logger;
+    private long _reportedTicks = -1;
     private long _lastPoll = NeverPolled;
     private long _nextDue = NeverPolled;
 }
