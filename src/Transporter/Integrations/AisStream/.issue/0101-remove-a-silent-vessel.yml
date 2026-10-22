@@ -20,10 +20,10 @@ spikes: []
 spec: src/Transporter/Integrations/AisStream/.spec/README.md
 
 claims:
-  - B-019
   - B-021
   - B-022
   - B-023
+  - B-027
 
 created: "2026-10-16"
 updated: "2026-10-21"
@@ -45,11 +45,11 @@ summary: |
   Depends on `0099`: with no reported instant the clock never advances for
   vessels, and B-022 never fires.
 
-  This item also completes B-019's silence treatment after 0100 supplies the
+  This item completes B-027's silence treatment after 0100 supplies the
   rest of the vessel description.
 
 acceptance_criteria:
-  - "B-019 — the vessel description names removal after its silence threshold."
+  - "B-027 — the vessel description names removal after its silence threshold."
   - "B-021, B-022 — removed past the threshold with no message arriving and no wall clock; back as a new arrival."
   - "B-023 — a configurable vessel threshold, distinct from the aircraft's, applied to vessels only."
   - "§ 9 carries a row naming a test or a performed review for each id above."

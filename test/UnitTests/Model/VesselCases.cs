@@ -41,7 +41,10 @@ internal sealed class VesselMidCases : TheoryData<string, string>
     {
         Add("366999001", "United States of America");
         Add("201999001", "Albania (Republic of)");
-        Add("306999001", "Netherlands (Kingdom of the)");
+        const string DutchTerritories = "Netherlands (Kingdom of the) - Bonaire, Sint Eustatius and Saba; "
+            + "Netherlands (Kingdom of the) - Curaçao; "
+            + "Netherlands (Kingdom of the) - Sint Maarten (Dutch part)";
+        Add("306999001", DutchTerritories);
         Add("503999001", "Australia");
         Add("636999001", "Liberia (Republic of)");
         Add("775999001", "Venezuela (Bolivarian Republic of)");

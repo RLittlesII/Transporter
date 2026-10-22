@@ -66,42 +66,68 @@ public class VesselFleetDescriptionTests
 
     /// <summary>B-019. Sorts use the base vehicle's label, contact instant and group key.</summary>
     [Fact]
-    public void GivenTwoVessels_WhenSorted_ThenTheThreeComparersReadTheirBaseMembers()
+    public void GivenThreeVessels_WhenSorted_ThenEachComparerReadsItsOwnBaseMember()
     {
         // Given
         var sut = VesselFleetDescription.Offered;
         TransportVehicle first = new VesselFixture()
+            .WithMmsi("366999001")
             .WithName("ALFA")
-            .WithShipType(70)
+            .WithShipType(80)
             .WithLastContact(new DateTimeOffset(2026, 10, 21, 14, 0, 0, TimeSpan.Zero));
         TransportVehicle second = new VesselFixture()
-            .WithName("ZULU")
-            .WithShipType(80)
+            .WithMmsi("366999002")
+            .WithName("BRAVO")
+            .WithShipType(70)
             .WithLastContact(new DateTimeOffset(2026, 10, 21, 15, 0, 0, TimeSpan.Zero));
+        TransportVehicle third = new VesselFixture()
+            .WithMmsi("366999003")
+            .WithName("CHARLIE")
+            .WithShipType(60)
+            .WithLastContact(new DateTimeOffset(2026, 10, 21, 13, 0, 0, TimeSpan.Zero));
+        var vehicles = new[] { first, second, third };
 
         // When
-        var ordered = sut.Columns.Where(static column => column.Comparer.IsSome)
-            .Select(column => column.Comparer.IfNoneUnsafe((IComparer<TransportVehicle>?) null)!.Compare(first, second))
-            .ToArray();
+        var byName = sut.Columns.Single(static column => column.Name == "Name").Comparer.IfNoneUnsafe((IComparer<TransportVehicle>?) null)!;
+        var byType = sut.Columns.Single(static column => column.Name == "Ship type").Comparer.IfNoneUnsafe((IComparer<TransportVehicle>?) null)!;
+        var byContact = sut.Columns.Single(static column => column.Name == "Last contact").Comparer.IfNoneUnsafe((IComparer<TransportVehicle>?) null)!;
 
         // Then
-        ordered.Should().HaveCount(3).And.OnlyContain(static result => result < 0);
+        vehicles.OrderBy(static vehicle => vehicle, byName).Select(static vehicle => vehicle.Key)
+            .Should().Equal(["366999001", "366999002", "366999003"]);
+        vehicles.OrderBy(static vehicle => vehicle, byType).Select(static vehicle => vehicle.Key)
+            .Should().Equal(["366999002", "366999003", "366999001"]);
+        vehicles.OrderBy(static vehicle => vehicle, byContact).Select(static vehicle => vehicle.Key)
+            .Should().Equal(["366999003", "366999001", "366999002"]);
     }
 
     /// <summary>B-019. A filter choice admits and rejects vessels on data the source actually reports.</summary>
     [Fact]
-    public void GivenTheDescription_WhenItsFiltersAreRead_ThenEachChoiceConstrainsTheFleet()
+    public void GivenIndependentVesselValues_WhenFiltersAreRead_ThenEachChoiceMatchesOnlyItsRequirement()
     {
         // Given
         var sut = VesselFleetDescription.Offered;
-        TransportVehicle moving = new VesselFixture().WithName("BAY RUNNER").WithSpeedOverGround(12.4).WithPosition(new GeoPosition(29.4, -94.9));
-        TransportVehicle quiet = new VesselFixture().WithMmsi("366999002").WithSpeedOverGround(0);
+        (TransportVehicle Vessel, string[] Matches)[] cases =
+        [
+            (new VesselFixture().WithMmsi("366999001"), []),
+            (new VesselFixture().WithMmsi("366999002").WithName("BAY RUNNER").WithSpeedOverGround(0), ["Named vessel"]),
+            (new VesselFixture().WithMmsi("366999003").WithSpeedOverGround(12.4), ["Moving"]),
+            (new VesselFixture().WithMmsi("366999004").WithSpeedOverGround(0).WithPosition(new GeoPosition(29.4, -94.9)), ["Reporting a position"]),
+            (new VesselFixture()
+                .WithMmsi("366999005")
+                .WithName("@@@@")
+                .WithSpeedOverGround(12.4)
+                .WithPosition(new GeoPosition(29.5, -94.8)), ["Moving", "Reporting a position"]),
+        ];
 
         // When
-        var choices = sut.Filters.ToDictionary(static choice => choice.Name);
+        var choices = sut.Filters;
 
         // Then
-        choices.Keys.Should().BeEquivalentTo(["Moving", "Named vessel", "Reporting a position"]);
-        choices.Values.Should().OnlyContain(choice => choice.Matches(moving) && !choice.Matches(quiet));
+        choices.Select(static choice => choice.Name).Should().Equal(["Moving", "Named vessel", "Reporting a position"]);
+        foreach (var (vessel, expected) in cases)
+        {
+            choices.Where(choice => choice.Matches(vessel)).Select(static choice => choice.Name).Should().Equal(expected);
+        }
     }
 }

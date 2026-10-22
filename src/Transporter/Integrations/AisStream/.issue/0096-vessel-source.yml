@@ -52,9 +52,10 @@ claims:
   - B-024
   - B-025
   - B-026
+  - B-027
 
 created: "2026-10-16"
-updated: "2026-10-17"
+updated: "2026-10-21"
 closed: null
 
 summary: |
@@ -70,12 +71,12 @@ summary: |
   The person approved the four remaining R3 product choices on 2026-10-17,
   and an independent review approved every § 12 owner row. The children hold
   delivery; no implementation claim is complete merely because the agreement
-  is approved. `0099` remains `blocked` on § 11 row 6's captured-message
-  evidence. `0101` and `0102` also require the cross-feature specification
+  is approved. `0099` is complete after the captured-message evidence in § 11 row 6.
+  `0101` and `0102` also require the cross-feature specification
   reviews listed in vessel-source § 12.
 
 acceptance_criteria:
-  - "Every § 3 claim B-001 – B-026 is done by the child that holds it."
+  - "Every § 3 claim B-001 – B-027 is done by the child that holds it."
   - "§ 9 carries a row naming a test or a performed review for each."
 
 decisions:

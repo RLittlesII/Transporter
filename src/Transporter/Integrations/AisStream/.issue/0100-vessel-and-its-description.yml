@@ -2,7 +2,7 @@ id: "0100"
 type: task
 title: Project the cache into vessels, and describe them by ship type and flag state
 
-status: in-progress
+status: done
 
 priority: high
 risk: 3
@@ -13,6 +13,7 @@ children: []
 
 depends_on:
   - "0098"
+  - "0099"
 blocks: []
 spikes: []
 
@@ -28,7 +29,7 @@ claims:
 
 created: "2026-10-16"
 updated: "2026-10-21"
-closed: null
+closed: "2026-10-21"
 
 summary: |
   The vessel is one level below `TransportVehicle`, built only by the
@@ -44,12 +45,13 @@ summary: |
 acceptance_criteria:
   - "B-010 — the projection gate for a cached vessel with no reported instant; the cache half remains with 0098."
   - "B-016, B-017, B-018 — one level below the base, built in one place, labelled, canonical units."
-  - "B-019, B-020 — the description's columns, selectors, comparers, card, trail, detail and two groupings; Unknown until reported or allocated. The B-019 silence treatment lands with 0101's pipeline stage."
+  - "B-019, B-020 — the description's columns, selectors, comparers, card, trail, detail and two groupings; Unknown until reported or allocated. B-027 assigns the silence treatment to 0101."
   - "§ 9 carries a row naming a test or a performed review for each id above."
 
 decisions:
-  - "2026-10-21 — B-020 — ITU GLAD lists MID 306 for three Dutch territories. The MID alone identifies their shared Netherlands administration, so the flag grouping uses that common name."
-  - "2026-10-21 — B-019 — 0100 supplies the description's columns, selectors, comparers, card, trail and groupings; 0101 supplies the silence treatment with its pipeline stage. The claim remains Missing until both land."
+  - "2026-10-21 — the person explicitly authorized starting 0100 in this fork from the known field shape before 0099 completed; 0100 retained its 0099 dependency and waited for the merged base before publication."
+  - "2026-10-21 — B-020 — ITU GLAD lists MID 306 for three Dutch territories. The MID cannot identify one territory, so the flag grouping preserves all three official allocation labels in one deterministic value."
+  - "2026-10-21 — B-019/B-027 — 0100 completes the description's columns, selectors, comparers, card, trail and groupings; new B-027 assigns silence treatment to 0101 so each item can close against a complete claim."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

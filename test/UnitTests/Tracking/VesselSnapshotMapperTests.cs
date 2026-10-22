@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using LanguageExt;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
 using Transporter.Integrations.AisStream;
 using Transporter.Model;
@@ -9,6 +10,27 @@ namespace Transporter.UnitTests.Tracking;
 
 public class VesselSnapshotMapperTests
 {
+    /// <summary>B-017: the projection holds the normalized name and uses MMSI when the name is absent.</summary>
+    /// <param name="name">The name held in the snapshot.</param>
+    /// <param name="normalized">The name held in the vessel, or absence.</param>
+    /// <param name="label">The displayed label.</param>
+    [Theory]
+    [ClassData(typeof(VesselCachedNameCases))]
+    public void GivenACachedName_WhenProjected_ThenVesselNameAndLabelAreNormalized(
+        Option<string> name, string? normalized, string label)
+    {
+        // Given
+        VesselSnapshotMapper sut = new VesselSnapshotMapperFixture();
+        VesselSnapshot snapshot = new TimedVesselSnapshotFixture().WithMmsi("366999005").WithName(name);
+
+        // When
+        var vessel = sut.Project(snapshot);
+
+        // Then
+        vessel.Name.IfNoneUnsafe((string?) null).Should().Be(normalized);
+        vessel.Label.Should().Be(label);
+    }
+
     /// <summary>B-018. Knots and degrees remain exactly as reported in the domain vehicle.</summary>
     [Fact]
     public void GivenReportedSpeedCourseAndHeading_WhenProjected_ThenTheyAreHeldAsReported()

@@ -16,7 +16,7 @@ internal static class MaritimeIdentificationDigits
         return Allocations.TryGetValue(mid, out var state) ? state : Option<string>.None;
     }
 
-    // ITU GLAD, 2026-10-21. MID 306 names three Dutch territories; the MID alone identifies their shared administration.
+    // ITU GLAD, 2026-10-21. MID 306 has three allocations; its digits cannot identify one territory.
     private static readonly IReadOnlyDictionary<int, string> Allocations = new Dictionary<int, string>
     {
         [201] = "Albania (Republic of)",
@@ -97,7 +97,9 @@ internal static class MaritimeIdentificationDigits
         [303] = "United States of America - Alaska (State of)",
         [304] = "Antigua and Barbuda",
         [305] = "Antigua and Barbuda",
-        [306] = "Netherlands (Kingdom of the)",
+        [306] = "Netherlands (Kingdom of the) - Bonaire, Sint Eustatius and Saba; "
+            + "Netherlands (Kingdom of the) - Curaçao; "
+            + "Netherlands (Kingdom of the) - Sint Maarten (Dutch part)",
         [307] = "Netherlands (Kingdom of the) - Aruba",
         [308] = "Bahamas (Commonwealth of the)",
         [309] = "Bahamas (Commonwealth of the)",
