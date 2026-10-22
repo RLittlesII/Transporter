@@ -185,6 +185,43 @@ Feature: Vessel source — a push feed on the same seam
      When a message reporting 14:32:18 arrives
      Then the observed clock still reads 14:32:25
 
+  @B-014 @B-015
+  Scenario Outline: Provider UTC text is read at tick precision
+    Given vessels are live
+     When a <kind> message carries MetaData.time_utc "2026-10-20 14:32:25.123456789 +0000 UTC"
+     Then the vessel's last contact is 2026-10-20 14:32:25.1234567 UTC
+      And the observed clock reads 2026-10-20 14:32:25.1234567 UTC
+    Examples:
+      | kind           |
+      | position       |
+      | static-data    |
+
+  @B-014 @B-015
+  Scenario: Late messages preserve each vessel's latest contact independently
+    Given vessel "366999001" last reported 14:32:25 UTC
+      And vessel "366999002" last reported 14:32:18 UTC
+     When vessel "366999001" reports 14:32:10 UTC
+     Then its last contact is still 14:32:25 UTC
+     When vessel "366999002" reports 14:32:20 UTC
+     Then its last contact is 14:32:20 UTC
+      And the observed clock is still 14:32:25 UTC
+
+  @B-014 @B-015
+  Scenario: An unreadable metadata instant leaves time unchanged and the message readable
+    Given vessels are live and a vessel last reported 14:32:25 UTC
+     When its position report has an unreadable MetaData.time_utc and payload Timestamp 30
+     Then its position is updated
+      And its last contact and the observed clock remain 14:32:25 UTC
+
+  @B-015
+  Scenario: Equal or late vessel times do not overwrite another writer
+    Given the vessel client last reported 14:32:25 UTC
+      And another source has reset the shared observed clock to 13:00:00 UTC
+     When a vessel message reports 14:32:25 UTC
+     Then the observed clock still reads 13:00:00 UTC
+     When a vessel message reports 14:32:26 UTC
+     Then the observed clock reads 14:32:26 UTC
+
   # ───────────────────────────── The vessel and its description ─────────────────────────────
 
   @B-016

@@ -1,6 +1,7 @@
 using System.Reactive.Concurrency;
 using System.Text.Json;
 using DynamicData;
+using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rocket.Surgery.Airframe;
@@ -24,6 +25,7 @@ internal sealed class VesselClient
     {
         _sockets = sockets;
         _vessels = vessels;
+        _clock = clock;
         _options = options;
         _box = box;
         _schedulers = schedulers;
@@ -113,6 +115,13 @@ internal sealed class VesselClient
         {
             var held = updater.Lookup(message.Mmsi);
             var snapshot = held.HasValue ? held.Value : new VesselSnapshot { Mmsi = message.Mmsi };
+            message.Reported.IfSome(instant =>
+            {
+                if (snapshot.Reported.Match(latest => instant > latest, static () => true))
+                {
+                    snapshot = snapshot with { Reported = instant };
+                }
+            });
             updater.AddOrUpdate(message switch
             {
                 VesselPositionMessage position => snapshot with
@@ -130,13 +139,25 @@ internal sealed class VesselClient
                 _ => snapshot,
             });
         });
+        message.Reported.IfSome(instant =>
+        {
+            if (_latestReported.Match(latest => instant <= latest, static () => false))
+            {
+                return;
+            }
+
+            _latestReported = instant;
+            _clock.Observe(instant);
+        });
     }
 
     private readonly Func<IVesselSocket> _sockets;
     private readonly SourceCache<VesselSnapshot, string> _vessels;
+    private readonly IObservedClockWriter _clock;
     private readonly IOptions<AisStreamOptions> _options;
     private readonly IOptions<OpenSkyOptions> _box;
     private readonly ISchedulerProvider _schedulers;
     private readonly ILogger<VesselClient> _logger;
     private readonly SemaphoreSlim _connectionOwnership = new(1, 1);
+    private Option<DateTimeOffset> _latestReported;
 }

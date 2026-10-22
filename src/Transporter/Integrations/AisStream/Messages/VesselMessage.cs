@@ -4,7 +4,10 @@ using Transporter.Model;
 namespace Transporter.Integrations.AisStream.Messages;
 
 /// <summary>One supported AIS message keyed by its MMSI.</summary>
-internal abstract record VesselMessage(string Mmsi);
+internal abstract record VesselMessage(string Mmsi)
+{
+    public Option<DateTimeOffset> Reported { get; init; }
+}
 
 /// <summary>A position update and its reported movement values.</summary>
 internal sealed record VesselPositionMessage(

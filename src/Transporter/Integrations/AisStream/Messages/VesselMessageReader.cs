@@ -38,9 +38,10 @@ internal static class VesselMessageReader
                 return Option<VesselMessage>.None;
             }
 
-            return kind == "PositionReport"
+            var message = kind == "PositionReport"
                 ? ReadPosition(mmsi, payload)
                 : ReadStatic(mmsi, payload);
+            return message.Map(value => value with { Reported = ReadReported(metadata) });
         }
         catch (JsonException)
         {
@@ -81,6 +82,42 @@ internal static class VesselMessageReader
                 ? code
                 : Option<int>.None;
         return new VesselStaticMessage(mmsi, name, shipType);
+    }
+
+    private static Option<DateTimeOffset> ReadReported(JsonElement metadata)
+    {
+        const string suffix = " +0000 UTC";
+        if (!metadata.TryGetProperty("time_utc", out var value)
+            || value.ValueKind != JsonValueKind.String
+            || value.GetString() is not { } text
+            || !text.EndsWith(suffix, StringComparison.Ordinal))
+        {
+            return Option<DateTimeOffset>.None;
+        }
+
+        var utc = text[..^suffix.Length];
+        if (utc.Length > 19 && utc[19] == '.')
+        {
+            var fraction = utc[20..];
+            if (fraction.Length is < 1 or > 9 || !fraction.All(char.IsAsciiDigit))
+            {
+                return Option<DateTimeOffset>.None;
+            }
+
+            if (fraction.Length > 7)
+            {
+                utc = utc[..27];
+            }
+        }
+
+        return DateTimeOffset.TryParseExact(
+            utc,
+            ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"],
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out var reported)
+                ? reported
+                : Option<DateTimeOffset>.None;
     }
 
     private static Option<string> ReadMmsi(JsonElement metadata)
