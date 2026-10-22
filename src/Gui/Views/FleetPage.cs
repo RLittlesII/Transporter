@@ -78,7 +78,7 @@ public class FleetPage : ContentPage
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(new GridLength(220)),
-                new RowDefinition(new GridLength(440))),
+                new RowDefinition(new GridLength(800))),
             RowSpacing = FlightDeck.Space4,
             Padding = FlightDeck.Space4,
             Children =
@@ -365,7 +365,7 @@ public class FleetPage : ContentPage
                 mapAndTrail,
             },
         });
-        panel.HeightRequest = 440;
+        panel.HeightRequest = 800;
         return panel;
     }
 

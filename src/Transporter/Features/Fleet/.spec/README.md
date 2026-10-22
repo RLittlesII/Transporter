@@ -600,7 +600,7 @@ LastContact)`, run when `Observed` or the element changes and on no timer
   style. A legend under the map names the measure and its range.
 - **The list** binds `FleetDetailViewModel.Trail` in a `CollectionView` beside
   the map: the contact as a clock time and the distance from the point before
-  (B-035). The selected detail pane gives the map a 360-point viewport; the
+  (B-035). The selected detail pane gives the map a 720-point viewport; the
   fleet cards keep a 220-point scrolling viewport above it for the demo.
 
 **The next poll (B-036), designed for `0072`**

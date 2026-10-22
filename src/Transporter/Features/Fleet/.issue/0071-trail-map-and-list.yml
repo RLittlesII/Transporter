@@ -58,7 +58,7 @@ acceptance_criteria:
 
 decisions:
   - "2026-10-22 — iOS and Mac Catalyst both draw the selected trail with native Maps; neither needs a list-only fallback."
-  - "2026-10-22 — the user's demo request makes the map 360 points tall, with a 220-point scrollable fleet viewport above it so the map stays fully visible."
+  - "2026-10-22 — the user's demo request makes the map 720 points tall, with a 220-point scrollable fleet viewport above it."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

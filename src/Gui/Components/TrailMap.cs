@@ -15,7 +15,7 @@ public sealed class TrailMap : ContentView
     /// <summary>Initializes a new instance of the <see cref="TrailMap"/> class.</summary>
     public TrailMap()
     {
-        _map = new Map { MapType = MapType.Street, HeightRequest = 360, IsShowingUser = false };
+        _map = new Map { MapType = MapType.Street, HeightRequest = 720, IsShowingUser = false };
         _map.Loaded += (_, _) => ShowPendingRegion();
         _legend = new Label { Style = FlightDeckStyles.Caption, TextColor = FlightDeck.InkSecondary };
         Content = new VerticalStackLayout
