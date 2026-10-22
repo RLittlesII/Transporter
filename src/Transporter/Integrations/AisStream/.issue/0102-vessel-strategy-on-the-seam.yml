@@ -2,7 +2,7 @@ id: "0102"
 type: task
 title: Register the vessel strategy behind the swap decorator as Vessels
 
-status: ready-for-architecture
+status: in-progress
 
 priority: high
 risk: 3
@@ -25,7 +25,7 @@ claims:
   - B-026
 
 created: "2026-10-16"
-updated: "2026-10-17"
+updated: "2026-10-21"
 closed: null
 
 summary: |
