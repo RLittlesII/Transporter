@@ -2,7 +2,7 @@ id: "0101"
 type: task
 title: Remove a vessel silent past the vessel threshold, in a pipeline stage the description drives
 
-status: ready-for-architecture
+status: done
 
 priority: high
 risk: 4
@@ -27,7 +27,7 @@ claims:
 
 created: "2026-10-16"
 updated: "2026-10-21"
-closed: null
+closed: "2026-10-21"
 
 summary: |
   Vessels go, aircraft stay. A vessel silent for longer than its own
@@ -54,7 +54,8 @@ acceptance_criteria:
   - "B-023 — a configurable vessel threshold, distinct from the aircraft's, applied to vessels only."
   - "§ 9 carries a row naming a test or a performed review for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-21 — the person — waives the draft sign-off gate in fleet-pipeline §§ 1-5 and 8-9 for item 0101 only. The B-044 agreement and design were independently reviewed on 2026-10-17; this waiver does not waive any Missing § 9 delivery row."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

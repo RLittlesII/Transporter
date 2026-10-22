@@ -22,6 +22,7 @@ public static class AisStreamRegistration
             ApiKey = section[nameof(AisStreamOptions.ApiKey)] is { } key && !string.IsNullOrWhiteSpace(key) ? key : Option<string>.None,
             Endpoint = section.GetValue(nameof(AisStreamOptions.Endpoint), defaults.Endpoint)!,
             ReconnectAfter = section.GetValue(nameof(AisStreamOptions.ReconnectAfter), defaults.ReconnectAfter),
+            SilentAfter = section.GetValue(nameof(AisStreamOptions.SilentAfter), defaults.SilentAfter),
         }));
         services.AddSingleton(static _ => new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi));
         services.AddSingleton<Func<IVesselSocket>>(static _ => static () => new ClientVesselSocket());
