@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using AwesomeAssertions;
 using DynamicData;
 using LanguageExt;
@@ -13,6 +14,41 @@ namespace Transporter.UnitTests.Tracking;
 
 public class VesselTrackerSourceTests
 {
+    /// <summary>B-024 and replay-source B-008. A supplied playback lifetime uses the same projection and retains its cache across subscriptions.</summary>
+    [Fact]
+    public void GivenASuppliedSubscriptionAndCache_WhenTheSourceReconnects_ThenTheCacheRemainsAndTheLifetimeIsReplaced()
+    {
+        // Given
+        using var cache = new SourceCache<VesselSnapshot, string>(static snapshot => snapshot.Mmsi);
+        var firstInstant = new DateTimeOffset(2026, 10, 21, 14, 32, 10, TimeSpan.Zero);
+        var latestInstant = firstInstant.AddMinutes(1);
+        cache.AddOrUpdate(new VesselSnapshot { Mmsi = "366999006", Reported = firstInstant });
+        var started = 0;
+        var stopped = 0;
+        var source = VesselTrackerSource.FromSubscription(
+            () =>
+            {
+                started++;
+                return Disposable.Create(() => stopped++);
+            },
+            cache,
+            new VesselSnapshotMapper());
+        var first = new List<IChangeSet<TransportVehicle, string>>();
+        var firstSubscription = source.Connect().Subscribe(first.Add);
+
+        // When
+        firstSubscription.Dispose();
+        cache.AddOrUpdate(new VesselSnapshot { Mmsi = "366999006", Reported = latestInstant });
+        var second = new List<IChangeSet<TransportVehicle, string>>();
+        using var secondSubscription = source.Connect().Subscribe(second.Add);
+
+        // Then
+        started.Should().Be(2);
+        stopped.Should().Be(1);
+        first.Should().ContainSingle().Which.Should().ContainSingle().Which.Current.LastContact.Should().Be(firstInstant);
+        second.Should().ContainSingle().Which.Should().ContainSingle().Which.Current.LastContact.Should().Be(latestInstant);
+    }
+
     /// <summary>B-010. A cache entry with no feed instant stays out of the fleet until a timed update arrives.</summary>
     [Fact]
     public void GivenAVesselNoMessageHasTimed_WhenTheFleetIsRead_ThenItIsAbsentUntilAMessageTimesIt()

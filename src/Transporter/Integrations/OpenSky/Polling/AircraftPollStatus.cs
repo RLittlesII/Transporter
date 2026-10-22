@@ -1,3 +1,4 @@
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Transporter.Tracking;
 
@@ -17,6 +18,9 @@ internal sealed class AircraftPollStatus : IPollStatus
 {
     /// <inheritdoc/>
     public IObservable<PollStatus> Status => _status;
+
+    /// <inheritdoc/>
+    public IObservable<bool> CanDemandPoll { get; } = Observable.Never<bool>().StartWith(true);
 
     /// <summary>Gets the status in force, which a failed poll keeps the refusal of.</summary>
     internal PollStatus Current => _status.Value;

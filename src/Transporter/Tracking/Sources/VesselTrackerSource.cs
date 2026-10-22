@@ -13,8 +13,17 @@ internal sealed class VesselTrackerSource : IVesselTrackerSource
     /// <param name="snapshots">The cache the client writes.</param>
     /// <param name="mapper">The sole vessel projection.</param>
     public VesselTrackerSource(VesselClient client, SourceCache<VesselSnapshot, string> snapshots, VesselSnapshotMapper mapper)
+        : this(client.Listen, snapshots, mapper)
     {
-        _client = client;
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="VesselTrackerSource"/> class over a supplied lifetime.</summary>
+    /// <param name="subscribe">Starts the source until its returned lifetime is disposed.</param>
+    /// <param name="snapshots">The cache retained by this source.</param>
+    /// <param name="mapper">The sole vessel projection.</param>
+    private VesselTrackerSource(Func<IDisposable> subscribe, SourceCache<VesselSnapshot, string> snapshots, VesselSnapshotMapper mapper)
+    {
+        _subscribe = subscribe;
         _snapshots = snapshots;
         _mapper = mapper;
     }
@@ -22,12 +31,23 @@ internal sealed class VesselTrackerSource : IVesselTrackerSource
     /// <inheritdoc/>
     public IObservable<IChangeSet<TransportVehicle, string>> Connect() =>
         Observable.Using(
-            () => _client.Listen(),
+            _subscribe,
             _ => _snapshots.Connect()
                 .Filter(static snapshot => snapshot.Reported.IsSome)
                 .Transform(TransportVehicle (snapshot) => _mapper.Project(snapshot)));
 
-    private readonly VesselClient _client;
+    /// <summary>Builds the same projection over a supplied playback lifetime and separate cache.</summary>
+    /// <param name="subscribe">Starts playback until its returned lifetime is disposed.</param>
+    /// <param name="snapshots">The replay cache, retained across recording rewinds.</param>
+    /// <param name="mapper">The sole vessel projection.</param>
+    /// <returns>A source using the supplied subscription rather than a live socket.</returns>
+    internal static VesselTrackerSource FromSubscription(
+        Func<IDisposable> subscribe,
+        SourceCache<VesselSnapshot, string> snapshots,
+        VesselSnapshotMapper mapper) =>
+        new(subscribe, snapshots, mapper);
+
+    private readonly Func<IDisposable> _subscribe;
     private readonly SourceCache<VesselSnapshot, string> _snapshots;
     private readonly VesselSnapshotMapper _mapper;
 }

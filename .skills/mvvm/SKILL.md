@@ -87,13 +87,16 @@ in the view model.
 `ICommand`.** The reason is not the saved file: an `RxCommand` is an
 `IObservable` of its own executions, so a view model that needs to watch its own
 gesture — to drive an indicator, to open a window, to debounce — listens to the
-command and holds no subject beside it. A hand-written command forces that
+command and normally holds no subject beside it. A hand-written command forces that
 subject, which is a second place the gesture lives.
 
 Compose the command's gesture stream with the domain response and any specified
 presentation deadline, then expose the result through `AsValue`. Where dispatch
 can produce a response immediately, arm response observation before sending
-the message. Do not keep a second subject or assign a flag beside that stream.
+the message. Do not assign a flag beside that stream. A local signal for an
+**accepted** action is warranted when a direct disabled `ICommand.Execute` can
+still produce command output; the unqualified output is not proof the action
+was accepted.
 
 Assign the command to its property and read the property — no local to pass
 around, and no second field. Type the property as the command rather than as
@@ -108,6 +111,12 @@ process-wide locator, which is the ambient read a view model must not make. The
 locator's core registrations — the exception handler and the default schedulers —
 are written once by the composition root, and a test assembly does the same in a
 module initialiser.
+
+When can-execute comes from another thread, apply `ObserveOn` with the injected
+UI scheduler **to that input before creating the command**. The output
+scheduler does not move can-execute notifications; a native button can retain
+its old appearance even when `ICommand.CanExecute` returns false. Test the
+notification's scheduler and inspect the running native control.
 
 Use `Ask<T>` only for genuine request/response, and **always with an explicit
 timeout**.

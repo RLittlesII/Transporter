@@ -2,6 +2,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData;
 using Transporter.Model;
+using Transporter.Tracking.Fleet;
 
 namespace Transporter.Tracking.Sources;
 
@@ -26,11 +27,15 @@ internal sealed class SwappingTrackerSource : ITrackerSource, IPollStatus
                 + "swap then silently does nothing (ADR-0011).");
         }
 
-        _selected = new BehaviorSubject<TrackerSourceEntry>(Entries[0]);
+        _selected = new BehaviorSubject<Selection>(new Selection(Entries[0], Connected: true));
     }
 
     /// <summary>Gets every registered strategy with its name, in registration order.</summary>
     public IReadOnlyList<TrackerSourceEntry> Entries { get; }
+
+    /// <summary>Gets the selected source's description, including its current value for a late subscriber.</summary>
+    public IObservable<FleetSourceDescription> Description =>
+        _selected.Select(static selection => selection.Entry.Description).DistinctUntilChanged();
 
     /// <inheritdoc/>
     /// <remarks>
@@ -39,20 +44,41 @@ internal sealed class SwappingTrackerSource : ITrackerSource, IPollStatus
     /// status is dropped nothing it writes is published (B-056).
     /// </remarks>
     public IObservable<PollStatus> Status =>
-        _selected.Select(static entry => entry.Status.Status).Switch();
+        _selected.Select(static selection => selection.Connected
+            ? selection.Entry.Status.Status
+            : Observable.Never<PollStatus>()).Switch();
+
+    /// <inheritdoc/>
+    public IObservable<bool> CanDemandPoll =>
+        _selected.Select(static selection => selection.Connected
+            ? selection.Entry.Status.CanDemandPoll
+            : Observable.Never<bool>()).Switch();
 
     /// <inheritdoc/>
     /// <remarks>DynamicData's <c>Switch</c>: the outgoing fleet leaves as removes rather than lingering.</remarks>
     public IObservable<IChangeSet<TransportVehicle, string>> Connect() =>
-        _selected.Select(static entry => entry.Source.Connect()).Switch();
+        _selected.Select(static selection => selection.Connected
+            ? selection.Entry.Source.Connect()
+            : Observable.Never<IChangeSet<TransportVehicle, string>>()).Switch();
 
     /// <summary>Makes the strategy behind <paramref name="entry"/> the live one.</summary>
     /// <param name="entry">One of <see cref="Entries"/>.</param>
     /// <exception cref="InvalidOperationException">The entry is not one registration made.</exception>
-    public void Select(TrackerSourceEntry entry) =>
-        _selected.OnNext(Entries.Contains(entry)
-            ? entry
-            : throw new InvalidOperationException($"'{entry.Name}' is not a registered strategy, so it cannot be made live (B-057)."));
+    public void Select(TrackerSourceEntry entry)
+    {
+        if (!Entries.Contains(entry))
+        {
+            throw new InvalidOperationException($"'{entry.Name}' is not a registered strategy, so it cannot be made live (B-057).");
+        }
 
-    private readonly BehaviorSubject<TrackerSourceEntry> _selected;
+        // One selection controls both streams. Disconnect first so outgoing removes are read
+        // through the old description; publish the new description before connecting its cache.
+        _selected.OnNext(_selected.Value with { Connected = false });
+        _selected.OnNext(new Selection(entry, Connected: false));
+        _selected.OnNext(new Selection(entry, Connected: true));
+    }
+
+    private sealed record Selection(TrackerSourceEntry Entry, bool Connected);
+
+    private readonly BehaviorSubject<Selection> _selected;
 }

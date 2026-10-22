@@ -132,4 +132,26 @@ public class AisStreamRegistrationTests
         provider.GetRequiredService<IOptions<AisStreamOptions>>().Value.SilentAfter
             .Should().Be(TimeSpan.FromMinutes(20));
     }
+
+    /// <summary>B-023, B-024: the selected vessel description uses the configured threshold, not the default.</summary>
+    [Fact]
+    public void GivenAConfiguredVesselSilenceThreshold_WhenTheVesselEntryIsResolved_ThenItsDescriptionUsesThatThreshold()
+    {
+        using var packaged = new MemoryStream(Encoding.UTF8.GetBytes(TransporterSettingsPayloads.Packaged));
+        using var secrets = new MemoryStream(Encoding.UTF8.GetBytes(VesselPayloads.UserSecrets));
+        var configuration = new ConfigurationBuilder()
+            .AddConfiguration(TransporterConfiguration.Compose(packaged, secrets))
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AisStream:SilentAfter"] = "00:20:00",
+            })
+            .Build();
+        using var host = new HostBuilder()
+            .ConfigureServices(services => services.AddTransporter(configuration, new TestScheduler()))
+            .Build();
+
+        var entry = host.Services.GetServices<TrackerSourceEntry>().Single(static candidate => candidate.Name == "Vessels");
+
+        entry.Description.SilentAfter.IfNone(TimeSpan.Zero).Should().Be(TimeSpan.FromMinutes(20));
+    }
 }

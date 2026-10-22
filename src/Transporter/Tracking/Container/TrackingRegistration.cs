@@ -3,6 +3,7 @@ using Akka.DependencyInjection;
 using Akka.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Transporter.Messages;
+using Transporter.Tracking.Fleet;
 using Transporter.Tracking.Sources;
 
 namespace Transporter.Tracking.Container;
@@ -25,6 +26,8 @@ public static class TrackingRegistration
         services.AddSingleton<SwappingTrackerSource>();
         services.AddSingleton<ITrackerSource>(static provider => provider.GetRequiredService<SwappingTrackerSource>());
         services.AddSingleton<IPollStatus>(static provider => provider.GetRequiredService<SwappingTrackerSource>());
+        services.AddSingleton<IObservable<FleetSourceDescription>>(
+            static provider => provider.GetRequiredService<SwappingTrackerSource>().Description);
         services.AddSingleton<IFleetTracker, FleetTracker>();
 
         return services;

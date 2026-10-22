@@ -203,6 +203,8 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
      When live vessels or recorded vessels are selected
      Then Refresh stays visible but is disabled
       And no demanded poll or refresh indicator starts from an attempted press
+      And a queued rejected press cannot open an indicator after aircraft are selected again
+      And a queued accepted press cannot reopen an indicator after a vessel-to-aircraft round trip
      When live aircraft are selected again
      Then Refresh is enabled before their next poll status arrives
 

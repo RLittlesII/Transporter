@@ -1089,6 +1089,13 @@ not meet B-060. A late description subscriber reads the selected entry's
 current description immediately. No metadata is added to `ITrackerSource`,
 and the actor still carries only the registered target.
 
+The poll-status seam also carries `CanDemandPoll` separately from
+`PollStatus.None`: live aircraft offer true before their first poll, while
+`NoPollStatus` offers false for replay and vessels. The decorator selects
+this capability with the same entry and the tracker republishes it for
+`fleet-dashboard` B-028. The aircraft status and the source seam retain
+their existing payloads.
+
 ## 8. Testing Strategy
 
 <!-- Rules: ../../../../../.spec/templates/feature.md § 8 -->
@@ -1363,7 +1370,7 @@ is B-049 and the clause waiting on `0005`.
 | B-057    | `@B-057` | `SourceSwapActorTests.GivenTheApplicationsRegistrations_WhenTheTargetsAreAsked_ThenOnePerStrategyArrivesInOrderWithItsName`, `SourceSwapActorTests.GivenTheApplicationsTargets_WhenTheActorIsToldToSwapToTheSecond_ThenTheRecordingIsLive` and `SourceSwapActorTests.GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered`; the seam's half is B-037's row                                                                                                                                                                                                                                                                | Verified |
 | B-058    | `@B-058` | `TransporterConfigurationTests.GivenAUserSecretsStoreHoldingTheCredentials_WhenTheConfigurationIsComposed_ThenTheCredentialsAreTheStoresAndNoOtherSettingChanges`, `…GivenAUserSecretsStoreNamingASettingThePackagedSettingsName_WhenTheConfigurationIsComposed_ThenTheSettingIsTheStores` and `…GivenNoUserSecretsStore_WhenTheConfigurationIsComposed_ThenItIsThePackagedSettingsAndNoCredentialIsConfigured`. **Review** on `0086`: the Mac Catalyst bundle held `secrets.json` beside a synthetic store, none without; iOS not built. **Absent: a launch** (§ 8). Re-done by a change to `Gui.csproj`, `MauiProgram.Settings()` or the Apple workload                   | Missing  |
 | B-059    | `@B-059` | [`0093`](../.issue/0093-absent-settings-named.yml) — planned: `OpenSkyStartupTests.GivenNoBoundingBox_WhenTheApplicationStarts_ThenItFailsNamingTheBox` extended to assert the failure contains neither configured credential and to cite B-059. Today it proves the first clause and cites B-050                                                                                                                                                                                                                                                                                                                                                                           | Missing  |
-| B-060    | `@B-060` | [`0102`](../../../../../src/Transporter/Integrations/AisStream/.issue/0102-vessel-strategy-on-the-seam.yml) — planned: `SwappingTrackerSourceTests.GivenTwoEntriesWithDescriptions_WhenTheSecondIsSelected_ThenItsDescriptionIsPublishedWithItsVehicles`, and `OpenSkyRegistrationTests.GivenTheLiveAndRecordedEntries_WhenRead_ThenEachCarriesTheAircraftDescription`                                                                                                                                                                                                                                                                                                      | Missing  |
+| B-060    | `@B-060` | `SwappingTrackerSourceTests.GivenTwoEntriesWithDescriptions_WhenTheSecondIsSelected_ThenItsDescriptionIsPublishedWithItsVehicles` checks outgoing removals, incoming description before the cached incoming add, and a late description subscriber. `ReplayRegistrationTests.GivenTheLiveAndRecordedEntries_WhenRead_ThenEachCarriesTheAircraftDescription` checks both aircraft entries.                                                                                                                                                                                                                                                                                   | Verified |
 
 Fifty-eight rows, fifty-eight live claims, each appearing once — B-010 is
 Withdrawn and has none. A scenario existing is not coverage; this section is the
@@ -2333,6 +2340,22 @@ through current/late readers, refusal clearing and none, with no clock read.
 **No actionable finding; §§ 8-9 are approved again.** The full build remains
 the delivery check, and dashboard `0095` still owes the bound countdown and
 its rendered evidence.
+**Scoped item `0102` review, 2026-10-21 — independent `spec-reviewer`.** This
+reviewer authored none of the reviewed claims, design, tests or implementation.
+B-060 is satisfied under ADR-0018: live and recorded aircraft entries carry
+the aircraft description, and selection removes outgoing rows under their
+old description before publishing the incoming description and cached rows.
+The ordering and both aircraft registrations have executable evidence in § 9.
+The minimal demand-poll capability remains distinct from initial
+`PollStatus.None`, so live aircraft can refresh before their first status.
+No actionable findings remain within this scope; the modified sections are
+approved without changing unrelated claim verdicts.
+
+The inspected final `./build.sh --skip Clean` log reports successful restore,
+Format and Mac Catalyst/iOS compilation, with 563 tests passed and none failed
+or skipped. Format reported a workspace-loading warning. The earlier
+unqualified `./build.sh` did not pass; this is no claim of a passing full gate
+or of a visible application swap.
 
 ## Decisions
 

@@ -124,11 +124,11 @@ public class SourceSwapActorTests : TestKit
 
     /// <summary>
     /// B-057 with `replay-source` B-024: the application's own composition, run with no recording
-    /// named, registers no replay strategy — so the actor offers the live source alone, and a picker
+    /// named, registers no replay strategy — so the actor offers only live sources, and a picker
     /// cannot offer a recording nobody chose.
     /// </summary>
     [Fact]
-    public void GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyTheLiveSourceIsOffered()
+    public void GivenTheApplicationsCompositionNamingNoRecording_WhenTheTargetsAreAsked_ThenOnlyLiveSourcesAreOffered()
     {
         // Given
         using var host = new HostBuilder()
@@ -143,7 +143,7 @@ public class SourceSwapActorTests : TestKit
 
         // Then
         targets.Should().Equal(
-            [new SwapTarget(OpenSkyRegistration.LiveAircraft, 0)],
+            [new SwapTarget(OpenSkyRegistration.LiveAircraft, 0), new SwapTarget("Vessels", 1)],
             "a run that names no recording registers no replay source to offer");
     }
 
@@ -170,7 +170,7 @@ public class SourceSwapActorTests : TestKit
 
         // Then
         resolved.Should().BeTrue("the message a consumer tells is the key it resolves the actor by");
-        TargetsOf(sut).Select(static target => target.Name).Should().Equal(OpenSkyRegistration.LiveAircraft);
+        TargetsOf(sut).Select(static target => target.Name).Should().Equal(OpenSkyRegistration.LiveAircraft, "Vessels");
     }
 
     /// <summary>What the system starts the actor from.</summary>

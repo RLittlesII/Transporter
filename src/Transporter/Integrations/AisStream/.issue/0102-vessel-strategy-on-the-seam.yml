@@ -2,7 +2,7 @@ id: "0102"
 type: task
 title: Register the vessel strategy behind the swap decorator as Vessels
 
-status: in-progress
+status: done
 
 priority: high
 risk: 3
@@ -26,7 +26,7 @@ claims:
 
 created: "2026-10-16"
 updated: "2026-10-21"
-closed: null
+closed: "2026-10-21"
 
 summary: |
   The closing act's one tap. The vessel strategy is registered like every

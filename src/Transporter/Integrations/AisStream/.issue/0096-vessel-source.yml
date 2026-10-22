@@ -2,7 +2,7 @@ id: "0096"
 type: feature
 title: Subscribe to AISStream for vessels and project them into the fleet
 
-status: ready-for-implementation
+status: done
 
 priority: high
 value: 5
@@ -56,7 +56,7 @@ claims:
 
 created: "2026-10-16"
 updated: "2026-10-21"
-closed: null
+closed: "2026-10-21"
 
 summary: |
   The closing act's source. AISStream's push feed of vessel positions over the
@@ -72,8 +72,8 @@ summary: |
   and an independent review approved every § 12 owner row. The children hold
   delivery; no implementation claim is complete merely because the agreement
   is approved. `0099` is complete after the captured-message evidence in § 11 row 6.
-  `0101` and `0102` also require the cross-feature specification
-  reviews listed in vessel-source § 12.
+  `0101` and `0102` completed the cross-feature specification reviews
+  listed in vessel-source § 12. All B-001 – B-027 rows are Verified.
 
 acceptance_criteria:
   - "Every § 3 claim B-001 – B-027 is done by the child that holds it."

@@ -168,7 +168,8 @@ public static class OpenSkyReplayRegistration
             new TrackerSourceEntry(
                 provider.GetRequiredService<IAircraftReplayTrackerSource>(),
                 RecordedAircraft,
-                new NoPollStatus()));
+                new NoPollStatus(),
+                AircraftFleetDescription.Offered));
 
         return services;
     }
