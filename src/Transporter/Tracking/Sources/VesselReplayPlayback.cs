@@ -25,8 +25,16 @@ internal sealed class VesselReplayPlayback
 
     /// <summary>Starts playback for as long as the strategy is selected.</summary>
     /// <returns>The playback lifetime.</returns>
-    public IDisposable Start() =>
-        _schedulers.BackgroundThread.ScheduleAsync((_, cancellation) => Run(cancellation));
+    public IDisposable Start()
+    {
+        var reportedTicks = Interlocked.Read(ref _reportedTicks);
+        if (reportedTicks >= 0)
+        {
+            _clock.Observe(new DateTimeOffset(reportedTicks, TimeSpan.Zero));
+        }
+
+        return _schedulers.BackgroundThread.ScheduleAsync((_, cancellation) => Run(cancellation));
+    }
 
     /// <summary>Releases and applies the next recorded provider message.</summary>
     /// <param name="cancellationToken">Stops a pending playback wait.</param>
@@ -73,7 +81,7 @@ internal sealed class VesselReplayPlayback
         var firstTimed = message.Reported.IsSome && _timedThisPass.Add(message.Mmsi);
         if (_rebaseClock && message.Reported.IsSome)
         {
-            message.Reported.IfSome(_clock.Observe);
+            message.Reported.IfSome(Observe);
             _rebaseClock = false;
             _latestReported = message.Reported;
         }
@@ -93,8 +101,14 @@ internal sealed class VesselReplayPlayback
             }
 
             _latestReported = instant;
-            _clock.Observe(instant);
+            Observe(instant);
         });
+    }
+
+    private void Observe(DateTimeOffset instant)
+    {
+        Interlocked.Exchange(ref _reportedTicks, instant.UtcTicks);
+        _clock.Observe(instant);
     }
 
     private readonly IRecordingPacer _pacer;
@@ -103,6 +117,7 @@ internal sealed class VesselReplayPlayback
     private readonly ISchedulerProvider _schedulers;
     private readonly SemaphoreSlim _ownership = new(1, 1);
     private readonly System.Collections.Generic.HashSet<string> _timedThisPass = [];
+    private long _reportedTicks = -1;
     private Option<DateTimeOffset> _latestReported;
     private long _rewindCount;
     private bool _rebaseClock;

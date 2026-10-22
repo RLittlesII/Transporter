@@ -35,8 +35,16 @@ internal sealed class VesselClient
         _logger = logger;
     }
 
-    public IDisposable Listen() =>
-        _schedulers.BackgroundThread.ScheduleAsync((scheduler, cancellation) => Listen(scheduler, cancellation));
+    public IDisposable Listen()
+    {
+        var reportedTicks = Interlocked.Read(ref _reportedTicks);
+        if (reportedTicks >= 0)
+        {
+            _clock.Observe(new DateTimeOffset(reportedTicks, TimeSpan.Zero));
+        }
+
+        return _schedulers.BackgroundThread.ScheduleAsync((scheduler, cancellation) => Listen(scheduler, cancellation));
+    }
 
     private async Task Listen(IScheduler scheduler, CancellationToken cancellation)
     {
@@ -130,6 +138,7 @@ internal sealed class VesselClient
             }
 
             _latestReported = instant;
+            Interlocked.Exchange(ref _reportedTicks, instant.UtcTicks);
             _clock.Observe(instant);
         });
     }
@@ -143,5 +152,6 @@ internal sealed class VesselClient
     private readonly IRecordingWriter _recorder;
     private readonly ILogger<VesselClient> _logger;
     private readonly SemaphoreSlim _connectionOwnership = new(1, 1);
+    private long _reportedTicks = -1;
     private Option<DateTimeOffset> _latestReported;
 }

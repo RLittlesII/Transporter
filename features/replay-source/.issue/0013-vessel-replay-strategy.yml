@@ -2,7 +2,7 @@ id: "0013"
 type: task
 title: Substitute vessel replay at the strategy
 
-status: in-review
+status: in-progress
 
 priority: medium
 value: 3
@@ -25,6 +25,9 @@ spikes: []
 spec: features/replay-source/.spec/README.md
 
 claims:
+  - B-009
+  - B-010
+  - B-017
   - B-019
   - B-020
   - B-021
@@ -51,6 +54,10 @@ summary: |
   messages and replays them through a separate strategy and cache.
 
 acceptance_criteria:
+  - "B-009/B-010 — provider time is restored before retained vehicles publish
+    when a source is reselected, preserving source-specific silence treatment."
+  - "B-017 — a late aircraft response after a swap cannot write the shared clock
+    or outgoing cache."
   - "B-023 — vessel replay substitutes at the strategy, not at a contract."
   - "B-019 — the aircraft recording's format and selection path, one line per
     received message, with no batching into poll-shaped snapshots."
@@ -59,6 +66,7 @@ acceptance_criteria:
   - "§ 9 carries a row naming a test for each id above."
 
 decisions:
+  - "2026-10-21 — rehearsal — returning from vessel replay exposed cached aircraft aged against the outgoing clock until the next recorded frame. Restore each activated source's own last provider instant before its retained rows are published; retain the shared clock and existing writer authority. B-017 also needs a late aircraft response to stop before writing the outgoing cache or clock. The same 0013 followup closes this rehearsal defect and the operational fallback review."
   - "2026-10-21 — implementer — preserve the push feed's one-message-per-frame recording. Reuse the live vessel message reader, snapshot merge, projection and tracker source. A replay-specific cache and pacer belong behind the strategy, not in a second vehicle or snapshot model."
   - "2026-10-21 — implementer — reset replay's provider-time maximum and each contact's first timed value only when the pacer genuinely rewinds. Keep the cache at that boundary so the fleet does not disappear; untimed messages retain the prior reported instant."
   - "2026-10-21 — implementer — inspect named vessel recordings against AisStream:SilentAfter, default ten minutes, while aircraft retain their five-minute minimum. Real stage configuration is checked after integration with the captured recording."
