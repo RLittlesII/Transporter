@@ -188,7 +188,7 @@ Replace the polled source with a push source and show that everything downstream
 - [x] Register an OpenSky account and create an API client — done 2026-10-09; the credentials go in the user-secrets store (§ "Authentication")
 - [x] Pick the bounding box (metro area) and polling interval — Houston: IAH, HOU, the ship channel and Galveston Bay, polled every 15 seconds ([decision 0001](src/Transporter/Integrations/OpenSky/.spec/decisions/0001-houston-bounding-box.md))
 - [x] Decide UI framework (WPF, Avalonia, Blazor, MAUI)
-- [ ] Record replay snapshots during rehearsal
+- [x] Record replay snapshots during rehearsal — done 2026-10-22; aircraft and vessel recordings, source swaps and the full vessel pass were verified ([replay-source § 9](features/replay-source/.spec/README.md#9-traceability-matrix); [runbook](docs/runbook.md))
 - [x] Decide on the closing act (ships, Coinbase, or simulated) — ships, decided 2026-10-15 ([`vessel-source`](src/Transporter/Integrations/AisStream/.spec/README.md))
 - [ ] If using ships: get an AISStream API key
     - [x] Intend to show ships
