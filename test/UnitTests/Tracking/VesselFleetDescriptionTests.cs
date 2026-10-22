@@ -7,6 +7,15 @@ namespace Transporter.UnitTests.Tracking;
 
 public class VesselFleetDescriptionTests
 {
+    /// <summary>B-027: the vessel description carries the configured removal threshold.</summary>
+    [Fact]
+    public void GivenTheVesselThreshold_WhenTheDescriptionIsRead_ThenItNamesRemovalAfterThatThreshold()
+    {
+        VesselFleetDescription.Offered.SilentAfter.IfNone(TimeSpan.Zero).Should().Be(TimeSpan.FromMinutes(10));
+        VesselFleetDescription.WithSilentAfter(TimeSpan.FromMinutes(20)).SilentAfter.IfNone(TimeSpan.Zero)
+            .Should().Be(TimeSpan.FromMinutes(20));
+    }
+
     /// <summary>B-019. The vessel source supplies the cells, sort choices and card roles the live view reads.</summary>
     [Fact]
     public void GivenTheDescription_WhenItIsRead_ThenItNamesItsColumnsComparersCardTrailAndDetail()

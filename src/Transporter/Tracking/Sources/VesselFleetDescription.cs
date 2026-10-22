@@ -8,7 +8,12 @@ namespace Transporter.Tracking.Sources;
 /// <summary>Columns, filters, groups, card and detail for the vessel source.</summary>
 internal static class VesselFleetDescription
 {
-    public static FleetSourceDescription Offered { get; } = Describe();
+    public static FleetSourceDescription Offered { get; } = WithSilentAfter(TimeSpan.FromMinutes(10));
+
+    /// <summary>Builds the vessel offer with the configured removal threshold (B-027).</summary>
+    /// <param name="threshold">How long a vessel remains after its last report.</param>
+    /// <returns>The vessel description with removal after the threshold.</returns>
+    public static FleetSourceDescription WithSilentAfter(TimeSpan threshold) => Describe() with { SilentAfter = threshold };
 
     private static FleetSourceDescription Describe()
     {

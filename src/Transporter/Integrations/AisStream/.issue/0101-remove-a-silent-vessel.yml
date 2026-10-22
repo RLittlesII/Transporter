@@ -2,7 +2,7 @@ id: "0101"
 type: task
 title: Remove a vessel silent past the vessel threshold, in a pipeline stage the description drives
 
-status: in-progress
+status: done
 
 priority: high
 risk: 4
@@ -27,7 +27,7 @@ claims:
 
 created: "2026-10-16"
 updated: "2026-10-21"
-closed: null
+closed: "2026-10-21"
 
 summary: |
   Vessels go, aircraft stay. A vessel silent for longer than its own

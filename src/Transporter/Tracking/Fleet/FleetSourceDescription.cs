@@ -1,3 +1,5 @@
+using LanguageExt;
+
 namespace Transporter.Tracking.Fleet;
 
 /// <summary>
@@ -18,6 +20,9 @@ public sealed record FleetSourceDescription
     public required IReadOnlyList<FleetGrouping> Groupings { get; init; }
 
     public required FleetTrailMeasure Trail { get; init; }
+
+    /// <summary>Gets the source's removal threshold; none keeps the existing stale marking treatment (B-044).</summary>
+    public Option<TimeSpan> SilentAfter { get; init; }
 
     /// <summary>Gets the filter choices this source offers, in the order the control shows them (B-029).</summary>
     /// <remarks>

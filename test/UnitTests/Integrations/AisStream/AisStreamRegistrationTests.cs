@@ -1,6 +1,7 @@
 using System.Text;
 using AwesomeAssertions;
 using DynamicData;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -61,5 +62,22 @@ public class AisStreamRegistrationTests
         options.ApiKey.IsSome.Should().BeTrue();
         options.ApiKey.IfSome(static value => value.Should().Be("synthetic-credential"));
         options.ReconnectAfter.Should().Be(TimeSpan.FromSeconds(9));
+        options.SilentAfter.Should().Be(TimeSpan.FromMinutes(10));
+    }
+
+    /// <summary>B-023: the vessel threshold comes from the AIS configuration.</summary>
+    [Fact]
+    public void GivenAConfiguredVesselSilenceThreshold_WhenOptionsAreBound_ThenItReplacesTheDefault()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["AisStream:SilentAfter"] = "00:20:00",
+        }).Build();
+        var services = new ServiceCollection();
+        services.AddAisStream(configuration);
+
+        using var provider = services.BuildServiceProvider();
+        provider.GetRequiredService<IOptions<AisStreamOptions>>().Value.SilentAfter
+            .Should().Be(TimeSpan.FromMinutes(20));
     }
 }

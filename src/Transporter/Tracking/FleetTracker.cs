@@ -46,8 +46,29 @@ internal sealed class FleetTracker : IFleetTracker
             .Move(Description.Select(static offered => offered.Trail.Value), () => _staleAfter.Value, DefaultTrailBound)
             .RefCount();
         _arrivals = _reported.Filter(_predicate.Select(Over)).RefCount();
-        Fleet = _arrivals
-            .Transform(Mark, Reevaluate(ticks))
+        Fleet = Observable.Defer(() =>
+            {
+                var silentAfter = Option<TimeSpan>.None;
+                var visible = Description.CombineLatest(ticks.Instant, (offered, instant) =>
+                {
+                    silentAfter = offered.SilentAfter;
+                    Func<MovedVehicle, bool> predicate = moved => offered.SilentAfter.Match(
+                        threshold => instant - moved.Vehicle.LastContact <= threshold,
+                        static () => true);
+                    return predicate;
+                }).StartWith(static _ => true);
+                var treatmentChanged = Description.Select(static offered => offered.SilentAfter)
+                    .StartWith(Option<TimeSpan>.None)
+                    .DistinctUntilChanged()
+                    .Skip(1)
+                    .Select(static _ => Unit.Default);
+
+                return _arrivals
+                    .Filter(visible)
+                    .Transform(
+                        moved => Mark(moved, silentAfter.IsNone),
+                        Reevaluate(ticks).Merge(treatmentChanged));
+            })
             .RefCount()
             .TakeUntil(_shutdown);
         Groups = Fleet
@@ -363,16 +384,17 @@ internal sealed class FleetTracker : IFleetTracker
 
     /// <summary>Derives the stale mark, never storing it and never reading an ambient clock (B-043).</summary>
     /// <param name="moved">The vehicle the seam reported, with the movement the stage above derived.</param>
+    /// <param name="markStale">Whether this source retains and marks a silent vehicle.</param>
     /// <returns>The vehicle, kept rather than removed, carrying the mark (B-051) and its movement unchanged.</returns>
     /// <remarks>
     /// Forced on every tick, so it copies the movement and never derives it: re-run here, a tick
     /// would read a zero leg and a vehicle that replaced itself (fleet-pipeline § 7).
     /// </remarks>
-    private TrackedVehicle Mark(MovedVehicle moved) =>
+    private TrackedVehicle Mark(MovedVehicle moved, bool markStale) =>
         new()
         {
             Vehicle = moved.Vehicle,
-            IsStale = moved.Vehicle.IsStale(_clock.Current, _staleAfter.Value),
+            IsStale = markStale && moved.Vehicle.IsStale(_clock.Current, _staleAfter.Value),
             Replaced = moved.Replaced,
             Leg = moved.Leg,
             Travelled = moved.Travelled,
