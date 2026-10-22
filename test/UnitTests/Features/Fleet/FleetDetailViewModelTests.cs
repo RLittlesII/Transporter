@@ -4,6 +4,7 @@ using AwesomeAssertions;
 using LanguageExt;
 using Microsoft.Reactive.Testing;
 using Rocket.Surgery.Extensions.Testing.AutoFixtures;
+using Transporter.Features.Fleet;
 using Transporter.Features.Fleet.ViewModels;
 using Transporter.Model;
 using Transporter.Scheduling;
@@ -73,6 +74,36 @@ public class FleetDetailViewModelTests
         sut.IsEmpty.Should().BeTrue();
         sut.Rows.Should().BeEmpty();
         sut.Title.Should().BeEmpty();
+    }
+
+    /// <summary>B-035. The detail list reverses the published points and formats their own distances.</summary>
+    [Fact]
+    public void GivenASelectedElementWithATrail_WhenTheTrailIsRead_ThenItIsNewestFirstAndFormattedNotComputed()
+    {
+        // Given
+        var scheduler = new TestScheduler();
+        var instant = new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero);
+        TrailPoint[] points =
+        [
+            new TrailPointFixture().WithLastContact(instant),
+            new TrailPointFixture().WithLastContact(instant.AddSeconds(10)).WithDistance(9_600),
+            new TrailPointFixture().WithLastContact(instant.AddSeconds(20)).WithDistance(10_200),
+        ];
+        TrackedVehicle selected = new TrackedVehicleFixture().WithTrail(points);
+        FleetDetailViewModel sut = new FleetDetailViewModelFixture()
+            .WithSelected(Observable.Return(Option<TrackedVehicle>.Some(selected)))
+            .WithDescription(Observable.Return(AircraftFleetDescription.Offered))
+            .WithScheduler(scheduler);
+
+        // When
+        scheduler.Start();
+
+        // Then
+        sut.Element.Should().BeSameAs(selected);
+        sut.Trail.Should().Equal(
+            new FleetTrailRow("12:00:20", "10.2 km"),
+            new FleetTrailRow("12:00:10", "9.6 km"),
+            new FleetTrailRow("12:00:00", FleetCardText.Missing));
     }
 
     /// <summary>

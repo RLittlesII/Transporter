@@ -2,7 +2,7 @@ id: "0071"
 type: task
 title: Draw the selected aircraft's trail on a map, and list it
 
-status: ready-for-architecture
+status: done
 
 priority: high
 value: 4
@@ -25,8 +25,8 @@ claims:
   - B-035
 
 created: "2026-10-08"
-updated: "2026-10-08"
-closed: null
+updated: "2026-10-22"
+closed: "2026-10-22"
 
 summary: |
   The detail pane draws the selected vehicle's trail on a map (B-034),
@@ -56,7 +56,9 @@ acceptance_criteria:
   - "B-035 — the trail listed newest first, bound and computing nothing."
   - "§ 9 Traceability Matrix carries a row naming a test or a performed review for each id above."
 
-decisions: []
+decisions:
+  - "2026-10-22 — iOS and Mac Catalyst both draw the selected trail with native Maps; neither needs a list-only fallback."
+  - "2026-10-22 — the user's demo request makes the map 720 points tall, with a 220-point scrollable fleet viewport above it."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

@@ -39,6 +39,7 @@ public class FleetPage : ContentPage
         };
         var fleet = new CollectionView
         {
+            HeightRequest = 220,
             SelectionMode = SelectionMode.Single,
             ItemsLayout = _layout,
             EmptyView = Empty(),
@@ -76,8 +77,8 @@ public class FleetPage : ContentPage
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Auto),
-                new RowDefinition(GridLength.Star),
-                new RowDefinition(GridLength.Auto)),
+                new RowDefinition(new GridLength(220)),
+                new RowDefinition(new GridLength(800))),
             RowSpacing = FlightDeck.Space4,
             Padding = FlightDeck.Space4,
             Children =
@@ -309,7 +310,50 @@ public class FleetPage : ContentPage
             .Bind(Readout.CaptionProperty, nameof(FleetDetailRow.Label))
             .Bind(Readout.ValueProperty, nameof(FleetDetailRow.Value))));
 
-        return Panel(new VerticalStackLayout
+        var trail = new CollectionView
+        {
+            HeightRequest = 150,
+            EmptyView = new Label { Text = "No trail yet", Style = FlightDeckStyles.Caption },
+            ItemTemplate = new DataTemplate(static () => new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitionCollection(
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(GridLength.Auto)),
+                Padding = new Thickness(0, FlightDeck.Space1),
+                Children =
+                {
+                    new Label { Style = FlightDeckStyles.DataSmall }.Bind(Label.TextProperty, nameof(FleetTrailRow.Contact)).Column(0),
+                    new Label { Style = FlightDeckStyles.Caption }.Bind(Label.TextProperty, nameof(FleetTrailRow.Distance)).Column(1),
+                },
+            }),
+        }.Bind(ItemsView.ItemsSourceProperty, nameof(FleetDetailViewModel.Trail), source: detail);
+        var mapAndTrail = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection(
+                new ColumnDefinition(new GridLength(2, GridUnitType.Star)),
+                new ColumnDefinition(GridLength.Star)),
+            ColumnSpacing = FlightDeck.Space3,
+            Children =
+            {
+                new TrailMap()
+                    .Bind(TrailMap.ElementProperty, nameof(FleetDetailViewModel.Element), source: detail)
+                    .Bind(TrailMap.MeasureProperty, nameof(FleetDetailViewModel.Measure), source: detail)
+                    .Column(0),
+                new VerticalStackLayout
+                {
+                    Spacing = FlightDeck.Space2,
+                    Children =
+                    {
+                        new Label { Text = "Details", Style = FlightDeckStyles.Caption },
+                        new ScrollView { Content = rows, HeightRequest = 100 },
+                        new Label { Text = "Trail · newest first", Style = FlightDeckStyles.Caption },
+                        trail,
+                    },
+                }.Column(1),
+            },
+        };
+
+        var panel = Panel(new VerticalStackLayout
         {
             Spacing = FlightDeck.Space3,
             Children =
@@ -318,9 +362,11 @@ public class FleetPage : ContentPage
                     .Bind(IsVisibleProperty, nameof(FleetDetailViewModel.IsEmpty), source: detail),
                 new Label { Style = FlightDeckStyles.Heading }
                     .Bind(Label.TextProperty, nameof(FleetDetailViewModel.Title), source: detail),
-                rows,
+                mapAndTrail,
             },
         });
+        panel.HeightRequest = 800;
+        return panel;
     }
 
     /// <summary>What the grid shows before the first item arrives, or when a filter admits nothing.</summary>

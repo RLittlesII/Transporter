@@ -74,6 +74,19 @@ public static class FlightDeck
     /// <summary>Gets labels above readouts and placeholder text: at least 4.5:1 on every surface, the selected card's fill included (B-033).</summary>
     public static Color InkMuted { get; } = Color.FromArgb("#939eab");
 
+    /// <summary>Eight ordered cividis stops for a measured trail (B-034).</summary>
+    public static IReadOnlyList<Color> TrailRamp { get; } =
+    [
+        Color.FromArgb("#656870"),
+        Color.FromArgb("#777777"),
+        Color.FromArgb("#8c8878"),
+        Color.FromArgb("#a19975"),
+        Color.FromArgb("#b8aa6e"),
+        Color.FromArgb("#cfbd62"),
+        Color.FromArgb("#e7d150"),
+        Color.FromArgb("#fee838"),
+    ];
+
     /// <summary>Gets the one interactive hue: focus, selection, the primary button.</summary>
     public static Color Accent { get; } = Color.FromArgb("#6cbcf0");
 
@@ -109,4 +122,9 @@ public static class FlightDeck
 
     /// <summary>Gets the fill behind a throttled badge.</summary>
     public static Color StatusThrottledSoft { get; } = Color.FromArgb("#38351a");
+
+    /// <summary>Gets the sequential trail colour at a normalized measure.</summary>
+    /// <param name="shade">The measure as a fraction from zero to one.</param>
+    /// <returns>The nearest stop in the ordered ramp.</returns>
+    public static Color Ramp(double shade) => TrailRamp[Math.Clamp((int) Math.Round(shade * (TrailRamp.Count - 1)), 0, TrailRamp.Count - 1)];
 }
