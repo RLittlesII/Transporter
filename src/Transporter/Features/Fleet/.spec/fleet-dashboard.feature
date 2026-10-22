@@ -74,11 +74,29 @@ Feature: Fleet dashboard — one page, thin view models, and the only legitimate
       And no view model enumerated a collection to learn any of it
 
   @B-039
-  Scenario: Changing the grouping clears a selection only the old grouping meant
-    Given Germany and the on-ground choice selected, and the search text "FLT"
-     When the fleet is grouped by staleness instead
+  Scenario: Regrouping clears a selected value of the old key
+    Given a description offers country and callsign groupings
+      And Germany is selected from the country values, and the search text is "FLT"
+     When the fleet is grouped by callsign instead
      Then Germany is no longer selected
-      And the on-ground choice and the search text still apply
+      And the search text still applies
+
+  @B-039
+  Scenario: Regrouping clears a selected value even after it is withdrawn
+    Given a description offers country and callsign groupings
+      And Brazil was selected from the country values
+      And the last aircraft from Brazil has left, withdrawing Brazil from the offered values while it remains selected
+     When the fleet is grouped by callsign instead
+     Then Brazil is no longer selected
+
+  @B-039
+  Scenario: Regrouping preserves a curated choice even when a value has the same name
+    Given a description offers country and callsign groupings
+      And the description offers a curated choice named Germany
+      And the current country values also include Germany
+      And the curated Germany choice is selected, and the search text is "FLT"
+     When the fleet is grouped by callsign instead
+     Then the curated Germany choice and the search text still apply
 
   @B-012
   Scenario: A sort choice sorts, reverse reverses, and a grouping is published
