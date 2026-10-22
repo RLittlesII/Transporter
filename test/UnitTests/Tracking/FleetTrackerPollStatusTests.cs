@@ -1,3 +1,4 @@
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AwesomeAssertions;
 using LanguageExt;
@@ -150,4 +151,7 @@ internal sealed class PollStatusDouble(BehaviorSubject<PollStatus> status) : IPo
 {
     /// <inheritdoc/>
     public IObservable<PollStatus> Status => status;
+
+    /// <inheritdoc/>
+    public IObservable<bool> CanDemandPoll { get; } = Observable.Never<bool>().StartWith(true);
 }

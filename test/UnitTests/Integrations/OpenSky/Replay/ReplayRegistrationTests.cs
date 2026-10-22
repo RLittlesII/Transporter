@@ -12,6 +12,28 @@ namespace Transporter.UnitTests.Integrations.OpenSky.Replay;
 
 public class ReplayRegistrationTests
 {
+    /// <summary>B-060. Live and recorded aircraft each carry their own selected entry's aircraft description.</summary>
+    [Fact]
+    public void GivenTheLiveAndRecordedEntries_WhenRead_ThenEachCarriesTheAircraftDescription()
+    {
+        // Given
+        var recordings = new RecordedFiles().Holding(Rehearsal, ReplayRecordingCases.SpanningSixMinutes);
+        var settings = ReplayComposition.Settings(aircraft: Rehearsal);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<ISchedulerProvider>(ReplayComposition.Schedulers(new TestScheduler()));
+        services.AddOpenSky(settings);
+        services.AddAircraftReplay(settings, recordings);
+        using var provider = services.BuildServiceProvider();
+
+        // When
+        var entries = provider.GetServices<TrackerSourceEntry>().ToArray();
+
+        // Then
+        entries.Should().HaveCount(2);
+        entries.Should().OnlyContain(static entry => ReferenceEquals(entry.Description, AircraftFleetDescription.Offered));
+    }
+
     /// <summary>
     /// B-024. One key per replay source and no default compiled in: the aircraft key names a
     /// recording and the vessel key names none, so one replay source is registered beside the live

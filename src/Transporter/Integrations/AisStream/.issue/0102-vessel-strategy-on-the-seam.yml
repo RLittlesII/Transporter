@@ -2,7 +2,7 @@ id: "0102"
 type: task
 title: Register the vessel strategy behind the swap decorator as Vessels
 
-status: ready-for-architecture
+status: done
 
 priority: high
 risk: 3
@@ -25,8 +25,8 @@ claims:
   - B-026
 
 created: "2026-10-16"
-updated: "2026-10-17"
-closed: null
+updated: "2026-10-21"
+closed: "2026-10-21"
 
 summary: |
   The closing act's one tap. The vessel strategy is registered like every
@@ -45,6 +45,14 @@ decisions:
     which `aircraft-source` claims as B-060: each registered entry carries its
     fleet description, and the swap decorator switches it. It completes
     `aircraft-source` § 9's B-060 row."
+  - "2026-10-21 — the person — Refresh remains visible but disabled while live
+    vessels or vessel replay are selected. An attempted press tells no poll actor
+    and starts no indicator. Aircraft Refresh stays enabled before its first
+    poll status. This item records and builds the scoped fleet-dashboard B-028
+    delta; its unrelated R1/R2/R3 review blockers remain unchanged."
+  - "2026-10-21 — implementer — retain a reusable vessel projection over a
+    supplied cache and subscription lifetime, so vessel replay can supply its
+    own playback without a second projection or a wider tracker seam."
 
 out_of_scope:
   - "Everything in § 5 of the specification."

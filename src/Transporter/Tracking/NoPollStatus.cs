@@ -14,4 +14,7 @@ internal sealed class NoPollStatus : IPollStatus
 {
     /// <inheritdoc/>
     public IObservable<PollStatus> Status { get; } = Observable.Never<PollStatus>().StartWith(PollStatus.None);
+
+    /// <inheritdoc/>
+    public IObservable<bool> CanDemandPoll { get; } = Observable.Never<bool>().StartWith(false);
 }

@@ -170,6 +170,7 @@ public class FleetPage : ContentPage
                     .Margins(right: FlightDeck.Space2),
                 new Button { Text = "Refresh" }
                     .Bind(Button.CommandProperty, static (FleetViewModel model) => model.RefreshCommand)
+                    .Bind(VisualElement.IsEnabledProperty, static (FleetViewModel model) => model.CanRefresh)
                     .Margins(right: FlightDeck.Space2, bottom: FlightDeck.Space1),
                 new ActivityIndicator { WidthRequest = 24, HeightRequest = 24 }
                     .Bind(ActivityIndicator.IsRunningProperty, static (FleetViewModel model) => model.IsRefreshing),
@@ -313,7 +314,7 @@ public class FleetPage : ContentPage
             Spacing = FlightDeck.Space3,
             Children =
             {
-                new Label { Text = "Select an aircraft", Style = FlightDeckStyles.Caption }
+                new Label { Text = "Select an item", Style = FlightDeckStyles.Caption }
                     .Bind(IsVisibleProperty, nameof(FleetDetailViewModel.IsEmpty), source: detail),
                 new Label { Style = FlightDeckStyles.Heading }
                     .Bind(Label.TextProperty, nameof(FleetDetailViewModel.Title), source: detail),
@@ -322,7 +323,7 @@ public class FleetPage : ContentPage
         });
     }
 
-    /// <summary>What the grid shows before the first poll lands, or when a filter admits nothing.</summary>
+    /// <summary>What the grid shows before the first item arrives, or when a filter admits nothing.</summary>
     /// <returns>The empty state.</returns>
     private static View Empty() =>
         new VerticalStackLayout
@@ -332,10 +333,10 @@ public class FleetPage : ContentPage
             HorizontalOptions = LayoutOptions.Center,
             Children =
             {
-                new Label { Text = "No aircraft yet", Style = FlightDeckStyles.Heading, HorizontalTextAlignment = TextAlignment.Center },
+                new Label { Text = "No tracked items yet", Style = FlightDeckStyles.Heading, HorizontalTextAlignment = TextAlignment.Center },
                 new Label
                 {
-                    Text = "Waiting for the first poll, or nothing matches the filter.",
+                    Text = "Waiting for data, or nothing matches the filter.",
                     Style = FlightDeckStyles.Caption,
                     HorizontalTextAlignment = TextAlignment.Center,
                 },

@@ -1319,6 +1319,14 @@ and `IFleetTracker.PollStatus` beside `Observed`. What they owe:
   value. That is the swap test holding for status, and why B-040's swap
   scenario is proven with a double that reports a status and then none.
 
+`IPollStatus.CanDemandPoll` is a separate observable capability, read at
+once and selected by the same decorator. `AircraftPollStatus` offers true
+before its first status; `NoPollStatus` offers false. `FleetTracker` republishes
+it as `IFleetTracker.CanDemandPoll` with its own shutdown, and the dashboard
+uses it to enable Refresh (`fleet-dashboard` B-028). `PollStatus.None` is
+not a capability test: it also seeds a live aircraft source. The tracker
+still names no provider and derives no capability from a vehicle type.
+
 Rejected: a `TimeSpan` "seconds until the next poll" on the status, which is a
 value that changes with no report and so needs a timer somewhere — the clause
 B-040 and `fleet-dashboard` B-017 forbid; a `Refused` flag beside an interval,
@@ -2602,6 +2610,22 @@ seconds, so this review claims no successful Clean. This is scoped approval for
 `0101` only: unrelated draft owner rows and `spec_status: in-review` remain,
 and the person's named `0101` waiver remains applicable. No other item or
 specification gap is approved by this review.
+**Scoped item `0102` review, 2026-10-21 — independent `spec-reviewer`.** This
+reviewer authored none of the reviewed claims, design, tests or implementation.
+The selected description is published before incoming source rows, and the
+existing status seam carries explicit demand-poll capability independently of
+`PollStatus.None`. The tracker forwards that capability with its shutdown;
+`ITrackerSource` remains unchanged. The reviewed registration and capability
+deltas satisfy vessel B-024 through B-026, aircraft B-060 and the scoped
+dashboard B-028 requirement. No actionable finding remains in those deltas.
+This is scoped approval only: unrelated draft owner rows and
+`spec_status: in-review` retain their existing verdicts.
+
+The inspected final `./build.sh --skip Clean` log shows restore, Format,
+Mac Catalyst/iOS compilation and 563 tests passing, none failed or skipped.
+Format reported a workspace-loading warning. The earlier unqualified
+`./build.sh` did not pass; no passing full gate or visible application swap
+is claimed here.
 
 ## Decisions
 

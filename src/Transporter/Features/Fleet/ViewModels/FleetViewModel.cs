@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Akka.Actor;
 using Akka.Hosting;
 using DynamicData;
@@ -82,13 +83,32 @@ public sealed class FleetViewModel : RxObject, IDisposable
 
         // The scheduler is passed rather than left to default: an unset one is resolved from
         // ReactiveMarbles' service locator, which is the ambient read B-005 forbids.
+        tracker.CanDemandPoll
+            .Subscribe(canDemandPoll => _canDemandPoll = canDemandPoll)
+            .DisposeWith(_garbage);
+        tracker.CanDemandPoll
+            .DistinctUntilChanged()
+            .ObserveOn(schedulers.UserInterfaceThread)
+            .Subscribe(canDemandPoll => CanRefresh = canDemandPoll)
+            .DisposeWith(_garbage);
+        var acceptedRefreshes = new Subject<Unit>().DisposeWith(_garbage);
         RefreshCommand = RxCommand
             .Create(
-                () => registry.Get<DemandPoll>().Tell(DemandPoll.Instance),
-                outputScheduler: schedulers.UserInterfaceThread)
+                () =>
+                {
+                    if (_canDemandPoll)
+                    {
+                        // Arm the observed-instant window before Tell can deliver a poll synchronously.
+                        // Command output may arrive after a source swap; only an accepted action is a press.
+                        acceptedRefreshes.OnNext(Unit.Default);
+                        registry.Get<DemandPoll>().Tell(DemandPoll.Instance);
+                    }
+                },
+                tracker.CanDemandPoll.ObserveOn(schedulers.UserInterfaceThread),
+                schedulers.UserInterfaceThread)
             .DisposeWith(_garbage);
 
-        _isRefreshing = RefreshCommand
+        _isRefreshing = acceptedRefreshes
             .Select(_ => tracker
                 .Observed
                 .Skip(1)
@@ -97,6 +117,7 @@ public sealed class FleetViewModel : RxObject, IDisposable
                 .Take(1)
                 .StartWith(true))
             .Switch()
+            .Merge(tracker.CanDemandPoll.Where(static canDemandPoll => !canDemandPoll).Select(static _ => false))
             .AsValue(
                 _ => RaisePropertyChanged(nameof(IsRefreshing)),
                 schedulers.UserInterfaceThread,
@@ -191,6 +212,9 @@ public sealed class FleetViewModel : RxObject, IDisposable
     /// its own presses and <see cref="IsRefreshing"/> is read from it.
     /// </remarks>
     public RxCommand<Unit, Unit> RefreshCommand { get; }
+
+    /// <summary>Gets whether the selected source accepts a demanded poll, for the visible Refresh button (B-028).</summary>
+    public bool CanRefresh { get; private set => RaiseAndSetIfChanged(ref field, value); }
 
     /// <summary>Gets a value indicating whether a demanded poll is outstanding (B-028).</summary>
     /// <remarks>
@@ -360,5 +384,6 @@ public sealed class FleetViewModel : RxObject, IDisposable
     private readonly IValueBinder<DateTimeOffset> _observed;
     private readonly ReadOnlyObservableCollection<TrackedVehicle> _fleet;
     private readonly IFleetTracker _tracker;
+    private volatile bool _canDemandPoll;
     private SwapTargets _answered = new([]);
 }

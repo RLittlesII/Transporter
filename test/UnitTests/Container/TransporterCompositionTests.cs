@@ -133,7 +133,7 @@ public class TransporterCompositionTests
         selector.Entries.Select(static entry => entry.Name)
             .Should()
             .Equal(
-                [OpenSkyRegistration.LiveAircraft, OpenSkyReplayRegistration.RecordedAircraft],
+                [OpenSkyRegistration.LiveAircraft, "Vessels", OpenSkyReplayRegistration.RecordedAircraft],
                 "the live source registers first and is the one the selector starts on; the recording follows it");
     }
 

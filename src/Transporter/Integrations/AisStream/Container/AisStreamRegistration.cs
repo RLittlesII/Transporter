@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Transporter.Integrations.AisStream.Configuration;
+using Transporter.Tracking;
+using Transporter.Tracking.Sources;
 
 namespace Transporter.Integrations.AisStream.Container;
 
@@ -27,6 +29,14 @@ public static class AisStreamRegistration
         services.AddSingleton(static _ => new SourceCache<VesselSnapshot, string>(static vessel => vessel.Mmsi));
         services.AddSingleton<Func<IVesselSocket>>(static _ => static () => new ClientVesselSocket());
         services.AddSingleton<VesselClient>();
+        services.AddSingleton<VesselSnapshotMapper>();
+        services.AddSingleton<IVesselTrackerSource, VesselTrackerSource>();
+        services.AddSingleton<ITrackerSourceStrategy>(static provider => provider.GetRequiredService<IVesselTrackerSource>());
+        services.AddSingleton(static provider => new TrackerSourceEntry(
+            provider.GetRequiredService<IVesselTrackerSource>(),
+            "Vessels",
+            new NoPollStatus(),
+            VesselFleetDescription.WithSilentAfter(provider.GetRequiredService<IOptions<AisStreamOptions>>().Value.SilentAfter)));
         return services;
     }
 }

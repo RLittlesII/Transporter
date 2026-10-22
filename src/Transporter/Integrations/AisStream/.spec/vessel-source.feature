@@ -349,6 +349,7 @@ Feature: Vessel source — a push feed on the same seam
      When the presenter swaps to vessels
      Then the tracker publishes no poll status
       And nothing the aircraft poller reported is published after the swap
+      And Refresh remains visible but cannot be invoked
 
   @B-026
   Scenario: Swapping changes the vehicles and the description, and nothing else

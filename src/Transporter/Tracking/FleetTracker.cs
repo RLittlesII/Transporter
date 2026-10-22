@@ -87,6 +87,7 @@ internal sealed class FleetTracker : IFleetTracker
             .TakeUntil(_shutdown);
         Observed = ticks.Instant.TakeUntil(_shutdown);
         PollStatus = status.Status.TakeUntil(_shutdown);
+        CanDemandPoll = status.CanDemandPoll.TakeUntil(_shutdown);
         Recent = Windowed()
             .ShareLatest()
             .TakeUntil(_shutdown);
@@ -159,6 +160,9 @@ internal sealed class FleetTracker : IFleetTracker
     /// timer and no <c>ObserveOn</c> (fleet-pipeline B-005, B-040).
     /// </remarks>
     public IObservable<PollStatus> PollStatus { get; }
+
+    /// <inheritdoc/>
+    public IObservable<bool> CanDemandPoll { get; }
 
     /// <inheritdoc/>
     /// <remarks>

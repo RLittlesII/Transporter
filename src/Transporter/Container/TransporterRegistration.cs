@@ -7,6 +7,7 @@ using ReactiveMarbles.Locator;
 using ReactiveMarbles.Mvvm;
 using Rocket.Surgery.Airframe;
 using Transporter.Features.Fleet.ViewModels;
+using Transporter.Integrations.AisStream.Container;
 using Transporter.Integrations.OpenSky.Container;
 using Transporter.Scheduling;
 using Transporter.Tracking.Container;
@@ -61,6 +62,7 @@ public static class TransporterRegistration
 
         // Live before replay: the selector starts on the first strategy registered (replay-source B-028).
         services.AddOpenSky(configuration);
+        services.AddAisStream(configuration);
         services.AddAircraftReplay(configuration);
         services.AddFleetTracking();
         services.AddTransient<FleetViewModel>();

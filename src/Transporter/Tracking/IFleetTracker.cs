@@ -53,6 +53,9 @@ public interface IFleetTracker : IDisposable
     /// </remarks>
     IObservable<PollStatus> PollStatus { get; }
 
+    /// <summary>Gets whether the selected source accepts a demanded poll, starting with its current capability (fleet-dashboard B-028).</summary>
+    IObservable<bool> CanDemandPoll { get; }
+
     /// <summary>Gets the twenty most recent changes the source made, and their totals (fleet-pipeline B-039).</summary>
     /// <remarks>
     /// One window for every subscriber: a later one reads it at once, and it is emptied when the last

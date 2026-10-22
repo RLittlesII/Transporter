@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Reactive.Concurrency;
-using System.Reactive.Subjects;
 using Akka.Actor;
 using Akka.DependencyInjection;
 using Akka.Hosting;
@@ -92,7 +91,8 @@ public static class OpenSkyRegistration
         services.AddSingleton(static provider => new TrackerSourceEntry(
             provider.GetRequiredService<IAircraftTrackerSource>(),
             LiveAircraft,
-            provider.GetRequiredService<AircraftPollStatus>()));
+            provider.GetRequiredService<AircraftPollStatus>(),
+            AircraftFleetDescription.Offered));
 
         return services;
     }
@@ -170,11 +170,6 @@ public static class OpenSkyRegistration
         services.AddSingleton<IObservedClockTicks>(static provider => provider.GetRequiredService<ObservedClock>());
 
         services.AddSingleton<AircraftSnapshotMapper>();
-
-        // A subject rather than Observable.Return, so the stream does not complete when it is read.
-        services.AddSingleton(static _ => new BehaviorSubject<FleetSourceDescription>(AircraftFleetDescription.Offered));
-        services.AddSingleton<IObservable<FleetSourceDescription>>(
-            static provider => provider.GetRequiredService<BehaviorSubject<FleetSourceDescription>>());
 
         return services;
     }

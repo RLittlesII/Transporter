@@ -13,4 +13,8 @@ public interface IPollStatus
 {
     /// <summary>Gets the poll status, starting with the one in force and then every report.</summary>
     IObservable<PollStatus> Status { get; }
+
+    /// <summary>Gets whether the selected source accepts a demanded poll, starting with the capability in force.</summary>
+    /// <remarks><see cref="PollStatus.None"/> cannot answer this: live aircraft also start with none.</remarks>
+    IObservable<bool> CanDemandPoll { get; }
 }
